@@ -1,0 +1,14 @@
+﻿header {
+    display: flex;
+    min-height: 5em;
+
+    .logo-container {
+    }
+
+    .menu-container {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        padding-right: 1.25em;
+    }
+}

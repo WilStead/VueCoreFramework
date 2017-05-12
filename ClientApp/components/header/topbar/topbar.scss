@@ -1,0 +1,43 @@
+﻿.topbar {
+    height: 1.875em;
+    text-align: right;
+    padding-top: 0.25em;
+    color: #888;
+
+    div {
+        display: inline;
+        margin-left: 2.125em;
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    .social-icons-container {
+        i {
+            font-size: 1.125em;
+            margin-left: 0.5em;
+            vertical-align: middle;
+        }
+
+        .fa-twitter:hover {
+            color: #0084b4;
+        }
+
+        .fa-facebook-official:hover {
+            color: #3b5998;
+        }
+
+        .fa-google-plus-official:hover {
+            color: #d34836;
+        }
+
+        .fa-reddit-alien:hover {
+            color: #FF5700;
+        }
+    }
+
+    .user-controls-container {
+        text-transform: uppercase;
+    }
+}
