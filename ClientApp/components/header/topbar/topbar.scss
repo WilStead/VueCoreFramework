@@ -1,8 +1,11 @@
-﻿.topbar {
+﻿@import "../../../_style.scss";
+
+.topbar
+{
     height: 1.875em;
     text-align: right;
     padding-top: 0.25em;
-    color: #888;
+    color: $muted-text-color;
 
     div {
         display: inline;
@@ -10,6 +13,7 @@
     }
 
     a {
+        color: $muted-text-color;
         text-decoration: none;
     }
 

@@ -1,75 +1,106 @@
+@import '../../_style.scss';
+
 .main-nav {
-    /* Keep the nav menu independent of scrolling and on top of other items */
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    flex-grow: 1;
 
-    li {
-        .glyphicon {
-            margin-right: 10px;
-        }
+    ul {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+    }
 
-        a.router-link-active,
-        a.router-link-active:hover,
-        a.router-link-active:focus {
-            /* Highlighting rules for nav menu items */
-            background-color: #4189C7;
-            color: white;
+    &.navmenu-v {
+        display: inline-block;
+        width: 20rem;
+        padding-left: 0.4rem;
+        padding-right: 0.4rem;
+        flex-grow: 0;
+        flex-shrink: 0;
+        background-color: $main-nav-bg-color-v;
+        overflow: auto;
+    }
+}
+
+.menu-listing {
+    display: inline-block;
+    position: relative;
+    padding: 0;
+    font-size: 1.5rem;
+    line-height: 1.5rem;
+    cursor: pointer;
+    box-sizing: border-box;
+    width: auto;
+
+    margin: {
+        left: 1.6rem;
+        top: 0;
+        bottom: 0;
+    }
+
+    .popup & {
+        margin-left: 0;
+        width: 100%;
+        // If a menu item's text is too long, truncate it
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .navmenu-v & {
+        display: block;
+        // If a menu item's text is too long, truncate it
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        margin: {
+            left: 0;
+            top: 0.6rem;
+            bottom: 0.6rem;
         }
     }
 }
 
-@media (max-width: 767px) {
-    body {
-        /* On small screens, the nav menu spans the full width of the screen. Leave a space for it. */
-        padding-top: 50px;
+.menu-item {
+    padding: 1rem 1rem 1rem 0;
+    border-radius: 1rem;
+    color: $menu-item-color;
+    display: inline-block;
+
+    &:hover {
+        color: $menu-item-color-hover;
+        background-color: $menu-item-bg-color-hover;
+        text-decoration: none;
     }
-}
 
-@media (min-width: 768px) {
-    .main-nav {
-        /* On small screens, convert the nav menu to a vertical sidebar */
-        height: 100%;
-        width: calc(25% - 20px);
+    .navmenu-v & {
+        padding: 0.6rem 0.6rem 0.6rem 0;
+        color: $menu-item-color-v;
+        width: 100%;
 
-        .navbar {
-            border-radius: 0px;
-            border-width: 0px;
-            height: 100%;
-
-            ul {
-                float: none;
-            }
-
-            li {
-                float: none;
-                font-size: 15px;
-                margin: 6px;
-
-                a {
-                    padding: 10px 16px;
-                    border-radius: 4px;
-                }
-            }
-
-            a {
-                /* If a menu item's text is too long, truncate it */
-                width: 100%;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
+        &:hover {
+            background-color: $menu-item-bg-color-v-hover;
         }
+    }
 
-        .navbar-header {
-            float: none;
-        }
+    .glyphicon {
+        top: 0.1rem;
+        font-size: 1.4rem;
+        margin-left: 0.8rem;
+        margin-right: 0.4rem;
+    }
 
-        .navbar-collapse {
-            border-top: 1px solid #444;
-            padding: 0px;
+    &.router-link-active,
+    &.router-link-active:hover,
+    &.router-link-active:focus {
+        // Highlighting rules for nav menu items
+        background-color: $menu-item-bg-color-hover;
+
+        .navmenu-v & {
+            background-color: $menu-item-bg-color-v-hover;
         }
     }
 }

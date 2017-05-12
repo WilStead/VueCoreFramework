@@ -1,18 +1,26 @@
-﻿body {
-    font-size: 16px;
+﻿html {
+    font-size: 10px;
+    height: 100%;
+}
+
+body {
+    font-size: 1.6rem;
+    display: flex;
+    min-height: 100%;
+    flex-direction: column;
 }
 
 #app-root {
     display: flex;
+    flex-grow: 1;
     flex-direction: column;
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
 }
 
 main {
     display: flex;
     flex-grow: 1;
+}
+
+.navmenu-v {
+    display: none;
 }

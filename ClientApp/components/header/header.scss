@@ -1,14 +1,39 @@
 ﻿header {
-    display: flex;
-    min-height: 5em;
+    .header-container {
+        display: flex;
+        min-height: 8rem;
+
+        &-small {
+            min-height: 5.6rem;
+            display: flex;
+
+            span {
+                margin-left: 1rem;
+                margin-right: 2rem;
+                font-size: 2.5rem;
+                line-height: 5rem;
+            }
+        }
+    }
 
     .logo-container {
+        min-width: 8rem;
+
+        background: {
+            repeat: no-repeat;
+            size: contain;
+        }
+
+        &-small {
+            flex-grow: 1;
+            min-width: 5.6rem;
+        }
     }
 
     .menu-container {
         display: flex;
         flex-direction: column;
         flex-grow: 1;
-        padding-right: 1.25em;
+        padding-right: 2rem;
     }
 }

@@ -4,6 +4,9 @@ import VueRouter from 'vue-router';
 Vue.use(VueRouter);
 import { store } from './store/store';
 
+import Vue_Responsive from './vue-responsive-custom';
+Vue.directive('responsiveness', Vue_Responsive);
+
 const routes = [
     { path: '/', component: require('./components/home/home.vue') },
     { path: '/counter', component: resolve => require(['./components/counter/counter.vue'], resolve) },
