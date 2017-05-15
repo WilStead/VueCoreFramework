@@ -3,7 +3,7 @@ import { store } from './store/store';
 
 const routes = [
     { path: '/', component: require('./components/home/home.vue') },
-    { path: '/signin', component: require('./components/user/signin.vue') },
+    { path: '/login', component: require('./components/user/login.vue'), props: (route) => ({ query: route.query.returnUrl }) },
     { path: '/register', component: require('./components/user/register.vue') },
     { path: '/counter', component: resolve => require(['./components/counter/counter.vue'], resolve) },
     { path: '/fetchdata', component: resolve => require(['./components/fetchdata/fetchdata.vue'], resolve) },
@@ -43,6 +43,6 @@ export function checkAuthentication(to, from, next) {
     if (passed) {
         next();
     } else {
-        next('/signin');
+        next("/login?returnUrl='" + from.fullPath + "'");
     }
 }

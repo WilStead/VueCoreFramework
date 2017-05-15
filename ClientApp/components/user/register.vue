@@ -4,37 +4,35 @@
             <div class="logo-container"></div>
             <h4>Register for a New Account</h4>
             <vue-form :state="formstate" v-model="formstate" @submit.prevent="onSubmit">
-                <validate auto-label class="form-group" v-bind:class="fieldClassName(formstate.username)">
-                    <input type="text" class="form-control" name="username" placeholder="User Name" required v-model.trim.lazy="model.username" />
-                    <field-messages name="username" show="$invalid && $dirty">
-                        <div slot="required">a username is required</div>
+                <validate :custom="{customValidator: modelErrorValidator}" class="text-danger">
+                    <field-messages show="$submitted">
+                        <div slot="modelErrorValidator">{{ getModelError('*') }}</div>
                     </field-messages>
                 </validate>
-                <validate auto-label class="form-group" v-bind:class="fieldClassName(formstate.email)">
+                <validate :custom="{customValidator: emailModelErrorValidator}" auto-label class="form-group" v-bind:class="fieldClassName(formstate.email)">
                     <input type="email" class="form-control" name="email" placeholder="Email" required v-model.trim.lazy="model.email" />
                     <field-messages name="email" show="$invalid && $dirty">
                         <div slot="required">a valid email address is required</div>
                         <div slot="email">a valid email address is required</div>
+                        <div slot="emailModelErrorValidator">{{ getModelError('Email') }}</div>
                     </field-messages>
                 </validate>
-                <validate auto-label class="form-group" v-bind:class="fieldClassName(formstate.password)">
-                    <input type="password" class="form-control" name="password" placeholder="Password" required v-model.trim.lazy="model.password" />
+                <validate :custom="{customValidator: passwordModelErrorValidator}" auto-label class="form-group" v-bind:class="fieldClassName(formstate.password)">
+                    <input type="password" class="form-control" name="password" placeholder="Password" required minlength="6" maxlength="100" v-model.trim.lazy="model.password" />
                     <field-messages name="password" show="$invalid && $dirty">
                         <div slot="required">a password is required</div>
+                        <div slot="passwordModelErrorValidator">{{ getModelError('Password') }}</div>
                     </field-messages>
                 </validate>
-                <validate auto-label class="form-group" v-bind:class="fieldClassName(formstate.passwordConfirm)" :custom="{ customValidator: passwordMatch }">
-                    <input type="password" class="form-control" name="passwordConfirm" placeholder="Confirm Password" required v-model.trim.lazy="model.passwordConfirm" />
-                    <field-messages name="passwordConfirm" show="$invalid && $dirty">
+                <validate auto-label class="form-group" v-bind:class="fieldClassName(formstate.confirmPassword)" :custom="{ customValidator: passwordMatch }">
+                    <input type="password" class="form-control" name="confirmPassword" placeholder="Confirm Password" required v-model.trim.lazy="model.confirmPassword" />
+                    <field-messages name="confirmPassword" show="$invalid && $dirty">
                         <div slot="required">you must confirm your password</div>
                         <div slot="passwordMatch">your passwords must match</div>
                     </field-messages>
                 </validate>
-                <div class="checkbox">
-                    <label><input type="checkbox" name="rememberUser" />Remember Me</label>
-                </div>
             </vue-form>
-            <router-link tag="button" class="btn btn-default" to="/signin">Cancel</router-link>
+            <router-link tag="button" class="btn btn-default" to="/login">Cancel</router-link>
             <button class="btn btn-primary">Register</button>
         </div>
     </div>

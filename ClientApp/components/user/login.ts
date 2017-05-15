@@ -2,26 +2,26 @@
 import { Component, Prop } from 'vue-property-decorator';
 import { FormState } from '../../vue-form';
 
-interface RegisterViewModel {
+interface LoginViewModel {
     email: string,
     password: string,
-    confirmPassword: string,
+    rememberUser: boolean,
     returnUrl: string,
     redirect: boolean,
     errors: Object
 }
 
 @Component
-export default class RegisterComponent extends Vue {
+export default class LoginComponent extends Vue {
     formstate: FormState = {};
 
     @Prop()
     query: any
 
-    model: RegisterViewModel = {
+    model: LoginViewModel = {
         email: '',
         password: '',
-        confirmPassword: '',
+        rememberUser: false,
         returnUrl: this.query ? this.query.returnUrl || '' : '',
         redirect: false,
         errors: {}
@@ -52,19 +52,29 @@ export default class RegisterComponent extends Vue {
         return this.model.errors[prop];
     }
 
-    passwordMatch(value) {
-        return value === this.model.password;
+    submitting = false;
+
+    passwordReset = false;
+    forgottenPassword = false;
+    forgotPassword(val: boolean) {
+        this.forgottenPassword = val;
     }
 
     onSubmit() {
-        fetch('/api/Account/Register', { method: 'POST', body: this.model })
-            .then(response => response.json() as Promise<RegisterViewModel>)
-            .then(data => {
-                if (data.redirect) {
-                    this.$router.push(data.returnUrl);
-                } else {
-                    this.model.errors = data.errors;
-                }
-            });
+        if (this.forgottenPassword) {
+            fetch('/api/Account/ForgotPassword', { method: 'POST' });
+            this.passwordReset = true;
+            this.forgottenPassword = false;
+        } else {
+            fetch('/api/Account/Login', { method: 'POST', body: this.model })
+                .then(response => response.json() as Promise<LoginViewModel>)
+                .then(data => {
+                    if (data.redirect) {
+                        this.$router.push(data.returnUrl);
+                    } else {
+                        this.model.errors = data.errors;
+                    }
+                });
+        }
     }
 }
