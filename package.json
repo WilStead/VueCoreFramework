@@ -23,12 +23,12 @@
     "url-loader": "^0.5.8",
     "vue": "^2.3.3",
     "vue-class-component": "^5.0.1",
+    "vue-form": "^4.0.3",
     "vue-loader": "^12.0.3",
     "vue-property-decorator": "^5.0.1",
     "vue-router": "^2.5.3",
     "vue-template-compiler": "^2.3.3",
     "vuex": "^2.3.1",
-    "vuex-class": "^0.2.0",
     "webpack": "^2.5.1",
     "webpack-hot-middleware": "^2.18.0"
   }

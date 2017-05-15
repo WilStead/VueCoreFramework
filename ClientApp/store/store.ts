@@ -12,8 +12,9 @@ export const store = new Vuex.Store({
         increment(state) {
             state.count++;
         },
-        toggleVerticalMenu(state) {
-            state.uiState.verticalMenuShown = !state.uiState.verticalMenuShown;
+        toggleVerticalMenu(state, onOff) {
+            if (onOff === undefined) state.uiState.verticalMenuShown = !state.uiState.verticalMenuShown;
+            else state.uiState.verticalMenuShown = onOff.onOff;
         }
     }
 });

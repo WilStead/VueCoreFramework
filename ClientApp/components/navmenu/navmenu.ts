@@ -1,8 +1,12 @@
 ﻿import Vue from 'vue';
 import Component from 'vue-class-component';
-import { State } from 'vuex-class';
 
-@Component
-export default class NavmenuComponent extends Vue {
-    @State uiState
-}
+@Component({
+    props: {
+        vertical: Boolean
+    },
+    components: {
+        MenuItemComponent: require('./menu-item/menu-item.vue')
+    }
+})
+export default class NavmenuComponent extends Vue { }

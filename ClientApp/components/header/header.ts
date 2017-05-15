@@ -1,6 +1,5 @@
 ﻿import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Mutation } from 'vuex-class';
 
 @Component({
     components: {
@@ -9,5 +8,7 @@ import { Mutation } from 'vuex-class';
     }
 })
 export default class HeaderComponent extends Vue {
-    @Mutation toggleVerticalMenu;
+    toggleVerticalMenu() {
+        this.$store.commit('toggleVerticalMenu');
+    }
 }

@@ -1,6 +1,5 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { State } from 'vuex-class';
 
 @Component({
     components: {
@@ -9,6 +8,4 @@ import { State } from 'vuex-class';
         FooterComponent: require('../footer/footer.vue')
     }
 })
-export default class AppComponent extends Vue {
-    @State uiState
-}
+export default class AppComponent extends Vue { }

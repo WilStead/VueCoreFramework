@@ -2,9 +2,9 @@
 
 .main-nav {
     display: flex;
+    flex-grow: 1;
     align-items: flex-end;
     justify-content: flex-end;
-    flex-grow: 1;
 
     ul {
         list-style-type: none;
@@ -40,67 +40,18 @@
         bottom: 0;
     }
 
-    .popup & {
+    &.popup {
         margin-left: 0;
         width: 100%;
-        // If a menu item's text is too long, truncate it
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
     }
 
     .navmenu-v & {
         display: block;
-        // If a menu item's text is too long, truncate it
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
 
         margin: {
             left: 0;
             top: 0.6rem;
             bottom: 0.6rem;
-        }
-    }
-}
-
-.menu-item {
-    padding: 1rem 1rem 1rem 0;
-    border-radius: 1rem;
-    color: $menu-item-color;
-    display: inline-block;
-
-    &:hover {
-        color: $menu-item-color-hover;
-        background-color: $menu-item-bg-color-hover;
-        text-decoration: none;
-    }
-
-    .navmenu-v & {
-        padding: 0.6rem 0.6rem 0.6rem 0;
-        color: $menu-item-color-v;
-        width: 100%;
-
-        &:hover {
-            background-color: $menu-item-bg-color-v-hover;
-        }
-    }
-
-    .glyphicon {
-        top: 0.1rem;
-        font-size: 1.4rem;
-        margin-left: 0.8rem;
-        margin-right: 0.4rem;
-    }
-
-    &.router-link-active,
-    &.router-link-active:hover,
-    &.router-link-active:focus {
-        // Highlighting rules for nav menu items
-        background-color: $menu-item-bg-color-hover;
-
-        .navmenu-v & {
-            background-color: $menu-item-bg-color-v-hover;
         }
     }
 }

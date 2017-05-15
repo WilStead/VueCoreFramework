@@ -8,7 +8,7 @@
             </div>
         </div>
         <div class="header-container header-container-small" v-responsiveness="['hidden-lg', 'hidden-xl']">
-            <a href="#" title="Toggle Menu" v-on:click.stop.prevent="toggleVerticalMenu"><span class="glyphicon glyphicon-menu-hamburger"></span></a>
+            <a href="#" title="Toggle Menu" @click.stop.prevent="toggleVerticalMenu"><span class="glyphicon glyphicon-menu-hamburger"></span></a>
             <div class="logo-container logo-container-small"></div>
             <span class="glyphicon glyphicon-option-vertical"></span>
         </div>

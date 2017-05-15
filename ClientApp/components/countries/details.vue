@@ -1,0 +1,1 @@
+﻿<template><span>{{ $route.params.name }}</span></template>

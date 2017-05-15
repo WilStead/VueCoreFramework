@@ -1,4 +1,6 @@
-﻿html {
+﻿@import '../../_style.scss';
+
+html {
     font-size: 10px;
     height: 100%;
 }
@@ -19,8 +21,29 @@ body {
 main {
     display: flex;
     flex-grow: 1;
+    background-color: $main-bg-color;
+}
+
+.navmenu-v-container {
+    display: flex;
 }
 
 .navmenu-v {
     display: none;
+}
+
+.slide-left {
+    &-enter,
+    &-leave-to {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+
+    &-enter-active {
+        transition: all .2s ease-in-out, opacity 0.3s;
+    }
+
+    &-leave-active {
+        transition: all .2s ease-in-out, opacity 0.3s;
+    }
 }

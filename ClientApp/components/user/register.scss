@@ -1,0 +1,40 @@
+﻿@import '../../_style.scss';
+
+.register-form-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 100vw;
+    background-color: $sign-in-backdrop-color;
+}
+
+.register-form {
+    min-width: 30rem;
+    background-color: $sign-in-bg-color;
+    opacity: 0.93;
+    padding: 2rem;
+
+    button {
+        float: right;
+    }
+
+    .btn-default {
+        float: left;
+    }
+}
+
+.logo-container {
+    min-width: 8rem;
+
+    background: {
+        repeat: no-repeat;
+        size: contain;
+        image: url('../../images/logo/iconmonstr-power-on-off-8.svg');
+    }
+
+    &-small {
+        flex-grow: 1;
+        min-width: 5.6rem;
+    }
+}

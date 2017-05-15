@@ -7,7 +7,7 @@
             <a href="http://reddit.com" title="Reddit"><i class="fa fa-reddit-alien" aria-hidden="true"></i></a>
         </div>
         <div class="user-controls-container">
-            sign in
+            <router-link to="/signin">sign in</router-link>
         </div>
     </div>
 </template>

@@ -1,4 +1,20 @@
-﻿header {
+﻿@import '../../_style.scss';
+
+header {
+    background-color: $header-bg-color;
+
+    a {
+        color: $header-link-color;
+
+        &:active {
+            color: $header-link-color-active;
+        }
+
+        &:hover {
+            color: $header-link-color-hover;
+        }
+    }
+
     .header-container {
         display: flex;
         min-height: 8rem;
@@ -16,24 +32,25 @@
         }
     }
 
-    .logo-container {
-        min-width: 8rem;
-
-        background: {
-            repeat: no-repeat;
-            size: contain;
-        }
-
-        &-small {
-            flex-grow: 1;
-            min-width: 5.6rem;
-        }
-    }
-
     .menu-container {
         display: flex;
         flex-direction: column;
         flex-grow: 1;
         padding-right: 2rem;
+    }
+}
+
+.logo-container {
+    min-width: 8rem;
+
+    background: {
+        repeat: no-repeat;
+        size: contain;
+        image: url('../../images/logo/iconmonstr-power-on-off-8.svg');
+    }
+
+    &-small {
+        flex-grow: 1;
+        min-width: 5.6rem;
     }
 }

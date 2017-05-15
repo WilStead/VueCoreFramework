@@ -2,7 +2,11 @@
     <div id='app-root'>
         <header-component />
         <main>
-            <navmenu-component class="navmenu-v" v-responsiveness="['hidden-lg', 'hidden-xl']" />
+            <div class="navmenu-v-container" v-responsiveness="['hidden-lg', 'hidden-xl']">
+                <transition name="slide-left">
+                    <navmenu-component class="navmenu-v" v-if="$store.state.uiState.verticalMenuShown" :vertical="true" />
+                </transition>
+            </div>
             <router-view></router-view>
         </main>
         <footer-component />
