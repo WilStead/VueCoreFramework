@@ -45,6 +45,7 @@ export default class RegisterComponent extends Vue {
 
     onSubmit() {
         if (this.formstate.$valid) {
+            this.model.errors = [];
             fetch('/api/Account/Register',
                 {
                     method: 'POST',

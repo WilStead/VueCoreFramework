@@ -5,8 +5,8 @@ import { checkAuthorization } from '../../../router';
 @Component
 export default class TopbarComponent extends Vue {
     userActivity = "sign in";
-    created() {
-        checkAuthorization(undefined)
+    updateAuth() {
+        checkAuthorization(undefined, this.getReturnUrl())
             .then(auth => {
                 if (auth) {
                     this.userActivity = "sign out";
@@ -15,6 +15,8 @@ export default class TopbarComponent extends Vue {
                 }
             });
     }
+    created() { this.updateAuth(); }
+    beforeUpdate() { this.updateAuth(); }
 
     getReturnUrl() {
         let returnUrl: string = this.$route.query.returnUrl;

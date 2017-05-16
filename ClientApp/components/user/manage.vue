@@ -6,49 +6,47 @@
                 <div v-if="changeSuccess" class="text-success">
                     <span>{{ successMessage }}</span>
                 </div>
-                <div v-if="getModelError('*')" class="text-danger">
-                    <span>{{ getModelError('*') }}</span>
-                </div>
                 <div v-if="changingEmail">
-                    <validate :custom="{customValidator: emailModelErrorValidator}" auto-label class="form-group" v-bind:class="fieldClassName(formstate.email)">
-                        <input type="email" class="form-control" name="email" placeholder="Email" required v-model.trim.lazy="model.email" />
+                    <validate auto-label class="form-group" v-bind:class="fieldClassName(formstate.email)">
+                        <input type="email" class="form-control" name="email" placeholder="Email" v-model.trim.lazy="model.email" required />
                         <field-messages name="email" show="$invalid && $dirty">
                             <div slot="required">a valid email address is required</div>
                             <div slot="email">a valid email address is required</div>
-                            <div slot="emailModelErrorValidator">{{ getModelError('Email') }}</div>
                         </field-messages>
                     </validate>
                 </div>
                 <div v-if="changingPassword || settingPassword">
                     <div v-if="changingPassword">
-                        <validate :custom="{customValidator: oldPasswordModelErrorValidator}" auto-label class="form-group" v-bind:class="fieldClassName(formstate.oldPassword)">
-                            <input type="password" class="form-control" name="oldPassword" placeholder="Password" v-model.trim.lazy="model.oldPassword" />
+                        <validate auto-label class="form-group" v-bind:class="fieldClassName(formstate.oldPassword)">
+                            <input type="password" class="form-control" name="oldPassword" placeholder="Password" v-model.trim.lazy="model.oldPassword" required />
                             <field-messages name="oldPassword" show="$invalid && $dirty">
                                 <div slot="required">a password is required</div>
-                                <div slot="passwordModelErrorValidator">{{ getModelError('OldPassword') }}</div>
                             </field-messages>
                         </validate>
                     </div>
-                    <validate :custom="{customValidator: newPasswordModelErrorValidator}" auto-label class="form-group" v-bind:class="fieldClassName(formstate.newPassword)">
-                        <input type="password" class="form-control" name="newPassword" placeholder="Password" required minlength="6" maxlength="100" v-model.trim.lazy="model.newPassword" />
+                    <validate auto-label class="form-group" v-bind:class="fieldClassName(formstate.newPassword)">
+                        <input type="password" class="form-control" name="newPassword" placeholder="Password" v-model.trim.lazy="model.newPassword"
+                               required minlength="6" maxlength="100" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])" />
                         <field-messages name="newPassword" show="$invalid && $dirty">
                             <div slot="required">a password is required</div>
-                            <div slot="passwordModelErrorValidator">{{ getModelError('NewPassword') }}</div>
                         </field-messages>
                     </validate>
                     <validate auto-label class="form-group" v-bind:class="fieldClassName(formstate.confirmPassword)" :custom="{ customValidator: passwordMatch }">
-                        <input type="password" class="form-control" name="confirmPassword" placeholder="Confirm Password" required v-model.trim.lazy="model.confirmPassword" />
+                        <input type="password" class="form-control" name="confirmPassword" placeholder="Confirm Password" v-model.trim.lazy="model.confirmPassword" required />
                         <field-messages name="confirmPassword" show="$invalid && $dirty">
                             <div slot="required">you must confirm your password</div>
                             <div slot="passwordMatch">your passwords must match</div>
                         </field-messages>
                     </validate>
                 </div>
+                <ul class="text-danger">
+                    <li v-for="error in model.errors">{{ error }}</li>
+                </ul>
+                <div v-if="changingEmail || changingPassword || settingPassword" class="submit-row">
+                    <button class="btn btn-default" @click.stop.prevent="cancelChange">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
             </vue-form>
-            <div v-if="changingEmail || changingPassword || settingPassword" class="submit-row">
-                <button class="btn btn-default" @click.stop.prevent="cancelChange">Cancel</button>
-                <button type="submit" class="btn btn-primary">Submit</button>
-            </div>
             <div v-if="!changingEmail && !changingPassword && !settingPassword">
                 <a href="#" @click.stop.prevent="changeEmail">Change email</a>
             </div>

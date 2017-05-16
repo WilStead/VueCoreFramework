@@ -49,7 +49,7 @@ router.afterEach((to, from) => {
 });
 router.beforeEach((to, from, next) => {
     if (to.matched.some(record => record.meta.requiresAuth)) {
-        checkAuthorization(to)
+        checkAuthorization(to, to.fullPath)
             .then(auth => {
                 if (auth) {
                     next();
@@ -69,8 +69,22 @@ export interface ApiResponseViewModel {
 interface AuthorizationViewModel {
     authorization: string
 }
-export function checkAuthorization(to): Promise<boolean> {
-    return fetch('/api/Account/Authorize')
+export function checkAuthorization(to, returnPath): Promise<boolean> {
+    return fetch('/api/Account/Authorize',
+        {
+            headers: {
+                'Authorization': `bearer ${store.state.token}`
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 401) {
+                    throw Error("unauthorized");
+                }
+                throw Error(response.statusText);
+            }
+            return response;
+        })
         .then(response => response.json() as Promise<AuthorizationViewModel>)
         .then(data => {
             if (data.authorization === "authorized") {
@@ -78,5 +92,20 @@ export function checkAuthorization(to): Promise<boolean> {
             } else {
                 return false;
             }
+        })
+        .catch(error => {
+            if (error.message === "unauthorized") {
+                return false;
+            } else { console.log(error); }
         });
+}
+
+export function checkResponse(response, returnPath) {
+    if (!response.ok) {
+        if (response.status === 401) {
+            router.push({ path: '/login', query: { returnUrl: returnPath } });
+        }
+        throw Error(response.statusText);
+    }
+    return response;
 }

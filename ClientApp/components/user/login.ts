@@ -8,6 +8,7 @@ interface LoginViewModel {
     rememberUser: boolean,
     returnUrl: string,
     redirect: boolean,
+    token: string
     errors: Array<string>
 }
 
@@ -30,6 +31,7 @@ export default class LoginComponent extends Vue {
         rememberUser: false,
         returnUrl: this.returnUrl || '',
         redirect: false,
+        token: '',
         errors: []
     };
 
@@ -55,15 +57,34 @@ export default class LoginComponent extends Vue {
 
     onSubmit() {
         if (this.forgottenPassword) {
+            this.model.errors = [];
             if (this.formstate.email.$valid) {
-                fetch('/api/Account/ForgotPassword', { method: 'POST' });
+                fetch('/api/Account/ForgotPassword',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `bearer ${this.$store.state.token}`
+                        }
+                    });
                 this.passwordReset = true;
                 this.forgottenPassword = false;
             }
         } else if (this.formstate.$valid) {
-            fetch('/api/Account/Login', { method: 'POST', body: this.model })
+            this.model.errors = [];
+            fetch('/api/Account/Login',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(this.model)
+                })
                 .then(response => response.json() as Promise<LoginViewModel>)
                 .then(data => {
+                    if (data.token) {
+                        this.$store.commit('setToken', data.token);
+                    }
                     if (data.redirect) {
                         this.$router.push(data.returnUrl);
                     } else {

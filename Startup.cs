@@ -8,9 +8,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using MVCCoreVue.Data;
 using MVCCoreVue.Models;
 using MVCCoreVue.Services;
+using System;
+using System.Text;
 
 namespace MVCCoreVue
 {
@@ -39,12 +42,15 @@ namespace MVCCoreVue
         public void ConfigureServices(IServiceCollection services)
         {
             // Add framework services.
+            services.AddOptions();
+
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
             services.AddIdentity<ApplicationUser, IdentityRole>(config =>
             {
-                config.SignIn.RequireConfirmedEmail = true;
+                //config.SignIn.RequireConfirmedEmail = true;
+                config.Cookies.ApplicationCookie.AutomaticChallenge = false;
             })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
@@ -58,6 +64,11 @@ namespace MVCCoreVue
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.Configure<AuthMessageSenderOptions>(Configuration);
+
+            services.Configure<TokenProviderOptions>(options =>
+            {
+                options.SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["secretJwtKey"])), SecurityAlgorithms.HmacSha256);
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -87,6 +98,20 @@ namespace MVCCoreVue
             app.UseIdentity();
 
             // Add external authentication middleware below. To configure them please see https://go.microsoft.com/fwlink/?LinkID=532715
+
+            app.UseJwtBearerAuthentication(new JwtBearerOptions
+            {
+                AutomaticAuthenticate = true,
+                TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["secretJwtKey"])),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.FromMinutes(15)
+                }
+            });
 
             app.UseMvc(routes =>
             {

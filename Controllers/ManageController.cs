@@ -87,9 +87,7 @@ namespace MVCCoreVue.Controllers
                 return model;
             }
 
-            user.OldEmail = user.Email;
-            user.Email = model.Email;
-            user.EmailConfirmed = false;
+            user.NewEmail = model.Email;
 
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var callbackUrl = Url.Action(nameof(AccountController.ConfirmEmail), "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
@@ -106,8 +104,8 @@ namespace MVCCoreVue.Controllers
             var user = await GetCurrentUserAsync();
             if (user == null) return;
 
-            user.Email = user.OldEmail;
-            user.OldEmail = null;
+            user.Email = user.NewEmail;
+            user.NewEmail = null;
             user.EmailConfirmed = false;
 
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);

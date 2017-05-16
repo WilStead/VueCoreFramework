@@ -4,7 +4,7 @@
             <h4>Sign In</h4>
             <vue-form :state="formstate" v-model="formstate" @submit.prevent="onSubmit">
                 <validate auto-label class="form-group required-field" v-bind:class="fieldClassName(formstate.email)">
-                    <input type="email" class="form-control" name="email" placeholder="Email" required v-model.trim.lazy="model.email" />
+                    <input type="email" class="form-control" name="email" placeholder="Email" v-model.trim.lazy="model.email" required />
                     <field-messages name="email" show="$dirty && $touched">
                         <div slot="required">a valid email address is required</div>
                         <div slot="email">a valid email address is required</div>
@@ -12,13 +12,13 @@
                 </validate>
                 <div v-if="!forgottenPassword">
                     <validate auto-label class="form-group required-field" v-bind:class="fieldClassName(formstate.password)">
-                        <input type="password" class="form-control" name="password" placeholder="Password" required v-model.trim.lazy="model.password" />
+                        <input type="password" class="form-control" name="password" placeholder="Password" v-model.trim.lazy="model.password" required />
                         <field-messages name="password" show="$dirty && $touched">
                             <div slot="required">a password is required</div>
                         </field-messages>
                     </validate>
                     <div class="checkbox">
-                        <label><input type="checkbox" name="rememberUser" />Remember Me</label>
+                        <label><input type="checkbox" name="rememberUser" v-model.lazy="model.rememberUser" />Remember Me</label>
                     </div>
                 </div>
                 <ul class="text-danger">

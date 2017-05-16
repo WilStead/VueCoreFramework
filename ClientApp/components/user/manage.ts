@@ -1,6 +1,6 @@
 ﻿import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import { checkAuthorization, ApiResponseViewModel } from '../../router';
+import { checkResponse, ApiResponseViewModel } from '../../router';
 import { FormState } from '../../vue-form';
 
 interface ManageUserViewModel {
@@ -8,7 +8,7 @@ interface ManageUserViewModel {
     oldPassword: string,
     newPassword: string,
     confirmPassword: string,
-    errors: Object
+    errors: Array<String>
 }
 
 interface ManageUserFormState extends FormState {
@@ -27,7 +27,7 @@ export default class ManageUserComponent extends Vue {
         oldPassword: '',
         newPassword: '',
         confirmPassword: '',
-        errors: {}
+        errors: []
     };
 
     fieldClassName(field) {
@@ -40,19 +40,6 @@ export default class ManageUserComponent extends Vue {
         if ((field.$touched || field.$submitted) && field.$invalid) {
             return 'text-danger';
         }
-    }
-
-    emailModelErrorValidator(value) {
-        return !this.getModelError('Email');
-    }
-    oldPasswordModelErrorValidator(value) {
-        return !this.getModelError('OldPassword');
-    }
-    newPasswordModelErrorValidator(value) {
-        return !this.getModelError('NewPassword');
-    }
-    getModelError(prop: string) {
-        return this.model.errors[prop];
     }
 
     passwordMatch(value) {
@@ -95,7 +82,13 @@ export default class ManageUserComponent extends Vue {
             });
     }
     cancelEmailChange() {
-        fetch('/api/Manage/CancelPendingEmailChange');
+        fetch('/api/Manage/CancelPendingEmailChange',
+            {
+                headers: {
+                    'Authorization': `bearer ${this.$store.state.token}`
+                }
+            })
+            .then(response => checkResponse(response, this.$route.fullPath));
         this.changeSuccess = true;
         this.successMessage = "Okay, your request to update your email has been canceled. Please confirm your original email account by clicking on the link that was just sent.";
     }
@@ -118,7 +111,17 @@ export default class ManageUserComponent extends Vue {
             }
         }
         if (proceed) {
-            fetch(url, { method: 'POST', body: this.model })
+            fetch(url,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': `bearer ${this.$store.state.token}`
+                    },
+                    body: JSON.stringify(this.model)
+                })
+                .then(response => checkResponse(response, this.$route.fullPath))
                 .then(response => response.json() as Promise<ManageUserViewModel>)
                 .then(data => {
                     if (Object.keys(data.errors).length === 0) {
@@ -129,7 +132,8 @@ export default class ManageUserComponent extends Vue {
                         this.changeSuccess = false;
                         this.model.errors = data.errors;
                     }
-                });
+                })
+                .catch(error => console.log(error));
         } else {
             this.changeSuccess = false;
         }

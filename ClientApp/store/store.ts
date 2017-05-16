@@ -6,11 +6,15 @@ import { MenuItem, uiState } from './ui/uiStore';
 export const store = new Vuex.Store({
     state: {
         count: 0,
+        token: '',
         uiState
     },
     mutations: {
         increment(state) {
             state.count++;
+        },
+        setToken(state, token) {
+            state.token = token;
         },
         toggleVerticalMenu(state, onOff) {
             if (onOff === undefined) state.uiState.verticalMenuShown = !state.uiState.verticalMenuShown;

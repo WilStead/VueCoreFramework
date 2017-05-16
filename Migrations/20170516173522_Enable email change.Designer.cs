@@ -8,9 +8,10 @@ using MVCCoreVue.Data;
 namespace MVCCoreVue.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20170516173522_Enable email change")]
+    partial class Enableemailchange
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.1.2")
@@ -142,13 +143,13 @@ namespace MVCCoreVue.Migrations
 
                     b.Property<DateTimeOffset?>("LockoutEnd");
 
-                    b.Property<string>("NewEmail");
-
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256);
 
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256);
+
+                    b.Property<string>("OldEmail");
 
                     b.Property<string>("PasswordHash");
 

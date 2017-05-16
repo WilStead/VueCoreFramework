@@ -20,6 +20,8 @@ namespace MVCCoreVue.Models.AccountViewModels
 
         public bool Redirect { get; set; }
 
+        public string Token { get; set; }
+
         public List<string> Errors { get; set; }
     }
 }
