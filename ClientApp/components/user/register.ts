@@ -8,7 +8,7 @@ interface RegisterViewModel {
     confirmPassword: string,
     returnUrl: string,
     redirect: boolean,
-    errors: Object
+    errors: Array<string>
 }
 
 @Component
@@ -16,15 +16,15 @@ export default class RegisterComponent extends Vue {
     formstate: FormState = {};
 
     @Prop()
-    query: any
+    returnUrl: any
 
     model: RegisterViewModel = {
         email: '',
         password: '',
         confirmPassword: '',
-        returnUrl: this.query ? this.query.returnUrl || '' : '',
+        returnUrl: this.returnUrl || '',
         redirect: false,
-        errors: {}
+        errors: []
     };
 
     fieldClassName(field) {
@@ -39,32 +39,29 @@ export default class RegisterComponent extends Vue {
         }
     }
 
-    modelErrorValidator(value) {
-        return !this.getModelError('*');
-    }
-    emailModelErrorValidator(value) {
-        return !this.getModelError('Email');
-    }
-    passwordModelErrorValidator(value) {
-        return !this.getModelError('Password');
-    }
-    getModelError(prop: string) {
-        return this.model.errors[prop];
-    }
-
     passwordMatch(value) {
         return value === this.model.password;
     }
 
     onSubmit() {
-        fetch('/api/Account/Register', { method: 'POST', body: this.model })
-            .then(response => response.json() as Promise<RegisterViewModel>)
-            .then(data => {
-                if (data.redirect) {
-                    this.$router.push(data.returnUrl);
-                } else {
-                    this.model.errors = data.errors;
-                }
-            });
+        if (this.formstate.$valid) {
+            fetch('/api/Account/Register',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(this.model)
+                })
+                .then(response => response.json() as Promise<RegisterViewModel>)
+                .then(data => {
+                    if (data.redirect) {
+                        this.$router.push(data.returnUrl);
+                    } else {
+                        this.model.errors = data.errors;
+                    }
+                });
+        }
     }
 }

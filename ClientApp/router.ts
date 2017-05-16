@@ -3,8 +3,21 @@ import { store } from './store/store';
 
 const routes = [
     { path: '/', component: require('./components/home/home.vue') },
-    { path: '/login', component: require('./components/user/login.vue'), props: (route) => ({ query: route.query.returnUrl }) },
-    { path: '/register', component: require('./components/user/register.vue') },
+    {
+        path: '/login',
+        component: require('./components/user/login.vue'),
+        props: (route) => ({ returnUrl: route.query.returnUrl })
+    },
+    {
+        path: '/register',
+        component: require('./components/user/register.vue'),
+        props: (route) => ({ returnUrl: route.query.returnUrl })
+    },
+    {
+        path: '/user/manage',
+        component: require('./components/user/manage.vue'),
+        meta: { requiresAuth: true }
+    },
     { path: '/counter', component: resolve => require(['./components/counter/counter.vue'], resolve) },
     { path: '/fetchdata', component: resolve => require(['./components/fetchdata/fetchdata.vue'], resolve) },
     {
@@ -34,17 +47,36 @@ export const router = new VueRouter({
 router.afterEach((to, from) => {
     store.commit('toggleVerticalMenu', { onOff: false });
 });
+router.beforeEach((to, from, next) => {
+    if (to.matched.some(record => record.meta.requiresAuth)) {
+        checkAuthorization(to)
+            .then(auth => {
+                if (auth) {
+                    next();
+                } else {
+                    next({ path: '/login', query: { returnUrl: to.fullPath } });
+                }
+            })
+    } else {
+        next();
+    }
+});
 
-export function checkAuthentication(to, from, next) {
-    let passed: boolean = false;
+export interface ApiResponseViewModel {
+    response: string
+}
 
-    fetch('/api/Account/Authorize')
-        .then(response => response.json() as Promise<string>)
+interface AuthorizationViewModel {
+    authorization: string
+}
+export function checkAuthorization(to): Promise<boolean> {
+    return fetch('/api/Account/Authorize')
+        .then(response => response.json() as Promise<AuthorizationViewModel>)
         .then(data => {
-            if (data === "authorized") {
-                next();
+            if (data.authorization === "authorized") {
+                return true;
             } else {
-                next("/login?returnUrl='" + from.fullPath + "'");
+                return false;
             }
         });
 }

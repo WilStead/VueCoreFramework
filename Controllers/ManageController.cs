@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using MVCCoreVue.Models;
 using MVCCoreVue.Models.ManageViewModels;
 using MVCCoreVue.Services;
@@ -77,72 +76,85 @@ namespace MVCCoreVue.Controllers
             return RedirectToAction(nameof(ManageLogins), new { Message = message });
         }
 
-        //
-        // GET: /Manage/ChangePassword
-        [HttpGet]
-        public IActionResult ChangePassword()
-        {
-            return View();
-        }
-
-        //
-        // POST: /Manage/ChangePassword
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        [Route("api/[controller]/[action]")]
+        public async Task<ManageUserViewModel> ChangeEmail(ManageUserViewModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
             var user = await GetCurrentUserAsync();
-            if (user != null)
+            if (user == null)
             {
-                var result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
-                if (result.Succeeded)
-                {
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    _logger.LogInformation(3, "User changed their password successfully.");
-                    return RedirectToAction(nameof(Index), new { Message = ManageMessageId.ChangePasswordSuccess });
-                }
-                AddErrors(result);
-                return View(model);
+                model.Errors.Add("An error has occurred.");
+                return model;
             }
-            return RedirectToAction(nameof(Index), new { Message = ManageMessageId.Error });
+
+            user.OldEmail = user.Email;
+            user.Email = model.Email;
+            user.EmailConfirmed = false;
+
+            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var callbackUrl = Url.Action(nameof(AccountController.ConfirmEmail), "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
+            await _emailSender.SendEmailAsync(model.Email, "Confirm your email change",
+                $"Please confirm your email address change by clicking this link: <a href='{callbackUrl}'>link</a>");
+
+            return model;
         }
 
-        //
-        // GET: /Manage/SetPassword
-        [HttpGet]
-        public IActionResult SetPassword()
-        {
-            return View();
-        }
-
-        //
-        // POST: /Manage/SetPassword
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SetPassword(SetPasswordViewModel model)
+        [Route("api/[controller]/[action]")]
+        public async Task CancelPendingEmailChange()
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
             var user = await GetCurrentUserAsync();
-            if (user != null)
+            if (user == null) return;
+
+            user.Email = user.OldEmail;
+            user.OldEmail = null;
+            user.EmailConfirmed = false;
+
+            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var callbackUrl = Url.Action(nameof(AccountController.ConfirmEmail), "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
+            await _emailSender.SendEmailAsync(user.Email, "Confirm your email change",
+                $"Please confirm your email address change by clicking this link: <a href='{callbackUrl}'>link</a>");
+        }
+
+        [HttpPost]
+        [Route("api/[controller]/[action]")]
+        public async Task<ManageUserViewModel> ChangePassword(ManageUserViewModel model)
+        {
+            var user = await GetCurrentUserAsync();
+            if (user == null)
             {
-                var result = await _userManager.AddPasswordAsync(user, model.NewPassword);
-                if (result.Succeeded)
-                {
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction(nameof(Index), new { Message = ManageMessageId.SetPasswordSuccess });
-                }
-                AddErrors(result);
-                return View(model);
+                model.Errors.Add("An error has occurred.");
+                return model;
             }
-            return RedirectToAction(nameof(Index), new { Message = ManageMessageId.Error });
+            var result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
+            if (result.Succeeded)
+            {
+                await _signInManager.SignInAsync(user, isPersistent: false);
+                _logger.LogInformation(3, "User changed their password successfully.");
+                return model;
+            }
+            model.Errors.AddRange(result.Errors.Select(e => e.Description));
+            return model;
+        }
+
+        [HttpPost]
+        [Route("api/[controller]/[action]")]
+        public async Task<ManageUserViewModel> SetPassword(ManageUserViewModel model)
+        {
+            var user = await GetCurrentUserAsync();
+            if (user == null)
+            {
+                model.Errors.Add("An error has occurred.");
+                return model;
+            }
+            var result = await _userManager.AddPasswordAsync(user, model.NewPassword);
+            if (result.Succeeded)
+            {
+                await _signInManager.SignInAsync(user, isPersistent: false);
+                return model;
+            }
+            model.Errors.AddRange(result.Errors.Select(e => e.Description));
+            return model;
         }
 
         //GET: /Manage/ManageLogins
@@ -205,16 +217,6 @@ namespace MVCCoreVue.Controllers
             return RedirectToAction(nameof(ManageLogins), new { Message = message });
         }
 
-        #region Helpers
-
-        private void AddErrors(IdentityResult result)
-        {
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError(string.Empty, error.Description);
-            }
-        }
-
         public enum ManageMessageId
         {
             AddLoginSuccess,
@@ -228,7 +230,5 @@ namespace MVCCoreVue.Controllers
         {
             return _userManager.GetUserAsync(HttpContext.User);
         }
-
-        #endregion
     }
 }

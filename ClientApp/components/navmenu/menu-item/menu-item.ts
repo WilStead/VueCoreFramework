@@ -22,7 +22,7 @@ export default class MenuItemComponent extends Vue {
             return 'glyphicon-chevron-down';
         }
     }
-    
+
     popupLeft: string = '0';
     popupTop: string = '3.4rem';
 
@@ -48,6 +48,8 @@ export default class MenuItemComponent extends Vue {
 
     manualShow: boolean = false;
     toggle() {
-        this.manualShow = !this.manualShow;
+        if (this.$props.vertical) {
+            this.manualShow = !this.manualShow;
+        }
     }
 }

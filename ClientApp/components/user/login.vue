@@ -1,36 +1,31 @@
 ﻿<template>
     <div class="user-container">
         <div class="user-form">
-            <div class="logo-container"></div>
             <h4>Sign In</h4>
             <vue-form :state="formstate" v-model="formstate" @submit.prevent="onSubmit">
-                <div v-if="getModelError('*')" class="text-danger">
-                    <span>{{ getModelError('*') }}</span>
-                </div>
-                <validate :custom="{customValidator: emailModelErrorValidator}" auto-label class="form-group required-field" v-bind:class="fieldClassName(formstate.email)">
+                <validate auto-label class="form-group required-field" v-bind:class="fieldClassName(formstate.email)">
                     <input type="email" class="form-control" name="email" placeholder="Email" required v-model.trim.lazy="model.email" />
-                    <field-messages name="email" show="$invalid && $dirty">
+                    <field-messages name="email" show="$dirty && $touched">
                         <div slot="required">a valid email address is required</div>
                         <div slot="email">a valid email address is required</div>
-                        <div slot="emailModelErrorValidator">{{ getModelError('Email') }}</div>
                     </field-messages>
                 </validate>
-                <div v-if="!forgottenPassword && !passwordReset">
-                    <validate :custom="{customValidator: passwordModelErrorValidator}" auto-label class="form-group required-field" v-bind:class="fieldClassName(formstate.password)">
+                <div v-if="!forgottenPassword">
+                    <validate auto-label class="form-group required-field" v-bind:class="fieldClassName(formstate.password)">
                         <input type="password" class="form-control" name="password" placeholder="Password" required v-model.trim.lazy="model.password" />
-                        <field-messages name="password" show="$invalid && $dirty">
+                        <field-messages name="password" show="$dirty && $touched">
                             <div slot="required">a password is required</div>
-                            <div slot="passwordModelErrorValidator">{{ getModelError('Password') }}</div>
                         </field-messages>
                     </validate>
                     <div class="checkbox">
                         <label><input type="checkbox" name="rememberUser" />Remember Me</label>
                     </div>
                 </div>
-            </vue-form>
-            <div v-if="!submitting">
-                <div>
-                    <router-link :to="{ path: '/register', query: { returnUrl: $props.returnUrl }}">Register</router-link>
+                <ul class="text-danger">
+                    <li v-for="error in model.errors">{{ error }}</li>
+                </ul>
+                <div v-if="!submitting" class="submit-row">
+                    <router-link :to="{ path: '/register', query: { returnUrl }}">Register</router-link>
                     <div v-if="!forgottenPassword">
                         <button type="submit" class="btn btn-primary">Sign In</button>
                     </div>
@@ -38,7 +33,9 @@
                         <button type="submit" class="btn btn-primary">Reset</button>
                     </div>
                 </div>
-                <div>
+            </vue-form>
+            <div v-if="!submitting">
+                <div class="forgotten-password-container">
                     <div v-if="!passwordReset">
                         <div v-if="!forgottenPassword">
                             <a href="#" @click.stop.prevent="forgotPassword(true)">Forgot your password?</a>

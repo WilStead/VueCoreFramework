@@ -1,11 +1,12 @@
-﻿using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MVCCoreVue.Models;
 using MVCCoreVue.Models.AccountViewModels;
 using MVCCoreVue.Services;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace MVCCoreVue.Controllers
 {
@@ -30,11 +31,11 @@ namespace MVCCoreVue.Controllers
 
         [HttpGet]
         [Route("api/[controller]/[action]")]
-        public async Task<string> Authorize()
+        public async Task<JsonResult> Authorize()
         {
             var user = await _userManager.GetUserAsync(HttpContext.User);
-            if (user != null) return "authorized";
-            else return "unauthorized";
+            if (user != null) return Json(new AuthorizationViewModel { Authorization = "authorized" });
+            else return Json(new AuthorizationViewModel { Authorization = "unauthorized" });
         }
 
         [HttpPost]
@@ -42,15 +43,15 @@ namespace MVCCoreVue.Controllers
         public async Task<LoginViewModel> Login([FromBody]LoginViewModel model)
         {
             // Require the user to have a confirmed email before they can log in.
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user != null)
-            {
-                if (!await _userManager.IsEmailConfirmedAsync(user))
-                {
-                    model.Errors.Add("*", "You must have a confirmed email to log in.");
-                    return model;
-                }
-            }
+            //var user = await _userManager.FindByEmailAsync(model.Email);
+            //if (user != null)
+            //{
+            //    if (!await _userManager.IsEmailConfirmedAsync(user))
+            //    {
+            //        model.Errors.Add("You must have a confirmed email to log in.");
+            //        return model;
+            //    }
+            //}
 
             // This doesn't count login failures towards account lockout
             // To enable password failures to trigger account lockout, set lockoutOnFailure: true
@@ -62,7 +63,7 @@ namespace MVCCoreVue.Controllers
             }
             else
             {
-                model.Errors.Add("*", "Invalid login attempt.");
+                model.Errors.Add("Invalid login attempt.");
             }
 
             return model;
@@ -78,10 +79,10 @@ namespace MVCCoreVue.Controllers
             {
                 // For more information on how to enable account confirmation and password reset please visit https://go.microsoft.com/fwlink/?LinkID=532713
                 // Send an email with this link
-                var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                var callbackUrl = Url.Action(nameof(ConfirmEmail), "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
-                await _emailSender.SendEmailAsync(model.Email, "Confirm your account",
-                    $"Please confirm your account by clicking this link: <a href='{callbackUrl}'>link</a>");
+                //var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                //var callbackUrl = Url.Action(nameof(ConfirmEmail), "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
+                //await _emailSender.SendEmailAsync(model.Email, "Confirm your account",
+                //    $"Please confirm your account by clicking this link: <a href='{callbackUrl}'>link</a>");
 
                 // Comment out following line to prevent a new user automatically logged on.
                 //await _signInManager.SignInAsync(user, isPersistent: false);
@@ -92,10 +93,7 @@ namespace MVCCoreVue.Controllers
             }
             else
             {
-                foreach (var error in result.Errors)
-                {
-                    model.Errors.Add("<>", error.Description);
-                }
+                model.Errors.AddRange(result.Errors.Select(e => e.Description));
             }
 
             return model;
@@ -107,6 +105,15 @@ namespace MVCCoreVue.Controllers
         {
             await _signInManager.SignOutAsync();
             _logger.LogInformation(4, "User logged out.");
+        }
+
+        [HttpGet]
+        [Route("api/[controller]/[action]")]
+        public async Task<JsonResult> HasPendingEmailChange()
+        {
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            if (user == null || string.IsNullOrEmpty(user.OldEmail)) return Json(new { response = "no" });
+            else return Json(new { response = "yes" });
         }
 
         //

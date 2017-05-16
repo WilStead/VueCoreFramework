@@ -1,11 +1,10 @@
 ﻿<template>
     <div class="user-container">
         <div class="user-form">
-            <div class="logo-container"></div>
             <h4>Manage your account:</h4>
             <vue-form :state="formstate" v-model="formstate" @submit.prevent="onSubmit">
                 <div v-if="changeSuccess" class="text-success">
-                    <span>Success!</span>
+                    <span>{{ successMessage }}</span>
                 </div>
                 <div v-if="getModelError('*')" class="text-danger">
                     <span>{{ getModelError('*') }}</span>
@@ -23,7 +22,7 @@
                 <div v-if="changingPassword || settingPassword">
                     <div v-if="changingPassword">
                         <validate :custom="{customValidator: oldPasswordModelErrorValidator}" auto-label class="form-group" v-bind:class="fieldClassName(formstate.oldPassword)">
-                            <input type="password" class="form-control" name="oldPassword" placeholder="Password" required minlength="6" maxlength="100" v-model.trim.lazy="model.oldPassword" />
+                            <input type="password" class="form-control" name="oldPassword" placeholder="Password" v-model.trim.lazy="model.oldPassword" />
                             <field-messages name="oldPassword" show="$invalid && $dirty">
                                 <div slot="required">a password is required</div>
                                 <div slot="passwordModelErrorValidator">{{ getModelError('OldPassword') }}</div>
@@ -46,18 +45,21 @@
                     </validate>
                 </div>
             </vue-form>
-            <div v-if="changingEmail || changingPassword || settingPassword">
+            <div v-if="changingEmail || changingPassword || settingPassword" class="submit-row">
                 <button class="btn btn-default" @click.stop.prevent="cancelChange">Cancel</button>
                 <button type="submit" class="btn btn-primary">Submit</button>
             </div>
             <div v-if="!changingEmail && !changingPassword && !settingPassword">
                 <a href="#" @click.stop.prevent="changeEmail">Change email</a>
             </div>
+            <div v-if="pendingEmailChange && !changingEmail && !changingPassword && !settingPassword">
+                <a href="#" @click.stop.prevent="cancelEmailChange">Cancel pending email change</a>
+            </div>
             <div v-if="hasPassword && !changingEmail">
                 <a href="#" @click.stop.prevent="changePassword">Change password</a>
             </div>
             <div v-if="!hasPassword && !changingEmail">
-                <a href="#" @click.stop.prevent="setPassword">Add password</a>
+                <a href="#" @click.stop.prevent="setPassword">Add a local password</a>
             </div>
             <div>
                 <!--TODO: manage external logins-->

@@ -7,9 +7,11 @@
             <a href="http://reddit.com" title="Reddit"><i class="fa fa-reddit-alien" aria-hidden="true"></i></a>
         </div>
         <div class="user-controls-container">
-            <router-link to="/login">sign in</router-link>
+            <router-link :to="{ path: '/login', query: { returnUrl: getReturnUrl() } }">{{ userActivity }}</router-link>
         </div>
     </div>
 </template>
+
+<script src="./topbar.ts"></script>
 
 <style src="./topbar.scss" lang="scss"></style>

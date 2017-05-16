@@ -8,23 +8,29 @@ interface LoginViewModel {
     rememberUser: boolean,
     returnUrl: string,
     redirect: boolean,
-    errors: Object
+    errors: Array<string>
+}
+
+interface LoginFormState extends FormState {
+    email?: any,
+    password?: any,
+    rememberUser?: any
 }
 
 @Component
 export default class LoginComponent extends Vue {
-    formstate: FormState = {};
+    formstate: LoginFormState = {};
 
     @Prop()
-    query: any
+    returnUrl: string
 
     model: LoginViewModel = {
         email: '',
         password: '',
         rememberUser: false,
-        returnUrl: this.query ? this.query.returnUrl || '' : '',
+        returnUrl: this.returnUrl || '',
         redirect: false,
-        errors: {}
+        errors: []
     };
 
     fieldClassName(field) {
@@ -38,16 +44,6 @@ export default class LoginComponent extends Vue {
             return 'text-danger';
         }
     }
-    
-    emailModelErrorValidator(value) {
-        return !this.getModelError('Email');
-    }
-    passwordModelErrorValidator(value) {
-        return !this.getModelError('Password');
-    }
-    getModelError(prop: string) {
-        return this.model.errors[prop];
-    }
 
     submitting = false;
 
@@ -59,10 +55,12 @@ export default class LoginComponent extends Vue {
 
     onSubmit() {
         if (this.forgottenPassword) {
-            fetch('/api/Account/ForgotPassword', { method: 'POST' });
-            this.passwordReset = true;
-            this.forgottenPassword = false;
-        } else {
+            if (this.formstate.email.$valid) {
+                fetch('/api/Account/ForgotPassword', { method: 'POST' });
+                this.passwordReset = true;
+                this.forgottenPassword = false;
+            }
+        } else if (this.formstate.$valid) {
             fetch('/api/Account/Login', { method: 'POST', body: this.model })
                 .then(response => response.json() as Promise<LoginViewModel>)
                 .then(data => {

@@ -1,20 +1,5 @@
 ﻿@import '../../_style.scss';
 
-.logo-container {
-    min-width: 8rem;
-
-    background: {
-        repeat: no-repeat;
-        size: contain;
-        image: url('../../images/logo/iconmonstr-power-on-off-8.svg');
-    }
-
-    &-small {
-        flex-grow: 1;
-        min-width: 5.6rem;
-    }
-}
-
 .user-container {
     display: flex;
     align-items: center;
@@ -34,11 +19,8 @@
         line-height: 3.2rem;
     }
 
-    button {
-        float: right;
-    }
-
-    .btn-default {
-        float: left;
+    .submit-row {
+        display: flex;
+        justify-content: space-between;
     }
 }

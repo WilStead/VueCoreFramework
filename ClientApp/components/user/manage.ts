@@ -1,5 +1,6 @@
 ﻿import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
+import { checkAuthorization, ApiResponseViewModel } from '../../router';
 import { FormState } from '../../vue-form';
 
 interface ManageUserViewModel {
@@ -10,9 +11,16 @@ interface ManageUserViewModel {
     errors: Object
 }
 
+interface ManageUserFormState extends FormState {
+    email?: any,
+    oldPassword?: any,
+    newPassword?: any,
+    confirmPassword?: any
+}
+
 @Component
-export default class LoginComponent extends Vue {
-    formstate: FormState = {};
+export default class ManageUserComponent extends Vue {
+    formstate: ManageUserFormState = {};
 
     model: ManageUserViewModel = {
         email: '',
@@ -50,7 +58,7 @@ export default class LoginComponent extends Vue {
     passwordMatch(value) {
         return value === this.model.newPassword;
     }
-    
+
     changingEmail = false;
     changingPassword = false;
     settingPassword = false;
@@ -74,25 +82,56 @@ export default class LoginComponent extends Vue {
     }
 
     changeSuccess = false;
+    successMessage = "Success!";
+
+    pendingEmailChange = false;
+    created() {
+        fetch('/api/Account/HasPendingEmailChange')
+            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(data => {
+                if (data.response === "yes") {
+                    this.pendingEmailChange = true;
+                }
+            });
+    }
+    cancelEmailChange() {
+        fetch('/api/Manage/CancelPendingEmailChange');
+        this.changeSuccess = true;
+        this.successMessage = "Okay, your request to update your email has been canceled. Please confirm your original email account by clicking on the link that was just sent.";
+    }
 
     onSubmit() {
         let url: string;
+        let proceed = true;
         if (this.changingEmail) {
+            proceed = this.formstate.email.$valid;
             url = '/api/Manage/ChangeEmail';
-        } else if (this.changingPassword) {
-            url = '/api/Manage/ChangePassword';
         } else {
-            url = 'api/Manage/SetPassword';
+            if (this.formstate.newPassword.$invalid ||
+                this.formstate.confirmPassword.$invalid) {
+                proceed = false;
+            } else if (this.changingPassword) {
+                proceed = this.formstate.oldPassword.$valid;
+                url = '/api/Manage/ChangePassword';
+            } else {
+                url = 'api/Manage/SetPassword';
+            }
         }
-        fetch(url, { method: 'POST', body: this.model })
-            .then(response => response.json() as Promise<ManageUserViewModel>)
-            .then(data => {
-                if (Object.keys(data.errors).length === 0) {
-                    this.changeSuccess = true;
-                    this.cancelChange();
-                } else {
-                    this.model.errors = data.errors;
-                }
-            });
+        if (proceed) {
+            fetch(url, { method: 'POST', body: this.model })
+                .then(response => response.json() as Promise<ManageUserViewModel>)
+                .then(data => {
+                    if (Object.keys(data.errors).length === 0) {
+                        this.changeSuccess = true;
+                        this.successMessage = "Success!";
+                        this.cancelChange();
+                    } else {
+                        this.changeSuccess = false;
+                        this.model.errors = data.errors;
+                    }
+                });
+        } else {
+            this.changeSuccess = false;
+        }
     }
 }

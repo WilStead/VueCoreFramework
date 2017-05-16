@@ -40,8 +40,6 @@
     <WCFMetadata Include="Connected Services" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Models\AccountViewModels\" />
-    <Folder Include="Models\ManageViewModels\" />
     <Folder Include="Views\Account\" />
     <Folder Include="Views\Manage\" />
   </ItemGroup>
