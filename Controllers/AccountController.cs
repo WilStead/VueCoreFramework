@@ -28,6 +28,15 @@ namespace MVCCoreVue.Controllers
             _logger = loggerFactory.CreateLogger<AccountController>();
         }
 
+        [HttpGet]
+        [Route("api/[controller]/[action]")]
+        public async Task<string> Authorize()
+        {
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            if (user != null) return "authorized";
+            else return "unauthorized";
+        }
+
         [HttpPost]
         [Route("api/[controller]/[action]")]
         public async Task<LoginViewModel> Login([FromBody]LoginViewModel model)

@@ -1,19 +1,17 @@
 ﻿<template>
-    <div class="login-container">
-        <div class="login-form">
+    <div class="user-container">
+        <div class="user-form">
             <div class="logo-container"></div>
             <h4>Sign In</h4>
             <vue-form :state="formstate" v-model="formstate" @submit.prevent="onSubmit">
-                <validate :custom="{customValidator: modelErrorValidator}" class="text-danger">
-                    <field-messages show="$submitted">
-                        <div slot="modelErrorValidator">{{ getModelError('*') }}</div>
-                    </field-messages>
-                </validate>
+                <div v-if="getModelError('*')" class="text-danger">
+                    <span>{{ getModelError('*') }}</span>
+                </div>
                 <validate :custom="{customValidator: emailModelErrorValidator}" auto-label class="form-group required-field" v-bind:class="fieldClassName(formstate.email)">
                     <input type="email" class="form-control" name="email" placeholder="Email" required v-model.trim.lazy="model.email" />
                     <field-messages name="email" show="$invalid && $dirty">
-                        <div slot="required">a valid email is required</div>
-                        <div slot="email">a valid email is required</div>
+                        <div slot="required">a valid email address is required</div>
+                        <div slot="email">a valid email address is required</div>
                         <div slot="emailModelErrorValidator">{{ getModelError('Email') }}</div>
                     </field-messages>
                 </validate>
@@ -66,4 +64,5 @@
 
 <script src="./login.ts"></script>
 
+<style src="./user.scss" lang="scss"></style>
 <style src="./login.scss" lang="scss"></style>

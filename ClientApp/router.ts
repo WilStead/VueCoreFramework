@@ -38,11 +38,13 @@ router.afterEach((to, from) => {
 export function checkAuthentication(to, from, next) {
     let passed: boolean = false;
 
-    // TODO: check credentials
-
-    if (passed) {
-        next();
-    } else {
-        next("/login?returnUrl='" + from.fullPath + "'");
-    }
+    fetch('/api/Account/Authorize')
+        .then(response => response.json() as Promise<string>)
+        .then(data => {
+            if (data === "authorized") {
+                next();
+            } else {
+                next("/login?returnUrl='" + from.fullPath + "'");
+            }
+        });
 }

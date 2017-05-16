@@ -1,14 +1,12 @@
 ﻿<template>
-    <div class="register-form-container">
-        <div class="register-form">
+    <div class="user-container">
+        <div class="user-form">
             <div class="logo-container"></div>
             <h4>Register for a New Account</h4>
             <vue-form :state="formstate" v-model="formstate" @submit.prevent="onSubmit">
-                <validate :custom="{customValidator: modelErrorValidator}" class="text-danger">
-                    <field-messages show="$submitted">
-                        <div slot="modelErrorValidator">{{ getModelError('*') }}</div>
-                    </field-messages>
-                </validate>
+                <div v-if="getModelError('*')" class="text-danger">
+                    <span>{{ getModelError('*') }}</span>
+                </div>
                 <validate :custom="{customValidator: emailModelErrorValidator}" auto-label class="form-group" v-bind:class="fieldClassName(formstate.email)">
                     <input type="email" class="form-control" name="email" placeholder="Email" required v-model.trim.lazy="model.email" />
                     <field-messages name="email" show="$invalid && $dirty">
@@ -40,4 +38,4 @@
 
 <script src="./register.ts"></script>
 
-<style src="./register.scss" lang="scss"></style>
+<style src="./user.scss" lang="scss"></style>

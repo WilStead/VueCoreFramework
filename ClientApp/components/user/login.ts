@@ -38,10 +38,7 @@ export default class LoginComponent extends Vue {
             return 'text-danger';
         }
     }
-
-    modelErrorValidator(value) {
-        return !this.getModelError('*');
-    }
+    
     emailModelErrorValidator(value) {
         return !this.getModelError('Email');
     }
