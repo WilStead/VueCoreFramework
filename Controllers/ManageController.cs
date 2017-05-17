@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using MVCCoreVue.Models;
 using MVCCoreVue.Models.ManageViewModels;
 using MVCCoreVue.Services;
+using System.Security.Claims;
 
 namespace MVCCoreVue.Controllers
 {
@@ -80,7 +81,7 @@ namespace MVCCoreVue.Controllers
         [Route("api/[controller]/[action]")]
         public async Task<ManageUserViewModel> ChangeEmail(ManageUserViewModel model)
         {
-            var user = await GetCurrentUserAsync();
+            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
                 model.Errors.Add("An error has occurred.");
@@ -101,7 +102,7 @@ namespace MVCCoreVue.Controllers
         [Route("api/[controller]/[action]")]
         public async Task CancelPendingEmailChange()
         {
-            var user = await GetCurrentUserAsync();
+            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null) return;
 
             user.Email = user.NewEmail;
@@ -118,7 +119,7 @@ namespace MVCCoreVue.Controllers
         [Route("api/[controller]/[action]")]
         public async Task<ManageUserViewModel> ChangePassword(ManageUserViewModel model)
         {
-            var user = await GetCurrentUserAsync();
+            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
                 model.Errors.Add("An error has occurred.");
@@ -139,7 +140,7 @@ namespace MVCCoreVue.Controllers
         [Route("api/[controller]/[action]")]
         public async Task<ManageUserViewModel> SetPassword(ManageUserViewModel model)
         {
-            var user = await GetCurrentUserAsync();
+            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
                 model.Errors.Add("An error has occurred.");

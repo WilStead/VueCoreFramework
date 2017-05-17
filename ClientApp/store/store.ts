@@ -2,12 +2,15 @@
 import Vuex from 'vuex';
 Vue.use(Vuex);
 import { MenuItem, uiState } from './ui/uiStore';
+import { CountryData } from '../viewmodels/country';
 
 export const store = new Vuex.Store({
     state: {
         count: 0,
-        token: '',
-        uiState
+        token: localStorage.getItem('token') || '',
+        email: '',
+        uiState,
+        countryData: new CountryData()
     },
     mutations: {
         increment(state) {

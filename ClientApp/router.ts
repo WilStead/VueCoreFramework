@@ -15,13 +15,14 @@ const routes = [
     },
     {
         path: '/user/manage',
-        component: require('./components/user/manage.vue'),
-        meta: { requiresAuth: true }
+        meta: { requiresAuth: true },
+        component: require('./components/user/manage.vue')
     },
     { path: '/counter', component: resolve => require(['./components/counter/counter.vue'], resolve) },
     { path: '/fetchdata', component: resolve => require(['./components/fetchdata/fetchdata.vue'], resolve) },
     {
         path: '/countries',
+        meta: { requiresAuth: true },
         component: require('./components/countries/dashboard.vue'),
         children: [
             { path: 'list/:num', component: require('./components/countries/list.vue') },
@@ -67,6 +68,7 @@ export interface ApiResponseViewModel {
 }
 
 interface AuthorizationViewModel {
+    email: string,
     authorization: string
 }
 export function checkAuthorization(to, returnPath): Promise<boolean> {
@@ -88,6 +90,7 @@ export function checkAuthorization(to, returnPath): Promise<boolean> {
         .then(response => response.json() as Promise<AuthorizationViewModel>)
         .then(data => {
             if (data.authorization === "authorized") {
+                store.state.email = data.email;
                 return true;
             } else {
                 return false;

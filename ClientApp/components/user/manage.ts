@@ -20,6 +20,37 @@ interface ManageUserFormState extends FormState {
 
 @Component
 export default class ManageUserComponent extends Vue {
+    hasPassword = false;
+    pendingEmailChange = false;
+    created() {
+        fetch('/api/Account/HasPassword',
+            {
+                headers: {
+                    'Authorization': `bearer ${this.$store.state.token}`
+                }
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(data => {
+                if (data.response === "yes") {
+                    this.hasPassword = true;
+                }
+            });
+        fetch('/api/Account/HasPendingEmailChange',
+            {
+                headers: {
+                    'Authorization': `bearer ${this.$store.state.token}`
+                }
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(data => {
+                if (data.response === "yes") {
+                    this.pendingEmailChange = true;
+                }
+            });
+    }
+
     formstate: ManageUserFormState = {};
 
     model: ManageUserViewModel = {
@@ -71,16 +102,6 @@ export default class ManageUserComponent extends Vue {
     changeSuccess = false;
     successMessage = "Success!";
 
-    pendingEmailChange = false;
-    created() {
-        fetch('/api/Account/HasPendingEmailChange')
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
-            .then(data => {
-                if (data.response === "yes") {
-                    this.pendingEmailChange = true;
-                }
-            });
-    }
     cancelEmailChange() {
         fetch('/api/Manage/CancelPendingEmailChange',
             {

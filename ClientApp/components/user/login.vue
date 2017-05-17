@@ -53,7 +53,7 @@
                 </div>
             </div>
             <div v-if="submitting">
-                <p class="submitting">Signing In...</p>
+                <p class="submitting">Signing In</p>
             </div>
         </div>
     </div>

@@ -70,6 +70,7 @@ export default class LoginComponent extends Vue {
                 this.forgottenPassword = false;
             }
         } else if (this.formstate.$valid) {
+            this.submitting = true;
             this.model.errors = [];
             fetch('/api/Account/Login',
                 {
@@ -84,12 +85,20 @@ export default class LoginComponent extends Vue {
                 .then(data => {
                     if (data.token) {
                         this.$store.commit('setToken', data.token);
+                        if (this.model.rememberUser) {
+                            localStorage.setItem('token', data.token);
+                        }
                     }
                     if (data.redirect) {
                         this.$router.push(data.returnUrl);
                     } else {
                         this.model.errors = data.errors;
                     }
+                    this.submitting = false;
+                })
+                .catch(error => {
+                    console.log(error);
+                    this.submitting = false;
                 });
         }
     }

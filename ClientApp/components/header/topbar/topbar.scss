@@ -1,7 +1,6 @@
 ﻿@import "../../../_style.scss";
 
-.topbar
-{
+.topbar {
     height: 1.875em;
     text-align: right;
     padding-top: 0.25em;
@@ -41,7 +40,12 @@
         }
     }
 
-    .user-controls-container {
+    .user-action {
         text-transform: uppercase;
+        margin-left: 1rem;
+    }
+
+    .user-controls-container {
+        display: inline-flex;
     }
 }

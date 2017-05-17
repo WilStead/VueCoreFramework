@@ -4,14 +4,14 @@ import { checkAuthorization } from '../../../router';
 
 @Component
 export default class TopbarComponent extends Vue {
-    userActivity = "sign in";
+    signedIn = false;
     updateAuth() {
         checkAuthorization(undefined, this.getReturnUrl())
             .then(auth => {
                 if (auth) {
-                    this.userActivity = "sign out";
+                    this.signedIn = true;
                 } else {
-                    this.userActivity = "sign in";
+                    this.signedIn = false;
                 }
             });
     }
@@ -24,5 +24,12 @@ export default class TopbarComponent extends Vue {
             returnUrl = this.$route.fullPath;
         }
         return returnUrl;
+    }
+
+    logout() {
+        this.$store.state.token = '';
+        localStorage.removeItem('token');
+        fetch('/api/Account/Logout', { method: 'POST' });
+        this.$router.push('/');
     }
 }

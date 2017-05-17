@@ -97,8 +97,6 @@ namespace MVCCoreVue
 
             app.UseIdentity();
 
-            // Add external authentication middleware below. To configure them please see https://go.microsoft.com/fwlink/?LinkID=532715
-
             app.UseJwtBearerAuthentication(new JwtBearerOptions
             {
                 AutomaticAuthenticate = true,
@@ -112,6 +110,8 @@ namespace MVCCoreVue
                     ClockSkew = TimeSpan.FromMinutes(15)
                 }
             });
+
+            // Add external authentication middleware below. To configure them please see https://go.microsoft.com/fwlink/?LinkID=532715
 
             app.UseMvc(routes =>
             {

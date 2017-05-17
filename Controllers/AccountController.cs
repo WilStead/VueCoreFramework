@@ -43,7 +43,7 @@ namespace MVCCoreVue.Controllers
         public async Task<JsonResult> Authorize()
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            if (user != null) return Json(new AuthorizationViewModel { Authorization = "authorized" });
+            if (user != null) return Json(new AuthorizationViewModel { Email = user.Email, Authorization = "authorized" });
             else return Json(new AuthorizationViewModel { Authorization = "unauthorized" });
         }
 
@@ -77,7 +77,6 @@ namespace MVCCoreVue.Controllers
             }
 
             var now = DateTime.UtcNow;
-            UserIdClaimType
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, model.Email),
@@ -142,11 +141,22 @@ namespace MVCCoreVue.Controllers
             _logger.LogInformation(4, "User logged out.");
         }
 
+        [Authorize]
+        [HttpGet]
+        [Route("api/[controller]/[action]")]
+        public async Task<JsonResult> HasPassword()
+        {
+            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            if (await _userManager.HasPasswordAsync(user)) return Json(new { response = "yes" });
+            else return Json(new { response = "no" });
+        }
+
+        [Authorize]
         [HttpGet]
         [Route("api/[controller]/[action]")]
         public async Task<JsonResult> HasPendingEmailChange()
         {
-            var user = await _userManager.GetUserAsync(HttpContext.User);
+            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null || string.IsNullOrEmpty(user.NewEmail)) return Json(new { response = "no" });
             else return Json(new { response = "yes" });
         }
