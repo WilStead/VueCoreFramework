@@ -33,15 +33,27 @@ export default class FetchDataComponent extends Vue {
             });
     }
 
-    showCountryDetail(id: number) {
+    showCountryDetail(id: string) {
 
     }
 
-    editCountry(id: number) {
+    editCountry(id: string) {
 
     }
 
-    deleteCountryQuestion(id: number) {
+    deleteCountryQuestion(id: string) {
+        this.deleteId = id;
+    }
 
+    deleteCountry(id: string) {
+        this.isDeleting = true;
+        this.$store.state.countryData.remove(id)
+            .then(() => {
+                this.countries.splice(this.countries.findIndex(c => c.id == id), 1);
+                this.isDeleting = false;
+            })
+            .catch(error => {
+                this.isDeleting = false;
+            });
     }
 }

@@ -24,6 +24,9 @@
                         <button class="btn btn-sm" @click.stop.prevent="cancelDelete()"><i class="fa fa-ban" aria-hidden="true"></i><span class="sr-only">Cancel</span></button>
                         <button class="btn btn-sm btn-danger" @click.stop.prevent="deleteCountry(row.id)"><i class="fa fa-trash" aria-hidden="true"></i><span class="sr-only">Delete</span></button>
                     </td>
+                    <td v-if="isDeleting">
+                        <span class="submitting">Deleting</span>
+                    </td>
                 </tr>
             </tbody>
         </table>
