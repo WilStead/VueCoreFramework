@@ -1,4 +1,6 @@
-﻿export interface MenuItem {
+﻿import { countryData } from '../../viewmodels/country';
+
+export interface MenuItem {
     text: string,
     iconClasses: Array<string>,
     route: string,
@@ -24,24 +26,7 @@ const menuItems = <MenuItem[]>[
             },
             {
                 text: 'Select',
-                iconClasses: ['glyphicon', 'glyphicon-expand'],
-                submenu: [
-                    {
-                        text: 'USA',
-                        iconClasses: ['glyphicon', 'glyphicon-flag'],
-                        route: '/countries/USA'
-                    },
-                    {
-                        text: 'India',
-                        iconClasses: ['glyphicon', 'glyphicon-flag'],
-                        route: '/countries/India'
-                    },
-                    {
-                        text: 'Switzerland',
-                        iconClasses: ['glyphicon', 'glyphicon-flag'],
-                        route: '/countries/Switzerland'
-                    }
-                ]
+                iconClasses: ['glyphicon', 'glyphicon-expand']
             },
             {
                 text: 'Top 3',
@@ -57,6 +42,11 @@ const menuItems = <MenuItem[]>[
                 text: 'All',
                 iconClasses: ['glyphicon', 'glyphicon-flag'],
                 route: '/countries/list/0'
+            },
+            {
+                text: 'Maintenance',
+                iconClasses: ['glyphicon', 'glyphicon-wrench'],
+                route: '/countries/maintenance'
             }
         ]
     },
@@ -78,7 +68,23 @@ const menuItems = <MenuItem[]>[
     }
 ];
 
+function getMenuItems(): Array<MenuItem> {
+    countryData.getAll()
+        .then(data => {
+            menuItems[1].submenu[1].submenu = data.map(c => {
+                return {
+                    text: c.name,
+                    iconClasses: ['glyphicon', 'glyphicon-flag'],
+                    route: `/countries/${c.id}`,
+                    routeExact: false,
+                    submenu: []
+                }
+            });
+        });
+    return menuItems;
+}
+
 export const uiState = {
-    menuItems,
+    menuItems: getMenuItems(),
     verticalMenuShown: false
 };

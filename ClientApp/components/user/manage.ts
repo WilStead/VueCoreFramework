@@ -1,7 +1,8 @@
 ﻿import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { checkResponse, ApiResponseViewModel } from '../../router';
-import { FormState } from '../../vue-form';
+import VueFormGenerator from 'vue-form-generator';
+import * as ErrorMsg from '../error/error-msg';
 
 interface ManageUserViewModel {
     email: string,
@@ -9,13 +10,6 @@ interface ManageUserViewModel {
     newPassword: string,
     confirmPassword: string,
     errors: Array<String>
-}
-
-interface ManageUserFormState extends FormState {
-    email?: any,
-    oldPassword?: any,
-    newPassword?: any,
-    confirmPassword?: any
 }
 
 @Component
@@ -51,7 +45,9 @@ export default class ManageUserComponent extends Vue {
             });
     }
 
-    formstate: ManageUserFormState = {};
+    components = {
+        'vue-form-generator': VueFormGenerator.component
+    };
 
     model: ManageUserViewModel = {
         email: '',
@@ -61,20 +57,94 @@ export default class ManageUserComponent extends Vue {
         errors: []
     };
 
-    fieldClassName(field) {
-        if (!field) {
-            return '';
+    schema = {
+        fields: [
+            {
+                type: 'input',
+                inputType: 'email',
+                model: 'email',
+                placeholder: 'Email',
+                autocomplete: true,
+                validator: this.requireEmail,
+                visible: () => this.changingEmail
+            },
+            {
+                type: 'input',
+                inputType: 'password',
+                model: 'oldPassword',
+                placeholder: 'Old Password',
+                autocomplete: true,
+                validator: this.requirePassword,
+                visible: () => this.changingPassword || this.settingPassword
+            },
+            {
+                type: 'input',
+                inputType: 'password',
+                model: 'newPassword',
+                placeholder: 'New Password',
+                min: 6,
+                max: 24,
+                validator: this.requireNewPassword,
+                visible: () => this.changingPassword || this.settingPassword
+            },
+            {
+                type: 'input',
+                inputType: 'password',
+                model: 'confirmPassword',
+                placeholder: 'Confirm Password',
+                validator: this.requirePasswordMatch,
+                visible: () => this.changingPassword || this.settingPassword
+            }
+        ]
+    };
+
+    formOptions = {
+        validateAfterChanged: true
+    };
+
+    isValid = false;
+    onValidated(isValid: boolean, errors: Array<any>) {
+        this.isValid = isValid;
+    }
+
+    requireEmail(value) {
+        if (!this.changingEmail) return null;
+        if (value === undefined || value === null || value === "") {
+            return ["a valid email address is required"];
         }
-        if ((field.$touched || field.$submitted) && field.$valid) {
-            return 'text-success';
-        }
-        if ((field.$touched || field.$submitted) && field.$invalid) {
-            return 'text-danger';
+        let re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        if (!re.test(value))
+            return ["a valid email address is required"];
+    }
+
+    requirePassword(value) {
+        if (!this.changingPassword && !this.settingPassword) return null;
+        if (value === undefined || value === null || value === "") {
+            return ["a password is required"];
         }
     }
 
-    passwordMatch(value) {
-        return value === this.model.newPassword;
+    requirePasswordMatch(value, field, model) {
+        if (!this.changingPassword && !this.settingPassword) return null;
+        if (value === undefined || value === null || value === "") {
+            return ["you must confirm your new password"];
+        }
+        if (value !== model.newPassword) {
+            return ["your passwords must match"];
+        }
+    }
+
+    requireNewPassword(value, field) {
+        if (!this.changingPassword && !this.settingPassword) return null;
+        if (value === undefined || value === null || value === "") {
+            return ["a password is required"];
+        }
+        if (value.length < field.min || value.length > field.max) {
+            return [`passwords must be between ${field.min} and ${field.max} characters`];
+        }
+        let re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])/;
+        if (!re.test(value))
+            return ["passwords must contain at least one of each of the following: lower-case letter, upper-case letter, number, and special character like !@#$%^&*"];
     }
 
     changingEmail = false;
@@ -109,54 +179,49 @@ export default class ManageUserComponent extends Vue {
                     'Authorization': `bearer ${this.$store.state.token}`
                 }
             })
-            .then(response => checkResponse(response, this.$route.fullPath));
-        this.changeSuccess = true;
-        this.successMessage = "Okay, your request to update your email has been canceled. Please confirm your original email account by clicking on the link that was just sent.";
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(() => {
+                this.changeSuccess = true;
+                this.successMessage = "Okay, your request to update your email has been canceled. Please confirm your original email account by clicking on the link that was just sent.";
+            })
+            .catch(error => ErrorMsg.showErrorMsgAndLog("A problem occurred. Your request was not received.", error));
     }
 
     onSubmit() {
+        if (!this.isValid) return;
         let url: string;
-        let proceed = true;
         if (this.changingEmail) {
-            proceed = this.formstate.email.$valid;
             url = '/api/Manage/ChangeEmail';
+        } else if (this.changingPassword) {
+            url = '/api/Manage/ChangePassword';
         } else {
-            if (this.formstate.newPassword.$invalid ||
-                this.formstate.confirmPassword.$invalid) {
-                proceed = false;
-            } else if (this.changingPassword) {
-                proceed = this.formstate.oldPassword.$valid;
-                url = '/api/Manage/ChangePassword';
-            } else {
-                url = 'api/Manage/SetPassword';
-            }
+            url = 'api/Manage/SetPassword';
         }
-        if (proceed) {
-            fetch(url,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'Authorization': `bearer ${this.$store.state.token}`
-                    },
-                    body: JSON.stringify(this.model)
-                })
-                .then(response => checkResponse(response, this.$route.fullPath))
-                .then(response => response.json() as Promise<ManageUserViewModel>)
-                .then(data => {
-                    if (Object.keys(data.errors).length === 0) {
-                        this.changeSuccess = true;
-                        this.successMessage = "Success!";
-                        this.cancelChange();
-                    } else {
-                        this.changeSuccess = false;
-                        this.model.errors = data.errors;
-                    }
-                })
-                .catch(error => console.log(error));
-        } else {
-            this.changeSuccess = false;
-        }
+        fetch(url,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `bearer ${this.$store.state.token}`
+                },
+                body: JSON.stringify(this.model)
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<ManageUserViewModel>)
+            .then(data => {
+                if (Object.keys(data.errors).length === 0) {
+                    this.changeSuccess = true;
+                    this.successMessage = "Success!";
+                    this.cancelChange();
+                } else {
+                    this.changeSuccess = false;
+                    this.model.errors = data.errors;
+                }
+            })
+            .catch(error => {
+                ErrorMsg.showErrorMsgAndLog("A problem occurred. Your request was not received.", error);
+                this.changeSuccess = false;
+            });
     }
 }

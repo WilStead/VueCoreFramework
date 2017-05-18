@@ -1,6 +1,7 @@
 ﻿import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import { FormState } from '../../vue-form';
+import * as ErrorMsg from '../error/error-msg';
+import VueFormGenerator from 'vue-form-generator';
 
 interface LoginViewModel {
     email: string,
@@ -12,20 +13,16 @@ interface LoginViewModel {
     errors: Array<string>
 }
 
-interface LoginFormState extends FormState {
-    email?: any,
-    password?: any,
-    rememberUser?: any
-}
-
 @Component
 export default class LoginComponent extends Vue {
-    formstate: LoginFormState = {};
-
     @Prop()
     returnUrl: string
 
-    model: LoginViewModel = {
+    components = {
+        'vue-form-generator': VueFormGenerator.component
+    };
+
+    model = {
         email: '',
         password: '',
         rememberUser: false,
@@ -35,16 +32,46 @@ export default class LoginComponent extends Vue {
         errors: []
     };
 
-    fieldClassName(field) {
-        if (!field) {
-            return '';
-        }
-        if ((field.$touched || field.$submitted) && field.$valid) {
-            return 'text-success';
-        }
-        if ((field.$touched || field.$submitted) && field.$invalid) {
-            return 'text-danger';
-        }
+    schema = {
+        fields: [
+            {
+                type: 'input',
+                inputType: 'email',
+                model: 'email',
+                placeholder: 'Email',
+                autocomplete: true,
+                required: true,
+                validator: [
+                    VueFormGenerator.validators.email.locale({
+                        fieldIsRequired: "a valid email address is required",
+                        invalidEmail: "a valid email address is required"
+                    })
+                ]
+            },
+            {
+                type: 'input',
+                inputType: 'password',
+                model: 'password',
+                placeholder: 'Password',
+                autocomplete: true,
+                required: true,
+                validator: [VueFormGenerator.validators.required]
+            },
+            {
+                type: 'checkbox',
+                label: 'Remember Me',
+                model: 'rememberUser'
+            }
+        ]
+    };
+
+    formOptions = {
+        validateAfterChanged: true
+    };
+
+    isValid = false;
+    onValidated(isValid: boolean, errors: Array<any>) {
+        this.isValid = isValid;
     }
 
     submitting = false;
@@ -55,51 +82,52 @@ export default class LoginComponent extends Vue {
         this.forgottenPassword = val;
     }
 
+    resetPassword() {
+        if (!this.isValid) return;
+        this.model.errors = [];
+        fetch('/api/Account/ForgotPassword',
+            {
+                method: 'POST',
+                headers: {
+                    'Authorization': `bearer ${this.$store.state.token}`
+                }
+            })
+            .catch(error => ErrorMsg.showErrorMsgAndLog("A problem occurred. Your request was not received.", error));
+        this.passwordReset = true;
+        this.forgottenPassword = false;
+    }
+
     onSubmit() {
-        if (this.forgottenPassword) {
-            this.model.errors = [];
-            if (this.formstate.email.$valid) {
-                fetch('/api/Account/ForgotPassword',
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `bearer ${this.$store.state.token}`
-                        }
-                    });
-                this.passwordReset = true;
-                this.forgottenPassword = false;
-            }
-        } else if (this.formstate.$valid) {
-            this.submitting = true;
-            this.model.errors = [];
-            fetch('/api/Account/Login',
-                {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(this.model)
-                })
-                .then(response => response.json() as Promise<LoginViewModel>)
-                .then(data => {
-                    if (data.token) {
-                        this.$store.commit('setToken', data.token);
-                        if (this.model.rememberUser) {
-                            localStorage.setItem('token', data.token);
-                        }
+        if (!this.isValid) return;
+        this.submitting = true;
+        this.model.errors = [];
+        fetch('/api/Account/Login',
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(this.model)
+            })
+            .then(response => response.json() as Promise<LoginViewModel>)
+            .then(data => {
+                if (data.token) {
+                    this.$store.commit('setToken', data.token);
+                    if (this.model.rememberUser) {
+                        localStorage.setItem('token', data.token);
                     }
-                    if (data.redirect) {
-                        this.$router.push(data.returnUrl);
-                    } else {
-                        this.model.errors = data.errors;
-                    }
-                    this.submitting = false;
-                })
-                .catch(error => {
-                    console.log(error);
-                    this.submitting = false;
-                });
-        }
+                }
+                if (data.redirect) {
+                    this.$router.push(data.returnUrl);
+                } else {
+                    this.model.errors = data.errors;
+                }
+                this.submitting = false;
+            })
+            .catch(error => {
+                ErrorMsg.showErrorMsgAndLog("A problem occurred. Login failed.", error);
+                this.submitting = false;
+            });
     }
 }

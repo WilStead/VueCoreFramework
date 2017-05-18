@@ -1,7 +1,6 @@
-﻿import * as UUID from '../uuid';
-
-export interface DataItem {
+﻿export interface DataItem {
     id: string;
+    creationTimestamp: number;
 }
 export class Repository<T extends DataItem> {
     private data: Array<T> = [];
@@ -10,7 +9,7 @@ export class Repository<T extends DataItem> {
 
     add(vm: T): Promise<T> {
         return new Promise<T>((resolve, reject) => {
-            let id = UUID();
+            let id = vm.creationTimestamp.toString();
             this.data.forEach(d => { if (d.id >= id) id = d.id + 1; });
             vm.id = id;
             this.data.push(vm);

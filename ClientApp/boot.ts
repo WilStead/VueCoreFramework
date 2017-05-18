@@ -8,13 +8,8 @@ import { router } from './router';
 import Vue_Responsive from './vue-responsive-custom';
 Vue.directive('responsiveness', Vue_Responsive);
 
-import VueForm from 'vue-form';
-Vue.use(VueForm, {
-    inputClasses: {
-        valid: 'form-control-success',
-        invalid: 'form-control-danger'
-    }
-});
+import VueFormGenerator from 'vue-form-generator';
+Vue.use(VueFormGenerator);
 
 new Vue({
     el: '#app-root',

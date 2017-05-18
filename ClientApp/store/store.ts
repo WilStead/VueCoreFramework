@@ -2,7 +2,7 @@
 import Vuex from 'vuex';
 Vue.use(Vuex);
 import { MenuItem, uiState } from './ui/uiStore';
-import { CountryData } from '../viewmodels/country';
+import { countryData } from '../viewmodels/country';
 
 export const store = new Vuex.Store({
     state: {
@@ -10,7 +10,7 @@ export const store = new Vuex.Store({
         token: localStorage.getItem('token') || '',
         email: '',
         uiState,
-        countryData: new CountryData()
+        countryData
     },
     mutations: {
         increment(state) {

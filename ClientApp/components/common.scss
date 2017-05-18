@@ -1,14 +1,4 @@
-﻿.external-login-providers {
-    display: flex;
-    flex-flow: row wrap;
-    justify-content: space-around;
-}
-
-.forgotten-password-container {
-    font-size: 0.8em;
-}
-
-.submitting:after {
+﻿.submitting:after {
     overflow: hidden;
     display: inline-block;
     vertical-align: bottom;

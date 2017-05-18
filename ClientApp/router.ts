@@ -25,8 +25,9 @@ const routes = [
         meta: { requiresAuth: true },
         component: require('./components/countries/dashboard.vue'),
         children: [
-            { path: 'list/:num', component: require('./components/countries/list.vue') },
-            { path: ':name', component: require('./components/countries/details.vue') }
+            { path: 'maintenance', component: require('./components/countries/maintenance.vue') },
+            { path: 'list/:count', component: require('./components/countries/list.vue') },
+            { path: ':id/:operation', name: 'country', component: require('./components/countries/details.vue') }
         ]
     },
     { path: '*', component: resolve => require(['./components/error/notfound.vue'], resolve) }

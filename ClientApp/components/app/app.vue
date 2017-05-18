@@ -17,3 +17,5 @@
 
 <style src="../../vue-responsive-custom.css"></style>
 <style src="./app.scss" lang="scss"></style>
+<style src="../common.scss" lang="scss"></style>
+<style src="../vue-form-generator-custom.scss" lang="scss"></style>

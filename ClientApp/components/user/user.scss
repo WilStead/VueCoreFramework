@@ -28,3 +28,13 @@
         justify-content: space-between;
     }
 }
+
+.external-login-providers {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+}
+
+.forgotten-password-container {
+    font-size: 0.8em;
+}

@@ -1,59 +1,74 @@
 ﻿import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Country, CountryData } from '../../viewmodels/country';
+import { Country } from '../../viewmodels/country';
+import * as ErrorMsg from '../error/error-msg';
 
 @Component
-export default class FetchDataComponent extends Vue {
+export default class MaintenanceComponent extends Vue {
     countries: Array<Country> = [];
-    deleteError = '';
-    deleteId = '';
-    isDeleting = false;
+    deleteQuestionIds: Array<string> = [];
+    deleteIds: Array<string> = [];
 
     mounted() {
         this.$store.state.countryData.getAll()
             .then(data => this.countries = data);
     }
 
-    cancelDelete() {
-        this.isDeleting = false;
-        this.deleteId = '';
+    cancelDelete(id: string) {
+        this.deleteQuestionIds.splice(this.deleteQuestionIds.indexOf(id), 1);
     }
 
     createCountry() {
-        let tempKey = Date.now().toString();
+        let timestamp = Date.now();
         let c: Country = {
-            id: tempKey,
+            id: timestamp.toString(),
+            creationTimestamp: timestamp,
             name: "",
             epiIndex: 0
         };
         this.countries.push(c); // optimistic add
         this.$store.state.countryData.add(c)
+            .then((data: Country) => {
+                c.id = data.id; // update optimistically added object with the permanent id
+                // check for edits to the optimistically added object
+                for (var prop in data) {
+                    if (c[prop] !== data[prop]) {
+                        // fire update to sync with data store if any are found
+                        this.editCountry(c.id);
+                        break;
+                    }
+                }
+            })
             .catch(error => {
-                this.countries.splice(this.countries.findIndex(b => b.id == c.id), 1); // remove on failure
+                // remove the optimistically added object on failure
+                this.countries.splice(this.countries.findIndex(b => b.id == c.id), 1);
+                ErrorMsg.showErrorMsgAndLog("A problem occurred. The new item could not be added.", error);
             });
-    }
-
-    showCountryDetail(id: string) {
-
-    }
-
-    editCountry(id: string) {
-
-    }
-
-    deleteCountryQuestion(id: string) {
-        this.deleteId = id;
     }
 
     deleteCountry(id: string) {
-        this.isDeleting = true;
+        this.deleteIds.push(id);
+        this.cancelDelete(id);
         this.$store.state.countryData.remove(id)
             .then(() => {
                 this.countries.splice(this.countries.findIndex(c => c.id == id), 1);
-                this.isDeleting = false;
+                this.deleteIds.splice(this.deleteIds.indexOf(id), 1);
             })
             .catch(error => {
-                this.isDeleting = false;
+                this.deleteIds.splice(this.deleteIds.indexOf(id), 1);
+                ErrorMsg.showErrorMsgAndLog("A problem occurred. The item could not be removed.", error);
             });
+    }
+
+    deleteCountryQuestion(id: string) {
+        this.deleteQuestionIds.push(id);
+    }
+
+    editCountry(id: string) {
+        this.$router.push({ name: 'country', params: { id, operation: 'edit' } });
+    }
+
+    showCountryDetail(id: string) {
+        this.$router.push({ name: 'country', params: { id, operation: 'details' } });
     }
 }
