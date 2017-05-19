@@ -5,8 +5,8 @@ Vue.use(VueRouter);
 import { store } from './store/store';
 import { router } from './router';
 
-import Vue_Responsive from './vue-responsive-custom';
-Vue.directive('responsiveness', Vue_Responsive);
+import Vuetify from 'vuetify';
+Vue.use(Vuetify);
 
 import VueFormGenerator from 'vue-form-generator';
 Vue.use(VueFormGenerator);

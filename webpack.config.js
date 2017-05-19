@@ -18,6 +18,20 @@ module.exports = (env) => {
                 { test: /\.vue$/, include: /ClientApp/, loader: 'vue-loader', options: { loaders: { js: 'awesome-typescript-loader?silent=true' } } },
                 { test: /\.ts$/, include: /ClientApp/, use: 'awesome-typescript-loader?silent=true' },
                 {
+                    test: /\.styl$/,
+                    use: isDevBuild
+                        ? ['style-loader', 'css-loader', 'stylus-loader']
+                        : ExtractTextPlugin.extract({
+                            use: [{
+                                loader: 'css-loader',
+                                options: { minimize: true }
+                            }, {
+                                loader: 'stylus-loader'
+                            }],
+                            fallback: 'style-loader'
+                        })
+                },
+                {
                     test: /\.scss$/,
                     use: isDevBuild ?
                         [{

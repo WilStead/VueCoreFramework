@@ -1,0 +1,54 @@
+﻿@import "../../_style.scss";
+
+.topbar {
+    div {
+        display: flex;
+        flex-direction: column;
+    }
+
+    a {
+        text-align: right;
+    }
+
+    i {
+        font-size: 1.125em;
+        margin-right: 0.5em;
+    }
+
+    .user-icon {
+        width: 100%;
+        font-size: 2.4rem;
+
+        &:hover {
+            color: $user-icon-color-hover;
+        }
+    }
+
+    .fa-twitter:hover {
+        color: #0084b4;
+    }
+
+    .fa-facebook-official:hover {
+        color: #3b5998;
+    }
+
+    .fa-google-plus-official:hover {
+        color: #d34836;
+    }
+
+    .fa-reddit-alien:hover {
+        color: #FF5700;
+    }
+
+    &.topbar-header {
+        display: flex;
+        flex-direction: row-reverse;
+        align-items: center;
+        margin-top: 1rem;
+        padding-bottom: 0;
+
+        div {
+            display: inline;
+        }
+    }
+}

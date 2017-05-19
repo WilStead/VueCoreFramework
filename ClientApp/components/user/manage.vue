@@ -7,8 +7,8 @@
             </ul>
             <vue-form-generator :schema="schema" :model="model" :options="formOptions" @validated="onValidated"></vue-form-generator>
             <div v-if="changingEmail || changingPassword || settingPassword" class="submit-row">
-                <button class="btn btn-default" @click.stop.prevent="cancelChange">Cancel</button>
-                <button class="btn btn-primary" @click.stop.prevent="onSubmit">Submit</button>
+                <v-btn default @click.native.stop.prevent="cancelChange">Cancel</v-btn>
+                <v-btn primary @click.native.stop.prevent="onSubmit">Submit</v-btn>
             </div>
             <div v-if="!changingEmail && !changingPassword && !settingPassword">
                 <a href="#" @click.stop.prevent="changeEmail">Change email</a>

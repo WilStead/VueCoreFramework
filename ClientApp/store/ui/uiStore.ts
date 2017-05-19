@@ -2,7 +2,7 @@
 
 export interface MenuItem {
     text: string,
-    iconClasses: Array<string>,
+    iconClass: string,
     route: string,
     routeExact: boolean,
     submenu: Array<MenuItem>
@@ -11,57 +11,57 @@ export interface MenuItem {
 const menuItems = <MenuItem[]>[
     {
         text: 'Home',
-        iconClasses: ['glyphicon', 'glyphicon-home'],
+        iconClass: 'home',
         route: '/',
         routeExact: true
     },
     {
         text: 'Countries',
-        iconClasses: ['glyphicon', 'glyphicon-flag'],
+        iconClass: 'public',
         submenu: [
             {
                 text: 'Dashboard',
-                iconClasses: ['glyphicon', 'glyphicon-expand'],
+                iconClass: 'view_list',
                 route: '/countries'
             },
             {
                 text: 'Select',
-                iconClasses: ['glyphicon', 'glyphicon-expand']
+                iconClass: 'trending_flat'
             },
             {
                 text: 'Top 3',
-                iconClasses: ['glyphicon', 'glyphicon-flag'],
+                iconClass: 'public',
                 route: '/countries/list/3'
             },
             {
                 text: 'Top 10',
-                iconClasses: ['glyphicon', 'glyphicon-flag'],
+                iconClass: 'public',
                 route: '/countries/list/10'
             },
             {
                 text: 'All',
-                iconClasses: ['glyphicon', 'glyphicon-flag'],
+                iconClass: 'public',
                 route: '/countries/list/0'
             },
             {
                 text: 'Maintenance',
-                iconClasses: ['glyphicon', 'glyphicon-wrench'],
+                iconClass: 'build',
                 route: '/countries/maintenance'
             }
         ]
     },
     {
         text: 'Default',
-        iconClasses: ['glyphicon', 'glyphicon-wrench'],
+        iconClass: 'reorder',
         submenu: [
             {
                 text: 'Counter',
-                iconClasses: ['glyphicon', 'glyphicon-education'],
+                iconClass: 'account_balance',
                 route: '/counter'
             },
             {
                 text: 'Fetch data',
-                iconClasses: ['glyphicon', 'glyphicon-th-list'],
+                iconClass: 'wb_cloudy',
                 route: '/fetchdata'
             }
         ]
@@ -74,7 +74,7 @@ function getMenuItems(): Array<MenuItem> {
             menuItems[1].submenu[1].submenu = data.map(c => {
                 return {
                     text: c.name,
-                    iconClasses: ['glyphicon', 'glyphicon-flag'],
+                    iconClass: 'public',
                     route: `/countries/${c.id}`,
                     routeExact: false,
                     submenu: []
@@ -85,6 +85,5 @@ function getMenuItems(): Array<MenuItem> {
 }
 
 export const uiState = {
-    menuItems: getMenuItems(),
-    verticalMenuShown: false
+    menuItems: getMenuItems()
 };

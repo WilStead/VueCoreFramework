@@ -8,7 +8,7 @@
             <vue-form-generator :schema="schema" :model="model" :options="formOptions" @validated="onValidated"></vue-form-generator>
             <div class="submit-row">
                 <router-link tag="button" class="btn btn-default" :to="{ path: '/login', query: { returnUrl }}">Cancel</router-link>
-                <button class="btn btn-primary" @click.stop.prevent="onSubmit">Register</button>
+                <v-btn primary @click.native.stop.prevent="onSubmit">Register</v-btn>
             </div>
         </div>
     </div>

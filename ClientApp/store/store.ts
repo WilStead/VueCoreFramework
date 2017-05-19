@@ -7,6 +7,8 @@ import { countryData } from '../viewmodels/country';
 export const store = new Vuex.Store({
     state: {
         count: 0,
+        author: 'Wil Stead',
+        year: '2017',
         token: localStorage.getItem('token') || '',
         email: '',
         uiState,
@@ -18,10 +20,6 @@ export const store = new Vuex.Store({
         },
         setToken(state, token) {
             state.token = token;
-        },
-        toggleVerticalMenu(state, onOff) {
-            if (onOff === undefined) state.uiState.verticalMenuShown = !state.uiState.verticalMenuShown;
-            else state.uiState.verticalMenuShown = onOff.onOff;
         }
     }
 });

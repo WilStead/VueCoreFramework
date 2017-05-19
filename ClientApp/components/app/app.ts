@@ -3,9 +3,10 @@ import Component from 'vue-class-component';
 
 @Component({
     components: {
-        HeaderComponent: require('../header/header.vue'),
-        NavmenuComponent: require('../navmenu/navmenu.vue'),
-        FooterComponent: require('../footer/footer.vue')
+        TopbarComponent: require('../topbar/topbar.vue'),
+        MenuItemComponent: require('../menu-item/menu-item.vue')
     }
 })
-export default class AppComponent extends Vue { }
+export default class AppComponent extends Vue {
+    sideNav = false;
+}

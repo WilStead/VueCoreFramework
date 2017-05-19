@@ -7,8 +7,8 @@
             </ul>
             <vue-form-generator :schema="schema" :model="model" :options="formOptions" @validated="onValidated"></vue-form-generator>
             <div class="submit-row">
-                <button v-if="this.forgottenPassword" class="btn btn-primary" @click.stop.prevent="resetPassword">Reset</button>
-                <button v-if="!this.forgottenPassword" class="btn btn-primary" @click.stop.prevent="onSubmit">Sign In</button>
+                <v-btn primary v-if="this.forgottenPassword" class="btn btn-primary" @click.native.stop.prevent="resetPassword">Reset</v-btn>
+                <v-btn primary v-if="!this.forgottenPassword" class="btn btn-primary" @click.native.stop.prevent="onSubmit">Sign In</v-btn>
             </div>
             <div v-if="!submitting">
                 <div class="forgotten-password-container">

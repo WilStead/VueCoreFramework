@@ -46,9 +46,6 @@ export const router = new VueRouter({
         }
     }
 });
-router.afterEach((to, from) => {
-    store.commit('toggleVerticalMenu', { onOff: false });
-});
 router.beforeEach((to, from, next) => {
     if (to.matched.some(record => record.meta.requiresAuth)) {
         checkAuthorization(to, to.fullPath)

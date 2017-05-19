@@ -1,0 +1,10 @@
+﻿@import '../../_style.scss';
+
+.menu-item {
+    color: $menu-item-color;
+
+    &:focus,
+    &:hover {
+        text-decoration: none;
+    }
+}

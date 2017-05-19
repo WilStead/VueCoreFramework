@@ -6,7 +6,7 @@
 
         <p>Current count: <strong>{{ $store.state.count }}</strong></p>
 
-        <button @click="increment">Increment</button>
+        <v-btn primary @click.native="increment">Increment</v-btn>
     </div>
 </template>
 

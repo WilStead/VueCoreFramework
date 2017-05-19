@@ -1,6 +1,6 @@
 ﻿import Vue from 'vue';
 import Component from 'vue-class-component';
-import { checkAuthorization } from '../../../router';
+import { checkAuthorization } from '../../router';
 
 @Component
 export default class TopbarComponent extends Vue {
