@@ -8,6 +8,7 @@
 
     a {
         text-align: right;
+        color: $color-secondary;
     }
 
     i {
@@ -20,7 +21,7 @@
         font-size: 2.4rem;
 
         &:hover {
-            color: $user-icon-color-hover;
+            color: $color-secondary;
         }
     }
 
@@ -47,8 +48,12 @@
         margin-top: 1rem;
         padding-bottom: 0;
 
+        a {
+            color: $color-primary-text;
+        }
+
         div {
-            display: inline;
+            flex-direction: row;
         }
     }
 }

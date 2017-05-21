@@ -1,0 +1,32 @@
+﻿.vue-form-generator {
+    .error {
+        background-color: inherit !important;
+
+        input {
+            background-color: #ffecec;
+            background-color: rgba(255, 0, 0, 0.10);
+        }
+    }
+
+    .errors {
+        color: red;
+        font-size: 0.8em;
+        padding-left: 1em;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 0;
+        font-weight: normal;
+    }
+
+    .field-checkbox {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+
+        label {
+            margin-left: 0.5em;
+        }
+    }
+}

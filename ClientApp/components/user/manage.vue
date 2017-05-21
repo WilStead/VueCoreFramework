@@ -30,3 +30,5 @@
 </template>
 
 <script src="./manage.ts"></script>
+
+<style src="./user.scss" lang="scss"></style>

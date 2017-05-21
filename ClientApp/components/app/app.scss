@@ -18,7 +18,7 @@ a:hover {
     text-decoration: none;
 }
 .list__tile--active .list__tile__title {
-    color: $menu-item-color;
+    color: $color-primary-text;
 }
 
 #app-root main {
@@ -26,7 +26,7 @@ a:hover {
     position: relative;
 
     .content {
-        background-color: $main-bg-color;
+        background-color: $color-paper;
         padding-top: 0;
     }
 }
@@ -35,6 +35,10 @@ a:hover {
     display: flex;
     height: 100%;
     width: 100%;
+}
+
+.main-content {
+    padding: 0 6rem;
 }
 
 .btn.active.focus,
@@ -47,12 +51,12 @@ a:hover {
 }
 
 .btn--dark {
-    color: $btn--dark-color;
+    color: $color-dark;
 }
 
 .topnav {
     a {
-        color: $menu-item-color;
+        color: $color-primary-text;
     }
 }
 
@@ -61,7 +65,7 @@ a:hover {
     z-index: 5;
 
     a {
-        color: $menu-item-color;
+        color: $color-primary-text;
     }
 }
 
@@ -97,8 +101,18 @@ a:hover {
     }
 }
 
+.footer {
+    display: flex;
+
+    .with.left-fixed-sidebar & {
+        padding-left: 0;
+    }
+}
+
 .copy-text {
     font-size: 1.2rem;
     margin-right: 1rem;
     font-style: italic;
+    text-decoration: none;
+    color: $color-primary-text;
 }

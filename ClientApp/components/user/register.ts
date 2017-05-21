@@ -2,6 +2,7 @@
 import { Component, Prop } from 'vue-property-decorator';
 import VueFormGenerator from 'vue-form-generator';
 import * as ErrorMsg from '../error/error-msg';
+import * as VFG_Custom from '../../vfg-custom-validators';
 
 interface RegisterViewModel {
     email: string,
@@ -41,8 +42,8 @@ export default class RegisterComponent extends Vue {
                 required: true,
                 validator: [
                     VueFormGenerator.validators.email.locale({
-                        fieldIsRequired: "a valid email address is required",
-                        invalidEmail: "a valid email address is required"
+                        fieldIsRequired: "A valid email address is required",
+                        invalidEmail: "A valid email address is required"
                     })
                 ]
             },
@@ -53,18 +54,12 @@ export default class RegisterComponent extends Vue {
                 placeholder: 'Password',
                 min: 6,
                 max: 24,
-                pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])/,
+                pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*_])/,
                 required: true,
                 validator: [
-                    VueFormGenerator.validators.string.locale({
-                        fieldIsRequired: "a password is required",
-                        textTooSmall: "passwords must be at least {1} characters long",
-                        textTooBig: "passwords cannot be longer than {1} characters",
-                        thisNotText: "invalid characters in password"
-                    }),
-                    VueFormGenerator.validators.regexp.locale({
-                        fieldIsRequired: "a password is required",
-                        invalidFormat: "passwords must contain at least one of each of the following: lower-case letter, upper-case letter, number, and special character like !@#$%^&*"
+                    VFG_Custom.string_regexp.locale({
+                        fieldIsRequired: "A password is required",
+                        invalidFormat: "Passwords must contain a lower-case letter, upper-case letter, number, and special character like !@#$%^&*_"
                     })
                 ]
             },
@@ -74,12 +69,6 @@ export default class RegisterComponent extends Vue {
                 model: 'confirmPassword',
                 placeholder: 'Confirm Password',
                 validator: this.requirePasswordMatch
-            },
-            {
-                type: 'submit',
-                buttonText: 'Register',
-                validateBeforeSubmit: true,
-                onSubmit: this.onSubmit
             }
         ]
     };
@@ -95,13 +84,14 @@ export default class RegisterComponent extends Vue {
 
     requirePasswordMatch(value, field, model) {
         if (value === undefined || value === null || value === "") {
-            return ["you must confirm your password"];
+            return ["You must confirm your password"];
         }
-        if (value !== model.newPassword) {
-            return ["your passwords must match"];
+        if (value !== model.password) {
+            return ["Your passwords must match"];
         }
     }
 
+    submitting = false;
     onSubmit() {
         if (!this.isValid) return;
         this.model.errors = [];

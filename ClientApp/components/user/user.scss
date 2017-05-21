@@ -5,12 +5,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: $user-backdrop-color;
+    background-color: $color-secondary;
 }
 
 .user-form {
     min-width: 30rem;
-    background-color: $user-bg-color;
+    background-color: $color-form;
     opacity: 0.93;
     padding: 2rem;
 
@@ -26,6 +26,7 @@
     .submit-row {
         display: flex;
         justify-content: space-between;
+        align-items: baseline;
     }
 }
 

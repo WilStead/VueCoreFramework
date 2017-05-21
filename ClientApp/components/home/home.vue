@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="main-content">
         <h1>Hello, world!</h1>
         <p>Welcome to your new single-page application, built with:</p>
         <ul>

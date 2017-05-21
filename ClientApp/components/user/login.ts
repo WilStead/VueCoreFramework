@@ -43,8 +43,8 @@ export default class LoginComponent extends Vue {
                 required: true,
                 validator: [
                     VueFormGenerator.validators.email.locale({
-                        fieldIsRequired: "a valid email address is required",
-                        invalidEmail: "a valid email address is required"
+                        fieldIsRequired: "A valid email address is required",
+                        invalidEmail: "A valid email address is required"
                     })
                 ]
             },
@@ -59,7 +59,7 @@ export default class LoginComponent extends Vue {
             },
             {
                 type: 'checkbox',
-                label: 'Remember Me',
+                label: 'Remember me',
                 model: 'rememberUser'
             }
         ]

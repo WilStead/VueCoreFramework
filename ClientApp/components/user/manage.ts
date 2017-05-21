@@ -110,41 +110,41 @@ export default class ManageUserComponent extends Vue {
     requireEmail(value) {
         if (!this.changingEmail) return null;
         if (value === undefined || value === null || value === "") {
-            return ["a valid email address is required"];
+            return ["A valid email address is required"];
         }
         let re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
         if (!re.test(value))
-            return ["a valid email address is required"];
+            return ["A valid email address is required"];
     }
 
     requirePassword(value) {
         if (!this.changingPassword && !this.settingPassword) return null;
         if (value === undefined || value === null || value === "") {
-            return ["a password is required"];
+            return ["A password is required"];
         }
     }
 
     requirePasswordMatch(value, field, model) {
         if (!this.changingPassword && !this.settingPassword) return null;
         if (value === undefined || value === null || value === "") {
-            return ["you must confirm your new password"];
+            return ["You must confirm your new password"];
         }
         if (value !== model.newPassword) {
-            return ["your passwords must match"];
+            return ["Your passwords must match"];
         }
     }
 
     requireNewPassword(value, field) {
         if (!this.changingPassword && !this.settingPassword) return null;
         if (value === undefined || value === null || value === "") {
-            return ["a password is required"];
+            return ["A password is required"];
         }
         if (value.length < field.min || value.length > field.max) {
-            return [`passwords must be between ${field.min} and ${field.max} characters`];
+            return [`Passwords must be between ${field.min} and ${field.max} characters`];
         }
         let re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])/;
         if (!re.test(value))
-            return ["passwords must contain at least one of each of the following: lower-case letter, upper-case letter, number, and special character like !@#$%^&*"];
+            return ["Passwords must contain at least one of each of the following: lower-case letter, upper-case letter, number, and special character like !@#$%^&*"];
     }
 
     changingEmail = false;

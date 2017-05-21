@@ -9,6 +9,7 @@
             <div class="submit-row">
                 <v-btn primary v-if="this.forgottenPassword" class="btn btn-primary" @click.native.stop.prevent="resetPassword">Reset</v-btn>
                 <v-btn primary v-if="!this.forgottenPassword" class="btn btn-primary" @click.native.stop.prevent="onSubmit">Sign In</v-btn>
+                <router-link :to="{ path: '/register', query: { returnUrl }}">New? Register here</router-link>
             </div>
             <div v-if="!submitting">
                 <div class="forgotten-password-container">

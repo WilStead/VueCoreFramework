@@ -1,9 +1,9 @@
 ﻿<template>
     <v-list class="topbar">
-        <router-link v-if="!signedIn" :to="{ path: '/login', query: { returnUrl: getReturnUrl() } }"><span class="sr-only">sign in</span><v-icon class="user-icon">account_circle</v-icon></router-link>
+        <router-link v-tooltip:bottom="{ html: 'sign in' }" v-if="!signedIn" :to="{ path: '/login', query: { returnUrl: getReturnUrl() } }"><span class="sr-only">sign in</span><v-icon class="user-icon">account_circle</v-icon></router-link>
         <div v-if="signedIn" class="user-controls-container">
-            <router-link to="/user/manage"><span class="sr-only">manage account</span><v-icon class="user-icon">account_circle</v-icon></router-link>
-            <a href="#" @click.stop.prevent="logout"><span class="sr-only">sign out</span><v-icon class="user-icon">exit_to_app</v-icon></a>
+            <router-link v-tooltip:bottom="{ html: 'profile' }" to="/user/manage"><span class="sr-only">manage account</span><v-icon class="user-icon">account_circle</v-icon></router-link>
+            <a v-tooltip:bottom="{ html: 'sign out' }" href="#" @click.stop.prevent="logout"><span class="sr-only">sign out</span><v-icon class="user-icon">exit_to_app</v-icon></a>
         </div>
         <div>
             <a href="http://twitter.com" title="Twitter"><i class="fa fa-twitter" aria-hidden="true"></i></a>

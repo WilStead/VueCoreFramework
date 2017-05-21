@@ -31,7 +31,8 @@
             </v-content>
         </main>
         <v-footer>
-            <div class="copy-text text-xs-right">&copy; {{ $store.state.author }}, {{ $store.state.year }}</div>
+            <v-spacer></v-spacer>
+            <a :href="'mailto:' + $store.state.contact" class="copy-text">&copy; {{ $store.state.author }}, {{ $store.state.year }}</a>
         </v-footer>
     </v-app>
 </template>
@@ -41,6 +42,6 @@
 <style lang="stylus">
     @import '../../stylus/main';
 </style>
-<style src="../vue-form-generator-custom.scss" lang="scss"></style>
+<style src="../../vue-form-generator-custom.scss" lang="scss"></style>
 <style src="../common.scss" lang="scss"></style>
 <style src="./app.scss" lang="scss"></style>

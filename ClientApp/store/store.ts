@@ -9,6 +9,7 @@ export const store = new Vuex.Store({
         count: 0,
         author: 'Wil Stead',
         year: '2017',
+        contact: 'wil.stead@williamstead.com',
         token: localStorage.getItem('token') || '',
         email: '',
         uiState,
