@@ -14,14 +14,10 @@
     i {
         font-size: 1.125em;
         margin-right: 0.5em;
-    }
+        color: $color-secondary;
 
-    .user-icon {
-        width: 100%;
-        font-size: 2.4rem;
-
-        &:hover {
-            color: $color-secondary;
+        &.user-icon {
+            width: 100%;
         }
     }
 
@@ -50,6 +46,17 @@
 
         a {
             color: $color-primary-text;
+        }
+
+        i {
+            color: white;
+
+            &.user-icon {
+                font-size: 1.5em;
+                &:hover {
+                    color: $color-secondary;
+                }
+            }
         }
 
         div {

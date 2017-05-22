@@ -8,10 +8,10 @@ export interface FieldDefinition {
     type: string;
     inputType?: string;
     label?: string;
-    isId?: boolean;
     default?: any;
     placeholder?: string;
     visible?: boolean | Function;
+    hideInTable?: boolean | Function;
     disabled?: boolean | Function;
     readonly?: boolean | Function;
     required?: boolean;

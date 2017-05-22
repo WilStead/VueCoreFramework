@@ -1,5 +1,6 @@
 ﻿import VueRouter from 'vue-router';
 import { store } from './store/store';
+import { countryFieldDefinitions } from './viewmodels/country';
 
 const routes = [
     { path: '/', component: require('./components/home/home.vue') },
@@ -25,9 +26,18 @@ const routes = [
         meta: { requiresAuth: true },
         component: require('./components/countries/dashboard.vue'),
         children: [
+            {
+                path: 'table',
+                component: require('./dynamic-data/dynamic-table/dynamic-table.vue'),
+                props: {
+                    routeName: "country",
+                    repository: store.state.countryData,
+                    vmDefinition: countryFieldDefinitions
+                }
+            },
             { path: 'maintenance', component: require('./components/countries/maintenance.vue') },
             { path: 'list/:count', component: require('./components/countries/list.vue') },
-            { path: ':id/:operation', name: 'country', component: require('./components/countries/details.vue') }
+            { name: 'country', path: ':operation/:id', component: require('./components/countries/details.vue') }
         ]
     },
     { path: '*', component: resolve => require(['./components/error/notfound.vue'], resolve) }

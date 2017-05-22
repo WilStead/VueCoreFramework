@@ -1,15 +1,22 @@
 <template>
-    <v-app id='app-root' left-fixed-sidebar top-toolbar footer>
+    <v-app id='app-root'>
+        <v-navigation-drawer persistent clipped disable-route-watcher v-model="sideNav">
+            <v-list>
+                <template v-for="menuItem in $store.state.uiState.menuItems">
+                    <menu-item-component :menuItem="menuItem" />
+                </template>
+            </v-list>
+        </v-navigation-drawer>
         <v-toolbar class="topnav">
-            <v-toolbar-side-icon @click.native.stop="sideNav = !sideNav" />
+            <v-toolbar-side-icon light @click.native.stop="sideNav = !sideNav" />
             <v-toolbar-logo class="logo-container">
                 <router-link to="/"><span class="logo-link"></span></router-link>
             </v-toolbar-logo>
             <v-spacer></v-spacer>
-            <v-toolbar-items class="menu-container hidden-md-and-down">
+            <v-toolbar-items class="menu-container hidden-sm-and-down">
                 <topbar-component class="topbar-header" />
             </v-toolbar-items>
-            <v-menu bottom left origin="top right" transition="v-scale-transition" class="hidden-lg-and-up">
+            <v-menu bottom left origin="top right" transition="v-scale-transition" class="hidden-md-and-up">
                 <v-btn icon dark slot="activator">
                     <v-icon>more_vert</v-icon>
                 </v-btn>
@@ -17,18 +24,9 @@
             </v-menu>
         </v-toolbar>
         <main>
-            <v-sidebar left fixed drawer v-model="sideNav" class="navmenu-v-container">
-                <v-list>
-                    <template v-for="menuItem in $store.state.uiState.menuItems">
-                        <menu-item-component :menuItem="menuItem" />
-                    </template>
-                </v-list>
-            </v-sidebar>
-            <v-content>
-                <v-container fluid class="main-container">
-                    <router-view></router-view>
-                </v-container>
-            </v-content>
+            <v-container fluid>
+                <router-view></router-view>
+            </v-container>
         </main>
         <v-footer>
             <v-spacer></v-spacer>

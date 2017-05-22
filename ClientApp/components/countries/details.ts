@@ -2,7 +2,7 @@
 import { Component, Prop } from 'vue-property-decorator';
 import { Country, countryFieldDefinitions } from '../../viewmodels/country';
 import * as ErrorMsg from '../error/error-msg';
-import { FieldDefinition } from '../../dynamic-forms/field-definition';
+import { FieldDefinition } from '../../dynamic-data/field-definition';
 
 @Component
 export default class DetailsComponent extends Vue {
@@ -18,7 +18,7 @@ export default class DetailsComponent extends Vue {
 
     mounted() {
         if (this.operation === 'create') {
-            this.country = { id: Date.now().toString(), name: "", epiIndex: null, creationTimestamp: Date.now() };
+            this.country = { id: Date.now().toString(), name: "", epiIndex: null, creationTimestamp: Date.now(), updateTimestamp: 0 };
         } else {
             this.$store.state.countryData.find(this.id)
                 .then((data: Country) => this.country = data)
