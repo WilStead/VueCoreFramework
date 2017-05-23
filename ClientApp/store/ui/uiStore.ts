@@ -4,7 +4,6 @@ export interface MenuItem {
     text: string,
     iconClass: string,
     route: string,
-    routeExact: boolean,
     submenu: Array<MenuItem>
 }
 
@@ -12,8 +11,7 @@ const menuItems = <MenuItem[]>[
     {
         text: 'Home',
         iconClass: 'home',
-        route: '/',
-        routeExact: true
+        route: '/'
     },
     {
         text: 'Countries',
@@ -76,7 +74,6 @@ function getMenuItems(): Array<MenuItem> {
                     text: c.name,
                     iconClass: 'public',
                     route: `/countries/${c.id}`,
-                    routeExact: false,
                     submenu: []
                 }
             });

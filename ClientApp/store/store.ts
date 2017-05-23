@@ -13,6 +13,10 @@ export const store = new Vuex.Store({
         token: localStorage.getItem('token') || '',
         email: '',
         uiState,
+        error: {
+            dialogShown: false,
+            message: ''
+        },
         countryData
     },
     mutations: {

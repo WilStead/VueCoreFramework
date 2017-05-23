@@ -26,6 +26,19 @@
         <main>
             <v-container fluid>
                 <router-view></router-view>
+                <v-dialog v-model="$store.state.error.dialogShown">
+                    <v-card>
+                        <v-card-row class="error">
+                            <v-card-title class="white--text">Error!</v-card-title>
+                        </v-card-row>
+                        <v-card-row>
+                            <v-card-text class="error--text text--darken-4 mt-4">{{ $store.state.error.message }}</v-card-text>
+                        </v-card-row>
+                        <v-card-row actions>
+                            <v-btn dark default @click.native="$store.state.error.dialogShown = false">Close</v-btn>
+                        </v-card-row>
+                    </v-card>
+                </v-dialog>
             </v-container>
         </main>
         <v-footer>
