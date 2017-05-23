@@ -24,7 +24,7 @@ export default class DynamicTableComponent extends Vue {
 
     activity = false;
     deleteDialogShown = false;
-    deleteItemDialogShown = {};
+    deletePendingItems = [];
     headers: Array<TableHeader> = [];
     items: Array<any> = [];
     loading = true;
@@ -40,6 +40,13 @@ export default class DynamicTableComponent extends Vue {
                 this.items = data.items;
                 this.totalItems = data.total;
             });
+    }
+
+    cancelDelete(id: string) {
+        let index = this.deletePendingItems.indexOf(id);
+        if (index !== -1) {
+            this.deletePendingItems.splice(index, 1);
+        }
     }
 
     getData() {
@@ -126,6 +133,7 @@ export default class DynamicTableComponent extends Vue {
         this.$store.state.countryData.remove(id)
             .then(() => {
                 this.items.splice(this.items.findIndex(d => d.id == id), 1);
+                this.cancelDelete(id); // removes from pending
                 this.activity = false;
             })
             .catch(error => {

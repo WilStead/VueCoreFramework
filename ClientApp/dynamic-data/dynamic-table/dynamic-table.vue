@@ -10,7 +10,7 @@
         </v-card-row>
         <v-card-row>
             <v-spacer></v-spacer>
-            <v-btn icon v-tooltip:left="{ html: 'new' }" @click.native.stop.prevent="onNew"><v-icon class="green--text">add_circle</v-icon></v-btn>
+            <v-btn icon v-tooltip:left="{ html: 'new' }" @click.native="onNew"><v-icon class="green--text">add_circle</v-icon></v-btn>
             <v-dialog v-model="deleteDialogShown">
                 <v-btn icon slot="activator" v-tooltip:left="{ html: 'delete' }"><v-icon :class="{ 'red--text text--accent-4': selected.length > 0 }">remove_circle</v-icon></v-btn>
                 <v-card>
@@ -35,21 +35,17 @@
             <template slot="items" scope="props">
                 <td><v-checkbox hide-details primary v-model="props.selected"></v-checkbox></td>
                 <td v-for="field in headers" :class="{ 'text-xs-right': field.text !== 'Name' }">{{ props.item[field.value] }}</td>
-                <td><v-btn icon v-tooltip:left="{ html: 'details' }" @click.native.stop.prevent="onDetail(props.item.id)"><v-icon class="info--text">details</v-icon></v-btn></td>
-                <td><v-btn icon v-tooltip:left="{ html: 'edit' }" @click.native.stop.prevent="onEdit(props.item.id)"><v-icon class="orange--text text--darken-2">edit</v-icon></v-btn></td>
+                <td v-bind:colspan="deletePendingItems.indexOf(props.item.id) === -1 ? 1 : 2">
+                    <v-btn v-if="deletePendingItems.indexOf(props.item.id) === -1" icon v-tooltip:left="{ html: 'details' }" @click.native="onDetail(props.item.id)"><v-icon class="info--text">details</v-icon></v-btn>
+                    <span v-else>Are you sure?</span>
+                </td>
                 <td>
-                    <v-dialog v-model="deleteItemDialogShown[props.item.id]">
-                        <v-btn icon slot="activator" v-tooltip:left="{ html: 'delete' }"><v-icon class="red--text text--accent-4">remove_circle</v-icon></v-btn>
-                        <v-card>
-                            <v-card-row>
-                                <v-card-title>Are you sure you want to delete this item?</v-card-title>
-                            </v-card-row>
-                            <v-card-row actions>
-                                <v-btn class="green--text darken-1" flat="flat" @click.native="deleteItemDialogShown[props.item.id] = false">Cancel</v-btn>
-                                <v-btn class="red--text accent-4" flat="flat" @click.native="onDeleteItem(props.item.id)">Delete</v-btn>
-                            </v-card-row>
-                        </v-card>
-                    </v-dialog>
+                    <v-btn v-if="deletePendingItems.indexOf(props.item.id) === -1" icon v-tooltip:left="{ html: 'edit' }" @click.native="onEdit(props.item.id)"><v-icon class="orange--text text--darken-2">edit</v-icon></v-btn>
+                    <v-btn v-else icon v-tooltip:left="{ html: 'cancel delete' }" @click.native="cancelDelete(props.item.id)"><v-icon class="success--text">undo</v-icon></v-btn>
+                </td>
+                <td>
+                    <v-btn v-if="deletePendingItems.indexOf(props.item.id) === -1" icon v-tooltip:left="{ html: 'delete' }"><v-icon class="red--text text--accent-4">remove_circle</v-icon></v-btn>
+                    <v-btn v-else icon v-tooltip:left="{ html: 'confirm delete' }" @click.native="onDeleteItem(props.item.id)"><v-icon class="red--text text--accent-4">delete</v-icon></v-btn>
                 </td>
             </template>
         </v-data-table>
