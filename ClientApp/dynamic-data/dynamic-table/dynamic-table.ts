@@ -24,10 +24,11 @@ export default class DynamicTableComponent extends Vue {
 
     activity = false;
     deleteDialogShown = false;
+    deleteItemDialogShown = {};
     headers: Array<TableHeader> = [];
     items: Array<any> = [];
     loading = true;
-    pagination = {};
+    pagination: any = {};
     search = '';
     selected: Array<any> = [];
     totalItems = 0;
@@ -44,10 +45,35 @@ export default class DynamicTableComponent extends Vue {
     getData() {
         this.loading = true;
         return new Promise((resolve, reject) => {
+            const { sortBy, descending, page, rowsPerPage } = this.pagination;
             this.repository.getAll()
                 .then(data => {
+                    const total = data.length;
+                    let items = data.slice();
+
+                    if (sortBy) {
+                        items.sort((a, b) => {
+                            const sortA = a[sortBy];
+                            const sortB = b[sortBy];
+
+                            if (descending) {
+                                if (sortA < sortB) return 1;
+                                if (sortA > sortB) return -1;
+                                return 0;
+                            } else {
+                                if (sortA < sortB) return -1;
+                                if (sortA > sortB) return 1;
+                                return 0;
+                            }
+                        });
+                    }
+
+                    if (rowsPerPage > 0) {
+                        items = items.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+                    }
+
                     this.loading = false;
-                    resolve({ items: data, total: data.length });
+                    resolve({ items, total });
                 });
         });
     }
@@ -92,6 +118,19 @@ export default class DynamicTableComponent extends Vue {
             .catch(error => {
                 this.activity = false;
                 ErrorMsg.showErrorMsgAndLog("A problem occurred. The item(s) could not be removed.", error);
+            });
+    }
+
+    onDeleteItem(id: string) {
+        this.activity = true;
+        this.$store.state.countryData.remove(id)
+            .then(() => {
+                this.items.splice(this.items.findIndex(d => d.id == id), 1);
+                this.activity = false;
+            })
+            .catch(error => {
+                this.activity = false;
+                ErrorMsg.showErrorMsgAndLog("A problem occurred. The item could not be removed.", error);
             });
     }
 

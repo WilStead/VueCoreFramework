@@ -1,4 +1,4 @@
-﻿@import '../../_style.scss';
+﻿@import '../../_theme.scss';
 
 html {
     font-size: 10px;
@@ -15,6 +15,16 @@ body {
 .btn:active:focus,
 .btn:focus {
     outline-color: transparent;
+}
+
+.datatable {
+    .btn {
+        margin-top: 0;
+    }
+    .btn--icon {
+        height: auto;
+        width: auto;
+    }
 }
 
 a.list__tile {

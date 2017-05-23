@@ -1,4 +1,4 @@
-﻿@import "../../_style.scss";
+﻿@import "../../_theme.scss";
 
 .topbar {
     div {
@@ -8,16 +8,18 @@
 
     a {
         text-align: right;
-        color: $color-secondary;
     }
 
     i {
         font-size: 1.125em;
         margin-right: 0.5em;
-        color: $color-secondary;
 
         &.user-icon {
             width: 100%;
+
+            &:hover {
+                color: $color-secondary;
+            }
         }
     }
 
@@ -44,15 +46,12 @@
         margin-top: 1rem;
         padding-bottom: 0;
 
-        a {
-            color: $color-primary-text;
-        }
-
         i {
-            color: white;
+            color: $color-primary-text;
 
             &.user-icon {
                 font-size: 1.5em;
+
                 &:hover {
                     color: $color-secondary;
                 }
