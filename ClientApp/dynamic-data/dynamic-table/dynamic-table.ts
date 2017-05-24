@@ -24,6 +24,7 @@ export default class DynamicTableComponent extends Vue {
 
     activity = false;
     deleteDialogShown = false;
+    deleteAskingItems = [];
     deletePendingItems = [];
     headers: Array<TableHeader> = [];
     items: Array<any> = [];
@@ -33,19 +34,20 @@ export default class DynamicTableComponent extends Vue {
     selected: Array<any> = [];
     totalItems = 0;
 
+    @Watch('search')
+    onSearchChange(val: string, oldVal: string) {
+        this.updateData();
+    }
+
     @Watch('pagination', { immediate: true, deep: true })
     onPaginationChange(val: any, oldVal: any) {
-        this.getData()
-            .then((data: any) => {
-                this.items = data.items;
-                this.totalItems = data.total;
-            });
+        this.updateData();
     }
 
     cancelDelete(id: string) {
-        let index = this.deletePendingItems.indexOf(id);
+        let index = this.deleteAskingItems.indexOf(id);
         if (index !== -1) {
-            this.deletePendingItems.splice(index, 1);
+            this.deleteAskingItems.splice(index, 1);
         }
     }
 
@@ -57,6 +59,14 @@ export default class DynamicTableComponent extends Vue {
                 .then(data => {
                     const total = data.length;
                     let items = data.slice();
+                    items = items.filter(v => {
+                        for (var prop in v) {
+                            if (v[prop].toString().includes(this.search)) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    });
 
                     if (sortBy) {
                         items.sort((a, b) => {
@@ -130,10 +140,15 @@ export default class DynamicTableComponent extends Vue {
 
     onDeleteItem(id: string) {
         this.activity = true;
+        this.deletePendingItems.push(id);
+        this.cancelDelete(id); // removes from asking
         this.$store.state.countryData.remove(id)
             .then(() => {
                 this.items.splice(this.items.findIndex(d => d.id == id), 1);
-                this.cancelDelete(id); // removes from pending
+                let index = this.deletePendingItems.indexOf(id);
+                if (index !== -1) {
+                    this.deletePendingItems.splice(index, 1);
+                }
                 this.activity = false;
             })
             .catch(error => {
@@ -152,5 +167,13 @@ export default class DynamicTableComponent extends Vue {
 
     onNew() {
         this.$router.push({ name: this.routeName, params: { operation: 'create', id: Date.now().toString() } });
+    }
+
+    updateData() {
+        this.getData()
+            .then((data: any) => {
+                this.items = data.items;
+                this.totalItems = data.total;
+            });
     }
 }

@@ -1,5 +1,6 @@
 ﻿import VueRouter from 'vue-router';
 import { store } from './store/store';
+import * as ErrorMsg from './components/error/error-msg';
 import { countryFieldDefinitions } from './viewmodels/country';
 
 const routes = [
@@ -19,8 +20,6 @@ const routes = [
         meta: { requiresAuth: true },
         component: require('./components/user/manage.vue')
     },
-    { path: '/counter', component: resolve => require(['./components/counter/counter.vue'], resolve) },
-    { path: '/fetchdata', component: resolve => require(['./components/fetchdata/fetchdata.vue'], resolve) },
     {
         path: '/countries',
         meta: { requiresAuth: true },
@@ -35,11 +34,21 @@ const routes = [
                     vmDefinition: countryFieldDefinitions
                 }
             },
-            { path: 'maintenance', component: require('./components/countries/maintenance.vue') },
-            { path: 'list/:count', component: require('./components/countries/list.vue') },
-            { name: 'country', path: ':operation/:id', component: require('./components/countries/details.vue') }
+            {
+                name: 'country',
+                path: ':operation/:id',
+                component: require('./dynamic-data/dynamic-form/dynamic-form.vue'),
+                props: (route) => ({
+                    id: route.params.id,
+                    operation: route.params.operation,
+                    repository: store.state.countryData,
+                    routeName: "country",
+                    vmDefinition: countryFieldDefinitions
+                })
+            }
         ]
     },
+    { path: '/fetchdata', component: resolve => require(['./components/fetchdata/fetchdata.vue'], resolve) },
     { path: '*', component: resolve => require(['./components/error/notfound.vue'], resolve) }
 ];
 
@@ -66,6 +75,10 @@ router.beforeEach((to, from, next) => {
                     next({ path: '/login', query: { returnUrl: to.fullPath } });
                 }
             })
+            .catch(error => {
+                ErrorMsg.logError(error);
+                next({ path: '/login', query: { returnUrl: to.fullPath } });
+            });
     } else {
         next();
     }
@@ -105,9 +118,10 @@ export function checkAuthorization(to, returnPath): Promise<boolean> {
             }
         })
         .catch(error => {
-            if (error.message === "unauthorized") {
-                return false;
-            } else { console.log(error); }
+            if (error.message !== "unauthorized") {
+                ErrorMsg.logError(error);
+            }
+            return false;
         });
 }
 

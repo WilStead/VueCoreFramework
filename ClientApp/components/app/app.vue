@@ -7,7 +7,7 @@
                 </template>
             </v-list>
         </v-navigation-drawer>
-        <v-toolbar class="topnav">
+        <v-toolbar fixed class="topnav">
             <v-toolbar-side-icon light @click.native.stop="sideNav = !sideNav" />
             <v-toolbar-logo class="logo-container">
                 <router-link to="/"><span class="logo-link"></span></router-link>
@@ -41,7 +41,7 @@
                 </v-dialog>
             </v-container>
         </main>
-        <v-footer>
+        <v-footer fixed>
             <v-spacer></v-spacer>
             <a :href="'mailto:' + $store.state.contact" class="copy-text">&copy; {{ $store.state.author }}, {{ $store.state.year }}</a>
         </v-footer>

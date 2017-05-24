@@ -9,6 +9,11 @@ export interface OperationReply<T extends DataItem> {
     errors: Array<string>;
 }
 
+export interface PageData<T extends DataItem> {
+    pageItems: Array<T>;
+    totalItems: number;
+}
+
 export class Repository<T extends DataItem> {
     private data: Array<T> = [];
 
@@ -28,6 +33,58 @@ export class Repository<T extends DataItem> {
         });
     }
 
+    find(id: string): Promise<T> {
+        return new Promise<T>((resolve, reject) => {
+            resolve(this.data.find(d => d.id == id));
+        });
+    }
+
+    getAll(): Promise<Array<T>> {
+        return new Promise<Array<T>>((resolve, reject) => {
+            resolve(this.data);
+        });
+    }
+
+    getPage(search, sortBy, descending, page, rowsPerPage): Promise<PageData<T>> {
+        return new Promise<PageData<T>>((resolve, reject) => {
+            let pageItems = this.data.slice();
+            pageItems = pageItems.filter(v => {
+                for (var prop in v) {
+                    if (typeof v[prop] === 'string') {
+                        let s: string = <any>v[prop];
+                        if (s.includes(search)) return true;
+                    } else if (typeof v[prop] === 'number') {
+                        let n: number = <any>v[prop];
+                        if (n.toString().includes(search)) return true;
+                    }
+                }
+                return false;
+            });
+
+            if (sortBy) {
+                pageItems.sort((a, b) => {
+                    const sortA = a[sortBy];
+                    const sortB = b[sortBy];
+
+                    if (descending) {
+                        if (sortA < sortB) return 1;
+                        if (sortA > sortB) return -1;
+                        return 0;
+                    } else {
+                        if (sortA < sortB) return -1;
+                        if (sortA > sortB) return 1;
+                        return 0;
+                    }
+                });
+            }
+
+            if (rowsPerPage > 0) {
+                pageItems = pageItems.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+            }
+            resolve({ pageItems, totalItems: this.data.length });
+        });
+    }
+
     remove(id: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             this.data.splice(this.data.findIndex(d => d.id == id), 1);
@@ -41,18 +98,6 @@ export class Repository<T extends DataItem> {
                 this.data.splice(this.data.findIndex(d => d.id == ids[i]), 1);
             }
             resolve();
-        });
-    }
-
-    getAll(): Promise<Array<T>> {
-        return new Promise<Array<T>>((resolve, reject) => {
-            resolve(this.data);
-        });
-    }
-
-    find(id: string): Promise<T> {
-        return new Promise<T>((resolve, reject) => {
-            resolve(this.data.find(d => d.id == id));
         });
     }
 

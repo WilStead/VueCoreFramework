@@ -5,17 +5,7 @@ import { checkAuthorization } from '../../router';
 @Component
 export default class TopbarComponent extends Vue {
     signedIn = false;
-    updateAuth() {
-        checkAuthorization(undefined, this.getReturnUrl())
-            .then(auth => {
-                if (auth) {
-                    this.signedIn = true;
-                } else {
-                    this.signedIn = false;
-                }
-            });
-    }
-    created() { this.updateAuth(); }
+    mounted() { this.updateAuth(); }
     beforeUpdate() { this.updateAuth(); }
 
     getReturnUrl() {
@@ -31,5 +21,16 @@ export default class TopbarComponent extends Vue {
         localStorage.removeItem('token');
         fetch('/api/Account/Logout', { method: 'POST' });
         this.$router.push('/');
+    }
+
+    updateAuth() {
+        checkAuthorization(undefined, this.getReturnUrl())
+            .then(auth => {
+                if (auth) {
+                    this.signedIn = true;
+                } else {
+                    this.signedIn = false;
+                }
+            });
     }
 }

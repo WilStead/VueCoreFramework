@@ -8,16 +8,29 @@ import { Repository, OperationReply } from '../../store/repository';
 @Component
 export default class DynamicFormComponent extends Vue {
     @Prop()
+    id: string;
+
+    @Prop()
     operation: string;
 
     @Prop()
     repository: Repository<any>;
 
     @Prop()
-    vm: any;
+    routeName: string;
 
     @Prop()
     vmDefinition: Array<FieldDefinition>;
+
+    @Watch('id')
+    onIdChanged(val: string, oldVal: string) {
+        this.updateForm();
+    }
+
+    @Watch('operation')
+    onOperationChanged(val: string, oldVal: string) {
+        this.updateForm();
+    }
 
     components = {
         'vue-form-generator': VueFormGenerator.component
@@ -26,6 +39,7 @@ export default class DynamicFormComponent extends Vue {
     activity = false;
     errorMessages: Array<string> = [];
     formOptions = {
+        validateAfterLoad: true,
         validateAfterChanged: true
     };
     isValid = false;
@@ -34,43 +48,15 @@ export default class DynamicFormComponent extends Vue {
         fields: []
     };
     success = false;
+    vm: any;
     vmCopy: any;
 
     mounted() {
-        this.clearForm();
-        this.setFormData();
-    }
-
-    beforeRouteUpdate(to, from, next) {
-        this.clearForm();
-        this.setFormData();
-        next();
-    }
-
-    clearForm() {
-        this.success = false;
-        this.vmCopy = Object.assign({}, this.vm);
-        this.model = {};
-        this.schema = { fields: [] };
-        this.vmDefinition.forEach(field => {
-            this.model[field.model] = field.default || null;
-        });
-        this.vmDefinition.forEach(field => {
-            this.schema.fields.push(field);
-        });
-        if (this.operation === 'details') {
-            this.schema.fields.forEach(f => f.readonly = true);
-        }
+        this.updateForm();
     }
 
     onValidated(isValid: boolean, errors: Array<any>) {
         this.isValid = isValid;
-    }
-
-    setFormData() {
-        for (var prop in this.vm) {
-            this.model[prop] = this.vm[prop];
-        }
     }
 
     onCancel() {
@@ -101,10 +87,7 @@ export default class DynamicFormComponent extends Vue {
     }
 
     onEdit() {
-        this.success = false;
-        this.operation = 'edit';
-        this.clearForm();
-        this.setFormData();
+        this.$router.push({ name: this.routeName, params: { operation: 'edit', id: this.id } });
     }
 
     onSave() {
@@ -122,6 +105,29 @@ export default class DynamicFormComponent extends Vue {
             .catch(error => {
                 this.activity = false;
                 ErrorMsg.showErrorMsgAndLog("A problem occurred. The item could not be updated.", error);
+            });
+    }
+
+    updateForm() {
+        this.repository.find(this.id)
+            .then(data => {
+                this.success = false;
+                this.vm = data;
+                this.vmCopy = Object.assign({}, this.vm);
+                this.model = {};
+                this.schema = { fields: [] };
+                this.vmDefinition.forEach(field => {
+                    this.model[field.model] = field.default || null;
+                });
+                this.vmDefinition.forEach(field => {
+                    this.schema.fields.push(Object.assign({}, field));
+                });
+                if (this.operation === 'details') {
+                    this.schema.fields.forEach(f => f.readonly = true);
+                }
+                for (var prop in this.vm) {
+                    this.model[prop] = this.vm[prop];
+                }
             });
     }
 }

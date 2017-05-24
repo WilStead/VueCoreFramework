@@ -1,4 +1,5 @@
 ﻿import { Repository } from '../store/repository';
+import VueFormGenerator from 'vue-form-generator';
 import { FieldDefinition } from '../dynamic-data/field-definition';
 
 export interface Country {
@@ -24,7 +25,8 @@ export const countryFieldDefinitions: Array<FieldDefinition> = [
         inputType: 'text',
         required: true,
         min: 3,
-        max: 25
+        max: 25,
+        validator: VueFormGenerator.validators.string
     },
     {
         model: 'epiIndex',
@@ -33,7 +35,8 @@ export const countryFieldDefinitions: Array<FieldDefinition> = [
         inputType: 'number',
         required: true,
         min: 0,
-        max: 100
+        max: 100,
+        validator: VueFormGenerator.validators.number
     }
 ];
 

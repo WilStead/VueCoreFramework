@@ -5,7 +5,7 @@
         </v-card-row>
         <v-alert error :value="errorMessages.length > 0">
             <ul>
-                <li v-for="error in errorMessages" class="error--text">{{ error }}</li>
+                <li v-for="error in errorMessages">{{ error }}</li>
             </ul>
         </v-alert>
         <v-card-row v-if="success" transition="v-fade-transition" class="text-md-center success--text">Success</v-card-row>
@@ -14,16 +14,16 @@
         </v-card-row>
         <v-card-row v-else>
             <div v-if="operation === 'details'" class="submit-row condensed">
-                <v-btn light default ripple @click.native.stop.prevent="onCancel">Back</v-btn>
+                <v-btn dark default ripple @click.native.stop.prevent="onCancel">Back</v-btn>
                 <v-btn light primary ripple @click.native.stop.prevent="onEdit">Edit</v-btn>
             </div>
             <div v-else-if="operation === 'edit'" class="submit-row condensed">
-                <v-btn light default ripple @click.native.stop.prevent="onCancel">Cancel</v-btn>
-                <v-btn light primary ripple @click.native.stop.prevent="onSave">Save</v-btn>
+                <v-btn dark default ripple @click.native.stop.prevent="onCancel">Cancel</v-btn>
+                <v-btn light primary ripple :class="{ 'btn--disabled': !isValid }" @click.native.stop.prevent="onSave">Save</v-btn>
             </div>
             <div v-else-if="operation === 'create'" class="submit-row condensed">
-                <v-btn light default ripple @click.native.stop.prevent="onCancel">Cancel</v-btn>
-                <v-btn light primary ripple @click.native.stop.prevent="onCreate">Create</v-btn>
+                <v-btn dark default ripple @click.native.stop.prevent="onCancel">Cancel</v-btn>
+                <v-btn light primary ripple :class="{ 'btn--disabled': !isValid }" @click.native.stop.prevent="onCreate">Create</v-btn>
             </div>
         </v-card-row>
     </v-card>
