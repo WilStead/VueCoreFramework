@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Rewrite;
@@ -12,6 +13,9 @@ using Microsoft.IdentityModel.Tokens;
 using MVCCoreVue.Data;
 using MVCCoreVue.Models;
 using MVCCoreVue.Services;
+using NLog;
+using NLog.Extensions.Logging;
+using NLog.Web;
 using System;
 using System.Text;
 
@@ -34,6 +38,8 @@ namespace MVCCoreVue
 
             builder.AddEnvironmentVariables();
             Configuration = builder.Build();
+
+            env.ConfigureNLog("nlog.config");
         }
 
         public IConfigurationRoot Configuration { get; }
@@ -69,13 +75,17 @@ namespace MVCCoreVue
             {
                 options.SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["secretJwtKey"])), SecurityAlgorithms.HmacSha256);
             });
+
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-            loggerFactory.AddDebug();
+            loggerFactory.AddNLog();
+            app.AddNLogWeb();
+            LogManager.Configuration.Variables["connectionString"] = Configuration.GetConnectionString("DefaultConnection");
+            LogManager.Configuration.Variables["logDir"] = @"C:\Windows\Temp\MVCCoreVue\Logs";
 
             if (env.IsDevelopment())
             {
