@@ -17,9 +17,6 @@
             <v-card-row v-else>
                 <v-card-text>
                     <a href="#" @click.stop.prevent="changeEmail">Change email</a>
-                    <div v-if="pendingEmailChange">
-                        <a href="#" @click.stop.prevent="cancelEmailChange">Cancel pending email change</a>
-                    </div>
                     <div v-if="hasPassword">
                         <a href="#" @click.stop.prevent="changePassword">Change password</a>
                     </div>

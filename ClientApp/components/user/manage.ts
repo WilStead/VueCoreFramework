@@ -2,6 +2,7 @@
 import { Component, Prop } from 'vue-property-decorator';
 import { checkResponse, ApiResponseViewModel } from '../../router';
 import VueFormGenerator from 'vue-form-generator';
+import * as VFG_Custom from '../../vfg-custom-validators';
 import * as ErrorMsg from '../../error-msg';
 
 interface ManageUserViewModel {
@@ -15,7 +16,6 @@ interface ManageUserViewModel {
 @Component
 export default class ManageUserComponent extends Vue {
     hasPassword = false;
-    pendingEmailChange = false;
     created() {
         fetch('/api/Account/HasPassword',
             {
@@ -31,20 +31,6 @@ export default class ManageUserComponent extends Vue {
                 }
             })
             .catch(error => ErrorMsg.logError("manage.created.fetchPW", error));
-        fetch('/api/Account/HasPendingEmailChange',
-            {
-                headers: {
-                    'Authorization': `bearer ${this.$store.state.token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
-            .then(data => {
-                if (data.response === "yes") {
-                    this.pendingEmailChange = true;
-                }
-            })
-            .catch(error => ErrorMsg.logError("manage.created.fetchPendingEmailChange", error));
     }
 
     components = {
@@ -109,14 +95,9 @@ export default class ManageUserComponent extends Vue {
         this.isValid = isValid;
     }
 
-    requireEmail(value) {
+    requireEmail(value, field, model) {
         if (!this.changingEmail) return null;
-        if (value === undefined || value === null || value === "") {
-            return ["A valid email address is required"];
-        }
-        let re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-        if (!re.test(value))
-            return ["A valid email address is required"];
+        return VFG_Custom.requireEmail(value, field, model, undefined);
     }
 
     requirePassword(value) {
@@ -128,25 +109,12 @@ export default class ManageUserComponent extends Vue {
 
     requirePasswordMatch(value, field, model) {
         if (!this.changingPassword && !this.settingPassword) return null;
-        if (value === undefined || value === null || value === "") {
-            return ["You must confirm your new password"];
-        }
-        if (value !== model.newPassword) {
-            return ["Your passwords must match"];
-        }
+        return VFG_Custom.requirePasswordMatch(value, field, model, undefined);
     }
 
-    requireNewPassword(value, field) {
+    requireNewPassword(value, field, model) {
         if (!this.changingPassword && !this.settingPassword) return null;
-        if (value === undefined || value === null || value === "") {
-            return ["A password is required"];
-        }
-        if (value.length < field.min || value.length > field.max) {
-            return [`Passwords must be between ${field.min} and ${field.max} characters`];
-        }
-        let re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])/;
-        if (!re.test(value))
-            return ["Passwords must contain at least one of each of the following: lower-case letter, upper-case letter, number, and special character like !@#$%^&*"];
+        return VFG_Custom.requireNewPassword(value, field, model, undefined);
     }
 
     changingEmail = false;
@@ -173,21 +141,6 @@ export default class ManageUserComponent extends Vue {
 
     changeSuccess = false;
     successMessage = "Success!";
-
-    cancelEmailChange() {
-        fetch('/api/Manage/CancelPendingEmailChange',
-            {
-                headers: {
-                    'Authorization': `bearer ${this.$store.state.token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
-            .then(() => {
-                this.changeSuccess = true;
-                this.successMessage = "Okay, your request to update your email has been canceled. Please confirm your original email account by clicking on the link that was just sent.";
-            })
-            .catch(error => ErrorMsg.showErrorMsgAndLog("manage.cancelEmailChange", "A problem occurred. Your request was not received.", error));
-    }
 
     onSubmit() {
         if (!this.isValid) return;

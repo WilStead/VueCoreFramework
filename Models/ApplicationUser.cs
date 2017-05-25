@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using System;
 
 namespace MVCCoreVue.Models
 {
@@ -6,5 +7,7 @@ namespace MVCCoreVue.Models
     public class ApplicationUser : IdentityUser
     {
         public string NewEmail { get; set; }
+        public string OldEmail { get; set; }
+        public DateTime LastEmailChange { get; set; }
     }
 }

@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import Component from 'vue-class-component';
+import { Component } from 'vue-property-decorator';
 
 @Component({
     components: {
@@ -9,4 +9,11 @@ import Component from 'vue-class-component';
 })
 export default class AppComponent extends Vue {
     sideNav = false;
+
+    mounted() {
+        let forwardUrl = document.getElementById("forward-url").getAttribute("data-forward-url");
+        if (forwardUrl) {
+            this.$router.push(forwardUrl);
+        }
+    }
 }

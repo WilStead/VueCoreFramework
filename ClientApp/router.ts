@@ -21,6 +21,19 @@ const routes = [
         component: require('./components/user/manage.vue')
     },
     {
+        path: '/user/email/confirm',
+        component: require('./components/user/email/confirm.vue')
+    },
+    {
+        path: '/user/email/restore',
+        component: require('./components/user/email/restore.vue')
+    },
+    {
+        path: '/user/reset/:code',
+        component: require('./components/user/password/reset.vue'),
+        props: true
+    },
+    {
         path: '/countries',
         meta: { requiresAuth: true },
         component: require('./components/countries/dashboard.vue'),
@@ -49,7 +62,9 @@ const routes = [
         ]
     },
     { path: '/fetchdata', component: resolve => require(['./components/fetchdata/fetchdata.vue'], resolve) },
-    { path: '*', component: resolve => require(['./components/error/notfound.vue'], resolve) }
+    { path: '/error/notfound', component: resolve => require(['./components/error/notfound.vue'], resolve) },
+    { path: '/error/:code', component: resolve => require(['./components/error/error.vue'], resolve) },
+    { path: '*', redirect: '/error/notfound' }
 ];
 
 export const router = new VueRouter({

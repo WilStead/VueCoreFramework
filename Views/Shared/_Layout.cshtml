@@ -9,11 +9,11 @@
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
         <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons' rel="stylesheet" type="text/css">
         <jl-javascript-logger-definitions />
+        <script src="~/dist/vendor.js" asp-append-version="true"></script>
     </head>
     <body>
         @RenderBody()
 
-        <script src="~/dist/vendor.js" asp-append-version="true"></script>
         @RenderSection("scripts", required: false)
     </body>
 </html>

@@ -49,4 +49,34 @@ export const string_regexp = <VFG_Validator>function (value, field, model, messa
     return err;
 }
 
+export const requireEmail = <VFG_Validator>function (value, field, model, messages = resources) {
+    if (value === undefined || value === null || value === "") {
+        return ["A valid email address is required"];
+    }
+    let re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (!re.test(value))
+        return ["A valid email address is required"];
+}
+
+export const requirePasswordMatch = <VFG_Validator>function (value, field, model, messages = resources) {
+    if (value === undefined || value === null || value === "") {
+        return ["You must confirm your new password"];
+    }
+    if (value !== model.newPassword) {
+        return ["Your passwords must match"];
+    }
+}
+
+export const requireNewPassword = <VFG_Validator>function (value, field, model, messages = resources) {
+    if (value === undefined || value === null || value === "") {
+        return ["A password is required"];
+    }
+    if (value.length < field.min || value.length > field.max) {
+        return [`Passwords must be between ${field.min} and ${field.max} characters`];
+    }
+    let re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])/;
+    if (!re.test(value))
+        return ["Passwords must contain at least one of each of the following: lower-case letter, upper-case letter, number, and special character like !@#$%^&*"];
+}
+
 string_regexp.locale = customMessages => (value, field, model) => string_regexp(value, field, model, Object.assign({}, resources, customMessages));

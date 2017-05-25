@@ -1,0 +1,18 @@
+﻿@import "../../_theme.scss";
+
+.auth-providers {
+    display: flex;
+    justify-content: space-around;
+
+    .fa-facebook-official {
+        color: $facebook-color;
+    }
+
+    .fa-google {
+        color: $google-color;
+    }
+
+    .fa-windows {
+        color: $microsoft-color;
+    }
+}

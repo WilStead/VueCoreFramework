@@ -8,9 +8,10 @@ using MVCCoreVue.Data;
 namespace MVCCoreVue.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20170525144705_Add old email")]
+    partial class Addoldemail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.1.2")
@@ -137,8 +138,6 @@ namespace MVCCoreVue.Migrations
                         .HasMaxLength(256);
 
                     b.Property<bool>("EmailConfirmed");
-
-                    b.Property<DateTime>("LastEmailChange");
 
                     b.Property<bool>("LockoutEnabled");
 

@@ -8,6 +8,7 @@ using MVCCoreVue.Models;
 using MVCCoreVue.Models.ManageViewModels;
 using MVCCoreVue.Services;
 using System.Security.Claims;
+using System;
 
 namespace MVCCoreVue.Controllers
 {
@@ -29,6 +30,78 @@ namespace MVCCoreVue.Controllers
             _signInManager = signInManager;
             _emailSender = emailSender;
             _logger = logger;
+        }
+
+        [HttpPost]
+        [Route("api/[controller]/[action]")]
+        public async Task<ManageUserViewModel> ChangeEmail(ManageUserViewModel model)
+        {
+            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            if (user == null)
+            {
+                model.Errors.Add("An error has occurred.");
+                return model;
+            }
+            if (user.LastEmailChange > DateTime.Now.Subtract(TimeSpan.FromDays(1)))
+            {
+                model.Errors.Add("You may not change the email on your account more than once per day.");
+                return model;
+            }
+
+            user.NewEmail = model.Email;
+
+            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var restoreCallbackUrl = Url.Action(nameof(AccountController.RestoreEmail), "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
+            await _emailSender.SendEmailAsync(user.Email, "Confirm your email change",
+                $"A request was made to change the email address on your account from this email address to a new one. If this was a mistake, please click this link to reject the requested change: <a href='{restoreCallbackUrl}'>link</a>");
+            var changeCallbackUrl = Url.Action(nameof(AccountController.ChangeEmail), "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
+            await _emailSender.SendEmailAsync(user.NewEmail, "Confirm your email change",
+                $"Please confirm your email address change by clicking this link: <a href='{changeCallbackUrl}'>link</a>");
+            _logger.LogInformation(LogEvent.EMAIL_CHANGE_REQUEST, "Email change request received, from {OLDEMAIL} to {NEWEMAIL}.", user.Email, user.NewEmail);
+
+            return model;
+        }
+
+        [HttpPost]
+        [Route("api/[controller]/[action]")]
+        public async Task<ManageUserViewModel> ChangePassword(ManageUserViewModel model)
+        {
+            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            if (user == null)
+            {
+                model.Errors.Add("An error has occurred.");
+                return model;
+            }
+            var result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
+            if (result.Succeeded)
+            {
+                await _signInManager.SignInAsync(user, isPersistent: false);
+                _logger.LogInformation(LogEvent.CHANGE_PW, "User {USER} changed their password.", user.Email);
+                return model;
+            }
+            model.Errors.AddRange(result.Errors.Select(e => e.Description));
+            return model;
+        }
+
+        [HttpPost]
+        [Route("api/[controller]/[action]")]
+        public async Task<ManageUserViewModel> SetPassword(ManageUserViewModel model)
+        {
+            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            if (user == null)
+            {
+                model.Errors.Add("An error has occurred.");
+                return model;
+            }
+            var result = await _userManager.AddPasswordAsync(user, model.NewPassword);
+            if (result.Succeeded)
+            {
+                await _signInManager.SignInAsync(user, isPersistent: false);
+                _logger.LogInformation(LogEvent.SET_PW, "User {USER} set a password.", user.Email);
+                return model;
+            }
+            model.Errors.AddRange(result.Errors.Select(e => e.Description));
+            return model;
         }
 
         //
@@ -72,88 +145,10 @@ namespace MVCCoreVue.Controllers
                 {
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     message = ManageMessageId.RemoveLoginSuccess;
+                    _logger.LogInformation(LogEvent.REMOVE_EXTERNAL_LOGIN, "Removed {PROVIDER} login for {USER}.", account.LoginProvider, user.Email);
                 }
             }
             return RedirectToAction(nameof(ManageLogins), new { Message = message });
-        }
-
-        [HttpPost]
-        [Route("api/[controller]/[action]")]
-        public async Task<ManageUserViewModel> ChangeEmail(ManageUserViewModel model)
-        {
-            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            if (user == null)
-            {
-                model.Errors.Add("An error has occurred.");
-                return model;
-            }
-
-            user.NewEmail = model.Email;
-
-            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var callbackUrl = Url.Action(nameof(AccountController.ConfirmEmail), "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
-            await _emailSender.SendEmailAsync(model.Email, "Confirm your email change",
-                $"Please confirm your email address change by clicking this link: <a href='{callbackUrl}'>link</a>");
-
-            return model;
-        }
-
-        [HttpPost]
-        [Route("api/[controller]/[action]")]
-        public async Task CancelPendingEmailChange()
-        {
-            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            if (user == null) return;
-
-            user.Email = user.NewEmail;
-            user.NewEmail = null;
-            user.EmailConfirmed = false;
-
-            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var callbackUrl = Url.Action(nameof(AccountController.ConfirmEmail), "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
-            await _emailSender.SendEmailAsync(user.Email, "Confirm your email change",
-                $"Please confirm your email address change by clicking this link: <a href='{callbackUrl}'>link</a>");
-        }
-
-        [HttpPost]
-        [Route("api/[controller]/[action]")]
-        public async Task<ManageUserViewModel> ChangePassword(ManageUserViewModel model)
-        {
-            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            if (user == null)
-            {
-                model.Errors.Add("An error has occurred.");
-                return model;
-            }
-            var result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
-            if (result.Succeeded)
-            {
-                await _signInManager.SignInAsync(user, isPersistent: false);
-                _logger.LogInformation(3, "User changed their password successfully.");
-                return model;
-            }
-            model.Errors.AddRange(result.Errors.Select(e => e.Description));
-            return model;
-        }
-
-        [HttpPost]
-        [Route("api/[controller]/[action]")]
-        public async Task<ManageUserViewModel> SetPassword(ManageUserViewModel model)
-        {
-            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            if (user == null)
-            {
-                model.Errors.Add("An error has occurred.");
-                return model;
-            }
-            var result = await _userManager.AddPasswordAsync(user, model.NewPassword);
-            if (result.Succeeded)
-            {
-                await _signInManager.SignInAsync(user, isPersistent: false);
-                return model;
-            }
-            model.Errors.AddRange(result.Errors.Select(e => e.Description));
-            return model;
         }
 
         //GET: /Manage/ManageLogins
@@ -211,6 +206,7 @@ namespace MVCCoreVue.Controllers
             var message = ManageMessageId.Error;
             if (result.Succeeded)
             {
+                _logger.LogInformation(LogEvent.ADD_EXTERNAL_LOGIN, "Added {PROVIDER} login for {USER}.", info.LoginProvider, user.Email);
                 message = ManageMessageId.AddLoginSuccess;
             }
             return RedirectToAction(nameof(ManageLogins), new { Message = message });

@@ -13,6 +13,8 @@ namespace MVCCoreVue.Models.AccountViewModels
         [DataType(DataType.Password)]
         public string Password { get; set; }
 
+        public string AuthProvider { get; set; }
+
         [Display(Name = "Remember me?")]
         public bool RememberMe { get; set; }
 

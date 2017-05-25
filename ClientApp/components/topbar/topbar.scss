@@ -24,19 +24,19 @@
     }
 
     .fa-twitter:hover {
-        color: #0084b4;
+        color: $twitter-color;
     }
 
     .fa-facebook-official:hover {
-        color: #3b5998;
+        color: $facebook-color;
     }
 
     .fa-google-plus-official:hover {
-        color: #d34836;
+        color: $google-color;
     }
 
     .fa-reddit-alien:hover {
-        color: #FF5700;
+        color: $reddit-color;
     }
 
     &.topbar-header {

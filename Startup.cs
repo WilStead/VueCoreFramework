@@ -57,8 +57,10 @@ namespace MVCCoreVue
 
             services.AddIdentity<ApplicationUser, IdentityRole>(config =>
             {
-                //config.SignIn.RequireConfirmedEmail = true;
+                config.SignIn.RequireConfirmedEmail = true;
                 config.Cookies.ApplicationCookie.AutomaticChallenge = false;
+                config.Cookies.ApplicationCookie.LoginPath = new PathString("/Home/Index?forwardUrl=%2Flogin");
+                config.Cookies.ApplicationCookie.AccessDeniedPath = new PathString("/Home/Index?forwardUrl=%2Ferror%2F403");
             })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
@@ -77,8 +79,6 @@ namespace MVCCoreVue
             {
                 options.SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["secretJwtKey"])), SecurityAlgorithms.HmacSha256);
             });
-
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -105,13 +105,14 @@ namespace MVCCoreVue
             var jsnlogConfiguration = new JsnlogConfiguration()
             {
                 maxMessages = 5,
+                serverSideMessageFormat = "Message: %message | url: %url",
                 ajaxAppenders = new List<AjaxAppender>
                 {
                     new AjaxAppender
                     {
                         name = "ajaxAppender",
                         storeInBufferLevel = "TRACE",
-                        level = "WARN",
+                        level = "INFO",
                         sendWithBufferLevel = "FATAL",
                         bufferSize = 20
                     }
