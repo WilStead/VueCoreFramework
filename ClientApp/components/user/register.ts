@@ -1,7 +1,7 @@
 ﻿import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import VueFormGenerator from 'vue-form-generator';
-import * as ErrorMsg from '../error/error-msg';
+import * as ErrorMsg from '../../error-msg';
 import * as VFG_Custom from '../../vfg-custom-validators';
 
 interface RegisterViewModel {
@@ -112,6 +112,6 @@ export default class RegisterComponent extends Vue {
                     this.model.errors = data.errors;
                 }
             })
-            .catch(error => ErrorMsg.showErrorMsgAndLog("A problem occurred. Your account acould not be registered.", error));
+            .catch(error => ErrorMsg.showErrorMsgAndLog("register.onSubmit", "A problem occurred. Your account acould not be registered.", error));
     }
 }

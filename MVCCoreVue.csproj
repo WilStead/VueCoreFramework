@@ -8,6 +8,7 @@
     <UserSecretsId>aspnet-NetCoreAuth-233a3dae-f544-4f6d-826e-fea40609598a</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="JSNLog.AspNetCore" Version="2.23.0" />
     <PackageReference Include="MailKit" Version="1.16.1" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore" Version="1.1.2" />

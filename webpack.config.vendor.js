@@ -16,6 +16,7 @@ module.exports = (env) => {
                 'event-source-polyfill',
                 'isomorphic-fetch',
                 'jquery',
+                'jsnlog',
                 'vue',
                 'vue-router'
             ],

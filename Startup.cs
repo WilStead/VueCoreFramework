@@ -1,3 +1,4 @@
+using JSNLog;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -17,6 +18,7 @@ using NLog;
 using NLog.Extensions.Logging;
 using NLog.Web;
 using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace MVCCoreVue
@@ -85,7 +87,7 @@ namespace MVCCoreVue
             loggerFactory.AddNLog();
             app.AddNLogWeb();
             LogManager.Configuration.Variables["connectionString"] = Configuration.GetConnectionString("DefaultConnection");
-            LogManager.Configuration.Variables["logDir"] = @"C:\Windows\Temp\MVCCoreVue\Logs";
+            LogManager.Configuration.Variables["logDir"] = Configuration["LogDir"];
 
             if (env.IsDevelopment())
             {
@@ -99,6 +101,35 @@ namespace MVCCoreVue
             {
                 app.UseExceptionHandler("/Home/Error");
             }
+
+            var jsnlogConfiguration = new JsnlogConfiguration()
+            {
+                maxMessages = 5,
+                ajaxAppenders = new List<AjaxAppender>
+                {
+                    new AjaxAppender
+                    {
+                        name = "ajaxAppender",
+                        storeInBufferLevel = "TRACE",
+                        level = "WARN",
+                        sendWithBufferLevel = "FATAL",
+                        bufferSize = 20
+                    }
+                },
+                loggers = new List<JSNLog.Logger>
+                {
+                    new JSNLog.Logger { appenders = "ajaxAppender" }
+                }
+            };
+            if (env.IsDevelopment())
+            {
+                jsnlogConfiguration.consoleAppenders = new List<ConsoleAppender>
+                {
+                    new ConsoleAppender { name = "consoleAppender" }
+                };
+                jsnlogConfiguration.loggers[0].appenders = "ajaxAppender;consoleAppender";
+            }
+            app.UseJSNLog(new LoggingAdapter(loggerFactory), jsnlogConfiguration);
 
             var options = new RewriteOptions().AddRedirectToHttps();
             app.UseRewriter(options);

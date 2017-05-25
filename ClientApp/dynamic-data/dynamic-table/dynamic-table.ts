@@ -1,6 +1,6 @@
 ﻿import Vue from 'vue';
 import { Component, Prop, Watch } from 'vue-property-decorator';
-import * as ErrorMsg from '../../components/error/error-msg';
+import * as ErrorMsg from '../../error-msg';
 import { FieldDefinition } from '../field-definition';
 import { DataItem, Repository } from '../../store/repository';
 
@@ -134,7 +134,7 @@ export default class DynamicTableComponent extends Vue {
             })
             .catch(error => {
                 this.activity = false;
-                ErrorMsg.showErrorMsgAndLog("A problem occurred. The item(s) could not be removed.", error);
+                ErrorMsg.showErrorMsgAndLog("dynamic-table.onDelete", "A problem occurred. The item(s) could not be removed.", error);
             });
     }
 
@@ -153,7 +153,7 @@ export default class DynamicTableComponent extends Vue {
             })
             .catch(error => {
                 this.activity = false;
-                ErrorMsg.showErrorMsgAndLog("A problem occurred. The item could not be removed.", error);
+                ErrorMsg.showErrorMsgAndLog("dynamic-table.onDeleteItem", "A problem occurred. The item could not be removed.", error);
             });
     }
 
@@ -174,6 +174,9 @@ export default class DynamicTableComponent extends Vue {
             .then((data: any) => {
                 this.items = data.items;
                 this.totalItems = data.total;
+            })
+            .catch(error => {
+                ErrorMsg.showErrorMsgAndLog("dynamic-table.updateData", "A problem occurred while loading the data.", error);
             });
     }
 }

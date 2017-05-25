@@ -1,6 +1,6 @@
 ﻿import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import * as ErrorMsg from '../error/error-msg';
+import * as ErrorMsg from '../../error-msg';
 import VueFormGenerator from 'vue-form-generator';
 
 interface LoginViewModel {
@@ -92,7 +92,7 @@ export default class LoginComponent extends Vue {
                     'Authorization': `bearer ${this.$store.state.token}`
                 }
             })
-            .catch(error => ErrorMsg.showErrorMsgAndLog("A problem occurred. Your request was not received.", error));
+            .catch(error => ErrorMsg.showErrorMsgAndLog("login.resetPassword", "A problem occurred. Your request was not received.", error));
         this.passwordReset = true;
         this.forgottenPassword = false;
     }
@@ -126,7 +126,7 @@ export default class LoginComponent extends Vue {
                 this.submitting = false;
             })
             .catch(error => {
-                ErrorMsg.showErrorMsgAndLog("A problem occurred. Login failed.", error);
+                ErrorMsg.showErrorMsgAndLog("login.onSubmit", "A problem occurred. Login failed.", error);
                 this.submitting = false;
             });
     }

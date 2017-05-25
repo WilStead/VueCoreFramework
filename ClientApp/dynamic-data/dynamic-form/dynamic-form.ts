@@ -1,6 +1,6 @@
 ﻿import Vue from 'vue';
 import { Component, Prop, Watch } from 'vue-property-decorator';
-import * as ErrorMsg from '../../components/error/error-msg';
+import * as ErrorMsg from '../../error-msg';
 import { FieldDefinition } from '../field-definition';
 import VueFormGenerator from 'vue-form-generator';
 import { Repository, OperationReply } from '../../store/repository';
@@ -82,7 +82,7 @@ export default class DynamicFormComponent extends Vue {
             })
             .catch(error => {
                 this.activity = false;
-                ErrorMsg.showErrorMsgAndLog("A problem occurred. The new item could not be added.", error);
+                ErrorMsg.showErrorMsgAndLog("dynamic-form.onCreate", "A problem occurred. The new item could not be added.", error);
             });
     }
 
@@ -104,14 +104,14 @@ export default class DynamicFormComponent extends Vue {
             })
             .catch(error => {
                 this.activity = false;
-                ErrorMsg.showErrorMsgAndLog("A problem occurred. The item could not be updated.", error);
+                ErrorMsg.showErrorMsgAndLog("dynamic-form.onSave", "A problem occurred. The item could not be updated.", error);
             });
     }
 
     updateForm() {
+        this.success = false;
         this.repository.find(this.id)
             .then(data => {
-                this.success = false;
                 this.vm = data;
                 this.vmCopy = Object.assign({}, this.vm);
                 this.model = {};
@@ -128,6 +128,9 @@ export default class DynamicFormComponent extends Vue {
                 for (var prop in this.vm) {
                     this.model[prop] = this.vm[prop];
                 }
+            })
+            .catch(error => {
+                ErrorMsg.showErrorMsgAndLog("dynamic-form.updateForm", "A problem occurred while updating the data.", error);
             });
     }
 }

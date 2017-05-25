@@ -2,7 +2,7 @@
 import { Component, Prop } from 'vue-property-decorator';
 import { checkResponse, ApiResponseViewModel } from '../../router';
 import VueFormGenerator from 'vue-form-generator';
-import * as ErrorMsg from '../error/error-msg';
+import * as ErrorMsg from '../../error-msg';
 
 interface ManageUserViewModel {
     email: string,
@@ -29,7 +29,8 @@ export default class ManageUserComponent extends Vue {
                 if (data.response === "yes") {
                     this.hasPassword = true;
                 }
-            });
+            })
+            .catch(error => ErrorMsg.logError("manage.created.fetchPW", error));
         fetch('/api/Account/HasPendingEmailChange',
             {
                 headers: {
@@ -42,7 +43,8 @@ export default class ManageUserComponent extends Vue {
                 if (data.response === "yes") {
                     this.pendingEmailChange = true;
                 }
-            });
+            })
+            .catch(error => ErrorMsg.logError("manage.created.fetchPendingEmailChange", error));
     }
 
     components = {
@@ -184,7 +186,7 @@ export default class ManageUserComponent extends Vue {
                 this.changeSuccess = true;
                 this.successMessage = "Okay, your request to update your email has been canceled. Please confirm your original email account by clicking on the link that was just sent.";
             })
-            .catch(error => ErrorMsg.showErrorMsgAndLog("A problem occurred. Your request was not received.", error));
+            .catch(error => ErrorMsg.showErrorMsgAndLog("manage.cancelEmailChange", "A problem occurred. Your request was not received.", error));
     }
 
     onSubmit() {
@@ -220,7 +222,7 @@ export default class ManageUserComponent extends Vue {
                 }
             })
             .catch(error => {
-                ErrorMsg.showErrorMsgAndLog("A problem occurred. Your request was not received.", error);
+                ErrorMsg.showErrorMsgAndLog("manage.onSubmit", "A problem occurred. Your request was not received.", error);
                 this.changeSuccess = false;
             });
     }
