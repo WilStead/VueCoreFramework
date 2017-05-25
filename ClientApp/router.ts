@@ -1,6 +1,6 @@
 ﻿import VueRouter from 'vue-router';
 import { store } from './store/store';
-import * as ErrorMsg from './components/error/error-msg';
+import * as ErrorMsg from './error-msg';
 import { countryFieldDefinitions } from './viewmodels/country';
 
 const routes = [
@@ -76,7 +76,7 @@ router.beforeEach((to, from, next) => {
                 }
             })
             .catch(error => {
-                ErrorMsg.logError(error);
+                ErrorMsg.logError("router.beforeEach", error);
                 next({ path: '/login', query: { returnUrl: to.fullPath } });
             });
     } else {
@@ -119,7 +119,7 @@ export function checkAuthorization(to, returnPath): Promise<boolean> {
         })
         .catch(error => {
             if (error.message !== "unauthorized") {
-                ErrorMsg.logError(error);
+                ErrorMsg.logError("router.checkAuthorization", error);
             }
             return false;
         });
