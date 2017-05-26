@@ -82,7 +82,7 @@ namespace MVCCoreVue
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, ApplicationDbContext context)
         {
             loggerFactory.AddNLog();
             app.AddNLogWeb();
@@ -165,6 +165,8 @@ namespace MVCCoreVue
                     name: "spa-fallback",
                     defaults: new { controller = "Home", action = "Index" });
             });
+
+            DbInitialize.Initialize(context);
         }
     }
 }

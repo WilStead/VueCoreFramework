@@ -1,6 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using MVCCoreVue.Data.Attributes;
+using MVCCoreVue.Extensions;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -75,6 +78,222 @@ namespace MVCCoreVue.Data
             return items.AsEnumerable();
         }
 
+        private FieldDefinition GetFieldDefinition(PropertyInfo pInfo)
+        {
+            var fd = new FieldDefinition
+            {
+                Model = pInfo.Name
+            };
+
+            var dataType = pInfo.GetCustomAttribute<DataTypeAttribute>();
+            var step = pInfo.GetCustomAttribute<StepAttribute>();
+            if (dataType != null)
+            {
+                switch (dataType.DataType)
+                {
+                    case DataType.Currency:
+                        fd.Type = "input";
+                        fd.InputType = "number";
+                        if (step != null)
+                        {
+                            fd.Step = step.Step;
+                        }
+                        else
+                        {
+                            fd.Step = 0.01;
+                        }
+                        fd.Validator = "number";
+                        break;
+                    case DataType.Date:
+                        fd.Type = "dateTime";
+                        fd.DateTimePickerOptions = "M/D/YYYY";
+                        fd.Validator = "date";
+                        break;
+                    case DataType.DateTime:
+                        fd.Type = "dateTime";
+                        fd.DateTimePickerOptions = "M/D/YYYY h:mm A";
+                        fd.Validator = "date";
+                        break;
+                    case DataType.Time:
+                        fd.Type = "dateTime";
+                        fd.DateTimePickerOptions = "h:mm A";
+                        fd.Validator = "date";
+                        break;
+                    case DataType.Duration:
+                        fd.Type = "dateTime";
+                        fd.DateTimePickerOptions = "H:mm:ss";
+                        fd.Validator = "date";
+                        break;
+                    case DataType.EmailAddress:
+                        fd.Type = "input";
+                        fd.InputType = "email";
+                        fd.Validator = "email";
+                        break;
+                    case DataType.MultilineText:
+                        fd.Type = "textArea";
+                        fd.Rows = pInfo.GetCustomAttribute<RowsAttribute>()?.Rows;
+                        fd.Validator = "string";
+                        break;
+                    case DataType.Password:
+                        fd.Type = "input";
+                        fd.InputType = "password";
+                        fd.Validator = "string";
+                        break;
+                    case DataType.PhoneNumber:
+                        fd.Type = "input";
+                        fd.InputType = "telephone";
+                        fd.Validator = "string";
+                        break;
+                    case DataType.PostalCode:
+                        fd.Type = "input";
+                        fd.InputType = "text";
+                        fd.Pattern = @"(^(?!0{5})(\d{5})(?!-?0{4})(|-\d{4})?$)";
+                        fd.Validator = "string_regexp";
+                        break;
+                    case DataType.ImageUrl:
+                    case DataType.Url:
+                        fd.Type = "input";
+                        fd.InputType = "url";
+                        fd.Validator = "string";
+                        break;
+                    default:
+                        fd.Type = "input";
+                        fd.InputType = "text";
+                        fd.Validator = "string";
+                        break;
+                }
+            }
+            else if (pInfo.PropertyType == typeof(bool))
+            {
+                fd.Type = "checkbox";
+            }
+            else if (pInfo.PropertyType == typeof(DateTime))
+            {
+                fd.Type = "dateTime";
+                fd.DateTimePickerOptions = "M/D/YYYY h:mm A";
+                fd.Validator = "date";
+            }
+            else if (pInfo.PropertyType == typeof(TimeSpan))
+            {
+                fd.Type = "dateTime";
+                fd.DateTimePickerOptions = "H:mm:ss";
+                fd.Validator = "date";
+            }
+            else if (pInfo.PropertyType.GetTypeInfo().IsEnum)
+            {
+                if (pInfo.GetCustomAttribute<FlagsAttribute>() != null)
+                {
+                    fd.Type = "select";
+                    foreach (var value in Enum.GetValues(pInfo.PropertyType))
+                    {
+                        fd.Values.Add(new SelectOption
+                        {
+                            Name = Enum.GetName(pInfo.PropertyType, value),
+                            Id = value.ToString()
+                        });
+                    }
+                }
+                else
+                {
+                    fd.Type = "checklist";
+                    foreach (var value in Enum.GetValues(pInfo.PropertyType))
+                    {
+                        fd.Values.Add(new ChecklistOption
+                        {
+                            Name = Enum.GetName(pInfo.PropertyType, value),
+                            Value = value.ToString()
+                        });
+                    }
+                    fd.Validator = "array";
+                }
+            }
+            else if (pInfo.PropertyType.IsNumeric())
+            {
+                fd.Type = "input";
+                fd.InputType = "number";
+                if (pInfo.PropertyType.IsRealNumeric())
+                {
+                    if (step != null)
+                    {
+                        fd.Step = step.Step;
+                    }
+                    else
+                    {
+                        fd.Step = 0.1;
+                    }
+                }
+                else
+                {
+                    fd.Step = 1;
+                }
+                fd.Validator = "number";
+            }
+            else
+            {
+                fd.Type = "input";
+                fd.InputType = "text";
+                fd.Validator = "string";
+            }
+
+            fd.Default = pInfo.GetCustomAttribute<DefaultAttribute>()?.Default;
+
+            if (pInfo.GetCustomAttribute<EditableAttribute>()?.AllowEdit == false)
+            {
+                if (fd.Type == "input"
+                    && (fd.InputType == "text"
+                    || fd.InputType == "url"
+                    || fd.InputType == "telephone"
+                    || fd.InputType == "email"
+                    || fd.InputType == "password"
+                    || fd.InputType == "number"))
+                {
+                    fd.Readonly = true;
+                }
+                else
+                {
+                    fd.Disabled = true;
+                }
+            }
+
+            var display = pInfo.GetCustomAttribute<DisplayAttribute>();
+            fd.GroupName = display?.GroupName;
+            fd.Help = display?.Description;
+            fd.Hint = display?.ShortName;
+            fd.Label = display?.Name;
+            fd.Placeholder = display?.Prompt;
+
+            var hidden = pInfo.GetCustomAttribute<HiddenAttribute>();
+            if (hidden?.Hidden == true) fd.Visible = false;
+            fd.HideInTable = hidden?.HiddenInTable;
+
+            var range = pInfo.GetCustomAttribute<RangeAttribute>();
+            fd.Min = range?.Minimum;
+            fd.Max = range?.Maximum;
+
+            var pattern = pInfo.GetCustomAttribute<RegularExpressionAttribute>();
+            if (!string.IsNullOrEmpty(pattern?.Pattern))
+            {
+                fd.Pattern = pattern.Pattern;
+                fd.Validator = "string_regexp";
+            }
+
+            if (pInfo.GetCustomAttribute<RequiredAttribute>() != null)
+            {
+                fd.Required = true;
+            }
+
+            return fd;
+        }
+
+        public IEnumerable<FieldDefinition> GetFieldDefinitions()
+        {
+            var type = typeof(T);
+            foreach (var pInfo in type.GetProperties())
+            {
+                yield return GetFieldDefinition(pInfo);
+            }
+        }
+
         public IEnumerable<T> GetPage(string search, string sortBy, bool descending, int page, int rowsPerPage)
         {
             IQueryable<T> filteredItems = items.AsQueryable();
@@ -82,7 +301,7 @@ namespace MVCCoreVue.Data
             {
                 filteredItems = items.Where(i => AnyPropMatch(i, search));
             }
-            
+
             if (!string.IsNullOrEmpty(sortBy))
             {
                 var sortProp = typeof(T).GetProperty(sortBy);

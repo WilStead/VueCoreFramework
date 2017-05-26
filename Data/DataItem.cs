@@ -7,12 +7,12 @@ namespace MVCCoreVue.Data
 {
     public class DataItem
     {
-        [Editable(false)]
-        [Hidden]
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Editable(false)]
+        [Hidden(true)]
         public Guid Id { get; set; }
-        
+
         [Display(AutoGenerateField = false)]
         public DateTime CreationTimestamp { get; set; }
 

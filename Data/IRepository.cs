@@ -12,6 +12,8 @@ namespace MVCCoreVue.Data
 
         IEnumerable<T> GetAll();
 
+        IEnumerable<FieldDefinition> GetFieldDefinitions();
+
         IEnumerable<T> GetPage(
             string search,
             string sortBy,

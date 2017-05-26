@@ -1,6 +1,5 @@
-﻿export interface ItemOptions {
-    value: string;
-    name: string;
+﻿export interface DateTimePickerOptions {
+    format: string;
 }
 
 export interface FieldDefinition {
@@ -19,14 +18,10 @@ export interface FieldDefinition {
     hint?: string;
     help?: string;
     styleClasses?: string | Array<string>;
+    step?: number;
     values?: Array<any> | Function;
-    checklistOptions?: ItemOptions;
-    radiosOptions?: ItemOptions;
-    checked?: boolean;
+    dateTimePickerOptions?: DateTimePickerOptions;
     rows?: number;
-    buttonText?: string;
-    onSubmit?: Function;
-    validateBeforeSubmit?: boolean;
     min?: number;
     max?: number;
     pattern?: string;

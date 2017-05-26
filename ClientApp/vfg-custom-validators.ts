@@ -85,5 +85,7 @@ export const requireNewPassword = <VFG_Validator>function (value, field, model, 
 export const validators = {
     'string': VueFormGenerator.validators.string,
     'number': VueFormGenerator.validators.number,
-    'string_regexp': string_regexp
+    'string_regexp': string_regexp,
+    'date': VueFormGenerator.validators.date,
+    'array': VueFormGenerator.validators.array
 };
