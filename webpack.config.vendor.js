@@ -19,10 +19,6 @@ module.exports = (env) => {
                 'jsnlog',
                 'vue',
                 'vue-router'
-            ],
-            validate: [
-                'jquery-validation',
-                'jquery-validation-unobtrusive'
             ]
         },
         module: {

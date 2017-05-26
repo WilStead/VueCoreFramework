@@ -1,4 +1,6 @@
-﻿const resources = {
+﻿import VueFormGenerator from 'vue-form-generator';
+
+const resources = {
     fieldIsRequired: "This field is required",
     invalidFormat: "Invalid format",
     textTooSmall: "Must be at least {1} characters long",
@@ -48,6 +50,7 @@ export const string_regexp = <VFG_Validator>function (value, field, model, messa
 
     return err;
 }
+string_regexp.locale = customMessages => (value, field, model) => string_regexp(value, field, model, Object.assign({}, resources, customMessages));
 
 export const requireEmail = <VFG_Validator>function (value, field, model, messages = resources) {
     if (value === undefined || value === null || value === "") {
@@ -79,4 +82,8 @@ export const requireNewPassword = <VFG_Validator>function (value, field, model, 
         return ["Passwords must contain at least one of each of the following: lower-case letter, upper-case letter, number, and special character like !@#$%^&*"];
 }
 
-string_regexp.locale = customMessages => (value, field, model) => string_regexp(value, field, model, Object.assign({}, resources, customMessages));
+export const validators = {
+    'string': VueFormGenerator.validators.string,
+    'number': VueFormGenerator.validators.number,
+    'string_regexp': string_regexp
+};

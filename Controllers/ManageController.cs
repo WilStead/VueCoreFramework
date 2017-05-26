@@ -34,7 +34,7 @@ namespace MVCCoreVue.Controllers
 
         [HttpPost]
         [Route("api/[controller]/[action]")]
-        public async Task<ManageUserViewModel> ChangeEmail(ManageUserViewModel model)
+        public async Task<ManageUserViewModel> ChangeEmail([FromBody]ManageUserViewModel model)
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
@@ -64,7 +64,7 @@ namespace MVCCoreVue.Controllers
 
         [HttpPost]
         [Route("api/[controller]/[action]")]
-        public async Task<ManageUserViewModel> ChangePassword(ManageUserViewModel model)
+        public async Task<ManageUserViewModel> ChangePassword([FromBody]ManageUserViewModel model)
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
@@ -82,10 +82,80 @@ namespace MVCCoreVue.Controllers
             model.Errors.AddRange(result.Errors.Select(e => e.Description));
             return model;
         }
+        
+        [HttpPost]
+        public IActionResult LinkLogin([FromBody]ManageUserViewModel model)
+        {
+            var provider = _signInManager.GetExternalAuthenticationSchemes().SingleOrDefault(a => a.DisplayName == model.AuthProvider);
+            if (provider == null)
+            {
+                model.Errors.Add("There was a problem authorizing with that provider.");
+                _logger.LogWarning(LogEvent.EXTERNAL_PROVIDER_NOTFOUND, "Could not find provider {PROVIDER}.", model.AuthProvider);
+                return new JsonResult(model);
+            }
+            // Request a redirect to the external login provider to link a login for the current user
+            var redirectUrl = Url.Action(nameof(LinkLoginCallback), "Manage");
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider.AuthenticationScheme, redirectUrl, _userManager.GetUserId(User));
+            return Challenge(properties, provider.AuthenticationScheme);
+        }
+        
+        [HttpGet]
+        public async Task<ManageUserViewModel> LinkLoginCallback()
+        {
+            var model = new ManageUserViewModel();
+            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            if (user == null)
+            {
+                model.Errors.Add("There was a problem authorizing with that provider.");
+                return model;
+            }
+            var info = await _signInManager.GetExternalLoginInfoAsync(await _userManager.GetUserIdAsync(user));
+            if (info == null)
+            {
+                model.Errors.Add("There was a problem authorizing with that provider.");
+                return model;
+            }
+            var result = await _userManager.AddLoginAsync(user, info);
+            if (result.Succeeded)
+            {
+                _logger.LogInformation(LogEvent.ADD_EXTERNAL_LOGIN, "Added {PROVIDER} login for {USER}.", info.LoginProvider, user.Email);
+                return model;
+            }
+            model.Errors.AddRange(result.Errors.Select(e => e.Description));
+            return model;
+        }
+        
+        [HttpPost]
+        public async Task<ManageUserViewModel> RemoveLogin([FromBody]ManageUserViewModel model)
+        {
+            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            if (user == null)
+            {
+                model.Errors.Add("There was a problem with your request.");
+                return model;
+            }
+            var userLogins = await _userManager.GetLoginsAsync(user);
+            var provider = userLogins.SingleOrDefault(a => a.ProviderDisplayName == model.AuthProvider);
+            if (provider == null)
+            {
+                model.Errors.Add("There was a problem with your request.");
+                _logger.LogWarning(LogEvent.EXTERNAL_PROVIDER_NOTFOUND, "Could not find provider {PROVIDER}.", model.AuthProvider);
+                return model;
+            }
+            var result = await _userManager.RemoveLoginAsync(user, provider.LoginProvider, provider.ProviderKey);
+            if (result.Succeeded)
+            {
+                await _signInManager.SignInAsync(user, isPersistent: false);
+                _logger.LogInformation(LogEvent.REMOVE_EXTERNAL_LOGIN, "Removed {PROVIDER} login for {USER}.", provider.LoginProvider, user.Email);
+                return model;
+            }
+            model.Errors.AddRange(result.Errors.Select(e => e.Description));
+            return model;
+        }
 
         [HttpPost]
         [Route("api/[controller]/[action]")]
-        public async Task<ManageUserViewModel> SetPassword(ManageUserViewModel model)
+        public async Task<ManageUserViewModel> SetPassword([FromBody]ManageUserViewModel model)
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
@@ -102,128 +172,6 @@ namespace MVCCoreVue.Controllers
             }
             model.Errors.AddRange(result.Errors.Select(e => e.Description));
             return model;
-        }
-
-        //
-        // GET: /Manage/Index
-        [HttpGet]
-        public async Task<IActionResult> Index(ManageMessageId? message = null)
-        {
-            ViewData["StatusMessage"] =
-                message == ManageMessageId.ChangePasswordSuccess ? "Your password has been changed."
-                : message == ManageMessageId.SetPasswordSuccess ? "Your password has been set."
-                : message == ManageMessageId.Error ? "An error has occurred."
-                : "";
-
-            var user = await GetCurrentUserAsync();
-            if (user == null)
-            {
-                return View("Error");
-            }
-            var model = new IndexViewModel
-            {
-                HasPassword = await _userManager.HasPasswordAsync(user),
-                TwoFactor = await _userManager.GetTwoFactorEnabledAsync(user),
-                Logins = await _userManager.GetLoginsAsync(user),
-                BrowserRemembered = await _signInManager.IsTwoFactorClientRememberedAsync(user)
-            };
-            return View(model);
-        }
-
-        //
-        // POST: /Manage/RemoveLogin
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RemoveLogin(RemoveLoginViewModel account)
-        {
-            ManageMessageId? message = ManageMessageId.Error;
-            var user = await GetCurrentUserAsync();
-            if (user != null)
-            {
-                var result = await _userManager.RemoveLoginAsync(user, account.LoginProvider, account.ProviderKey);
-                if (result.Succeeded)
-                {
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    message = ManageMessageId.RemoveLoginSuccess;
-                    _logger.LogInformation(LogEvent.REMOVE_EXTERNAL_LOGIN, "Removed {PROVIDER} login for {USER}.", account.LoginProvider, user.Email);
-                }
-            }
-            return RedirectToAction(nameof(ManageLogins), new { Message = message });
-        }
-
-        //GET: /Manage/ManageLogins
-        [HttpGet]
-        public async Task<IActionResult> ManageLogins(ManageMessageId? message = null)
-        {
-            ViewData["StatusMessage"] =
-                message == ManageMessageId.RemoveLoginSuccess ? "The external login was removed."
-                : message == ManageMessageId.AddLoginSuccess ? "The external login was added."
-                : message == ManageMessageId.Error ? "An error has occurred."
-                : "";
-            var user = await GetCurrentUserAsync();
-            if (user == null)
-            {
-                return View("Error");
-            }
-            var userLogins = await _userManager.GetLoginsAsync(user);
-            var otherLogins = _signInManager.GetExternalAuthenticationSchemes().Where(auth => userLogins.All(ul => auth.AuthenticationScheme != ul.LoginProvider)).ToList();
-            ViewData["ShowRemoveButton"] = user.PasswordHash != null || userLogins.Count > 1;
-            return View(new ManageLoginsViewModel
-            {
-                CurrentLogins = userLogins,
-                OtherLogins = otherLogins
-            });
-        }
-
-        //
-        // POST: /Manage/LinkLogin
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult LinkLogin(string provider)
-        {
-            // Request a redirect to the external login provider to link a login for the current user
-            var redirectUrl = Url.Action(nameof(LinkLoginCallback), "Manage");
-            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl, _userManager.GetUserId(User));
-            return Challenge(properties, provider);
-        }
-
-        //
-        // GET: /Manage/LinkLoginCallback
-        [HttpGet]
-        public async Task<ActionResult> LinkLoginCallback()
-        {
-            var user = await GetCurrentUserAsync();
-            if (user == null)
-            {
-                return View("Error");
-            }
-            var info = await _signInManager.GetExternalLoginInfoAsync(await _userManager.GetUserIdAsync(user));
-            if (info == null)
-            {
-                return RedirectToAction(nameof(ManageLogins), new { Message = ManageMessageId.Error });
-            }
-            var result = await _userManager.AddLoginAsync(user, info);
-            var message = ManageMessageId.Error;
-            if (result.Succeeded)
-            {
-                _logger.LogInformation(LogEvent.ADD_EXTERNAL_LOGIN, "Added {PROVIDER} login for {USER}.", info.LoginProvider, user.Email);
-                message = ManageMessageId.AddLoginSuccess;
-            }
-            return RedirectToAction(nameof(ManageLogins), new { Message = message });
-        }
-
-        public enum ManageMessageId
-        {
-            AddLoginSuccess,
-            ChangePasswordSuccess,
-            SetPasswordSuccess,
-            RemoveLoginSuccess,
-            Error
-        }
-
-        private Task<ApplicationUser> GetCurrentUserAsync()
-        {
-            return _userManager.GetUserAsync(HttpContext.User);
         }
     }
 }

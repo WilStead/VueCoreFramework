@@ -92,8 +92,7 @@ export default class LoginComponent extends Vue {
                 }
             })
             .catch(error => {
-                ErrorMsg.showErrorMsgAndLog("login.onSubmit", "A problem occurred. Login failed.", error);
-                this.submitting = false;
+                ErrorMsg.logError("login.mounted", error);
             });
     }
 
@@ -123,6 +122,7 @@ export default class LoginComponent extends Vue {
     onSignInProvider(provider: string) {
         this.submitting = true;
         this.model.errors = [];
+        this.model.authProvider = provider;
         fetch('/api/Account/ExternalLogin',
             {
                 method: 'POST',

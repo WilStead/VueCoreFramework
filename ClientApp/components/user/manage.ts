@@ -10,12 +10,21 @@ interface ManageUserViewModel {
     oldPassword: string,
     newPassword: string,
     confirmPassword: string,
+    authProvider: string,
     errors: Array<String>
+}
+
+interface AuthProviders {
+    providers: Array<string>,
+    userProviders: Array<string>
 }
 
 @Component
 export default class ManageUserComponent extends Vue {
-    hasPassword = false;
+    components = {
+        'vue-form-generator': VueFormGenerator.component
+    };
+
     created() {
         fetch('/api/Account/HasPassword',
             {
@@ -33,18 +42,53 @@ export default class ManageUserComponent extends Vue {
             .catch(error => ErrorMsg.logError("manage.created.fetchPW", error));
     }
 
-    components = {
-        'vue-form-generator': VueFormGenerator.component
-    };
+    mounted() {
+        fetch('/api/Account/GetUserAuthProviders',
+            {
+                headers: {
+                    'Authorization': `bearer ${this.$store.state.token}`
+                }
+            })
+            .then(response => response.json() as Promise<AuthProviders>)
+            .then(data => {
+                if (data.providers) {
+                    this.authProviderFacebook = data.providers.indexOf('Facebook') !== -1;
+                    this.authProviderGoogle = data.providers.indexOf('Google') !== -1;
+                    this.authProviderMicrosoft = data.providers.indexOf('Microsoft') !== -1;
+                }
+                if (data.userProviders) {
+                    this.authProviderFacebookUser = data.providers.indexOf('Facebook') !== -1;
+                    this.authProviderGoogleUser = data.providers.indexOf('Google') !== -1;
+                    this.authProviderMicrosoftUser = data.providers.indexOf('Microsoft') !== -1;
+                }
+            })
+            .catch(error => {
+                ErrorMsg.logError("manage.mounted", error);
+            });
+    }
 
+    authProviderFacebook = false;
+    authProviderFacebookUser = false;
+    authProviderGoogle = false;
+    authProviderGoogleUser = false;
+    authProviderMicrosoft = false;
+    authProviderMicrosoftUser = false;
+    changeSuccess = false;
+    changingEmail = false;
+    changingPassword = false;
+    formOptions = {
+        validateAfterChanged: true
+    };
+    hasPassword = false;
+    isValid = false;
     model: ManageUserViewModel = {
         email: '',
         oldPassword: '',
         newPassword: '',
         confirmPassword: '',
+        authProvider: '',
         errors: []
     };
-
     schema = {
         fields: [
             {
@@ -85,64 +129,94 @@ export default class ManageUserComponent extends Vue {
             }
         ]
     };
-
-    formOptions = {
-        validateAfterChanged: true
-    };
-
-    isValid = false;
-    onValidated(isValid: boolean, errors: Array<any>) {
-        this.isValid = isValid;
-    }
-
-    requireEmail(value, field, model) {
-        if (!this.changingEmail) return null;
-        return VFG_Custom.requireEmail(value, field, model, undefined);
-    }
-
-    requirePassword(value) {
-        if (!this.changingPassword && !this.settingPassword) return null;
-        if (value === undefined || value === null || value === "") {
-            return ["A password is required"];
-        }
-    }
-
-    requirePasswordMatch(value, field, model) {
-        if (!this.changingPassword && !this.settingPassword) return null;
-        return VFG_Custom.requirePasswordMatch(value, field, model, undefined);
-    }
-
-    requireNewPassword(value, field, model) {
-        if (!this.changingPassword && !this.settingPassword) return null;
-        return VFG_Custom.requireNewPassword(value, field, model, undefined);
-    }
-
-    changingEmail = false;
-    changingPassword = false;
     settingPassword = false;
-    changeEmail() {
-        this.changingEmail = true;
-        this.changeSuccess = false;
-    }
-    changePassword() {
-        this.changingPassword = true;
-        this.changeSuccess = false;
-    }
-    setPassword() {
-        this.settingPassword = true;
-        this.changeSuccess = false;
-    }
+    successMessage = "Success!";
+    submitting = false;
+    success = false;
 
     cancelChange() {
+        this.success = false;
         this.changingEmail = false;
         this.changingPassword = false;
         this.settingPassword = false;
     }
 
-    changeSuccess = false;
-    successMessage = "Success!";
+    changeEmail() {
+        this.success = false;
+        this.changingEmail = true;
+        this.changeSuccess = false;
+    }
+
+    changePassword() {
+        this.success = false;
+        this.changingPassword = true;
+        this.changeSuccess = false;
+    }
+
+    onSignInProviderAdd(provider: string) {
+        this.success = false;
+        this.submitting = true;
+        this.model.errors = [];
+        this.model.authProvider = provider;
+        fetch('/api/Manage/LinkLogin',
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `bearer ${this.$store.state.token}`
+                },
+                body: JSON.stringify(this.model)
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<ManageUserViewModel>)
+            .then(data => {
+                if (data.errors) {
+                    this.model.errors = data.errors;
+                } else {
+                    this.success = true;
+                }
+                this.submitting = false;
+            })
+            .catch(error => {
+                ErrorMsg.showErrorMsgAndLog("manage.onSignInProviderAdd", "A problem occurred. Login failed.", error);
+                this.submitting = false;
+            });
+    }
+
+    onSignInProviderRemove(provider: string) {
+        this.success = false;
+        this.submitting = true;
+        this.model.errors = [];
+        this.model.authProvider = provider;
+        fetch('/api/Manage/RemoveLogin',
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `bearer ${this.$store.state.token}`
+                },
+                body: JSON.stringify(this.model)
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<ManageUserViewModel>)
+            .then(data => {
+                if (data.errors) {
+                    this.model.errors = data.errors;
+                } else {
+                    this.success = true;
+                }
+                this.submitting = false;
+            })
+            .catch(error => {
+                ErrorMsg.showErrorMsgAndLog("manage.onSignInProviderRemove", "A problem occurred. Login failed.", error);
+                this.submitting = false;
+            });
+    }
 
     onSubmit() {
+        this.success = false;
         if (!this.isValid) return;
         let url: string;
         if (this.changingEmail) {
@@ -178,5 +252,37 @@ export default class ManageUserComponent extends Vue {
                 ErrorMsg.showErrorMsgAndLog("manage.onSubmit", "A problem occurred. Your request was not received.", error);
                 this.changeSuccess = false;
             });
+    }
+
+    onValidated(isValid: boolean, errors: Array<any>) {
+        this.isValid = isValid;
+    }
+
+    requireEmail(value, field, model) {
+        if (!this.changingEmail) return null;
+        return VFG_Custom.requireEmail(value, field, model, undefined);
+    }
+
+    requireNewPassword(value, field, model) {
+        if (!this.changingPassword && !this.settingPassword) return null;
+        return VFG_Custom.requireNewPassword(value, field, model, undefined);
+    }
+
+    requirePassword(value) {
+        if (!this.changingPassword && !this.settingPassword) return null;
+        if (value === undefined || value === null || value === "") {
+            return ["A password is required"];
+        }
+    }
+
+    requirePasswordMatch(value, field, model) {
+        if (!this.changingPassword && !this.settingPassword) return null;
+        return VFG_Custom.requirePasswordMatch(value, field, model, undefined);
+    }
+
+    setPassword() {
+        this.success = false;
+        this.settingPassword = true;
+        this.changeSuccess = false;
     }
 }

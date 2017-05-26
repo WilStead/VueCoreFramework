@@ -212,9 +212,29 @@ namespace MVCCoreVue.Controllers
 
         [Authorize]
         [HttpGet]
-        public async Task<JsonResult> HasPassword()
+        public async Task<IActionResult> GetUserAuthProviders()
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var userLogins = await _userManager.GetLoginsAsync(user);
+            return Json(new {
+                providers = _signInManager.GetExternalAuthenticationSchemes().Select(s => s.DisplayName).ToArray(),
+                userProviders = userLogins.Select(l => l.ProviderDisplayName).ToArray()
+        });
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> HasPassword()
+        {
+            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
             if (await _userManager.HasPasswordAsync(user)) return Json(new { response = "yes" });
             else return Json(new { response = "no" });
         }

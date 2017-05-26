@@ -34,7 +34,7 @@
                         </div>
                     </v-card-text>
                 </v-card-row>
-                <v-card-row v-if="authProviderTwitter || authProviderFacebook || authProviderGoogle || authProviderMicrosoft">
+                <v-card-row v-if="authProviderFacebook || authProviderGoogle || authProviderMicrosoft">
                     <v-card-text>Sign in with an external account</v-card-text>
                     <div class="auth-providers">
                         <v-btn icon light ripple v-if="authProviderFacebook" @click.native="onSignInProvider('Facebook')"><v-icon fa>facebook</v-icon></v-btn>
