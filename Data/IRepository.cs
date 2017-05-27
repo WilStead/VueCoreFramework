@@ -4,17 +4,17 @@ using System.Threading.Tasks;
 
 namespace MVCCoreVue.Data
 {
-    interface IRepository<T> where T: DataItem
+    interface IRepository
     {
-        Task<T> AddAsync(T item);
+        Task<object> AddAsync(object item);
 
-        Task<T> FindAsync(Guid id);
+        Task<object> FindAsync(Guid id);
 
-        IEnumerable<T> GetAll();
+        IEnumerable<object> GetAll();
 
         IEnumerable<FieldDefinition> GetFieldDefinitions();
 
-        IEnumerable<T> GetPage(
+        IEnumerable<object> GetPage(
             string search,
             string sortBy,
             bool descending,
@@ -27,6 +27,6 @@ namespace MVCCoreVue.Data
 
         Task RemoveRangeAsync(IEnumerable<Guid> ids);
 
-        Task<T> UpdateAsync(T item);
+        Task<object> UpdateAsync(object item);
     }
 }

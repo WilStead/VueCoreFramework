@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace MVCCoreVue.Data
 {
-    public class Repository<T> : IRepository<T> where T : DataItem
+    public class Repository<T> : IRepository where T : DataItem
     {
         private readonly ApplicationDbContext _context;
 
@@ -22,13 +22,13 @@ namespace MVCCoreVue.Data
             items = _context.Set<T>();
         }
 
-        public async Task<T> AddAsync(T item)
+        public async Task<object> AddAsync(object item)
         {
             if (item == null)
             {
                 throw new ArgumentNullException(nameof(item));
             }
-            await items.AddAsync(item);
+            await items.AddAsync(item as T);
             await _context.SaveChangesAsync();
             return item;
         }
@@ -64,7 +64,7 @@ namespace MVCCoreVue.Data
             return false;
         }
 
-        public async Task<T> FindAsync(Guid id)
+        public async Task<object> FindAsync(Guid id)
         {
             if (id == null)
             {
@@ -73,7 +73,7 @@ namespace MVCCoreVue.Data
             return await items.FindAsync(id);
         }
 
-        public IEnumerable<T> GetAll()
+        public IEnumerable<object> GetAll()
         {
             return items.AsEnumerable();
         }
@@ -294,7 +294,7 @@ namespace MVCCoreVue.Data
             }
         }
 
-        public IEnumerable<T> GetPage(string search, string sortBy, bool descending, int page, int rowsPerPage)
+        public IEnumerable<object> GetPage(string search, string sortBy, bool descending, int page, int rowsPerPage)
         {
             IQueryable<T> filteredItems = items.AsQueryable();
             if (!string.IsNullOrEmpty(search))
@@ -339,7 +339,7 @@ namespace MVCCoreVue.Data
         public async Task RemoveAsync(Guid id)
         {
             var item = await FindAsync(id);
-            items.Remove(item);
+            items.Remove(item as T);
             await _context.SaveChangesAsync();
         }
 
@@ -349,13 +349,13 @@ namespace MVCCoreVue.Data
             await _context.SaveChangesAsync();
         }
 
-        public async Task<T> UpdateAsync(T item)
+        public async Task<object> UpdateAsync(object item)
         {
             if (item == null)
             {
                 throw new ArgumentNullException(nameof(item));
             }
-            items.Update(item);
+            items.Update(item as T);
             await _context.SaveChangesAsync();
             return item;
         }

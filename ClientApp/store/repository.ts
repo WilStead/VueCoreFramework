@@ -1,4 +1,7 @@
-﻿export interface DataItem {
+﻿import { checkResponse, ApiResponseViewModel } from '../router';
+import * as ErrorMsg from '../error-msg';
+
+export interface DataItem {
     id: string;
     creationTimestamp: number;
     updateTimestamp: number;
@@ -17,20 +20,35 @@ export interface PageData<T extends DataItem> {
 export class Repository<T extends DataItem> {
     private data: Array<T> = [];
 
+    dataType = '';
+
     constructor(initial: Array<T>) { this.data = initial.slice(); }
 
     add(vm: T): Promise<OperationReply<T>> {
-        return new Promise<OperationReply<T>>((resolve, reject) => {
-            let id = vm.creationTimestamp.toString();
-            this.data.forEach(d => { if (d.id >= id) id = d.id + 1; });
-            vm.id = id;
-            this.data.push(vm);
-            let reply = {
-                data: vm,
-                errors: []
-            };
-            resolve(reply);
-        });
+        return fetch(`/api/Data/${this.dataType}/Add`,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `bearer ${this.$store.state.token}`
+                },
+                body: JSON.stringify(vm)
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<T>)
+            .then(data => {
+                if (data.error) {
+                    return {
+                        data: vm,
+                        errors: [ data.error ]
+                    };
+                }
+                return { data };
+            })
+            .catch(error => {
+                return Promise.reject(`There was a problem with your request. ${error.Message}`);
+            });
     }
 
     find(id: string): Promise<T> {
