@@ -1,10 +1,20 @@
 ﻿<template>
     <v-card>
-        <v-alert error :value="errorMessage">{{ error }}</v-alert>
+        <v-dialog v-model="model.deleteDialogShown">
+            <v-card>
+                <v-card-row>
+                    <v-card-title>Are you sure you want to delete this item?</v-card-title>
+                </v-card-row>
+                <v-card-row actions>
+                    <v-btn class="green--text darken-1" flat="flat" @click.native="model.deleteDialogShown = false">Cancel</v-btn>
+                    <v-btn class="red--text accent-4" flat="flat" @click.native="onDelete">Delete</v-btn>
+                </v-card-row>
+            </v-card>
+        </v-dialog>
+        <v-alert error :value="errorMessage">{{ errorMessage }}</v-alert>
         <v-card-row>
             <vue-form-generator class="vfg-container" :schema="schema" :model="model" :options="formOptions" @validated="onValidated"></vue-form-generator>
         </v-card-row>
-        <v-card-row v-if="success" transition="v-fade-transition" class="text-md-center success--text">Success</v-card-row>
         <v-card-row v-if="activity" class="activity-row">
             <v-progress-circular indeterminate class="primary--text"></v-progress-circular>
         </v-card-row>

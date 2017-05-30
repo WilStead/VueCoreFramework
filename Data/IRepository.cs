@@ -21,7 +21,7 @@ namespace MVCCoreVue.Data
             int page,
             int rowsPerPage);
 
-        Task<int> GetTotalAsync();
+        Task<long> GetTotalAsync();
 
         Task RemoveAsync(Guid id);
 

@@ -30,7 +30,11 @@ namespace MVCCoreVue.Data
             }
             await items.AddAsync(item as T);
             await _context.SaveChangesAsync();
-            return item;
+            foreach (var reference in _context.Entry(item).References)
+            {
+                reference.Load();
+            }
+            return GetViewModel(item as T);
         }
 
         private bool AnyPropMatch(T item, string search)
@@ -70,19 +74,40 @@ namespace MVCCoreVue.Data
             {
                 throw new ArgumentNullException(nameof(id));
             }
-            return await items.FindAsync(id);
+            var item = await items.FindAsync(id);
+            foreach (var reference in _context.Entry(item).References)
+            {
+                reference.Load();
+            }
+            return GetViewModel(item);
         }
 
         public IEnumerable<object> GetAll()
         {
-            return items.AsEnumerable();
+            IQueryable<T> filteredItems = items.AsQueryable();
+
+            var tInfo = typeof(T).GetTypeInfo();
+            foreach (var pInfo in tInfo.GetProperties())
+            {
+                var ptInfo = pInfo.PropertyType.GetTypeInfo();
+                if (pInfo.PropertyType == typeof(DataItem)
+                    || ptInfo.IsSubclassOf(typeof(DataItem))
+                    || (ptInfo.IsGenericType
+                    && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(IEnumerable<>))
+                    && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem))))
+                {
+                    filteredItems = items.Include(pInfo.Name);
+                }
+            }
+
+            return items.Select(i => GetViewModel(i)).AsEnumerable();
         }
 
         private FieldDefinition GetFieldDefinition(PropertyInfo pInfo)
         {
             var fd = new FieldDefinition
             {
-                Model = pInfo.Name
+                Model = pInfo.Name.ToInitialLower()
             };
 
             var dataType = pInfo.GetCustomAttribute<DataTypeAttribute>();
@@ -163,6 +188,12 @@ namespace MVCCoreVue.Data
                         break;
                 }
             }
+            else if (pInfo.PropertyType == typeof(string))
+            {
+                fd.Type = "input";
+                fd.InputType = "text";
+                fd.Validator = "string";
+            }
             else if (pInfo.PropertyType == typeof(bool))
             {
                 fd.Type = "checkbox";
@@ -230,9 +261,7 @@ namespace MVCCoreVue.Data
             }
             else
             {
-                fd.Type = "input";
-                fd.InputType = "text";
-                fd.Validator = "string";
+                fd.Type = "label";
             }
 
             fd.Default = pInfo.GetCustomAttribute<DefaultAttribute>()?.Default;
@@ -256,15 +285,22 @@ namespace MVCCoreVue.Data
             }
 
             var display = pInfo.GetCustomAttribute<DisplayAttribute>();
-            fd.GroupName = display?.GroupName;
-            fd.Help = display?.Description;
-            fd.Hint = display?.ShortName;
-            fd.Label = display?.Name;
-            fd.Placeholder = display?.Prompt;
+            fd.GroupName = display?.GetGroupName();
+            fd.Hint = display?.GetDescription();
+            fd.Label = display?.GetName();
+            fd.Placeholder = display?.GetPrompt();
+            if (display?.GetAutoGenerateField() == false)
+            {
+                fd.Visible = false;
+                fd.HideInTable = true;
+            }
+
+            var help = pInfo.GetCustomAttribute<HelpAttribute>();
+            if (!string.IsNullOrWhiteSpace(help?.HelpText))
+                fd.Help = help?.HelpText;
 
             var hidden = pInfo.GetCustomAttribute<HiddenAttribute>();
             if (hidden?.Hidden == true) fd.Visible = false;
-            fd.HideInTable = hidden?.HiddenInTable;
 
             var range = pInfo.GetCustomAttribute<RangeAttribute>();
             fd.Min = range?.Minimum;
@@ -297,6 +333,21 @@ namespace MVCCoreVue.Data
         public IEnumerable<object> GetPage(string search, string sortBy, bool descending, int page, int rowsPerPage)
         {
             IQueryable<T> filteredItems = items.AsQueryable();
+
+            var tInfo = typeof(T).GetTypeInfo();
+            foreach (var pInfo in tInfo.GetProperties())
+            {
+                var ptInfo = pInfo.PropertyType.GetTypeInfo();
+                if (pInfo.PropertyType == typeof(DataItem)
+                    || ptInfo.IsSubclassOf(typeof(DataItem))
+                    || (ptInfo.IsGenericType
+                    && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(IEnumerable<>))
+                    && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem))))
+                {
+                    filteredItems = items.Include(pInfo.Name);
+                }
+            }
+
             if (!string.IsNullOrEmpty(search))
             {
                 filteredItems = items.Where(i => AnyPropMatch(i, search));
@@ -328,12 +379,38 @@ namespace MVCCoreVue.Data
                 filteredItems = filteredItems.Skip((page - 1) * rowsPerPage).Take(page * rowsPerPage);
             }
 
-            return filteredItems.AsEnumerable();
+            return filteredItems.Select(i => GetViewModel(i)).AsEnumerable();
         }
 
-        public async Task<int> GetTotalAsync()
+        public async Task<long> GetTotalAsync()
         {
-            return await items.CountAsync();
+            return await items.LongCountAsync();
+        }
+
+        private IDictionary<string, object> GetViewModel(T item)
+        {
+            IDictionary<string, object> vm = new Dictionary<string, object>();
+            var tInfo = typeof(T).GetTypeInfo();
+            foreach (var pInfo in tInfo.GetProperties())
+            {
+                var ptInfo = pInfo.PropertyType.GetTypeInfo();
+                if (pInfo.PropertyType == typeof(DataItem)
+                    || ptInfo.IsSubclassOf(typeof(DataItem)))
+                {
+                    vm[pInfo.Name.ToInitialLower()] = pInfo.GetValue(item).ToString();
+                }
+                else if (ptInfo.IsGenericType
+                    && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(IEnumerable<>))
+                    && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem)))
+                {
+                    vm[pInfo.Name.ToInitialLower()] = (pInfo.GetValue(item) as IEnumerable<DataItem>).Any() ? "..." : string.Empty;
+                }
+                else
+                {
+                    vm[pInfo.Name.ToInitialLower()] = pInfo.GetValue(item);
+                }
+            }
+            return vm;
         }
 
         public async Task RemoveAsync(Guid id)
@@ -357,7 +434,11 @@ namespace MVCCoreVue.Data
             }
             items.Update(item as T);
             await _context.SaveChangesAsync();
-            return item;
+            foreach (var reference in _context.Entry(item).References)
+            {
+                reference.Load();
+            }
+            return GetViewModel(item as T);
         }
     }
 }

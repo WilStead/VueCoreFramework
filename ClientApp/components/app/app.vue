@@ -3,7 +3,7 @@
         <v-navigation-drawer persistent clipped disable-route-watcher v-model="sideNav">
             <v-list>
                 <template v-for="menuItem in $store.state.uiState.menuItems">
-                    <menu-item-component :menuItem="menuItem" />
+                    <menu-item-component :menuItem="menuItem" :submenu="menuItem.submenu" />
                 </template>
             </v-list>
         </v-navigation-drawer>

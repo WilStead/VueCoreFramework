@@ -17,7 +17,7 @@ export default class DynamicTableComponent extends Vue {
 
     @Prop()
     routeName: string;
-    
+
     activity = false;
     deleteDialogShown = false;
     deleteAskingItems = [];
@@ -101,7 +101,7 @@ export default class DynamicTableComponent extends Vue {
             .catch(error => {
                 this.errorMessage = "A problem occurred while updating the data.";
                 this.activity = false;
-                ErrorMsg.logError("dynamic-form.updateForm", error);
+                ErrorMsg.logError("dynamic-table.mounted", error);
             });
     }
 

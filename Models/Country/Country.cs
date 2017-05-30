@@ -1,9 +1,11 @@
 ﻿using MVCCoreVue.Data;
 using MVCCoreVue.Data.Attributes;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace MVCCoreVue.Models
 {
+    [MenuClass(IconClass = "public")]
     public class Country : DataItem
     {
         [Display(Prompt = "Name")]
@@ -15,5 +17,11 @@ namespace MVCCoreVue.Models
         [Required]
         [Range(0, 100)]
         public double EpiIndex { get; set; }
+
+        [Display(AutoGenerateField = false)]
+        public Guid CityId { get; set; }
+
+        [Display(Name = "Capitol")]
+        public City City { get; set; }
     }
 }

@@ -4,43 +4,32 @@ import { FieldDefinition } from './field-definition';
 import { validators } from '../vfg-custom-validators';
 import * as ErrorMsg from '../error-msg';
 
+interface ApiNumericResponseViewModel {
+    response: number;
+}
+
 export interface DataItem {
     id: string;
     creationTimestamp: number;
     updateTimestamp: number;
 }
 
-export interface OperationReply<T extends DataItem> {
-    data: T;
+export interface OperationReply<DataItem> {
+    data: DataItem;
     error: string;
 }
 
-export interface PageData<T extends DataItem> {
-    pageItems: Array<T>;
+export interface PageData<DataItem> {
+    pageItems: Array<DataItem>;
     totalItems: number;
 }
 
-export interface Repository {
-    add(returnPath: string, vm: any): Promise<OperationReply<any>>;
-    find(returnPath: string, id: string): Promise<OperationReply<any>>;
-    getAll(returnPath: string): Promise<Array<any>>;
-    getFieldDefinitions(returnPath: string): Promise<Array<FieldDefinition>>;
-    getPage(returnPath: string, search: string, sortBy: string, descending: boolean, page: number, rowsPerPage: number): Promise<PageData<any>>;
-    remove(returnPath: string, id: string): Promise<OperationReply<any>>;
-    removeRange(returnPath: string, ids: Array<string>): Promise<OperationReply<any>>;
-    update(returnPath: string, vm: any): Promise<OperationReply<any>>;
-}
-
-interface ApiNumericResponseViewModel {
-    response: number;
-}
-
-export class DataRepository<T extends DataItem> implements Repository {
+export class Repository {
     dataType = '';
 
     constructor(dataType: string) { this.dataType = dataType; }
 
-    add(returnPath: string, vm: T): Promise<OperationReply<T>> {
+    add(returnPath: string, vm: DataItem): Promise<OperationReply<DataItem>> {
         return fetch(`/api/Data/${this.dataType}/Add`,
             {
                 method: 'POST',
@@ -63,11 +52,11 @@ export class DataRepository<T extends DataItem> implements Repository {
                 return { data };
             })
             .catch(error => {
-                return Promise.reject(`There was a problem with your request. ${error.Message}`);
+                return Promise.reject(`There was a problem with your request. ${error}`);
             });
     }
 
-    find(returnPath: string, id: string): Promise<OperationReply<T>> {
+    find(returnPath: string, id: string): Promise<OperationReply<DataItem>> {
         if (id === undefined || id === null || id === '')
         {
             return Promise.reject("The item id was missing from your request.");
@@ -92,11 +81,11 @@ export class DataRepository<T extends DataItem> implements Repository {
                 return { data };
             })
             .catch(error => {
-                return Promise.reject(`There was a problem with your request. ${error.Message}`);
+                return Promise.reject(`There was a problem with your request. ${error}`);
             });
     }
 
-    getAll(returnPath: string): Promise<Array<T>> {
+    getAll(returnPath: string): Promise<Array<DataItem>> {
         return fetch(`/api/Data/${this.dataType}/GetAll`,
             {
                 method: 'GET',
@@ -106,10 +95,10 @@ export class DataRepository<T extends DataItem> implements Repository {
                 }
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<Array<T>>)
+            .then(response => response.json() as Promise<Array<DataItem>>)
             .then(data => data)
             .catch(error => {
-                return Promise.reject(`There was a problem with your request. ${error.Message}`);
+                return Promise.reject(`There was a problem with your request. ${error}`);
             });
     }
 
@@ -134,14 +123,15 @@ export class DataRepository<T extends DataItem> implements Repository {
                             defs[i].validator = validators[defs[i].validator];
                         }
                     }
+                    return defs;
                 }
             })
             .catch(error => {
-                return Promise.reject(`There was a problem with your request. ${error.Message}`);
+                return Promise.reject(`There was a problem with your request. ${error}`);
             });
     }
 
-    getPage(returnPath: string, search: string, sortBy: string, descending: boolean, page: number, rowsPerPage: number): Promise<PageData<T>> {
+    getPage(returnPath: string, search: string, sortBy: string, descending: boolean, page: number, rowsPerPage: number): Promise<PageData<DataItem>> {
         var url = `/api/Data/${this.dataType}/GetPage`;
         if (search || sortBy || descending || page || rowsPerPage) {
             url += '?';
@@ -193,7 +183,7 @@ export class DataRepository<T extends DataItem> implements Repository {
                         }
                     })
                     .then(response => checkResponse(response, returnPath))
-                    .then(response => response.json() as Promise<Array<T>>)
+                    .then(response => response.json() as Promise<Array<DataItem>>)
                     .then(data => {
                         return {
                             pageItems: data,
@@ -201,15 +191,15 @@ export class DataRepository<T extends DataItem> implements Repository {
                         };
                     })
                     .catch(error => {
-                        return Promise.reject(`There was a problem with your request. ${error.Message}`);
+                        return Promise.reject(`There was a problem with your request. ${error}`);
                     });
             })
             .catch(error => {
-                return Promise.reject(`There was a problem with your request. ${error.Message}`);
+                return Promise.reject(`There was a problem with your request. ${error}`);
             });
     }
 
-    remove(returnPath: string, id: string): Promise<OperationReply<T>> {
+    remove(returnPath: string, id: string): Promise<OperationReply<DataItem>> {
         if (id === undefined || id === null || id === '') {
             return Promise.reject("The item id was missing from your request.");
         }
@@ -233,11 +223,40 @@ export class DataRepository<T extends DataItem> implements Repository {
                 return { data: undefined, error: undefined };
             })
             .catch(error => {
-                return Promise.reject(`There was a problem with your request. ${error.Message}`);
+                return Promise.reject(`There was a problem with your request. ${error}`);
             });
     }
 
-    removeRange(returnPath: string, ids: Array<string>): Promise<OperationReply<T>> {
+    removeChild(returnPath: string, id: string, childProp: string, childId: string): Promise<OperationReply<DataItem>> {
+        if (childProp === undefined || childProp === null || childProp === ''
+            || childId === undefined || childId === null || childId === '') {
+            return Promise.reject("The item info was missing from your request.");
+        }
+        return fetch(`/api/Data/${this.dataType}/RemoveChild/${id}/${childProp}/${childId}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${store.state.token}`
+                }
+            })
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(data => {
+                if (data.response) {
+                    return {
+                        data: undefined,
+                        error: data.response
+                    };
+                }
+                return { data: undefined, error: undefined };
+            })
+            .catch(error => {
+                return Promise.reject(`There was a problem with your request. ${error}`);
+            });
+    }
+
+    removeRange(returnPath: string, ids: Array<string>): Promise<OperationReply<DataItem>> {
         if (ids === undefined || ids === null || !ids.length) {
             return Promise.reject("The item ids were missing from your request.");
         }
@@ -263,11 +282,11 @@ export class DataRepository<T extends DataItem> implements Repository {
                 return { data: undefined, error: undefined };
             })
             .catch(error => {
-                return Promise.reject(`There was a problem with your request. ${error.Message}`);
+                return Promise.reject(`There was a problem with your request. ${error}`);
             });
     }
 
-    update(returnPath: string, vm: T): Promise<OperationReply<T>> {
+    update(returnPath: string, vm: DataItem): Promise<OperationReply<DataItem>> {
         return fetch(`/api/Data/${this.dataType}/Update`,
             {
                 method: 'POST',
@@ -290,7 +309,7 @@ export class DataRepository<T extends DataItem> implements Repository {
                 return { data };
             })
             .catch(error => {
-                return Promise.reject(`There was a problem with your request. ${error.Message}`);
+                return Promise.reject(`There was a problem with your request. ${error}`);
             });
     }
 }

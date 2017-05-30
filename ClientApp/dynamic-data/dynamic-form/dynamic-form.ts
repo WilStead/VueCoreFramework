@@ -3,7 +3,8 @@ import { Component, Prop, Watch } from 'vue-property-decorator';
 import * as ErrorMsg from '../../error-msg';
 import { FieldDefinition } from '../../store/field-definition';
 import VueFormGenerator from 'vue-form-generator';
-import { Repository, OperationReply } from '../../store/repository';
+import { DataItem, Repository, OperationReply } from '../../store/repository';
+import { router } from '../../router';
 
 @Component
 export default class DynamicFormComponent extends Vue {
@@ -40,9 +41,8 @@ export default class DynamicFormComponent extends Vue {
         validateAfterChanged: true
     };
     isValid = false;
-    model = {};
+    model: any = {};
     schema: any = {};
-    success = false;
     vm: any;
     vmDefinition: Array<FieldDefinition>;
 
@@ -55,21 +55,23 @@ export default class DynamicFormComponent extends Vue {
     }
 
     onCancel() {
-        this.success = false;
         this.activity = false;
         this.errorMessage = '';
         this.$router.go(-1);
     }
 
     onCreate() {
-        this.success = false;
         this.activity = true;
         this.errorMessage = '';
         let timestamp = Date.now();
-        let d = Object.assign({}, this.model);
-        d['id'] = timestamp.toString();
-        d['creationTimestamp'] = timestamp;
-        d['updateTimestamp'] = timestamp;
+        let d: DataItem = Object.assign({},
+            this.model,
+            {
+                id: timestamp.toString(),
+                creationTimestamp: timestamp,
+                updateTimestamp: timestamp
+            }
+        );
         this.repository.add(this.$route.fullPath, d)
             .then(data => {
                 if (data.error) {
@@ -86,21 +88,45 @@ export default class DynamicFormComponent extends Vue {
             });
     }
 
+    onDelete() {
+        this.activity = true;
+        this.model.deleteDialogShown = false;
+        this.repository.removeChild(this.$route.fullPath, this.id, this.model.deleteProp, this.model.deleteId)
+            .then(data => {
+                if (data.error) {
+                    this.errorMessage = data.error;
+                }
+                else {
+                    this.updateForm();
+                }
+                this.activity = false;
+            })
+            .catch(error => {
+                this.errorMessage = "A problem occurred. The item could not be removed.";
+                this.activity = false;
+                ErrorMsg.logError("dynamic-form.onDelete", error);
+            });
+    }
+
     onEdit() {
         this.$router.push({ name: this.routeName, params: { operation: 'edit', id: this.id } });
     }
 
     onSave() {
-        this.success = false;
         this.activity = true;
         this.errorMessage = '';
-        let d = Object.assign({}, this.model);
+        let d: DataItem = Object.assign({
+                id: '0',
+                creationTimestamp: 0,
+                updateTimestamp: 0
+            },
+            this.model);
         this.repository.update(this.$route.fullPath, d)
             .then(data => {
                 if (data.error) {
                     this.errorMessage = data.error;
                 } else {
-                    this.success = true;
+                    this.$router.go(-1);
                 }
                 this.activity = false;
             })
@@ -112,7 +138,6 @@ export default class DynamicFormComponent extends Vue {
     }
 
     updateForm() {
-        this.success = false;
         this.activity = true;
         this.errorMessage = '';
         this.repository.find(this.$route.fullPath, this.id)
@@ -138,7 +163,43 @@ export default class DynamicFormComponent extends Vue {
                             this.vmDefinition.forEach(field => {
                                 this.model[field.model] = field.default || null;
                             });
+                            for (var prop in this.vm) {
+                                this.model[prop] = this.vm[prop];
+                            }
                             this.vmDefinition.forEach(field => {
+                                let newField: any = Object.assign({}, field);
+                                if (newField.type === "label") {
+                                    let idField = this.vmDefinition.find(v => v.model === newField.model + "Id");
+                                    if (idField) {
+                                        newField.buttons = [
+                                            {
+                                                classes: 'btn btn--dark btn--flat info--text',
+                                                label: 'Details',
+                                                onclick: function (model, field) {
+                                                    router.push({ name: newField.model, params: { operation: 'details', id: model[field.model + "Id"] } });
+                                                }
+                                            },
+                                            {
+                                                classes: 'btn btn--dark btn--flat orange--text text--darken-2',
+                                                label: 'Edit',
+                                                onclick: function (model, field) {
+                                                    router.push({ name: newField.model, params: { operation: 'edit', id: model[field.model + "Id"] } });
+                                                }
+                                            }
+                                        ];
+                                        if (!field.required) {
+                                            newField.buttons.push({
+                                                classes: 'btn btn--dark btn--flat red--text text--accent-4',
+                                                label: 'Delete',
+                                                onclick: function (model, field) {
+                                                    model.deleteDialogShown = true;
+                                                    model.deleteProp = field.model;
+                                                    model.deleteId = model[field.model + "Id"];
+                                                }
+                                            });
+                                        }
+                                    }
+                                }
                                 if (this.schema.groups) {
                                     let group: any;
                                     if (field.groupName) {
@@ -150,17 +211,14 @@ export default class DynamicFormComponent extends Vue {
                                             this.schema.groups.push(group);
                                         }
                                     }
-                                    group.fields.push(Object.assign({}, field));
+                                    group.fields.push(newField);
                                 }
                                 else {
-                                    this.schema.fields.push(Object.assign({}, field));
+                                    this.schema.fields.push(newField);
                                 }
                             });
                             if (this.operation === 'details') {
                                 this.schema.fields.forEach(f => f.readonly = true);
-                            }
-                            for (var prop in this.vm) {
-                                this.model[prop] = this.vm[prop];
                             }
                             this.activity = false;
                         })

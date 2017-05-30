@@ -10,7 +10,7 @@ namespace MVCCoreVue.Data
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Editable(false)]
-        [Hidden(true)]
+        [Hidden]
         public Guid Id { get; set; }
 
         [Display(AutoGenerateField = false)]

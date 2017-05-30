@@ -32,36 +32,9 @@ const routes = [
         component: require('./components/user/password/reset.vue'),
         props: true
     },
-    {
-        path: '/countries',
-        meta: { requiresAuth: true },
-        component: require('./components/countries/dashboard.vue'),
-        children: [
-            {
-                path: 'table',
-                component: require('./dynamic-data/dynamic-table/dynamic-table.vue'),
-                props: {
-                    routeName: "country",
-                    repository: store.state.countryData
-                }
-            },
-            {
-                name: 'country',
-                path: ':operation/:id',
-                component: require('./dynamic-data/dynamic-form/dynamic-form.vue'),
-                props: (route) => ({
-                    id: route.params.id,
-                    operation: route.params.operation,
-                    repository: store.state.countryData,
-                    routeName: "country"
-                })
-            }
-        ]
-    },
     { path: '/fetchdata', component: resolve => require(['./components/fetchdata/fetchdata.vue'], resolve) },
     { path: '/error/notfound', component: resolve => require(['./components/error/notfound.vue'], resolve) },
-    { path: '/error/:code', component: resolve => require(['./components/error/error.vue'], resolve) },
-    { path: '*', redirect: '/error/notfound' }
+    { path: '/error/:code', component: resolve => require(['./components/error/error.vue'], resolve) }
 ];
 
 export const router = new VueRouter({

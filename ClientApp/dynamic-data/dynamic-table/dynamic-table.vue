@@ -1,6 +1,6 @@
 ﻿<template>
     <v-card>
-        <v-alert error :value="errorMessage">{{ error }}</v-alert>
+        <v-alert error :value="errorMessage">{{ errorMessage }}</v-alert>
         <v-card-row>
             <v-spacer></v-spacer>
             <v-text-field append-icon="search"

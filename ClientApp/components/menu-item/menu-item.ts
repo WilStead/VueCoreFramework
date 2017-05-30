@@ -7,6 +7,10 @@ export default class MenuItemComponent extends Vue {
     @Prop()
     menuItem: MenuItem;
 
+    @Prop()
+    submenu: MenuItem[];
+
     active = false;
+
     toggle() { this.active = !this.active; }
 }

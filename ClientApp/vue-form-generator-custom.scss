@@ -34,4 +34,15 @@
             margin-left: 0.5em;
         }
     }
+
+    .field-label {
+        span {
+            font-size: 1.2em;
+        }
+    }
+
+    .buttons {
+        display: inline-block;
+        float: right;
+    }
 }

@@ -12,16 +12,52 @@ namespace MVCCoreVue.Data.Attributes
         }
     }
 
+    internal class HelpAttribute : Attribute
+    {
+        public string HelpText { get; set; }
+
+        public HelpAttribute(string helpText)
+        {
+            HelpText = helpText;
+        }
+    }
+
     internal class HiddenAttribute : Attribute
     {
         public bool Hidden { get; set; }
 
-        public bool HiddenInTable { get; set; }
-
-        public HiddenAttribute(bool hidden = false)
+        public HiddenAttribute(bool hidden = true)
         {
             Hidden = hidden;
         }
+    }
+
+    /// <summary>
+    /// Classes with this attribute will appear in the site menu.
+    /// Classes without it will not appear, and so will not be directly
+    /// accessible on the site unless they appear as nested data within
+    /// other classes.
+    /// </summary>
+    internal class MenuClassAttribute : Attribute
+    {
+        /// <summary>
+        /// A string with the format "supertype/type/subtype"
+        /// </summary>
+        /// <remarks>
+        /// Used to generate menu and URL structure, doesn't need to reflect
+        /// data relationships in any way.
+        /// </remarks>
+        public string Category { get; set; }
+
+        /// <summary>
+        /// The name of a Material Icon, will appear as the class's icon in the
+        /// menu, and will also be the icon of every category above the class if
+        /// it is the first item added to that category.
+        /// </summary>
+        /// <remarks>Spaces should be replaced by underscores in icon names.</remarks>
+        public string IconClass { get; set; }
+
+        public MenuClassAttribute() { }
     }
 
     internal class RowsAttribute : Attribute

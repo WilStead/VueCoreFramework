@@ -2,10 +2,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MVCCoreVue.Data;
-using MVCCoreVue.Models;
+using MVCCoreVue.Data.Attributes;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace MVCCoreVue.Controllers
@@ -53,7 +56,7 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            if (Guid.TryParse(id, out Guid guid))
+            if (!Guid.TryParse(id, out Guid guid))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
@@ -127,6 +130,35 @@ namespace MVCCoreVue.Controllers
             return Json(new { response = total });
         }
 
+        [AllowAnonymous]
+        [HttpGet("/api/[controller]/[action]")]
+        public IActionResult GetTypes()
+        {
+            try
+            {
+                var types = _context.Model.GetEntityTypes();
+                IDictionary<string, dynamic> classes = new Dictionary<string, dynamic>();
+                foreach (var type in types)
+                {
+                    var attr = type.ClrType.GetTypeInfo().GetCustomAttribute<MenuClassAttribute>();
+                    if (attr != null)
+                    {
+                        classes.Add(type.ClrType.Name,
+                            new {
+                                entityName = type.Name,
+                                category = string.IsNullOrEmpty(attr.Category) ? "/" : attr.Category,
+                                iconClass = attr.IconClass
+                            });
+                    }
+                }
+                return Json(classes);
+            }
+            catch
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> Remove(string dataType, string id)
         {
@@ -138,13 +170,73 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            if (Guid.TryParse(id, out Guid guid))
+            if (!Guid.TryParse(id, out Guid guid))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
             try
-            { 
+            {
                 await repository.RemoveAsync(guid);
+            }
+            catch
+            {
+                return Json(new { response = "Item could not be removed." });
+            }
+            return Ok();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RemoveChild(string dataType, string id, string childProp, string childId)
+        {
+            if (!TryGetRepository(dataType, out IRepository repository))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (string.IsNullOrEmpty(id))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (!Guid.TryParse(id, out Guid guid))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (string.IsNullOrEmpty(childProp))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (string.IsNullOrEmpty(childId))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (!Guid.TryParse(childId, out Guid childGuid))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            object item = null;
+            try
+            {
+                item = await repository.FindAsync(guid);
+            }
+            catch
+            {
+                return Json(new { error = "Item could not be accessed." });
+            }
+            if (item == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/404" });
+            }
+            var pInfo = item.GetType().GetTypeInfo().GetProperty(childProp);
+            if (pInfo == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (!TryGetRepository(pInfo.PropertyType.Name, out IRepository childRepository))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            try
+            {
+                await childRepository.RemoveAsync(childGuid);
             }
             catch
             {
@@ -167,7 +259,7 @@ namespace MVCCoreVue.Controllers
             List<Guid> guids = new List<Guid>();
             foreach (var id in ids)
             {
-                if (Guid.TryParse(id, out Guid guid))
+                if (!Guid.TryParse(id, out Guid guid))
                 {
                     guids.Add(guid);
                 }
@@ -204,12 +296,12 @@ namespace MVCCoreVue.Controllers
             {
                 return false;
             }
-            repository = (IRepository)Activator.CreateInstance(typeof(Repository<>).MakeGenericType(type));
+            repository = (IRepository)Activator.CreateInstance(typeof(Repository<>).MakeGenericType(type), _context);
             return true;
         }
 
         private IRepository GetRepository(Type type)
-            => (IRepository)Activator.CreateInstance(typeof(Repository<>).MakeGenericType(type));
+            => (IRepository)Activator.CreateInstance(typeof(Repository<>).MakeGenericType(type), _context);
 
         private bool TryResolveObject(string dataType, JObject item, out object obj, out Type type)
         {
