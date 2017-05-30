@@ -1,7 +1,7 @@
 ﻿import Vue from 'vue';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import * as ErrorMsg from '../../error-msg';
-import { FieldDefinition } from '../field-definition';
+import { FieldDefinition } from '../../store/field-definition';
 import VueFormGenerator from 'vue-form-generator';
 import { Repository, OperationReply } from '../../store/repository';
 
@@ -14,13 +14,10 @@ export default class DynamicFormComponent extends Vue {
     operation: string;
 
     @Prop()
-    repository: Repository<any>;
+    repository: Repository;
 
     @Prop()
     routeName: string;
-
-    @Prop()
-    vmDefinition: Array<FieldDefinition>;
 
     @Watch('id')
     onIdChanged(val: string, oldVal: string) {
@@ -37,19 +34,17 @@ export default class DynamicFormComponent extends Vue {
     };
 
     activity = false;
-    errorMessages: Array<string> = [];
+    errorMessage = '';
     formOptions = {
         validateAfterLoad: true,
         validateAfterChanged: true
     };
     isValid = false;
     model = {};
-    schema = {
-        fields: []
-    };
+    schema: any = {};
     success = false;
     vm: any;
-    vmCopy: any;
+    vmDefinition: Array<FieldDefinition>;
 
     mounted() {
         this.updateForm();
@@ -61,28 +56,33 @@ export default class DynamicFormComponent extends Vue {
 
     onCancel() {
         this.success = false;
-        this.errorMessages = [];
+        this.activity = false;
+        this.errorMessage = '';
         this.$router.go(-1);
     }
 
     onCreate() {
         this.success = false;
         this.activity = true;
+        this.errorMessage = '';
         let timestamp = Date.now();
         let d = Object.assign({}, this.model);
         d['id'] = timestamp.toString();
         d['creationTimestamp'] = timestamp;
-        this.repository.add(d)
+        d['updateTimestamp'] = timestamp;
+        this.repository.add(this.$route.fullPath, d)
             .then(data => {
-                this.errorMessages = data.errors;
-                this.activity = false;
-                if (data.errors.length === 0) {
+                if (data.error) {
+                    this.errorMessage = data.error;
+                } else {
                     this.$router.go(-1);
                 }
+                this.activity = false;
             })
             .catch(error => {
                 this.activity = false;
-                ErrorMsg.showErrorMsgAndLog("dynamic-form.onCreate", "A problem occurred. The new item could not be added.", error);
+                this.errorMessage = "A problem occurred. The new item could not be added.";
+                ErrorMsg.logError("dynamic-form.onCreate", error);
             });
     }
 
@@ -93,44 +93,88 @@ export default class DynamicFormComponent extends Vue {
     onSave() {
         this.success = false;
         this.activity = true;
+        this.errorMessage = '';
         let d = Object.assign({}, this.model);
-        this.repository.update(d)
+        this.repository.update(this.$route.fullPath, d)
             .then(data => {
-                this.errorMessages = data.errors;
-                this.activity = false;
-                if (data.errors.length === 0) {
+                if (data.error) {
+                    this.errorMessage = data.error;
+                } else {
                     this.success = true;
                 }
+                this.activity = false;
             })
             .catch(error => {
+                this.errorMessage = "A problem occurred. The item could not be updated.";
                 this.activity = false;
-                ErrorMsg.showErrorMsgAndLog("dynamic-form.onSave", "A problem occurred. The item could not be updated.", error);
+                ErrorMsg.logError("dynamic-form.onSave", error);
             });
     }
 
     updateForm() {
         this.success = false;
-        this.repository.find(this.id)
+        this.activity = true;
+        this.errorMessage = '';
+        this.repository.find(this.$route.fullPath, this.id)
             .then(data => {
-                this.vm = data;
-                this.vmCopy = Object.assign({}, this.vm);
-                this.model = {};
-                this.schema = { fields: [] };
-                this.vmDefinition.forEach(field => {
-                    this.model[field.model] = field.default || null;
-                });
-                this.vmDefinition.forEach(field => {
-                    this.schema.fields.push(Object.assign({}, field));
-                });
-                if (this.operation === 'details') {
-                    this.schema.fields.forEach(f => f.readonly = true);
-                }
-                for (var prop in this.vm) {
-                    this.model[prop] = this.vm[prop];
+                if (data.error) {
+                    this.errorMessage = data.error;
+                    this.activity = false;
+                } else {
+                    this.repository.getFieldDefinitions(this.$route.fullPath)
+                        .then(defData => {
+                            this.vmDefinition = defData;
+                            this.vm = data.data;
+                            this.model = {};
+                            let groups = this.vmDefinition.filter(v => v.groupName !== undefined && v.groupName !== null).map(v => v.groupName);
+                            if (groups.length) {
+                                this.schema = { groups: [] };
+                                for (var i = 0; i < groups.length; i++) {
+                                    this.schema.groups[i] = { fields: [] };
+                                    this.schema.groups[i].legend = groups[i];
+                                }
+                            }
+                            this.schema = { fields: [] };
+                            this.vmDefinition.forEach(field => {
+                                this.model[field.model] = field.default || null;
+                            });
+                            this.vmDefinition.forEach(field => {
+                                if (this.schema.groups) {
+                                    let group: any;
+                                    if (field.groupName) {
+                                        group = this.schema.groups.find(g => g.legend == field.groupName);
+                                    } else {
+                                        group = this.schema.groups.find(g => g.legend == "Other");
+                                        if (!group) {
+                                            group = { legend: "Other", fields: [] };
+                                            this.schema.groups.push(group);
+                                        }
+                                    }
+                                    group.fields.push(Object.assign({}, field));
+                                }
+                                else {
+                                    this.schema.fields.push(Object.assign({}, field));
+                                }
+                            });
+                            if (this.operation === 'details') {
+                                this.schema.fields.forEach(f => f.readonly = true);
+                            }
+                            for (var prop in this.vm) {
+                                this.model[prop] = this.vm[prop];
+                            }
+                            this.activity = false;
+                        })
+                        .catch(error => {
+                            this.errorMessage = "A problem occurred while updating the data.";
+                            this.activity = false;
+                            ErrorMsg.logError("dynamic-form.updateForm", error);
+                        });
                 }
             })
             .catch(error => {
-                ErrorMsg.showErrorMsgAndLog("dynamic-form.updateForm", "A problem occurred while updating the data.", error);
+                this.errorMessage = "A problem occurred while updating the data.";
+                this.activity = false;
+                ErrorMsg.logError("dynamic-form.updateForm", error);
             });
     }
 }

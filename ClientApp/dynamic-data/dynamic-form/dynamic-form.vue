@@ -1,13 +1,9 @@
 ﻿<template>
     <v-card>
+        <v-alert error :value="errorMessage">{{ error }}</v-alert>
         <v-card-row>
             <vue-form-generator class="vfg-container" :schema="schema" :model="model" :options="formOptions" @validated="onValidated"></vue-form-generator>
         </v-card-row>
-        <v-alert error :value="errorMessages.length > 0">
-            <ul>
-                <li v-for="error in errorMessages">{{ error }}</li>
-            </ul>
-        </v-alert>
         <v-card-row v-if="success" transition="v-fade-transition" class="text-md-center success--text">Success</v-card-row>
         <v-card-row v-if="activity" class="activity-row">
             <v-progress-circular indeterminate class="primary--text"></v-progress-circular>

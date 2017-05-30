@@ -42,7 +42,7 @@ namespace MVCCoreVue.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpGet("{id}")]
         public async Task<IActionResult> Find(string dataType, string id)
         {
             if (!TryGetRepository(dataType, out IRepository repository))
@@ -57,7 +57,15 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            var item = await repository.FindAsync(guid);
+            object item = null;
+            try
+            {
+                item = await repository.FindAsync(guid);
+            }
+            catch
+            {
+                return Json(new { error = "Item could not be accessed." });
+            }
             if (item == null)
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/404" });
@@ -82,7 +90,14 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            return Json(repository.GetFieldDefinitions());
+            try
+            {
+                return Json(repository.GetFieldDefinitions());
+            }
+            catch
+            {
+                return Json(new { error = "Data could not be retrieved." });
+            }
         }
 
         [HttpGet]
@@ -109,7 +124,7 @@ namespace MVCCoreVue.Controllers
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
             var total = await repository.GetTotalAsync();
-            return Json(new { total = total });
+            return Json(new { response = total });
         }
 
         [HttpPost]
@@ -133,7 +148,7 @@ namespace MVCCoreVue.Controllers
             }
             catch
             {
-                return Json(new { error = "Item could not be removed." });
+                return Json(new { response = "Item could not be removed." });
             }
             return Ok();
         }
@@ -167,7 +182,7 @@ namespace MVCCoreVue.Controllers
             }
             catch
             {
-                return Json(new { error = "One or more items could not be removed." });
+                return Json(new { response = "One or more items could not be removed." });
             }
             return Ok();
         }

@@ -1,7 +1,6 @@
 ﻿import VueRouter from 'vue-router';
 import { store } from './store/store';
 import * as ErrorMsg from './error-msg';
-import { countryFieldDefinitions } from './viewmodels/country';
 
 const routes = [
     { path: '/', component: require('./components/home/home.vue') },
@@ -43,8 +42,7 @@ const routes = [
                 component: require('./dynamic-data/dynamic-table/dynamic-table.vue'),
                 props: {
                     routeName: "country",
-                    repository: store.state.countryData,
-                    vmDefinition: countryFieldDefinitions
+                    repository: store.state.countryData
                 }
             },
             {
@@ -55,8 +53,7 @@ const routes = [
                     id: route.params.id,
                     operation: route.params.operation,
                     repository: store.state.countryData,
-                    routeName: "country",
-                    vmDefinition: countryFieldDefinitions
+                    routeName: "country"
                 })
             }
         ]

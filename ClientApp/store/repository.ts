@@ -1,4 +1,7 @@
-﻿import { checkResponse, ApiResponseViewModel } from '../router';
+﻿import { router, checkResponse, ApiResponseViewModel } from '../router';
+import { store } from './store';
+import { FieldDefinition } from './field-definition';
+import { validators } from '../vfg-custom-validators';
 import * as ErrorMsg from '../error-msg';
 
 export interface DataItem {
@@ -9,7 +12,7 @@ export interface DataItem {
 
 export interface OperationReply<T extends DataItem> {
     data: T;
-    errors: Array<string>;
+    error: string;
 }
 
 export interface PageData<T extends DataItem> {
@@ -17,31 +20,44 @@ export interface PageData<T extends DataItem> {
     totalItems: number;
 }
 
-export class Repository<T extends DataItem> {
-    private data: Array<T> = [];
+export interface Repository {
+    add(returnPath: string, vm: any): Promise<OperationReply<any>>;
+    find(returnPath: string, id: string): Promise<OperationReply<any>>;
+    getAll(returnPath: string): Promise<Array<any>>;
+    getFieldDefinitions(returnPath: string): Promise<Array<FieldDefinition>>;
+    getPage(returnPath: string, search: string, sortBy: string, descending: boolean, page: number, rowsPerPage: number): Promise<PageData<any>>;
+    remove(returnPath: string, id: string): Promise<OperationReply<any>>;
+    removeRange(returnPath: string, ids: Array<string>): Promise<OperationReply<any>>;
+    update(returnPath: string, vm: any): Promise<OperationReply<any>>;
+}
 
+interface ApiNumericResponseViewModel {
+    response: number;
+}
+
+export class DataRepository<T extends DataItem> implements Repository {
     dataType = '';
 
-    constructor(initial: Array<T>) { this.data = initial.slice(); }
+    constructor(dataType: string) { this.dataType = dataType; }
 
-    add(vm: T): Promise<OperationReply<T>> {
+    add(returnPath: string, vm: T): Promise<OperationReply<T>> {
         return fetch(`/api/Data/${this.dataType}/Add`,
             {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': `bearer ${this.$store.state.token}`
+                    'Authorization': `bearer ${store.state.token}`
                 },
                 body: JSON.stringify(vm)
             })
-            .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<T>)
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<any>)
             .then(data => {
                 if (data.error) {
                     return {
                         data: vm,
-                        errors: [ data.error ]
+                        error: data.error
                     };
                 }
                 return { data };
@@ -51,85 +67,230 @@ export class Repository<T extends DataItem> {
             });
     }
 
-    find(id: string): Promise<T> {
-        return new Promise<T>((resolve, reject) => {
-            resolve(this.data.find(d => d.id == id));
-        });
+    find(returnPath: string, id: string): Promise<OperationReply<T>> {
+        if (id === undefined || id === null || id === '')
+        {
+            return Promise.reject("The item id was missing from your request.");
+        }
+        return fetch(`/api/Data/${this.dataType}/Find/${id}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${store.state.token}`
+                }
+            })
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<any>)
+            .then(data => {
+                if (data.error) {
+                    return {
+                        data: undefined,
+                        error: data.error
+                    };
+                }
+                return { data };
+            })
+            .catch(error => {
+                return Promise.reject(`There was a problem with your request. ${error.Message}`);
+            });
     }
 
-    getAll(): Promise<Array<T>> {
-        return new Promise<Array<T>>((resolve, reject) => {
-            resolve(this.data);
-        });
+    getAll(returnPath: string): Promise<Array<T>> {
+        return fetch(`/api/Data/${this.dataType}/GetAll`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${store.state.token}`
+                }
+            })
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<Array<T>>)
+            .then(data => data)
+            .catch(error => {
+                return Promise.reject(`There was a problem with your request. ${error.Message}`);
+            });
     }
 
-    getPage(search, sortBy, descending, page, rowsPerPage): Promise<PageData<T>> {
-        return new Promise<PageData<T>>((resolve, reject) => {
-            let pageItems = this.data.slice();
-            pageItems = pageItems.filter(v => {
-                for (var prop in v) {
-                    if (typeof v[prop] === 'string') {
-                        let s: string = <any>v[prop];
-                        if (s.includes(search)) return true;
-                    } else if (typeof v[prop] === 'number') {
-                        let n: number = <any>v[prop];
-                        if (n.toString().includes(search)) return true;
+    getFieldDefinitions(returnPath: string): Promise<Array<FieldDefinition>> {
+        return fetch(`/api/Data/${this.dataType}/GetFieldDefinitions`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${store.state.token}`
+                }
+            })
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<any>)
+            .then(data => {
+                if (data.error) {
+                    return Promise.reject(`There was a problem with your request. ${data.error}`);
+                } else {
+                    let defs = data;
+                    for (var i = 0; i < defs.length; i++) {
+                        if (defs[i].validator && validators[defs[i].validator]) {
+                            defs[i].validator = validators[defs[i].validator];
+                        }
                     }
                 }
-                return false;
+            })
+            .catch(error => {
+                return Promise.reject(`There was a problem with your request. ${error.Message}`);
             });
-
-            if (sortBy) {
-                pageItems.sort((a, b) => {
-                    const sortA = a[sortBy];
-                    const sortB = b[sortBy];
-
-                    if (descending) {
-                        if (sortA < sortB) return 1;
-                        if (sortA > sortB) return -1;
-                        return 0;
-                    } else {
-                        if (sortA < sortB) return -1;
-                        if (sortA > sortB) return 1;
-                        return 0;
-                    }
-                });
-            }
-
-            if (rowsPerPage > 0) {
-                pageItems = pageItems.slice((page - 1) * rowsPerPage, page * rowsPerPage);
-            }
-            resolve({ pageItems, totalItems: this.data.length });
-        });
     }
 
-    remove(id: string): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            this.data.splice(this.data.findIndex(d => d.id == id), 1);
-            resolve();
-        });
-    }
-
-    removeRange(ids: Array<string>): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            for (var i = 0; i < ids.length; i++) {
-                this.data.splice(this.data.findIndex(d => d.id == ids[i]), 1);
+    getPage(returnPath: string, search: string, sortBy: string, descending: boolean, page: number, rowsPerPage: number): Promise<PageData<T>> {
+        var url = `/api/Data/${this.dataType}/GetPage`;
+        if (search || sortBy || descending || page || rowsPerPage) {
+            url += '?';
+        }
+        if (search) {
+            url += `search=${encodeURIComponent(search)}`;
+        }
+        if (sortBy) {
+            if (search) {
+                url += '&';
             }
-            resolve();
-        });
+            url += `sortBy=${encodeURIComponent(sortBy)}`;
+        }
+        if (descending) {
+            if (search || sortBy) {
+                url += '&';
+            }
+            url += `descending=${descending}`;
+        }
+        if (page) {
+            if (search || sortBy || descending) {
+                url += '&';
+            }
+            url += `page=${page}`;
+        }
+        if (rowsPerPage) {
+            if (search || sortBy || descending || page) {
+                url += '&';
+            }
+            url += `rowsPerPage=${rowsPerPage}`;
+        }
+        return fetch(`/api/Data/${this.dataType}/GetTotal`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${store.state.token}`
+                }
+            })
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<ApiNumericResponseViewModel>)
+            .then(response => {
+                return fetch(url,
+                    {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Authorization': `bearer ${store.state.token}`
+                        }
+                    })
+                    .then(response => checkResponse(response, returnPath))
+                    .then(response => response.json() as Promise<Array<T>>)
+                    .then(data => {
+                        return {
+                            pageItems: data,
+                            totalItems: response.response
+                        };
+                    })
+                    .catch(error => {
+                        return Promise.reject(`There was a problem with your request. ${error.Message}`);
+                    });
+            })
+            .catch(error => {
+                return Promise.reject(`There was a problem with your request. ${error.Message}`);
+            });
     }
 
-    update(vm: T): Promise<OperationReply<T>> {
-        return new Promise<OperationReply<T>>((resolve, reject) => {
-            vm.updateTimestamp = Date.now();
-            let oldIndex = this.data.findIndex(d => d.id == vm.id);
-            if (oldIndex == -1) reject();
-            this.data.splice(oldIndex, 1, vm);
-            let reply = {
-                data: this.data[oldIndex],
-                errors: []
-            };
-            resolve(reply);
-        });
+    remove(returnPath: string, id: string): Promise<OperationReply<T>> {
+        if (id === undefined || id === null || id === '') {
+            return Promise.reject("The item id was missing from your request.");
+        }
+        return fetch(`/api/Data/${this.dataType}/Remove/${id}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${store.state.token}`
+                }
+            })
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(data => {
+                if (data.response) {
+                    return {
+                        data: undefined,
+                        error: data.response
+                    };
+                }
+                return { data: undefined, error: undefined };
+            })
+            .catch(error => {
+                return Promise.reject(`There was a problem with your request. ${error.Message}`);
+            });
+    }
+
+    removeRange(returnPath: string, ids: Array<string>): Promise<OperationReply<T>> {
+        if (ids === undefined || ids === null || !ids.length) {
+            return Promise.reject("The item ids were missing from your request.");
+        }
+        return fetch(`/api/Data/${this.dataType}/Remove`,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `bearer ${store.state.token}`
+                },
+                body: JSON.stringify(ids)
+            })
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(data => {
+                if (data.response) {
+                    return {
+                        data: undefined,
+                        error: data.response
+                    };
+                }
+                return { data: undefined, error: undefined };
+            })
+            .catch(error => {
+                return Promise.reject(`There was a problem with your request. ${error.Message}`);
+            });
+    }
+
+    update(returnPath: string, vm: T): Promise<OperationReply<T>> {
+        return fetch(`/api/Data/${this.dataType}/Update`,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `bearer ${store.state.token}`
+                },
+                body: JSON.stringify(vm)
+            })
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<any>)
+            .then(data => {
+                if (data.error) {
+                    return {
+                        data: vm,
+                        error: data.error
+                    };
+                }
+                return { data };
+            })
+            .catch(error => {
+                return Promise.reject(`There was a problem with your request. ${error.Message}`);
+            });
     }
 }
