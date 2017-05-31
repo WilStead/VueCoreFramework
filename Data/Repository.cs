@@ -37,6 +37,35 @@ namespace MVCCoreVue.Data
             return GetViewModel(item as T);
         }
 
+        public async Task<object> AddChildAsync(object item, object child, PropertyInfo pInfo, PropertyInfo idPInfo)
+        {
+            if (item == null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
+            if (child == null)
+            {
+                throw new ArgumentNullException(nameof(child));
+            }
+            if (pInfo == null)
+            {
+                throw new ArgumentNullException(nameof(pInfo));
+            }
+            if (idPInfo == null)
+            {
+                throw new ArgumentNullException(nameof(idPInfo));
+            }
+            pInfo.SetValue(item, child);
+            idPInfo.SetValue(item, (child as DataItem).Id);
+            items.Update(item as T);
+            await _context.SaveChangesAsync();
+            foreach (var reference in _context.Entry(item).References)
+            {
+                reference.Load();
+            }
+            return GetViewModel(item as T);
+        }
+
         private bool AnyPropMatch(T item, string search)
         {
             var type = typeof(T);
@@ -80,6 +109,20 @@ namespace MVCCoreVue.Data
                 reference.Load();
             }
             return GetViewModel(item);
+        }
+
+        public async Task<object> FindItemAsync(Guid id)
+        {
+            if (id == null)
+            {
+                throw new ArgumentNullException(nameof(id));
+            }
+            var item = await items.FindAsync(id);
+            foreach (var reference in _context.Entry(item).References)
+            {
+                reference.Load();
+            }
+            return item;
         }
 
         public IEnumerable<object> GetAll()
@@ -210,6 +253,12 @@ namespace MVCCoreVue.Data
                 fd.DateTimePickerOptions = "H:mm:ss";
                 fd.Validator = "date";
             }
+            else if (pInfo.PropertyType == typeof(Guid))
+            {
+                fd.Type = "label";
+                fd.HideInTable = true;
+                fd.Visible = false;
+            }
             else if (pInfo.PropertyType.GetTypeInfo().IsEnum)
             {
                 if (pInfo.GetCustomAttribute<FlagsAttribute>() != null)
@@ -261,7 +310,7 @@ namespace MVCCoreVue.Data
             }
             else
             {
-                fd.Type = "label";
+                fd.Type = "object";
             }
 
             fd.Default = pInfo.GetCustomAttribute<DefaultAttribute>()?.Default;
@@ -397,7 +446,15 @@ namespace MVCCoreVue.Data
                 if (pInfo.PropertyType == typeof(DataItem)
                     || ptInfo.IsSubclassOf(typeof(DataItem)))
                 {
-                    vm[pInfo.Name.ToInitialLower()] = pInfo.GetValue(item).ToString();
+                    object value = pInfo.GetValue(item);
+                    if (value == null)
+                    {
+                        vm[pInfo.Name.ToInitialLower()] = "[None]";
+                    }
+                    else
+                    {
+                        vm[pInfo.Name.ToInitialLower()] = value.ToString();
+                    }
                 }
                 else if (ptInfo.IsGenericType
                     && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(IEnumerable<>))
@@ -413,11 +470,43 @@ namespace MVCCoreVue.Data
             return vm;
         }
 
+        public async Task<object> NewAsync()
+        {
+            var newItem = await items.AddAsync(Activator.CreateInstance<T>());
+            await _context.SaveChangesAsync();
+            return newItem.Entity;
+        }
+
         public async Task RemoveAsync(Guid id)
         {
-            var item = await FindAsync(id);
+            var item = await FindItemAsync(id);
             items.Remove(item as T);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<object> RemoveChildAsync(object item, PropertyInfo pInfo, PropertyInfo idPInfo)
+        {
+            if (item == null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
+            if (pInfo == null)
+            {
+                throw new ArgumentNullException(nameof(pInfo));
+            }
+            if (idPInfo == null)
+            {
+                throw new ArgumentNullException(nameof(idPInfo));
+            }
+            pInfo.SetValue(item, null);
+            idPInfo.SetValue(item, null);
+            items.Update(item as T);
+            await _context.SaveChangesAsync();
+            foreach (var reference in _context.Entry(item).References)
+            {
+                reference.Load();
+            }
+            return GetViewModel(item as T);
         }
 
         public async Task RemoveRangeAsync(IEnumerable<Guid> ids)

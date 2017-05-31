@@ -1,8 +1,8 @@
 ﻿import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import VueFormGenerator from 'vue-form-generator';
 import * as ErrorMsg from '../../error-msg';
-import * as VFG_Custom from '../../vfg-custom-validators';
+import VueFormGenerator from 'vue-form-generator';
+import * as VFG_Custom from '../../vfg/vfg-custom-validators';
 
 interface RegisterViewModel {
     email: string,

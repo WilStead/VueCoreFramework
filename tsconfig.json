@@ -8,10 +8,11 @@
     "sourceMap": true,
     "skipDefaultLibCheck": true,
     "types": [ "requirejs" ],
-    "lib": ["dom", "es2015", "scripthost"]
+    "lib": [ "dom", "es2015", "scripthost" ]
   },
   "exclude": [
       "bin",
-      "node_modules"
+      "node_modules",
+      "ClientApp/vfg/dist"
   ]
 }

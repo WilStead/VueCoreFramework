@@ -1,7 +1,8 @@
 ﻿import Vue from 'vue';
 import Vuex from 'vuex';
 Vue.use(Vuex);
-import { MenuItem, uiState, getMenuItems } from './ui/uiStore';
+import { MenuItem, uiState, getMenuItems, getChildItems } from './ui/uiStore';
+import * as ErrorLog from '../error-msg';
 
 export const store = new Vuex.Store({
     state: {
@@ -24,16 +25,18 @@ export const store = new Vuex.Store({
         setToken(state, token) {
             state.token = token;
         },
-        addMenuItems(state, router) {
+        addTypeRoutes(state, router) {
             let dataItemIndex = state.uiState.menuItems.findIndex(v => v.text === "Data");
-            getMenuItems(router)
+            getMenuItems(router, state.uiState.menuItems[dataItemIndex])
                 .then(data => {
-                    if (data.length) {
-                        state.uiState.menuItems[dataItemIndex].submenu = data;
-                    } else {
+                    if (!state.uiState.menuItems[dataItemIndex].submenu
+                        || !state.uiState.menuItems[dataItemIndex].submenu.length) {
                         state.uiState.menuItems.splice(dataItemIndex, 1);
                     }
-                });
+                })
+                .catch(error => ErrorLog.logError("store.addTypeRoutes.getMenuItems", error));
+            getChildItems(router)
+                .catch(error => ErrorLog.logError("store.addTypeRoutes.getChildItems", error));
 
             // must be added after dynamic routes to avoid matching before them.
             router.addRoutes([{ path: '*', redirect: '/error/notfound' }]);

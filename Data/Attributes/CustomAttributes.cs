@@ -2,6 +2,25 @@
 
 namespace MVCCoreVue.Data.Attributes
 {
+    /// <summary>
+    /// Classes with this attribute will not appear in the site menu.
+    /// Classes without it will not appear either unless they have the
+    /// MenuClassAttribute, but this one can be used to set their route.
+    /// </summary>
+    internal class ChildClassAttribute : Attribute
+    {
+        /// <summary>
+        /// A string with the format "supertype/type/subtype"
+        /// </summary>
+        /// <remarks>
+        /// Used to generate URL structure, doesn't need to reflect
+        /// data relationships in any way.
+        /// </remarks>
+        public string Category { get; set; }
+
+        public ChildClassAttribute() { }
+    }
+
     internal class DefaultAttribute: Attribute
     {
         public object Default { get; set; }

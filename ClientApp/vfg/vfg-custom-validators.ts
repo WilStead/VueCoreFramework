@@ -1,6 +1,4 @@
-﻿import VueFormGenerator from 'vue-form-generator';
-
-const resources = {
+﻿const resources = {
     fieldIsRequired: "This field is required",
     invalidFormat: "Invalid format",
     textTooSmall: "Must be at least {1} characters long",
@@ -83,9 +81,9 @@ export const requireNewPassword = <VFG_Validator>function (value, field, model, 
 }
 
 export const validators = {
-    'string': VueFormGenerator.validators.string,
-    'number': VueFormGenerator.validators.number,
+    'string': 'string',
+    'number': 'number',
     'string_regexp': string_regexp,
-    'date': VueFormGenerator.validators.date,
-    'array': VueFormGenerator.validators.array
+    'date': 'date',
+    'array': 'array'
 };

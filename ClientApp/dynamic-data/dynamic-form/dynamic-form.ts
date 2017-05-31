@@ -41,7 +41,7 @@ export default class DynamicFormComponent extends Vue {
         validateAfterChanged: true
     };
     isValid = false;
-    model: any = {};
+    model: any = { self: this };
     schema: any = {};
     vm: any;
     vmDefinition: Array<FieldDefinition>;
@@ -54,6 +54,27 @@ export default class DynamicFormComponent extends Vue {
         this.isValid = isValid;
     }
 
+    onAddChild(childProp: string) {
+        this.activity = true;
+        this.errorMessage = '';
+        this.repository.addChild(this.$route.fullPath, this.id, childProp)
+            .then(data => {
+                if (data.error) {
+                    this.errorMessage = data.error;
+                } else if (!data.data || !data.data[childProp + "Id"]) {
+                    this.errorMessage = "A problem occurred. The item could not be added.";
+                } else {
+                    this.$router.push({ name: childProp, params: { operation: 'edit', id: data.data[childProp + "Id"] } });
+                }
+                this.activity = false;
+            })
+            .catch(error => {
+                this.errorMessage = "A problem occurred. The item could not be added.";
+                this.activity = false;
+                ErrorMsg.logError("dynamic-form.onAddChild", error);
+            });
+    }
+
     onCancel() {
         this.activity = false;
         this.errorMessage = '';
@@ -64,14 +85,15 @@ export default class DynamicFormComponent extends Vue {
         this.activity = true;
         this.errorMessage = '';
         let timestamp = Date.now();
-        let d: DataItem = Object.assign({},
+        let d = Object.assign({},
             this.model,
             {
-                id: timestamp.toString(),
+                id: this.id,
                 creationTimestamp: timestamp,
                 updateTimestamp: timestamp
             }
         );
+        delete d.self;
         this.repository.add(this.$route.fullPath, d)
             .then(data => {
                 if (data.error) {
@@ -115,12 +137,12 @@ export default class DynamicFormComponent extends Vue {
     onSave() {
         this.activity = true;
         this.errorMessage = '';
-        let d: DataItem = Object.assign({
-                id: '0',
-                creationTimestamp: 0,
-                updateTimestamp: 0
-            },
+        let d = Object.assign({
+            id: this.id,
+            updateTimestamp: Date.now()
+        },
             this.model);
+        delete d.self;
         this.repository.update(this.$route.fullPath, d)
             .then(data => {
                 if (data.error) {
@@ -142,6 +164,8 @@ export default class DynamicFormComponent extends Vue {
         this.errorMessage = '';
         this.repository.find(this.$route.fullPath, this.id)
             .then(data => {
+                this.model = { self: this };
+                this.schema = { fields: [] };
                 if (data.error) {
                     this.errorMessage = data.error;
                     this.activity = false;
@@ -150,7 +174,6 @@ export default class DynamicFormComponent extends Vue {
                         .then(defData => {
                             this.vmDefinition = defData;
                             this.vm = data.data;
-                            this.model = {};
                             let groups = this.vmDefinition.filter(v => v.groupName !== undefined && v.groupName !== null).map(v => v.groupName);
                             if (groups.length) {
                                 this.schema = { groups: [] };
@@ -159,7 +182,6 @@ export default class DynamicFormComponent extends Vue {
                                     this.schema.groups[i].legend = groups[i];
                                 }
                             }
-                            this.schema = { fields: [] };
                             this.vmDefinition.forEach(field => {
                                 this.model[field.model] = field.default || null;
                             });
@@ -168,35 +190,47 @@ export default class DynamicFormComponent extends Vue {
                             }
                             this.vmDefinition.forEach(field => {
                                 let newField: any = Object.assign({}, field);
-                                if (newField.type === "label") {
+                                if (newField.type === "object") {
+                                    newField.type = "label";
                                     let idField = this.vmDefinition.find(v => v.model === newField.model + "Id");
                                     if (idField) {
-                                        newField.buttons = [
-                                            {
+                                        if (this.model[idField.model]) {
+                                            newField.buttons = [{
                                                 classes: 'btn btn--dark btn--flat info--text',
                                                 label: 'Details',
                                                 onclick: function (model, field) {
                                                     router.push({ name: newField.model, params: { operation: 'details', id: model[field.model + "Id"] } });
                                                 }
-                                            },
-                                            {
-                                                classes: 'btn btn--dark btn--flat orange--text text--darken-2',
-                                                label: 'Edit',
-                                                onclick: function (model, field) {
-                                                    router.push({ name: newField.model, params: { operation: 'edit', id: model[field.model + "Id"] } });
+                                            }];
+                                            if (this.operation === "edit") {
+                                                newField.buttons.push({
+                                                    classes: 'btn btn--dark btn--flat orange--text text--darken-2',
+                                                    label: 'Edit',
+                                                    onclick: function (model, field) {
+                                                        router.push({ name: newField.model, params: { operation: 'edit', id: model[field.model + "Id"] } });
+                                                    }
+                                                });
+                                                if (!field.required) {
+                                                    newField.buttons.push({
+                                                        classes: 'btn btn--dark btn--flat red--text text--accent-4',
+                                                        label: 'Delete',
+                                                        onclick: function (model, field, event) {
+                                                            event.stopPropagation();
+                                                            Vue.set(model, 'deleteDialogShown', true);
+                                                            model.deleteProp = field.model;
+                                                            model.deleteId = model[field.model + "Id"];
+                                                        }
+                                                    });
                                                 }
                                             }
-                                        ];
-                                        if (!field.required) {
-                                            newField.buttons.push({
-                                                classes: 'btn btn--dark btn--flat red--text text--accent-4',
-                                                label: 'Delete',
+                                        } else if (this.operation === "edit") {
+                                            newField.buttons = [{
+                                                classes: 'btn btn--dark btn--flat green--text',
+                                                label: 'Add',
                                                 onclick: function (model, field) {
-                                                    model.deleteDialogShown = true;
-                                                    model.deleteProp = field.model;
-                                                    model.deleteId = model[field.model + "Id"];
+                                                    model.self.onAddChild(field.model);
                                                 }
-                                            });
+                                            }];
                                         }
                                     }
                                 }

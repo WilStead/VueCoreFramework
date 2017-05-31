@@ -1,7 +1,7 @@
 ﻿import { router, checkResponse, ApiResponseViewModel } from '../router';
 import { store } from './store';
 import { FieldDefinition } from './field-definition';
-import { validators } from '../vfg-custom-validators';
+import { validators } from '../vfg/vfg-custom-validators';
 import * as ErrorMsg from '../error-msg';
 
 interface ApiNumericResponseViewModel {
@@ -46,6 +46,31 @@ export class Repository {
                 if (data.error) {
                     return {
                         data: vm,
+                        error: data.error
+                    };
+                }
+                return { data };
+            })
+            .catch(error => {
+                return Promise.reject(`There was a problem with your request. ${error}`);
+            });
+    }
+
+    addChild(returnPath: string, id: string, childProp: string): Promise<OperationReply<DataItem>> {
+        return fetch(`/api/Data/${this.dataType}/AddChild/${id}/${childProp}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${store.state.token}`
+                }
+            })
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<any>)
+            .then(data => {
+                if (data.error) {
+                    return {
+                        data: undefined,
                         error: data.error
                     };
                 }
@@ -241,15 +266,15 @@ export class Repository {
                 }
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(response => response.json() as Promise<any>)
             .then(data => {
-                if (data.response) {
+                if (data.error) {
                     return {
                         data: undefined,
-                        error: data.response
+                        error: data.error
                     };
                 }
-                return { data: undefined, error: undefined };
+                return { data };
             })
             .catch(error => {
                 return Promise.reject(`There was a problem with your request. ${error}`);

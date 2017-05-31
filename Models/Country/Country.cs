@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace MVCCoreVue.Models
 {
-    [MenuClass(IconClass = "public")]
+    [MenuClass(IconClass = "public", Category = "Country Data")]
     public class Country : DataItem
     {
         [Display(Prompt = "Name")]
@@ -19,7 +19,7 @@ namespace MVCCoreVue.Models
         public double EpiIndex { get; set; }
 
         [Display(AutoGenerateField = false)]
-        public Guid CityId { get; set; }
+        public Guid? CityId { get; set; }
 
         [Display(Name = "Capitol")]
         public City City { get; set; }

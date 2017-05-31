@@ -16,6 +16,6 @@ export default class AppComponent extends Vue {
             this.$router.push(forwardUrl);
         }
 
-        this.$store.commit('addMenuItems', this.$router);
+        this.$store.commit('addTypeRoutes', this.$router);
     }
 }

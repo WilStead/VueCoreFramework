@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace MVCCoreVue.Data
@@ -8,7 +9,11 @@ namespace MVCCoreVue.Data
     {
         Task<object> AddAsync(object item);
 
+        Task<object> AddChildAsync(object item, object child, PropertyInfo pInfo, PropertyInfo idPInfo);
+
         Task<object> FindAsync(Guid id);
+
+        Task<object> FindItemAsync(Guid id);
 
         IEnumerable<object> GetAll();
 
@@ -23,7 +28,11 @@ namespace MVCCoreVue.Data
 
         Task<long> GetTotalAsync();
 
+        Task<object> NewAsync();
+
         Task RemoveAsync(Guid id);
+
+        Task<object> RemoveChildAsync(object item, PropertyInfo pInfo, PropertyInfo idPInfo);
 
         Task RemoveRangeAsync(IEnumerable<Guid> ids);
 

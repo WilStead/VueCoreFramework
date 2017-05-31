@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MVCCoreVue.Data;
 using MVCCoreVue.Data.Attributes;
+using MVCCoreVue.Extensions;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
@@ -45,6 +46,65 @@ namespace MVCCoreVue.Controllers
             }
         }
 
+        [HttpPost("{id}/{childProp}")]
+        public async Task<IActionResult> AddChild(string dataType, string id, string childProp)
+        {
+            if (!TryGetRepository(dataType, out IRepository repository))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (string.IsNullOrEmpty(id))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (!Guid.TryParse(id, out Guid guid))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (string.IsNullOrEmpty(childProp))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            object item = null;
+            try
+            {
+                item = await repository.FindItemAsync(guid);
+            }
+            catch
+            {
+                return Json(new { error = "Item could not be accessed." });
+            }
+            if (item == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/404" });
+            }
+            var childTypeInfo = item.GetType().GetTypeInfo();
+            var pInfo = childTypeInfo.GetProperty(childProp.ToInitialCaps());
+            if (pInfo == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var idPInfo = childTypeInfo.GetProperty($"{childProp.ToInitialCaps()}Id");
+            if (idPInfo == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (!TryGetRepository(pInfo.PropertyType.Name, out IRepository childRepository))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            try
+            {
+                var newChild = await childRepository.NewAsync();
+                var updatedItem = await repository.AddChildAsync(item, newChild, pInfo, idPInfo);
+                return Json(updatedItem);
+            }
+            catch
+            {
+                return Json(new { error = "Item could not be added." });
+            }
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> Find(string dataType, string id)
         {
@@ -84,6 +144,32 @@ namespace MVCCoreVue.Controllers
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
             return Json(repository.GetAll());
+        }
+
+        [AllowAnonymous]
+        [HttpGet("/api/[controller]/[action]")]
+        public IActionResult GetChildTypes()
+        {
+            try
+            {
+                var types = _context.Model.GetEntityTypes();
+                IDictionary<string, dynamic> classes = new Dictionary<string, dynamic>();
+                foreach (var type in types)
+                {
+                    var attr = type.ClrType.GetTypeInfo().GetCustomAttribute<MenuClassAttribute>();
+                    if (attr == null)
+                    {
+                        var childAttr = type.ClrType.GetTypeInfo().GetCustomAttribute<ChildClassAttribute>();
+                        var category = string.IsNullOrEmpty(childAttr?.Category) ? "/" : childAttr?.Category;
+                        classes.Add(type.ClrType.Name, new { category = category });
+                    }
+                }
+                return Json(classes);
+            }
+            catch
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
         }
 
         [HttpGet]
@@ -145,7 +231,6 @@ namespace MVCCoreVue.Controllers
                     {
                         classes.Add(type.ClrType.Name,
                             new {
-                                entityName = type.Name,
                                 category = string.IsNullOrEmpty(attr.Category) ? "/" : attr.Category,
                                 iconClass = attr.IconClass
                             });
@@ -159,7 +244,7 @@ namespace MVCCoreVue.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpPost("{id}")]
         public async Task<IActionResult> Remove(string dataType, string id)
         {
             if (!TryGetRepository(dataType, out IRepository repository))
@@ -185,7 +270,7 @@ namespace MVCCoreVue.Controllers
             return Ok();
         }
 
-        [HttpPost]
+        [HttpPost("{id}/{childProp}/{childId}")]
         public async Task<IActionResult> RemoveChild(string dataType, string id, string childProp, string childId)
         {
             if (!TryGetRepository(dataType, out IRepository repository))
@@ -215,7 +300,7 @@ namespace MVCCoreVue.Controllers
             object item = null;
             try
             {
-                item = await repository.FindAsync(guid);
+                item = await repository.FindItemAsync(guid);
             }
             catch
             {
@@ -225,8 +310,14 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/404" });
             }
-            var pInfo = item.GetType().GetTypeInfo().GetProperty(childProp);
+            var childTypeInfo = item.GetType().GetTypeInfo();
+            var pInfo = childTypeInfo.GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var idPInfo = childTypeInfo.GetProperty($"{childProp.ToInitialCaps()}Id");
+            if (idPInfo == null)
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
@@ -236,13 +327,14 @@ namespace MVCCoreVue.Controllers
             }
             try
             {
+                var updatedItem = await repository.RemoveChildAsync(item, pInfo, idPInfo);
                 await childRepository.RemoveAsync(childGuid);
+                return Json(updatedItem);
             }
             catch
             {
-                return Json(new { response = "Item could not be removed." });
+                return Json(new { error = "Item could not be removed." });
             }
-            return Ok();
         }
 
         [HttpPost]
@@ -286,7 +378,7 @@ namespace MVCCoreVue.Controllers
             {
                 return false;
             }
-            var entity = _context.Model.FindEntityType(dataType);
+            var entity = _context.Model.GetEntityTypes().FirstOrDefault(e => e.Name.Substring(e.Name.LastIndexOf('.') + 1) == dataType);
             if (entity == null)
             {
                 return false;
@@ -315,7 +407,7 @@ namespace MVCCoreVue.Controllers
             {
                 return false;
             }
-            var entity = _context.Model.FindEntityType(dataType);
+            var entity = _context.Model.GetEntityTypes().FirstOrDefault(e => e.Name.Substring(e.Name.LastIndexOf('.') + 1) == dataType);
             if (entity == null)
             {
                 return false;

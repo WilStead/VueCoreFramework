@@ -2,7 +2,7 @@
 import { Component, Prop } from 'vue-property-decorator';
 import { checkResponse, ApiResponseViewModel } from '../../../router';
 import VueFormGenerator from 'vue-form-generator';
-import * as VFG_Custom from '../../../vfg-custom-validators';
+import * as VFG_Custom from '../../../vfg/vfg-custom-validators';
 import * as ErrorMsg from '../../../error-msg';
 
 interface ResetPasswordViewModel {

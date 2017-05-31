@@ -1,8 +1,10 @@
 ﻿using MVCCoreVue.Data;
+using MVCCoreVue.Data.Attributes;
 using System.ComponentModel.DataAnnotations;
 
 namespace MVCCoreVue.Models
 {
+    [ChildClass(Category = "Country Data/Country")]
     public class City : DataItem
     {
         [Display(Prompt = "Name")]
@@ -11,7 +13,7 @@ namespace MVCCoreVue.Models
         public string Name { get; set; }
 
         [Display(Name = "Population")]
-        [Range(0, 100)]
+        [Range(0, int.MaxValue)]
         public int Population { get; set; }
 
         public override string ToString() => Name;

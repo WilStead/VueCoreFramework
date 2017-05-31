@@ -36,13 +36,22 @@
     }
 
     .field-label {
-        span {
-            font-size: 1.2em;
+        font-size: 1.2em;
+
+        .field-wrap {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            span {
+                padding: 6px 12px;
+            }
         }
     }
 
     .buttons {
         display: inline-block;
-        float: right;
     }
 }
