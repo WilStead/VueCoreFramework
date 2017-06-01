@@ -112,6 +112,6 @@ export default class RegisterComponent extends Vue {
                     this.model.errors = data.errors;
                 }
             })
-            .catch(error => ErrorMsg.showErrorMsgAndLog("register.onSubmit", "A problem occurred. Your account acould not be registered.", error));
+            .catch(error => ErrorMsg.showErrorMsgAndLog("register.onSubmit", "A problem occurred. Your account acould not be registered.", new Error(error)));
     }
 }

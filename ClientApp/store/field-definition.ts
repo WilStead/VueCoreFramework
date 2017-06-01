@@ -4,6 +4,7 @@
 
 export interface FieldDefinition {
     autocomplete?: boolean;
+    buttons?: Array<any>
     dateTimePickerOptions?: DateTimePickerOptions;
     default?: any;
     disabled?: boolean | Function;

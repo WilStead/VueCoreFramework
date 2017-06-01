@@ -7,35 +7,34 @@ namespace MVCCoreVue.Data
 {
     interface IRepository
     {
-        Task<object> AddAsync(object item);
+        Task<IDictionary<string, object>> AddAsync(DataItem item);
 
-        Task<object> AddChildAsync(object item, object child, PropertyInfo pInfo, PropertyInfo idPInfo);
+        Task<IDictionary<string, object>> AddToParentCollectionAsync(DataItem parent, PropertyInfo childProp, IEnumerable<Guid> ids);
 
-        Task<object> FindAsync(Guid id);
+        Task<IDictionary<string, object>> FindAsync(Guid id);
 
-        Task<object> FindItemAsync(Guid id);
+        Task<DataItem> FindItemAsync(Guid id);
 
-        IEnumerable<object> GetAll();
+        IEnumerable<IDictionary<string, object>> GetAll();
 
         IEnumerable<FieldDefinition> GetFieldDefinitions();
 
-        IEnumerable<object> GetPage(
+        IEnumerable<IDictionary<string, object>> GetPage(
             string search,
             string sortBy,
             bool descending,
             int page,
-            int rowsPerPage);
+            int rowsPerPage,
+            IEnumerable<Guid> except);
 
         Task<long> GetTotalAsync();
 
-        Task<object> NewAsync();
-
         Task RemoveAsync(Guid id);
 
-        Task<object> RemoveChildAsync(object item, PropertyInfo pInfo, PropertyInfo idPInfo);
+        Task<IDictionary<string, object>> RemoveFromParentCollectionAsync(DataItem parent, PropertyInfo childProp, IEnumerable<Guid> ids);
 
         Task RemoveRangeAsync(IEnumerable<Guid> ids);
 
-        Task<object> UpdateAsync(object item);
+        Task<IDictionary<string, object>> UpdateAsync(DataItem item);
     }
 }

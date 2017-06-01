@@ -12,7 +12,6 @@
   },
   "exclude": [
       "bin",
-      "node_modules",
-      "ClientApp/vfg/dist"
+      "node_modules"
   ]
 }

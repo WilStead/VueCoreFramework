@@ -9,6 +9,7 @@ namespace MVCCoreVue.Data
         public DbSet<Log> Logs { get; set; }
         public DbSet<Country> Countries { get; set; }
         public DbSet<City> Cities { get; set; }
+        public DbSet<Leader> Leaders { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)

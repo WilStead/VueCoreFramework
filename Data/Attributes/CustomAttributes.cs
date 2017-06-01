@@ -79,6 +79,8 @@ namespace MVCCoreVue.Data.Attributes
         public MenuClassAttribute() { }
     }
 
+    internal class MultiSelectAttribute : Attribute { }
+
     internal class RowsAttribute : Attribute
     {
         public int Rows { get; set; }

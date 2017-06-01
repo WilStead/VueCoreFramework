@@ -18,7 +18,8 @@ function addMenuItem(menu: MenuItem, router: any, name: string, fullCategory: st
         index = category.substring(1).indexOf('/'); // skip first if it's not the only character
     }
     let currentCategory = index <= 0 ? category : category.substring(0, index);
-    if (currentCategory) {
+    category = index <= 0 ? '' : category.substring(index + 1);
+    if (currentCategory && currentCategory != '/') {
         let menuItem = null;
         if (menu.submenu && menu.submenu.length) {
             for (var i = 0; i < menu.submenu.length; i++) {
@@ -32,19 +33,19 @@ function addMenuItem(menu: MenuItem, router: any, name: string, fullCategory: st
             if (!menu.submenu) {
                 menu.submenu = [];
             }
-            menu.submenu.push({
+            menuItem = {
                 text: currentCategory,
                 iconClass,
                 submenu: []
-            });
+            };
+            menu.submenu.push(menuItem);
         }
-        addMenuItem(menuItem, router, name, fullCategory, category.substring(index + 1), iconClass);
+        addMenuItem(menuItem, router, name, fullCategory, category, iconClass);
     } else {
         let baseRoute = (fullCategory !== undefined && fullCategory !== null && fullCategory.length > 0 && fullCategory !== '/')
             ? `/data/${fullCategory.toLowerCase()}/${lowerName}`
             : `/data/${lowerName}`;
         let tableRoute = baseRoute + '/table';
-        let repository = new Repository(name);
 
         router.addRoutes([{
             path: baseRoute,
@@ -53,35 +54,58 @@ function addMenuItem(menu: MenuItem, router: any, name: string, fullCategory: st
             props: { title: name },
             children: [
                 {
-                    path: 'table',
+                    name: lowerName + "Table",
+                    path: 'table/:operation?/:parentType?/:parentId?/:parentProp?',
                     component: require('../../dynamic-data/dynamic-table/dynamic-table.vue'),
-                    props: {
-                        routeName: lowerName,
-                        repository
-                    }
+                    props: (route) => ({
+                        operation: route.params.operation,
+                        parentId: route.params.parentId,
+                        parentProp: route.params.parentProp,
+                        parentType: route.params.parentType,
+                        repositoryType: name,
+                        routeName: lowerName
+                    })
                 },
                 {
                     name: lowerName,
-                    path: ':operation/:id',
+                    path: ':operation/:id/:parentType?/:parentId?/:parentProp?',
                     component: require('../../dynamic-data/dynamic-form/dynamic-form.vue'),
                     props: (route) => ({
                         id: route.params.id,
                         operation: route.params.operation,
-                        repository,
+                        parentId: route.params.parentId,
+                        parentProp: route.params.parentProp,
+                        parentType: route.params.parentType,
+                        repositoryType: name,
                         routeName: lowerName
                     })
                 }
             ]
         }]);
 
-        if (!menu.submenu) {
-            menu.submenu = [];
+        let menuItem: MenuItem = null;
+        if (menu.submenu && menu.submenu.length) {
+            for (var i = 0; i < menu.submenu.length; i++) {
+                if (menu.submenu[i].text === name) {
+                    menuItem = menu.submenu[i];
+                    break;
+                }
+            }
         }
-        menu.submenu.push({
-            text: name,
-            iconClass,
-            route: tableRoute
-        });
+        if (!menuItem) {
+            if (!menu.submenu) {
+                menu.submenu = [];
+            }
+            menuItem = {
+                text: name,
+                iconClass,
+                route: tableRoute
+            };
+            menu.submenu.push(menuItem);
+        } else {
+            menuItem.iconClass = iconClass;
+            menuItem.route = tableRoute;
+        }
     }
 }
 
@@ -122,7 +146,7 @@ export function getChildItems(router: any): Promise<void> {
             }
         })
         .catch(error => {
-            ErrorMsg.logError("uiStore.getChildItems", error);
+            ErrorMsg.logError("uiStore.getChildItems", new Error(error));
         });
 }
 
@@ -141,7 +165,7 @@ export function getMenuItems(router: any, menu: MenuItem): Promise<void> {
             }
         })
         .catch(error => {
-            ErrorMsg.logError("uiStore.getMenuItems", error);
+            ErrorMsg.logError("uiStore.getMenuItems", new Error(error));
         });
 }
 
@@ -154,13 +178,7 @@ export const uiState = {
         },
         {
             text: 'Data',
-            iconClass: 'view_list',
-            submenu: [
-                {
-                    text: 'Country Data',
-                    iconClass: 'public'
-                }
-            ]
+            iconClass: 'view_list'
         },
         {
             text: 'Fetch data',

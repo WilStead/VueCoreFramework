@@ -22,7 +22,7 @@ namespace MVCCoreVue.Data
             items = _context.Set<T>();
         }
 
-        public async Task<object> AddAsync(object item)
+        public async Task<IDictionary<string, object>> AddAsync(DataItem item)
         {
             if (item == null)
             {
@@ -37,36 +37,19 @@ namespace MVCCoreVue.Data
             return GetViewModel(item as T);
         }
 
-        public async Task<object> AddChildAsync(object item, object child, PropertyInfo pInfo, PropertyInfo idPInfo)
+        public async Task<IDictionary<string, object>> AddToParentCollectionAsync(DataItem parent, PropertyInfo childProp, IEnumerable<Guid> ids)
         {
-            if (item == null)
+            ICollection<DataItem> children = childProp.GetValue(parent) as ICollection<DataItem>;
+            foreach (var id in ids)
             {
-                throw new ArgumentNullException(nameof(item));
+                var child = await FindItemAsync(id);
+                children.Add(child as DataItem);
             }
-            if (child == null)
-            {
-                throw new ArgumentNullException(nameof(child));
-            }
-            if (pInfo == null)
-            {
-                throw new ArgumentNullException(nameof(pInfo));
-            }
-            if (idPInfo == null)
-            {
-                throw new ArgumentNullException(nameof(idPInfo));
-            }
-            pInfo.SetValue(item, child);
-            idPInfo.SetValue(item, (child as DataItem).Id);
-            items.Update(item as T);
             await _context.SaveChangesAsync();
-            foreach (var reference in _context.Entry(item).References)
-            {
-                reference.Load();
-            }
-            return GetViewModel(item as T);
+            return GetViewModel(parent as T);
         }
 
-        private bool AnyPropMatch(T item, string search)
+        private static bool AnyPropMatch(DataItem item, string search)
         {
             var type = typeof(T);
             foreach (var pInfo in type.GetProperties())
@@ -97,7 +80,7 @@ namespace MVCCoreVue.Data
             return false;
         }
 
-        public async Task<object> FindAsync(Guid id)
+        public async Task<IDictionary<string, object>> FindAsync(Guid id)
         {
             if (id == null)
             {
@@ -111,7 +94,7 @@ namespace MVCCoreVue.Data
             return GetViewModel(item);
         }
 
-        public async Task<object> FindItemAsync(Guid id)
+        public async Task<DataItem> FindItemAsync(Guid id)
         {
             if (id == null)
             {
@@ -125,7 +108,7 @@ namespace MVCCoreVue.Data
             return item;
         }
 
-        public IEnumerable<object> GetAll()
+        public IEnumerable<IDictionary<string, object>> GetAll()
         {
             IQueryable<T> filteredItems = items.AsQueryable();
 
@@ -308,9 +291,30 @@ namespace MVCCoreVue.Data
                 }
                 fd.Validator = "number";
             }
+            else if (pInfo.PropertyType.GetTypeInfo().IsSubclassOf(typeof(DataItem)))
+            {
+                fd.InputType = pInfo.PropertyType.Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1);
+                var menuAttr = pInfo.GetCustomAttribute<MenuClassAttribute>();
+                if (menuAttr != null)
+                {
+                    var multiAttr = pInfo.GetCustomAttribute<MultiSelectAttribute>();
+                    if (multiAttr != null)
+                    {
+                        fd.Type = "objectMultiSelect";
+                    }
+                    else
+                    {
+                        fd.Type = "objectSelect";
+                    }
+                }
+                else
+                {
+                    fd.Type = "object";
+                }
+            }
             else
             {
-                fd.Type = "object";
+                fd.Type = "label";
             }
 
             fd.Default = pInfo.GetCustomAttribute<DefaultAttribute>()?.Default;
@@ -338,6 +342,10 @@ namespace MVCCoreVue.Data
             fd.Hint = display?.GetDescription();
             fd.Label = display?.GetName();
             fd.Placeholder = display?.GetPrompt();
+            if (fd.Hint == null && fd.Label == null && fd.Placeholder == null)
+            {
+                fd.Label = pInfo.Name;
+            }
             if (display?.GetAutoGenerateField() == false)
             {
                 fd.Visible = false;
@@ -379,9 +387,14 @@ namespace MVCCoreVue.Data
             }
         }
 
-        public IEnumerable<object> GetPage(string search, string sortBy, bool descending, int page, int rowsPerPage)
+        public IEnumerable<IDictionary<string, object>> GetPage(string search, string sortBy, bool descending, int page, int rowsPerPage, IEnumerable<Guid> except)
         {
-            IQueryable<T> filteredItems = items.AsQueryable();
+            return GetPageItems(items.Where(i => !except.Contains(i.Id)), search, sortBy, descending, page, rowsPerPage);
+        }
+
+        public static IEnumerable<IDictionary<string, object>> GetPageItems(IQueryable<DataItem> items, string search, string sortBy, bool descending, int page, int rowsPerPage)
+        {
+            IQueryable<DataItem> filteredItems = items;
 
             var tInfo = typeof(T).GetTypeInfo();
             foreach (var pInfo in tInfo.GetProperties())
@@ -428,7 +441,7 @@ namespace MVCCoreVue.Data
                 filteredItems = filteredItems.Skip((page - 1) * rowsPerPage).Take(page * rowsPerPage);
             }
 
-            return filteredItems.Select(i => GetViewModel(i)).AsEnumerable();
+            return filteredItems.ToList().Select(i => GetViewModel(i));
         }
 
         public async Task<long> GetTotalAsync()
@@ -436,7 +449,7 @@ namespace MVCCoreVue.Data
             return await items.LongCountAsync();
         }
 
-        private IDictionary<string, object> GetViewModel(T item)
+        private static IDictionary<string, object> GetViewModel(DataItem item)
         {
             IDictionary<string, object> vm = new Dictionary<string, object>();
             var tInfo = typeof(T).GetTypeInfo();
@@ -457,10 +470,10 @@ namespace MVCCoreVue.Data
                     }
                 }
                 else if (ptInfo.IsGenericType
-                    && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(IEnumerable<>))
+                    && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
                     && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem)))
                 {
-                    vm[pInfo.Name.ToInitialLower()] = (pInfo.GetValue(item) as IEnumerable<DataItem>).Any() ? "..." : string.Empty;
+                    vm[pInfo.Name.ToInitialLower()] = (pInfo.GetValue(item) as ICollection<DataItem>).Any() ? "..." : "[None]";
                 }
                 else
                 {
@@ -470,13 +483,6 @@ namespace MVCCoreVue.Data
             return vm;
         }
 
-        public async Task<object> NewAsync()
-        {
-            var newItem = await items.AddAsync(Activator.CreateInstance<T>());
-            await _context.SaveChangesAsync();
-            return newItem.Entity;
-        }
-
         public async Task RemoveAsync(Guid id)
         {
             var item = await FindItemAsync(id);
@@ -484,29 +490,16 @@ namespace MVCCoreVue.Data
             await _context.SaveChangesAsync();
         }
 
-        public async Task<object> RemoveChildAsync(object item, PropertyInfo pInfo, PropertyInfo idPInfo)
+        public async Task<IDictionary<string, object>> RemoveFromParentCollectionAsync(DataItem parent, PropertyInfo childProp, IEnumerable<Guid> ids)
         {
-            if (item == null)
+            ICollection<DataItem> children = childProp.GetValue(parent) as ICollection<DataItem>;
+            foreach (var id in ids)
             {
-                throw new ArgumentNullException(nameof(item));
+                var child = await FindItemAsync(id);
+                children.Remove(child as DataItem);
             }
-            if (pInfo == null)
-            {
-                throw new ArgumentNullException(nameof(pInfo));
-            }
-            if (idPInfo == null)
-            {
-                throw new ArgumentNullException(nameof(idPInfo));
-            }
-            pInfo.SetValue(item, null);
-            idPInfo.SetValue(item, null);
-            items.Update(item as T);
             await _context.SaveChangesAsync();
-            foreach (var reference in _context.Entry(item).References)
-            {
-                reference.Load();
-            }
-            return GetViewModel(item as T);
+            return GetViewModel(parent as T);
         }
 
         public async Task RemoveRangeAsync(IEnumerable<Guid> ids)
@@ -515,7 +508,7 @@ namespace MVCCoreVue.Data
             await _context.SaveChangesAsync();
         }
 
-        public async Task<object> UpdateAsync(object item)
+        public async Task<IDictionary<string, object>> UpdateAsync(DataItem item)
         {
             if (item == null)
             {

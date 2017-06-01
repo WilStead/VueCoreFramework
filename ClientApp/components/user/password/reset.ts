@@ -98,7 +98,7 @@ export default class ResetComponent extends Vue {
             })
             .catch(error => {
                 this.submitting = false;
-                ErrorMsg.showErrorMsgAndLog("reset.onSubmit", "A problem occurred. Your request was not received.", error);
+                ErrorMsg.showErrorMsgAndLog("reset.onSubmit", "A problem occurred. Your request was not received.", new Error(error));
             });
     }
 }

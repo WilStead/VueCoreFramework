@@ -104,7 +104,7 @@ export function checkAuthorization(to, returnPath): Promise<boolean> {
         })
         .catch(error => {
             if (error.message !== "unauthorized") {
-                ErrorMsg.logError("router.checkAuthorization", error);
+                ErrorMsg.logError("router.checkAuthorization", new Error(error));
             }
             return false;
         });

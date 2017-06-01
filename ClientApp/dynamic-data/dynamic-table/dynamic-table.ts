@@ -13,23 +13,57 @@ interface TableHeader {
 @Component
 export default class DynamicTableComponent extends Vue {
     @Prop()
-    repository: Repository;
+    operation: string;
+
+    @Prop()
+    parentId: string;
+
+    @Prop()
+    parentProp: string;
+
+    @Prop()
+    parentType: string;
+
+    @Prop()
+    repositoryType: string;
 
     @Prop()
     routeName: string;
 
     activity = false;
+    childItems: Array<any> = [];
+    childLoading = true;
+    childPagination: any = {};
+    childSearch = '';
     deleteDialogShown = false;
+    deleteAskingChildItems = [];
     deleteAskingItems = [];
+    deletePendingChildItems = [];
     deletePendingItems = [];
     errorMessage = '';
     headers: Array<TableHeader> = [];
     items: Array<any> = [];
     loading = true;
     pagination: any = {};
+    parentRepository: Repository = null;
+    repository: Repository = null;
     search = '';
+    selectErrorDialogMessage = '';
+    selectErrorDialogShown = false;
     selected: Array<any> = [];
+    selectedChildren: Array<any> = [];
+    totalChildItems = 0;
     totalItems = 0;
+
+    @Watch('childPagination', { immediate: true, deep: true })
+    onChildPaginationChange(val: any, oldVal: any) {
+        this.updateChildData();
+    }
+
+    @Watch('childSearch')
+    onChildSearchChange(val: string, oldVal: string) {
+        this.updateChildData();
+    }
 
     @Watch('search')
     onSearchChange(val: string, oldVal: string) {
@@ -41,34 +75,11 @@ export default class DynamicTableComponent extends Vue {
         this.updateData();
     }
 
-    cancelDelete(id: string) {
-        let index = this.deleteAskingItems.indexOf(id);
-        if (index !== -1) {
-            this.deleteAskingItems.splice(index, 1);
-        }
-    }
-
-    getData() {
-        this.loading = true;
-        return new Promise((resolve, reject) => {
-            const { sortBy, descending, page, rowsPerPage } = this.pagination;
-            this.repository.getPage(this.$route.fullPath, this.search, sortBy, descending, page, rowsPerPage)
-                .then(data => {
-                    this.loading = false;
-                    resolve({
-                        items: data.pageItems,
-                        total: data.totalItems
-                    });
-                })
-                .catch(error => {
-                    this.errorMessage = "A problem occurred while loading the data.";
-                    this.loading = false;
-                    ErrorMsg.logError("dynamic-table.getData", error);
-                });
-        });
-    }
-
     mounted() {
+        this.repository = new Repository(this.repositoryType);
+        if (this.parentType && this.parentId) {
+            this.parentRepository = new Repository(this.parentType);
+        }
         this.activity = true;
         this.repository.getFieldDefinitions(this.$route.fullPath)
             .then(defData => {
@@ -105,6 +116,110 @@ export default class DynamicTableComponent extends Vue {
             });
     }
 
+    cancelDelete(id: string) {
+        let index = this.deleteAskingItems.indexOf(id);
+        if (index !== -1) {
+            this.deleteAskingItems.splice(index, 1);
+        }
+    }
+
+    cancelDeleteChild(id: string) {
+        let index = this.deleteAskingChildItems.indexOf(id);
+        if (index !== -1) {
+            this.deleteAskingChildItems.splice(index, 1);
+        }
+    }
+
+    getChildData() {
+        this.childLoading = true;
+        return new Promise((resolve, reject) => {
+            const { sortBy, descending, page, rowsPerPage } = this.childPagination;
+            this.parentRepository.getChildPage(this.$route.fullPath, this.parentId, this.parentProp, this.childSearch, sortBy, descending, page, rowsPerPage)
+                .then(data => {
+                    this.childLoading = false;
+                    resolve({
+                        items: data.pageItems,
+                        total: data.totalItems
+                    });
+                })
+                .catch(error => {
+                    this.childLoading = false;
+                    ErrorMsg.logError("dynamic-table.getChildData", new Error(error));
+                    reject("A problem occurred while loading the data.");
+                });
+        });
+    }
+
+    getData() {
+        this.loading = true;
+        return new Promise((resolve, reject) => {
+            const { sortBy, descending, page, rowsPerPage } = this.pagination;
+            if (this.parentRepository) {
+                this.repository.getAllChildIds(this.$route.fullPath, this.parentId, this.parentProp)
+                    .then(childIds => {
+                        this.repository.getPage(this.$route.fullPath, this.search, sortBy, descending, page, rowsPerPage, childIds)
+                            .then(data => {
+                                this.loading = false;
+                                resolve({
+                                    items: data.pageItems,
+                                    total: data.totalItems
+                                });
+                            })
+                            .catch(error => {
+                                this.loading = false;
+                                ErrorMsg.logError("dynamic-table.getData", new Error(error));
+                                reject("A problem occurred while loading the data.");
+                            });
+                    })
+                    .catch(error => {
+                        this.loading = false;
+                        ErrorMsg.logError("dynamic-table.getData", new Error(error));
+                        reject("A problem occurred while loading the data.");
+                    });
+            } else {
+                this.repository.getPage(this.$route.fullPath, this.search, sortBy, descending, page, rowsPerPage)
+                    .then(data => {
+                        this.loading = false;
+                        resolve({
+                            items: data.pageItems,
+                            total: data.totalItems
+                        });
+                    })
+                    .catch(error => {
+                        this.loading = false;
+                        ErrorMsg.logError("dynamic-table.getData", new Error(error));
+                        reject("A problem occurred while loading the data.");
+                    });
+            }
+        });
+    }
+
+    onAddSelect() {
+        this.activity = true;
+        this.repository.addToParentCollection(this.$route.fullPath, this.parentId, this.parentProp, this.selected.map(c => c.id))
+            .then(data => {
+                if (data.error) {
+                    this.errorMessage = data.error;
+                }
+                else {
+                    this.items = this.items.filter(v => !this.selected.find(c => c.id == v.id));
+                    this.selected = [];
+                }
+                this.activity = false;
+            })
+            .catch(error => {
+                this.errorMessage = "A problem occurred. The item could not be removed.";
+                this.activity = false;
+                ErrorMsg.logError("dynamic-table.onDeleteChildItem", new Error(error));
+            });
+    }
+
+    onCancel() {
+        this.activity = false;
+        this.errorMessage = '';
+        this.$router.go(-1);
+    }
+
     onDelete() {
         this.activity = true;
         this.repository.removeRange(this.$route.fullPath, this.selected.map(i => i.id))
@@ -122,7 +237,32 @@ export default class DynamicTableComponent extends Vue {
             .catch(error => {
                 this.errorMessage = "A problem occurred. The item(s) could not be removed.";
                 this.activity = false;
-                ErrorMsg.logError("dynamic-table.onDelete", error);
+                ErrorMsg.logError("dynamic-table.onDelete", new Error(error));
+            });
+    }
+
+    onDeleteChildItem(id: string) {
+        this.activity = true;
+        this.deletePendingChildItems.push(id);
+        this.cancelDeleteChild(id); // removes from asking
+        this.repository.remove(this.$route.fullPath, id)
+            .then(data => {
+                if (data.error) {
+                    this.errorMessage = data.error;
+                }
+                else {
+                    this.items.splice(this.items.findIndex(d => d.id == id), 1);
+                    let index = this.deletePendingChildItems.indexOf(id);
+                    if (index !== -1) {
+                        this.deletePendingChildItems.splice(index, 1);
+                    }
+                }
+                this.activity = false;
+            })
+            .catch(error => {
+                this.errorMessage = "A problem occurred. The item could not be removed.";
+                this.activity = false;
+                ErrorMsg.logError("dynamic-table.onDeleteChildItem", new Error(error));
             });
     }
 
@@ -147,31 +287,109 @@ export default class DynamicTableComponent extends Vue {
             .catch(error => {
                 this.errorMessage = "A problem occurred. The item could not be removed.";
                 this.activity = false;
-                ErrorMsg.logError("dynamic-table.onDeleteItem", error);
+                ErrorMsg.logError("dynamic-table.onDeleteItem", new Error(error));
             });
-    }
-
-    onDetail(id: string) {
-        this.$router.push({ name: this.routeName, params: { operation: 'details', id } });
-    }
-
-    onEdit(id: string) {
-        this.$router.push({ name: this.routeName, params: { operation: 'edit', id } });
     }
 
     onNew() {
         this.$router.push({ name: this.routeName, params: { operation: 'create', id: Date.now().toString() } });
     }
 
-    updateData() {
-        this.getData()
-            .then((data: any) => {
-                this.items = data.items;
-                this.totalItems = data.total;
+    onRemoveSelect() {
+        this.activity = true;
+        this.repository.removeFromParentCollection(this.$route.fullPath, this.parentId, this.parentProp, this.selectedChildren.map(c => c.id))
+            .then(data => {
+                if (data.error) {
+                    this.errorMessage = data.error;
+                }
+                else {
+                    this.childItems = this.childItems.filter(v => !this.selectedChildren.find(c => c.id == v.id));
+                    this.selectedChildren = [];
+                }
+                this.activity = false;
             })
             .catch(error => {
-                this.errorMessage = "A problem occurred while loading the data.";
-                ErrorMsg.logError("dynamic-table.updateData", error);
+                this.errorMessage = "A problem occurred. The item could not be removed.";
+                this.activity = false;
+                ErrorMsg.logError("dynamic-table.onDeleteChildItem", new Error(error));
             });
+    }
+
+    onSelectItems() {
+        if (!this.selected.length) {
+            this.selectErrorDialogMessage = "You have not selected an item.";
+            this.selectErrorDialogShown = true;
+        } else if (this.selected.length > 1) {
+            this.selectErrorDialogMessage = "You can only select a single item.";
+            this.selectErrorDialogShown = true;
+        } else if (this.parentRepository && this.parentProp) {
+            this.parentRepository.find(this.$route.fullPath, this.parentId)
+                .then(data => {
+                    if (data.error) {
+                        this.errorMessage = data.error;
+                        this.activity = false;
+                    } else {
+                        let vm = data.data;
+                        vm[this.parentProp + "Id"] = this.selected[0].id;
+                        this.parentRepository.update(this.$route.fullPath, vm)
+                            .then(data => {
+                                if (data.error) {
+                                    this.errorMessage = data.error;
+                                } else {
+                                    this.$router.go(-1);
+                                }
+                                this.activity = false;
+                            })
+                            .catch(error => {
+                                this.errorMessage = "A problem occurred. The item could not be updated.";
+                                this.activity = false;
+                                ErrorMsg.logError("dynamic-table.onSelectItems", new Error(error));
+                            });
+                    }
+                })
+                .catch(error => {
+                    this.errorMessage = "A problem occurred while updating the data.";
+                    this.activity = false;
+                    ErrorMsg.logError("dynamic-table.onSelectItems", new Error(error));
+                });
+        } else {
+            this.errorMessage = "There was a problem saving your selection. Please try going back to the previous page before trying again.";
+        }
+    }
+
+    onViewChildItem(id: string) {
+        this.$router.push({ name: this.parentType.toLowerCase(), params: { operation: 'details', id } });
+    }
+
+    onViewItem(id: string) {
+        this.$router.push({ name: this.routeName, params: { operation: 'details', id } });
+    }
+
+    updateChildData() {
+        if (this.parentRepository) {
+            this.getChildData()
+                .then((data: any) => {
+                    this.childItems = data.items;
+                    this.totalChildItems = data.total;
+                })
+                .catch(error => {
+                    this.errorMessage = "A problem occurred while loading the data.";
+                    ErrorMsg.logError("dynamic-table.updateChildData", new Error(error));
+                });
+        }
+    }
+
+    updateData() {
+        if (this.repository) {
+            this.getData()
+                .then((data: any) => {
+                    this.items = data.items;
+                    this.totalItems = data.total;
+                })
+                .catch(error => {
+                    this.errorMessage = "A problem occurred while loading the data.";
+                    ErrorMsg.logError("dynamic-table.updateData", new Error(error));
+                });
+        }
     }
 }

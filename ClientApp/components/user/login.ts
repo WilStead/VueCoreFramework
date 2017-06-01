@@ -92,7 +92,7 @@ export default class LoginComponent extends Vue {
                 }
             })
             .catch(error => {
-                ErrorMsg.logError("login.mounted", error);
+                ErrorMsg.logError("login.mounted", new Error(error));
             });
     }
 
@@ -114,7 +114,7 @@ export default class LoginComponent extends Vue {
                     'Authorization': `bearer ${this.$store.state.token}`
                 }
             })
-            .catch(error => ErrorMsg.showErrorMsgAndLog("login.resetPassword", "A problem occurred. Your request was not received.", error));
+            .catch(error => ErrorMsg.showErrorMsgAndLog("login.resetPassword", "A problem occurred. Your request was not received.", new Error(error)));
         this.passwordReset = true;
         this.forgottenPassword = false;
     }
@@ -149,7 +149,7 @@ export default class LoginComponent extends Vue {
                 this.submitting = false;
             })
             .catch(error => {
-                ErrorMsg.showErrorMsgAndLog("login.onSubmit", "A problem occurred. Login failed.", error);
+                ErrorMsg.showErrorMsgAndLog("login.onSubmit", "A problem occurred. Login failed.", new Error(error));
                 this.submitting = false;
             });
     }
@@ -183,7 +183,7 @@ export default class LoginComponent extends Vue {
                 this.submitting = false;
             })
             .catch(error => {
-                ErrorMsg.showErrorMsgAndLog("login.onSubmit", "A problem occurred. Login failed.", error);
+                ErrorMsg.showErrorMsgAndLog("login.onSubmit", "A problem occurred. Login failed.", new Error(error));
                 this.submitting = false;
             });
     }

@@ -15,7 +15,16 @@ export default class DynamicFormComponent extends Vue {
     operation: string;
 
     @Prop()
-    repository: Repository;
+    parentId: string;
+
+    @Prop()
+    parentProp: string;
+
+    @Prop()
+    parentType: string;
+
+    @Prop()
+    repositoryType: string;
 
     @Prop()
     routeName: string;
@@ -41,12 +50,18 @@ export default class DynamicFormComponent extends Vue {
         validateAfterChanged: true
     };
     isValid = false;
-    model: any = { self: this };
+    model: any = { dataType: this.repositoryType };
+    parentRepository: Repository = null;
+    repository: Repository = null;
     schema: any = {};
     vm: any;
     vmDefinition: Array<FieldDefinition>;
 
     mounted() {
+        this.repository = new Repository(this.repositoryType);
+        if (this.parentType && this.parentId) {
+            this.parentRepository = new Repository(this.parentType);
+        }
         this.updateForm();
     }
 
@@ -54,25 +69,108 @@ export default class DynamicFormComponent extends Vue {
         this.isValid = isValid;
     }
 
-    onAddChild(childProp: string) {
-        this.activity = true;
-        this.errorMessage = '';
-        this.repository.addChild(this.$route.fullPath, this.id, childProp)
-            .then(data => {
-                if (data.error) {
-                    this.errorMessage = data.error;
-                } else if (!data.data || !data.data[childProp + "Id"]) {
-                    this.errorMessage = "A problem occurred. The item could not be added.";
-                } else {
-                    this.$router.push({ name: childProp, params: { operation: 'edit', id: data.data[childProp + "Id"] } });
+    addFieldToSchema(field: FieldDefinition) {
+        let newField: FieldDefinition = Object.assign({}, field);
+        if (newField.type.startsWith("object")) {
+            if (newField.type === "object" || newField.type === "objectSelect") {
+                let idField = this.vmDefinition.find(v => v.model === newField.model + "Id");
+                if (idField) {
+                    newField.buttons = [];
+                    if (newField.type === "objectSelect") {
+                        newField.buttons.push({
+                            classes: 'btn btn--dark btn--flat primary--text',
+                            label: 'Select',
+                            onclick: function (model, field) {
+                                router.push({
+                                    name: newField.inputType + "Table",
+                                    params: {
+                                        operation: 'select',
+                                        parentType: model.dataType,
+                                        parentId: model.id,
+                                        parentProp: newField.model
+                                    }
+                                });
+                            }
+                        });
+                    }
+                    this.addObjectButtons(newField, idField);
                 }
-                this.activity = false;
-            })
-            .catch(error => {
-                this.errorMessage = "A problem occurred. The item could not be added.";
-                this.activity = false;
-                ErrorMsg.logError("dynamic-form.onAddChild", error);
+            } else {
+                newField.buttons = [{
+                    classes: 'btn btn--dark btn--flat info--text',
+                    label: 'View/Edit',
+                    onclick: function (model, field) {
+                        router.push({
+                            name: newField.inputType + "Table",
+                            params: {
+                                operation: 'multiselect',
+                                parentType: model.dataType,
+                                parentId: model.id,
+                                parentProp: newField.model
+                            }
+                        });
+                    }
+                }];
+            }
+            newField.type = "label";
+        }
+        if (this.schema.groups) {
+            let group: any;
+            if (field.groupName) {
+                group = this.schema.groups.find(g => g.legend == field.groupName);
+            } else {
+                group = this.schema.groups.find(g => g.legend == "Other");
+                if (!group) {
+                    group = { legend: "Other", fields: [] };
+                    this.schema.groups.push(group);
+                }
+            }
+            group.fields.push(newField);
+        }
+        else {
+            this.schema.fields.push(newField);
+        }
+    }
+
+    addObjectButtons(newField: FieldDefinition, idField: FieldDefinition) {
+        if (this.operation === "edit"
+            && (newField.type === "objectSelect" || !this.model[idField.model])) {
+            newField.buttons.push({
+                classes: 'btn btn--dark btn--flat success--text',
+                label: 'Add',
+                onclick: function (model, field) {
+                    router.push({
+                        name: newField.inputType,
+                        params: {
+                            operation: 'create',
+                            id: Date.now().toString(),
+                            parentType: model.dataType,
+                            parentId: model.id,
+                            parentProp: newField.model
+                        }
+                    });
+                }
             });
+        }
+        newField.buttons.push({
+            classes: 'btn btn--dark btn--flat info--text',
+            label: 'View/Edit',
+            onclick: function (model, field) {
+                router.push({ name: newField.inputType, params: { operation: 'details', id: model[field.model + "Id"] } });
+            }
+        });
+        if (this.operation === "edit" && !newField.required) {
+            newField.buttons.push({
+                classes: 'btn btn--dark btn--flat error--text',
+                label: 'Delete',
+                onclick: function (model, field, event) {
+                    event.stopPropagation();
+                    Vue.set(model, 'deleteDialogShown', true);
+                    model.deleteProp = field.model;
+                    model.deleteId = model[field.model + "Id"];
+                }
+            });
+        }
     }
 
     onCancel() {
@@ -93,11 +191,41 @@ export default class DynamicFormComponent extends Vue {
                 updateTimestamp: timestamp
             }
         );
-        delete d.self;
+        delete d.dataType;
         this.repository.add(this.$route.fullPath, d)
             .then(data => {
                 if (data.error) {
                     this.errorMessage = data.error;
+                } else if (this.parentRepository && this.parentProp) {
+                    this.parentRepository.find(this.$route.fullPath, this.parentId)
+                        .then(data => {
+                            if (data.error) {
+                                this.errorMessage = data.error;
+                                this.activity = false;
+                            } else {
+                                let vm = data.data;
+                                vm[this.parentProp + "Id"] = data.data.id;
+                                this.parentRepository.update(this.$route.fullPath, vm)
+                                    .then(data => {
+                                        if (data.error) {
+                                            this.errorMessage = data.error;
+                                        } else {
+                                            this.$router.go(-1);
+                                        }
+                                        this.activity = false;
+                                    })
+                                    .catch(error => {
+                                        this.errorMessage = "A problem occurred. The item could not be updated.";
+                                        this.activity = false;
+                                        ErrorMsg.logError("dynamic-form.onCreate", new Error(error));
+                                    });
+                            }
+                        })
+                        .catch(error => {
+                            this.errorMessage = "A problem occurred while updating the data.";
+                            this.activity = false;
+                            ErrorMsg.logError("dynamic-form.onCreate", new Error(error));
+                        });
                 } else {
                     this.$router.go(-1);
                 }
@@ -106,19 +234,20 @@ export default class DynamicFormComponent extends Vue {
             .catch(error => {
                 this.activity = false;
                 this.errorMessage = "A problem occurred. The new item could not be added.";
-                ErrorMsg.logError("dynamic-form.onCreate", error);
+                ErrorMsg.logError("dynamic-form.onCreate", new Error(error));
             });
     }
 
     onDelete() {
         this.activity = true;
         this.model.deleteDialogShown = false;
-        this.repository.removeChild(this.$route.fullPath, this.id, this.model.deleteProp, this.model.deleteId)
+        this.vm[this.model.deleteProp] = null;
+        this.vm[this.model.deleteProp + "Id"] = null;
+        this.repository.update(this.$route.fullPath, this.vm)
             .then(data => {
                 if (data.error) {
                     this.errorMessage = data.error;
-                }
-                else {
+                } else {
                     this.updateForm();
                 }
                 this.activity = false;
@@ -126,7 +255,7 @@ export default class DynamicFormComponent extends Vue {
             .catch(error => {
                 this.errorMessage = "A problem occurred. The item could not be removed.";
                 this.activity = false;
-                ErrorMsg.logError("dynamic-form.onDelete", error);
+                ErrorMsg.logError("dynamic-form.onDelete", new Error(error));
             });
     }
 
@@ -142,7 +271,7 @@ export default class DynamicFormComponent extends Vue {
             updateTimestamp: Date.now()
         },
             this.model);
-        delete d.self;
+        delete d.dataType;
         this.repository.update(this.$route.fullPath, d)
             .then(data => {
                 if (data.error) {
@@ -155,7 +284,7 @@ export default class DynamicFormComponent extends Vue {
             .catch(error => {
                 this.errorMessage = "A problem occurred. The item could not be updated.";
                 this.activity = false;
-                ErrorMsg.logError("dynamic-form.onSave", error);
+                ErrorMsg.logError("dynamic-form.onSave", new Error(error));
             });
     }
 
@@ -164,7 +293,7 @@ export default class DynamicFormComponent extends Vue {
         this.errorMessage = '';
         this.repository.find(this.$route.fullPath, this.id)
             .then(data => {
-                this.model = { self: this };
+                this.model = { dataType: this.repositoryType };
                 this.schema = { fields: [] };
                 if (data.error) {
                     this.errorMessage = data.error;
@@ -189,67 +318,7 @@ export default class DynamicFormComponent extends Vue {
                                 this.model[prop] = this.vm[prop];
                             }
                             this.vmDefinition.forEach(field => {
-                                let newField: any = Object.assign({}, field);
-                                if (newField.type === "object") {
-                                    newField.type = "label";
-                                    let idField = this.vmDefinition.find(v => v.model === newField.model + "Id");
-                                    if (idField) {
-                                        if (this.model[idField.model]) {
-                                            newField.buttons = [{
-                                                classes: 'btn btn--dark btn--flat info--text',
-                                                label: 'Details',
-                                                onclick: function (model, field) {
-                                                    router.push({ name: newField.model, params: { operation: 'details', id: model[field.model + "Id"] } });
-                                                }
-                                            }];
-                                            if (this.operation === "edit") {
-                                                newField.buttons.push({
-                                                    classes: 'btn btn--dark btn--flat orange--text text--darken-2',
-                                                    label: 'Edit',
-                                                    onclick: function (model, field) {
-                                                        router.push({ name: newField.model, params: { operation: 'edit', id: model[field.model + "Id"] } });
-                                                    }
-                                                });
-                                                if (!field.required) {
-                                                    newField.buttons.push({
-                                                        classes: 'btn btn--dark btn--flat red--text text--accent-4',
-                                                        label: 'Delete',
-                                                        onclick: function (model, field, event) {
-                                                            event.stopPropagation();
-                                                            Vue.set(model, 'deleteDialogShown', true);
-                                                            model.deleteProp = field.model;
-                                                            model.deleteId = model[field.model + "Id"];
-                                                        }
-                                                    });
-                                                }
-                                            }
-                                        } else if (this.operation === "edit") {
-                                            newField.buttons = [{
-                                                classes: 'btn btn--dark btn--flat green--text',
-                                                label: 'Add',
-                                                onclick: function (model, field) {
-                                                    model.self.onAddChild(field.model);
-                                                }
-                                            }];
-                                        }
-                                    }
-                                }
-                                if (this.schema.groups) {
-                                    let group: any;
-                                    if (field.groupName) {
-                                        group = this.schema.groups.find(g => g.legend == field.groupName);
-                                    } else {
-                                        group = this.schema.groups.find(g => g.legend == "Other");
-                                        if (!group) {
-                                            group = { legend: "Other", fields: [] };
-                                            this.schema.groups.push(group);
-                                        }
-                                    }
-                                    group.fields.push(newField);
-                                }
-                                else {
-                                    this.schema.fields.push(newField);
-                                }
+                                this.addFieldToSchema(field);
                             });
                             if (this.operation === 'details') {
                                 this.schema.fields.forEach(f => f.readonly = true);
@@ -259,14 +328,14 @@ export default class DynamicFormComponent extends Vue {
                         .catch(error => {
                             this.errorMessage = "A problem occurred while updating the data.";
                             this.activity = false;
-                            ErrorMsg.logError("dynamic-form.updateForm", error);
+                            ErrorMsg.logError("dynamic-form.updateForm", new Error(error));
                         });
                 }
             })
             .catch(error => {
                 this.errorMessage = "A problem occurred while updating the data.";
                 this.activity = false;
-                ErrorMsg.logError("dynamic-form.updateForm", error);
+                ErrorMsg.logError("dynamic-form.updateForm", new Error(error));
             });
     }
 }

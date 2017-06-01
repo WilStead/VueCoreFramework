@@ -39,7 +39,7 @@ export default class ManageUserComponent extends Vue {
                     this.hasPassword = true;
                 }
             })
-            .catch(error => ErrorMsg.logError("manage.created.fetchPW", error));
+            .catch(error => ErrorMsg.logError("manage.created.fetchPW", new Error(error)));
     }
 
     mounted() {
@@ -63,7 +63,7 @@ export default class ManageUserComponent extends Vue {
                 }
             })
             .catch(error => {
-                ErrorMsg.logError("manage.mounted", error);
+                ErrorMsg.logError("manage.mounted", new Error(error));
             });
     }
 
@@ -179,7 +179,7 @@ export default class ManageUserComponent extends Vue {
                 this.submitting = false;
             })
             .catch(error => {
-                ErrorMsg.showErrorMsgAndLog("manage.onSignInProviderAdd", "A problem occurred. Login failed.", error);
+                ErrorMsg.showErrorMsgAndLog("manage.onSignInProviderAdd", "A problem occurred. Login failed.", new Error(error));
                 this.submitting = false;
             });
     }
@@ -210,7 +210,7 @@ export default class ManageUserComponent extends Vue {
                 this.submitting = false;
             })
             .catch(error => {
-                ErrorMsg.showErrorMsgAndLog("manage.onSignInProviderRemove", "A problem occurred. Login failed.", error);
+                ErrorMsg.showErrorMsgAndLog("manage.onSignInProviderRemove", "A problem occurred. Login failed.", new Error(error));
                 this.submitting = false;
             });
     }
@@ -249,7 +249,7 @@ export default class ManageUserComponent extends Vue {
                 }
             })
             .catch(error => {
-                ErrorMsg.showErrorMsgAndLog("manage.onSubmit", "A problem occurred. Your request was not received.", error);
+                ErrorMsg.showErrorMsgAndLog("manage.onSubmit", "A problem occurred. Your request was not received.", new Error(error));
                 this.changeSuccess = false;
             });
     }

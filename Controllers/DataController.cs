@@ -30,7 +30,7 @@ namespace MVCCoreVue.Controllers
         [HttpPost]
         public async Task<IActionResult> Add(string dataType, [FromBody]JObject item)
         {
-            if (!TryResolveObject(dataType, item, out object obj, out Type type))
+            if (!TryResolveObject(dataType, item, out DataItem obj, out Type type))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
@@ -47,7 +47,7 @@ namespace MVCCoreVue.Controllers
         }
 
         [HttpPost("{id}/{childProp}")]
-        public async Task<IActionResult> AddChild(string dataType, string id, string childProp)
+        public async Task<IActionResult> AddToParentCollection(string dataType, string id, string childProp, [FromBody]string[] childIds)
         {
             if (!TryGetRepository(dataType, out IRepository repository))
             {
@@ -65,7 +65,19 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            object item = null;
+            List<Guid> childGuids = new List<Guid>();
+            foreach (var childId in childIds)
+            {
+                if (!Guid.TryParse(childId, out Guid childGuid))
+                {
+                    return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                }
+                else
+                {
+                    childGuids.Add(childGuid);
+                }
+            }
+            DataItem item = null;
             try
             {
                 item = await repository.FindItemAsync(guid);
@@ -78,30 +90,24 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/404" });
             }
-            var childTypeInfo = item.GetType().GetTypeInfo();
-            var pInfo = childTypeInfo.GetProperty(childProp.ToInitialCaps());
+            var typeInfo = item.GetType().GetTypeInfo();
+            var pInfo = typeInfo.GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            var idPInfo = childTypeInfo.GetProperty($"{childProp.ToInitialCaps()}Id");
-            if (idPInfo == null)
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
-            if (!TryGetRepository(pInfo.PropertyType.Name, out IRepository childRepository))
+            if (!TryGetRepository(pInfo.PropertyType.Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1), out IRepository childRepository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
             try
             {
-                var newChild = await childRepository.NewAsync();
-                var updatedItem = await repository.AddChildAsync(item, newChild, pInfo, idPInfo);
+                var updatedItem = await childRepository.AddToParentCollectionAsync(item, pInfo, childGuids);
                 return Json(updatedItem);
             }
             catch
             {
-                return Json(new { error = "Item could not be added." });
+                return Json(new { error = "Item could not be accessed." });
             }
         }
 
@@ -144,6 +150,164 @@ namespace MVCCoreVue.Controllers
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
             return Json(repository.GetAll());
+        }
+
+        [HttpGet("{id}/{childProp}")]
+        public async Task<IActionResult> GetAllChildIds(
+            string dataType,
+            string id,
+            string childProp)
+        {
+            if (!TryGetRepository(dataType, out IRepository repository))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (string.IsNullOrEmpty(id))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (!Guid.TryParse(id, out Guid guid))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (string.IsNullOrEmpty(childProp))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            object item = null;
+            try
+            {
+                item = await repository.FindItemAsync(guid);
+            }
+            catch
+            {
+                return Json(new { error = "Item could not be accessed." });
+            }
+            if (item == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/404" });
+            }
+            var typeInfo = item.GetType().GetTypeInfo();
+            var pInfo = typeInfo.GetProperty(childProp.ToInitialCaps());
+            if (pInfo == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            try
+            {
+                var children = pInfo.GetValue(item) as ICollection<DataItem>;
+                return Json(children.Select(c => c.Id).ToList());
+            }
+            catch
+            {
+                return Json(new { error = "Item could not be accessed." });
+            }
+        }
+
+        [HttpGet("{id}/{childProp}")]
+        public async Task<IActionResult> GetChildPage(
+            string dataType,
+            string id,
+            string childProp,
+            string search,
+            string sortBy,
+            bool descending,
+            int page,
+            int rowsPerPage)
+        {
+            if (!TryGetRepository(dataType, out IRepository repository))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (string.IsNullOrEmpty(id))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (!Guid.TryParse(id, out Guid guid))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (string.IsNullOrEmpty(childProp))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            object item = null;
+            try
+            {
+                item = await repository.FindItemAsync(guid);
+            }
+            catch
+            {
+                return Json(new { error = "Item could not be accessed." });
+            }
+            if (item == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/404" });
+            }
+            var typeInfo = item.GetType().GetTypeInfo();
+            var pInfo = typeInfo.GetProperty(childProp.ToInitialCaps());
+            if (pInfo == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            try
+            {
+                var children = pInfo.GetValue(item) as ICollection<DataItem>;
+                return Json(Repository<DataItem>.GetPageItems(children.AsQueryable(), search, sortBy, descending, page, rowsPerPage));
+            }
+            catch
+            {
+                return Json(new { error = "Item could not be accessed." });
+            }
+        }
+
+        [HttpGet("{id}/{childProp}")]
+        public async Task<IActionResult> GetChildTotal(string dataType, string id, string childProp)
+        {
+            if (!TryGetRepository(dataType, out IRepository repository))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (string.IsNullOrEmpty(id))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (!Guid.TryParse(id, out Guid guid))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (string.IsNullOrEmpty(childProp))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            object item = null;
+            try
+            {
+                item = await repository.FindItemAsync(guid);
+            }
+            catch
+            {
+                return Json(new { error = "Item could not be accessed." });
+            }
+            if (item == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/404" });
+            }
+            var typeInfo = item.GetType().GetTypeInfo();
+            var pInfo = typeInfo.GetProperty(childProp.ToInitialCaps());
+            if (pInfo == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            try
+            {
+                var children = pInfo.GetValue(item) as ICollection<DataItem>;
+                return Json(new { response = children.Count });
+            }
+            catch
+            {
+                return Json(new { error = "Item could not be accessed." });
+            }
         }
 
         [AllowAnonymous]
@@ -189,20 +353,41 @@ namespace MVCCoreVue.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpPost]
         public IActionResult GetPage(
             string dataType,
             string search,
             string sortBy,
             bool descending,
             int page,
-            int rowsPerPage)
+            int rowsPerPage,
+            [FromBody]string[] except)
         {
             if (!TryGetRepository(dataType, out IRepository repository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            return Json(repository.GetPage(search, sortBy, descending, page, rowsPerPage));
+            List<Guid> exceptGuids = new List<Guid>();
+            foreach (var id in except)
+            {
+                if (!Guid.TryParse(id, out Guid guid))
+                {
+                    return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                }
+                else
+                {
+                    exceptGuids.Add(guid);
+                }
+            }
+            try
+            {
+                var results = repository.GetPage(search, sortBy, descending, page, rowsPerPage, exceptGuids);
+                return Json(results);
+            }
+            catch
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
         }
 
         [HttpGet]
@@ -270,8 +455,8 @@ namespace MVCCoreVue.Controllers
             return Ok();
         }
 
-        [HttpPost("{id}/{childProp}/{childId}")]
-        public async Task<IActionResult> RemoveChild(string dataType, string id, string childProp, string childId)
+        [HttpPost("{id}/{childProp}")]
+        public async Task<IActionResult> RemoveFromParentCollection(string dataType, string id, string childProp, [FromBody]string[] childIds)
         {
             if (!TryGetRepository(dataType, out IRepository repository))
             {
@@ -289,15 +474,19 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            if (string.IsNullOrEmpty(childId))
+            List<Guid> childGuids = new List<Guid>();
+            foreach (var childId in childIds)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                if (!Guid.TryParse(childId, out Guid childGuid))
+                {
+                    return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                }
+                else
+                {
+                    childGuids.Add(childGuid);
+                }
             }
-            if (!Guid.TryParse(childId, out Guid childGuid))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
-            object item = null;
+            DataItem item = null;
             try
             {
                 item = await repository.FindItemAsync(guid);
@@ -310,30 +499,24 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/404" });
             }
-            var childTypeInfo = item.GetType().GetTypeInfo();
-            var pInfo = childTypeInfo.GetProperty(childProp.ToInitialCaps());
+            var typeInfo = item.GetType().GetTypeInfo();
+            var pInfo = typeInfo.GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            var idPInfo = childTypeInfo.GetProperty($"{childProp.ToInitialCaps()}Id");
-            if (idPInfo == null)
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
-            if (!TryGetRepository(pInfo.PropertyType.Name, out IRepository childRepository))
+            if (!TryGetRepository(pInfo.PropertyType.Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1), out IRepository childRepository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
             try
             {
-                var updatedItem = await repository.RemoveChildAsync(item, pInfo, idPInfo);
-                await childRepository.RemoveAsync(childGuid);
+                var updatedItem = await childRepository.RemoveFromParentCollectionAsync(item, pInfo, childGuids);
                 return Json(updatedItem);
             }
             catch
             {
-                return Json(new { error = "Item could not be removed." });
+                return Json(new { error = "Item could not be accessed." });
             }
         }
 
@@ -395,7 +578,7 @@ namespace MVCCoreVue.Controllers
         private IRepository GetRepository(Type type)
             => (IRepository)Activator.CreateInstance(typeof(Repository<>).MakeGenericType(type), _context);
 
-        private bool TryResolveObject(string dataType, JObject item, out object obj, out Type type)
+        private bool TryResolveObject(string dataType, JObject item, out DataItem obj, out Type type)
         {
             obj = null;
             type = null;
@@ -415,7 +598,7 @@ namespace MVCCoreVue.Controllers
             type = entity.ClrType;
             try
             {
-                obj = item.ToObject(type);
+                obj = item.ToObject(type) as DataItem;
             }
             catch
             {
@@ -427,7 +610,7 @@ namespace MVCCoreVue.Controllers
         [HttpPost]
         public async Task<IActionResult> Update(string dataType, [FromBody]JObject item)
         {
-            if (!TryResolveObject(dataType, item, out object obj, out Type type))
+            if (!TryResolveObject(dataType, item, out DataItem obj, out Type type))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }

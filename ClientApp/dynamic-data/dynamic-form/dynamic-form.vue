@@ -6,8 +6,8 @@
                     <v-card-title>Are you sure you want to delete this item?</v-card-title>
                 </v-card-row>
                 <v-card-row actions>
-                    <v-btn class="green--text darken-1" flat="flat" @click.native="model.deleteDialogShown = false">Cancel</v-btn>
-                    <v-btn class="red--text accent-4" flat="flat" @click.native="onDelete">Delete</v-btn>
+                    <v-btn class="success--text" flat @click.native="model.deleteDialogShown = false">Cancel</v-btn>
+                    <v-btn class="error--text" flat @click.native="onDelete">Delete</v-btn>
                 </v-card-row>
             </v-card>
         </v-dialog>
@@ -20,16 +20,16 @@
         </v-card-row>
         <v-card-row v-else>
             <div v-if="operation === 'details'" class="submit-row condensed">
-                <v-btn dark default ripple @click.native="onCancel">Back</v-btn>
-                <v-btn light primary ripple @click.native="onEdit">Edit</v-btn>
+                <v-btn dark default @click.native="onCancel">Back</v-btn>
+                <v-btn light primary @click.native="onEdit">Edit</v-btn>
             </div>
             <div v-else-if="operation === 'edit'" class="submit-row condensed">
-                <v-btn dark default ripple @click.native="onCancel">Cancel</v-btn>
-                <v-btn light primary ripple :class="{ 'btn--disabled': !isValid }" @click.native="onSave">Save</v-btn>
+                <v-btn dark default @click.native="onCancel">Cancel</v-btn>
+                <v-btn light primary :class="{ 'btn--disabled': !isValid }" @click.native="onSave">Save</v-btn>
             </div>
             <div v-else-if="operation === 'create'" class="submit-row condensed">
-                <v-btn dark default ripple @click.native="onCancel">Cancel</v-btn>
-                <v-btn light primary ripple :class="{ 'btn--disabled': !isValid }" @click.native="onCreate">Create</v-btn>
+                <v-btn dark default @click.native="onCancel">Cancel</v-btn>
+                <v-btn light primary :class="{ 'btn--disabled': !isValid }" @click.native="onCreate">Create</v-btn>
             </div>
         </v-card-row>
     </v-card>

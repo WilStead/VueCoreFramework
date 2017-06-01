@@ -56,14 +56,16 @@ export class Repository {
             });
     }
 
-    addChild(returnPath: string, id: string, childProp: string): Promise<OperationReply<DataItem>> {
-        return fetch(`/api/Data/${this.dataType}/AddChild/${id}/${childProp}`,
+    addToParentCollection(returnPath: string, id: string, childProp: string, ids: Array<string>): Promise<OperationReply<DataItem>> {
+        return fetch(`/api/Data/${this.dataType}/AddToParentCollection/${id}/${childProp}`,
             {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
+                    'Content-Type': 'application/json',
                     'Authorization': `bearer ${store.state.token}`
-                }
+                },
+                body: JSON.stringify(ids)
             })
             .then(response => checkResponse(response, returnPath))
             .then(response => response.json() as Promise<any>)
@@ -82,8 +84,7 @@ export class Repository {
     }
 
     find(returnPath: string, id: string): Promise<OperationReply<DataItem>> {
-        if (id === undefined || id === null || id === '')
-        {
+        if (id === undefined || id === null || id === '') {
             return Promise.reject("The item id was missing from your request.");
         }
         return fetch(`/api/Data/${this.dataType}/Find/${id}`,
@@ -127,6 +128,96 @@ export class Repository {
             });
     }
 
+    getAllChildIds(returnPath: string, id: string, childProp: string): Promise<Array<string>> {
+        return fetch(`/api/Data/${this.dataType}/GetAllChildIds/${id}/${childProp}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${store.state.token}`
+                }
+            })
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<any>)
+            .then(data => {
+                if (data.error) {
+                    return Promise.reject(`There was a problem with your request. ${data.error}`);
+                }
+                return data;
+            })
+            .catch(error => {
+                return Promise.reject(`There was a problem with your request. ${error}`);
+            });
+    }
+
+    getChildPage(returnPath: string, id: string, childProp: string, search: string, sortBy: string, descending: boolean, page: number, rowsPerPage: number): Promise<PageData<DataItem>> {
+        var url = `/api/Data/${this.dataType}/GetChildPage/${id}/${childProp}`;
+        if (search || sortBy || descending || page || rowsPerPage) {
+            url += '?';
+        }
+        if (search) {
+            url += `search=${encodeURIComponent(search)}`;
+        }
+        if (sortBy) {
+            if (search) {
+                url += '&';
+            }
+            url += `sortBy=${encodeURIComponent(sortBy)}`;
+        }
+        if (descending) {
+            if (search || sortBy) {
+                url += '&';
+            }
+            url += `descending=${descending}`;
+        }
+        if (page) {
+            if (search || sortBy || descending) {
+                url += '&';
+            }
+            url += `page=${page}`;
+        }
+        if (rowsPerPage) {
+            if (search || sortBy || descending || page) {
+                url += '&';
+            }
+            url += `rowsPerPage=${rowsPerPage}`;
+        }
+        return fetch(`/api/Data/${this.dataType}/GetChildTotal/${id}/${childProp}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${store.state.token}`
+                }
+            })
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<ApiNumericResponseViewModel>)
+            .then(response => {
+                return fetch(url,
+                    {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Authorization': `bearer ${store.state.token}`
+                        }
+                    })
+                    .then(response => checkResponse(response, returnPath))
+                    .then(response => response.json() as Promise<Array<DataItem>>)
+                    .then(data => {
+                        return {
+                            pageItems: data,
+                            totalItems: response.response
+                        };
+                    })
+                    .catch(error => {
+                        return Promise.reject(`There was a problem with your request. ${error}`);
+                    });
+            })
+            .catch(error => {
+                return Promise.reject(`There was a problem with your request. ${error}`);
+            });
+    }
+
     getFieldDefinitions(returnPath: string): Promise<Array<FieldDefinition>> {
         return fetch(`/api/Data/${this.dataType}/GetFieldDefinitions`,
             {
@@ -156,7 +247,7 @@ export class Repository {
             });
     }
 
-    getPage(returnPath: string, search: string, sortBy: string, descending: boolean, page: number, rowsPerPage: number): Promise<PageData<DataItem>> {
+    getPage(returnPath: string, search: string, sortBy: string, descending: boolean, page: number, rowsPerPage: number, except: Array<string> = []): Promise<PageData<DataItem>> {
         var url = `/api/Data/${this.dataType}/GetPage`;
         if (search || sortBy || descending || page || rowsPerPage) {
             url += '?';
@@ -201,11 +292,13 @@ export class Repository {
             .then(response => {
                 return fetch(url,
                     {
-                        method: 'GET',
+                        method: 'POST',
                         headers: {
                             'Accept': 'application/json',
+                            'Content-Type': 'application/json',
                             'Authorization': `bearer ${store.state.token}`
-                        }
+                        },
+                        body: JSON.stringify(except)
                     })
                     .then(response => checkResponse(response, returnPath))
                     .then(response => response.json() as Promise<Array<DataItem>>)
@@ -252,18 +345,16 @@ export class Repository {
             });
     }
 
-    removeChild(returnPath: string, id: string, childProp: string, childId: string): Promise<OperationReply<DataItem>> {
-        if (childProp === undefined || childProp === null || childProp === ''
-            || childId === undefined || childId === null || childId === '') {
-            return Promise.reject("The item info was missing from your request.");
-        }
-        return fetch(`/api/Data/${this.dataType}/RemoveChild/${id}/${childProp}/${childId}`,
+    removeFromParentCollection(returnPath: string, id: string, childProp: string, ids: Array<string>): Promise<OperationReply<DataItem>> {
+        return fetch(`/api/Data/${this.dataType}/RemoveFromParentCollection/${id}/${childProp}`,
             {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
+                    'Content-Type': 'application/json',
                     'Authorization': `bearer ${store.state.token}`
-                }
+                },
+                body: JSON.stringify(ids)
             })
             .then(response => checkResponse(response, returnPath))
             .then(response => response.json() as Promise<any>)
