@@ -119,14 +119,14 @@ namespace MVCCoreVue.Data
                 if (pInfo.PropertyType == typeof(DataItem)
                     || ptInfo.IsSubclassOf(typeof(DataItem))
                     || (ptInfo.IsGenericType
-                    && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(IEnumerable<>))
+                    && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
                     && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem))))
                 {
-                    filteredItems = items.Include(pInfo.Name);
+                    filteredItems = filteredItems.Include(pInfo.Name);
                 }
             }
 
-            return items.Select(i => GetViewModel(i)).AsEnumerable();
+            return filteredItems.Select(i => GetViewModel(i)).AsEnumerable();
         }
 
         private FieldDefinition GetFieldDefinition(PropertyInfo pInfo)
@@ -138,6 +138,7 @@ namespace MVCCoreVue.Data
 
             var dataType = pInfo.GetCustomAttribute<DataTypeAttribute>();
             var step = pInfo.GetCustomAttribute<StepAttribute>();
+            var ptInfo = pInfo.PropertyType.GetTypeInfo();
             if (dataType != null)
             {
                 switch (dataType.DataType)
@@ -291,26 +292,25 @@ namespace MVCCoreVue.Data
                 }
                 fd.Validator = "number";
             }
-            else if (pInfo.PropertyType.GetTypeInfo().IsSubclassOf(typeof(DataItem)))
+            else if (pInfo.PropertyType == typeof(DataItem) || ptInfo.IsSubclassOf(typeof(DataItem)))
             {
                 fd.InputType = pInfo.PropertyType.Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1);
-                var menuAttr = pInfo.GetCustomAttribute<MenuClassAttribute>();
+                var menuAttr = ptInfo.GetCustomAttribute<MenuClassAttribute>();
                 if (menuAttr != null)
                 {
-                    var multiAttr = pInfo.GetCustomAttribute<MultiSelectAttribute>();
-                    if (multiAttr != null)
-                    {
-                        fd.Type = "objectMultiSelect";
-                    }
-                    else
-                    {
-                        fd.Type = "objectSelect";
-                    }
+                    fd.Type = "objectSelect";
                 }
                 else
                 {
                     fd.Type = "object";
                 }
+            }
+            else if (ptInfo.IsGenericType
+                && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
+                && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem)))
+            {
+                fd.InputType = pInfo.PropertyType.Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1);
+                fd.Type = "objectMultiSelect";
             }
             else
             {
@@ -403,10 +403,10 @@ namespace MVCCoreVue.Data
                 if (pInfo.PropertyType == typeof(DataItem)
                     || ptInfo.IsSubclassOf(typeof(DataItem))
                     || (ptInfo.IsGenericType
-                    && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(IEnumerable<>))
+                    && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
                     && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem))))
                 {
-                    filteredItems = items.Include(pInfo.Name);
+                    filteredItems = filteredItems.Include(pInfo.Name);
                 }
             }
 
@@ -473,7 +473,11 @@ namespace MVCCoreVue.Data
                     && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
                     && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem)))
                 {
-                    vm[pInfo.Name.ToInitialLower()] = (pInfo.GetValue(item) as ICollection<DataItem>).Any() ? "..." : "[None]";
+                    int count = (int)ptInfo.GetGenericTypeDefinition()
+                        .MakeGenericType(ptInfo.GenericTypeArguments.FirstOrDefault())
+                        .GetProperty("Count")
+                        .GetValue(pInfo.GetValue(item));
+                    vm[pInfo.Name.ToInitialLower()] = count > 0 ? "..." : "[None]";
                 }
                 else
                 {

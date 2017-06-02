@@ -381,8 +381,7 @@ namespace MVCCoreVue.Controllers
             }
             try
             {
-                var results = repository.GetPage(search, sortBy, descending, page, rowsPerPage, exceptGuids);
-                return Json(results);
+                return Json(repository.GetPage(search, sortBy, descending, page, rowsPerPage, exceptGuids));
             }
             catch
             {

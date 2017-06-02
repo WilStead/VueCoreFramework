@@ -23,8 +23,7 @@ namespace MVCCoreVue.Models
         public Guid CapitolId { get; set; }
 
         public City Capitol { get; set; }
-
-        [MultiSelect]
+        
         public ICollection<City> Cities { get; set; }
 
         [Display(AutoGenerateField = false)]
