@@ -21,6 +21,7 @@ body {
     .btn {
         margin-top: 0;
     }
+
     .btn--icon {
         height: auto;
         width: auto;
@@ -78,4 +79,10 @@ a.list__tile {
     font-style: italic;
     text-decoration: none;
     color: $color-primary-text;
+
+    &:hover,
+    &:focus {
+        text-decoration: none;
+        color: $color-primary-text;
+    }
 }

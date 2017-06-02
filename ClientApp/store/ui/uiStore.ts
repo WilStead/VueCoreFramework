@@ -124,7 +124,6 @@ export function getChildItems(router: any): Promise<void> {
                 let baseRoute = (data[dataClass].category !== undefined && data[dataClass].category !== null && data[dataClass].category.length > 0 && data[dataClass].category !== '/')
                     ? `/data/${data[dataClass].category.toLowerCase()}/${name}`
                     : `/data/${name}`;
-                let repository = new Repository(dataClass);
 
                 router.addRoutes([{
                     path: baseRoute,
@@ -133,12 +132,15 @@ export function getChildItems(router: any): Promise<void> {
                     props: { title: dataClass },
                     children: [{
                         name,
-                        path: ':operation/:id',
+                        path: ':operation/:id/:parentType?/:parentId?/:parentProp?',
                         component: require('../../dynamic-data/dynamic-form/dynamic-form.vue'),
                         props: (route) => ({
                             id: route.params.id,
                             operation: route.params.operation,
-                            repository,
+                            parentId: route.params.parentId,
+                            parentProp: route.params.parentProp,
+                            parentType: route.params.parentType,
+                            repositoryType: dataClass,
                             routeName: name
                         })
                     }]

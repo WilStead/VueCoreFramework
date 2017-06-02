@@ -294,7 +294,7 @@ namespace MVCCoreVue.Data
             }
             else if (pInfo.PropertyType == typeof(DataItem) || ptInfo.IsSubclassOf(typeof(DataItem)))
             {
-                fd.InputType = pInfo.PropertyType.Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1);
+                fd.InputType = pInfo.PropertyType.Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1).ToInitialLower();
                 var menuAttr = ptInfo.GetCustomAttribute<MenuClassAttribute>();
                 if (menuAttr != null)
                 {
@@ -309,7 +309,8 @@ namespace MVCCoreVue.Data
                 && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
                 && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem)))
             {
-                fd.InputType = pInfo.PropertyType.Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1);
+                var name = ptInfo.GenericTypeArguments.FirstOrDefault().Name;
+                fd.InputType = name.Substring(name.LastIndexOf('.') + 1).ToInitialLower();
                 fd.Type = "objectMultiSelect";
             }
             else

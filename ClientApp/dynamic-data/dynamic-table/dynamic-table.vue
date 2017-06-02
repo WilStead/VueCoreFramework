@@ -52,8 +52,8 @@
         </v-data-table>
         <v-container fluid v-if="operation === 'multiselect'">
             <v-layout row justify-space-around>
-                <v-btn light success @click.native="onAddSelect">Add<v-icon right light>arrow_downward</v-icon></v-btn>
-                <v-btn light error @click.native="onRemoveSelect">Remove<v-icon right light>arrow_upward</v-icon></v-btn>
+                <v-btn dark success :class="{ 'btn--disabled': !selected.length }" @click.native="onAddSelect">Add<v-icon right dark>arrow_downward</v-icon></v-btn>
+                <v-btn dark error :class="{ 'btn--disabled': !selectedChildren.length }" @click.native="onRemoveSelect">Remove<v-icon right dark>arrow_upward</v-icon></v-btn>
             </v-layout>
         </v-container>
         <v-card-row v-if="operation === 'multiselect'">
@@ -96,10 +96,10 @@
         <v-card-row v-else>
             <div v-if="operation === 'select'" class="submit-row condensed">
                 <v-btn dark default @click.native="onCancel">Cancel</v-btn>
-                <v-btn light primary @click.native="onSelectItems">Submit</v-btn>
+                <v-btn dark primary @click.native="onSelectItems">Submit</v-btn>
             </div>
             <div v-else-if="operation === 'multiselect'" class="submit-row condensed">
-                <v-btn light primary @click.native="onCancel">Finish</v-btn>
+                <v-btn dark primary @click.native="onCancel">Finish</v-btn>
             </div>
         </v-card-row>
         <v-dialog v-model="selectErrorDialogShown">

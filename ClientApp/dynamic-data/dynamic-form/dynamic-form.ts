@@ -31,12 +31,32 @@ export default class DynamicFormComponent extends Vue {
 
     @Watch('id')
     onIdChanged(val: string, oldVal: string) {
-        this.updateForm();
+        if (this.updateTimeout === 0) {
+            this.updateTimeout = setTimeout(this.updateForm, 125);
+        }
     }
 
     @Watch('operation')
     onOperationChanged(val: string, oldVal: string) {
-        this.updateForm();
+        if (this.updateTimeout === 0) {
+            this.updateTimeout = setTimeout(this.updateForm, 125);
+        }
+    }
+
+    @Watch('parentType')
+    onParentTypeChanged(val: string, oldVal: string) {
+        this.parentRepository = new Repository(val);
+        if (this.updateTimeout === 0) {
+            this.updateTimeout = setTimeout(this.updateForm, 125);
+        }
+    }
+
+    @Watch('repositoryType')
+    onRepositoryTypeChanged(val: string, oldVal: string) {
+        this.repository = new Repository(val);
+        if (this.updateTimeout === 0) {
+            this.updateTimeout = setTimeout(this.updateForm, 125);
+        }
     }
 
     components = {
@@ -54,6 +74,7 @@ export default class DynamicFormComponent extends Vue {
     parentRepository: Repository = null;
     repository: Repository = null;
     schema: any = {};
+    updateTimeout = 0;
     vm: any;
     vmDefinition: Array<FieldDefinition>;
 
@@ -212,6 +233,7 @@ export default class DynamicFormComponent extends Vue {
                                         } else {
                                             this.$router.go(-1);
                                         }
+                                        this.errorMessage = '';
                                         this.activity = false;
                                     })
                                     .catch(error => {
@@ -250,6 +272,7 @@ export default class DynamicFormComponent extends Vue {
                 } else {
                     this.updateForm();
                 }
+                this.errorMessage = '';
                 this.activity = false;
             })
             .catch(error => {
@@ -279,6 +302,7 @@ export default class DynamicFormComponent extends Vue {
                 } else {
                     this.$router.go(-1);
                 }
+                this.errorMessage = '';
                 this.activity = false;
             })
             .catch(error => {
@@ -290,6 +314,7 @@ export default class DynamicFormComponent extends Vue {
 
     updateForm() {
         this.activity = true;
+        this.updateTimeout = 0;
         this.errorMessage = '';
         this.repository.find(this.$route.fullPath, this.id)
             .then(data => {
@@ -323,6 +348,7 @@ export default class DynamicFormComponent extends Vue {
                             if (this.operation === 'details') {
                                 this.schema.fields.forEach(f => f.readonly = true);
                             }
+                            this.errorMessage = '';
                             this.activity = false;
                         })
                         .catch(error => {

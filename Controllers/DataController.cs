@@ -316,16 +316,18 @@ namespace MVCCoreVue.Controllers
         {
             try
             {
-                var types = _context.Model.GetEntityTypes();
+                var types = _context.Model.GetEntityTypes()
+                    .Select(t => t.ClrType)
+                    .Where(t => t.GetTypeInfo().IsSubclassOf(typeof(DataItem)));
                 IDictionary<string, dynamic> classes = new Dictionary<string, dynamic>();
                 foreach (var type in types)
                 {
-                    var attr = type.ClrType.GetTypeInfo().GetCustomAttribute<MenuClassAttribute>();
+                    var attr = type.GetTypeInfo().GetCustomAttribute<MenuClassAttribute>();
                     if (attr == null)
                     {
-                        var childAttr = type.ClrType.GetTypeInfo().GetCustomAttribute<ChildClassAttribute>();
+                        var childAttr = type.GetTypeInfo().GetCustomAttribute<ChildClassAttribute>();
                         var category = string.IsNullOrEmpty(childAttr?.Category) ? "/" : childAttr?.Category;
-                        classes.Add(type.ClrType.Name, new { category = category });
+                        classes.Add(type.Name, new { category = category });
                     }
                 }
                 return Json(classes);
@@ -406,14 +408,16 @@ namespace MVCCoreVue.Controllers
         {
             try
             {
-                var types = _context.Model.GetEntityTypes();
+                var types = _context.Model.GetEntityTypes()
+                    .Select(t => t.ClrType)
+                    .Where(t => t.GetTypeInfo().IsSubclassOf(typeof(DataItem)));
                 IDictionary<string, dynamic> classes = new Dictionary<string, dynamic>();
                 foreach (var type in types)
                 {
-                    var attr = type.ClrType.GetTypeInfo().GetCustomAttribute<MenuClassAttribute>();
+                    var attr = type.GetTypeInfo().GetCustomAttribute<MenuClassAttribute>();
                     if (attr != null)
                     {
-                        classes.Add(type.ClrType.Name,
+                        classes.Add(type.Name,
                             new {
                                 category = string.IsNullOrEmpty(attr.Category) ? "/" : attr.Category,
                                 iconClass = attr.IconClass

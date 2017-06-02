@@ -15,8 +15,8 @@
             </v-card-row>
             <div v-else>
                 <v-card-row class="submit-row">
-                    <v-btn light primary ripple v-if="this.forgottenPassword" @click.native="resetPassword">Reset</v-btn>
-                    <v-btn light primary ripple v-if="!this.forgottenPassword" @click.native="onSubmit">Sign In</v-btn>
+                    <v-btn dark primary ripple v-if="this.forgottenPassword" @click.native="resetPassword">Reset</v-btn>
+                    <v-btn dark primary ripple v-if="!this.forgottenPassword" @click.native="onSubmit">Sign In</v-btn>
                     <router-link class="ml-5 mr-3" :to="{ path: '/register', query: { returnUrl }}">New? Register here</router-link>
                 </v-card-row>
                 <v-card-row>
@@ -37,9 +37,9 @@
                 <v-card-row v-if="authProviderFacebook || authProviderGoogle || authProviderMicrosoft">
                     <v-card-text>Sign in with an external account</v-card-text>
                     <div class="auth-providers">
-                        <v-btn icon light ripple v-if="authProviderFacebook" @click.native="onSignInProvider('Facebook')"><v-icon fa>facebook</v-icon></v-btn>
-                        <v-btn icon light ripple v-if="authProviderGoogle" @click.native="onSignInProvider('Google')"><v-icon fa>google</v-icon></v-btn>
-                        <v-btn icon light ripple v-if="authProviderMicrosoft" @click.native="onSignInProvider('Microsoft')"><v-icon fa>windows</v-icon></v-btn>
+                        <v-btn icon dark ripple v-if="authProviderFacebook" @click.native="onSignInProvider('Facebook')"><v-icon fa>facebook</v-icon></v-btn>
+                        <v-btn icon dark ripple v-if="authProviderGoogle" @click.native="onSignInProvider('Google')"><v-icon fa>google</v-icon></v-btn>
+                        <v-btn icon dark ripple v-if="authProviderMicrosoft" @click.native="onSignInProvider('Microsoft')"><v-icon fa>windows</v-icon></v-btn>
                     </div>
                 </v-card-row>
             </div>

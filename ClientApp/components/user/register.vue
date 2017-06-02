@@ -14,8 +14,8 @@
                 <v-progress-circular indeterminate class="primary--text"></v-progress-circular>
             </v-card-row>
             <v-card-row v-else class="submit-row">
-                <router-link tag="button" class="btn btn--light btn--raised btn--default" :to="{ path: '/login', query: { returnUrl }}">Cancel</router-link>
-                <v-btn light primary ripple @click.native.stop.prevent="onSubmit">Register</v-btn>
+                <router-link tag="button" class="btn btn--dark btn--raised btn--default" :to="{ path: '/login', query: { returnUrl }}">Cancel</router-link>
+                <v-btn dark primary ripple @click.native.stop.prevent="onSubmit">Register</v-btn>
             </v-card-row>
         </v-card>
     </v-layout>

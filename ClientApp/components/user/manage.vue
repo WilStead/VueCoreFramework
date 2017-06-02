@@ -14,17 +14,17 @@
             <v-card-row v-if="!submitting && (authProviderFacebook || authProviderGoogle || authProviderMicrosoft) && (!authProviderFacebookUser || !authProviderGoogleUser || !authProviderMicrosoftUser)">
                 <v-card-text>Add external login</v-card-text>
                 <div class="auth-providers">
-                    <v-btn icon light ripple v-if="authProviderFacebook && !authProviderFacebookUser" @click.native="onSignInProviderAdd('Facebook')"><v-icon fa>facebook</v-icon></v-btn>
-                    <v-btn icon light ripple v-if="authProviderGoogle && !authProviderGoogleUser" @click.native="onSignInProviderAdd('Google')"><v-icon fa>google</v-icon></v-btn>
-                    <v-btn icon light ripple v-if="authProviderMicrosoft && !authProviderMicrosoftUser" @click.native="onSignInProviderAdd('Microsoft')"><v-icon fa>windows</v-icon></v-btn>
+                    <v-btn icon dark ripple v-if="authProviderFacebook && !authProviderFacebookUser" @click.native="onSignInProviderAdd('Facebook')"><v-icon fa>facebook</v-icon></v-btn>
+                    <v-btn icon dark ripple v-if="authProviderGoogle && !authProviderGoogleUser" @click.native="onSignInProviderAdd('Google')"><v-icon fa>google</v-icon></v-btn>
+                    <v-btn icon dark ripple v-if="authProviderMicrosoft && !authProviderMicrosoftUser" @click.native="onSignInProviderAdd('Microsoft')"><v-icon fa>windows</v-icon></v-btn>
                 </div>
             </v-card-row>
             <v-card-row v-if="!submitting && (authProviderFacebookUser || authProviderGoogleUser || authProviderMicrosoftUser)">
                 <v-card-text>Remove external login</v-card-text>
                 <div class="auth-providers">
-                    <v-btn icon light ripple v-if="authProviderFacebook && authProviderFacebookUser" @click.native="onSignInProviderRemove('Facebook')"><v-icon fa>facebook</v-icon></v-btn>
-                    <v-btn icon light ripple v-if="authProviderGoogle && authProviderGoogleUser" @click.native="onSignInProviderRemove('Google')"><v-icon fa>google</v-icon></v-btn>
-                    <v-btn icon light ripple v-if="authProviderMicrosoft && authProviderMicrosoftUser" @click.native="onSignInProviderRemove('Microsoft')"><v-icon fa>windows</v-icon></v-btn>
+                    <v-btn icon dark ripple v-if="authProviderFacebook && authProviderFacebookUser" @click.native="onSignInProviderRemove('Facebook')"><v-icon fa>facebook</v-icon></v-btn>
+                    <v-btn icon dark ripple v-if="authProviderGoogle && authProviderGoogleUser" @click.native="onSignInProviderRemove('Google')"><v-icon fa>google</v-icon></v-btn>
+                    <v-btn icon dark ripple v-if="authProviderMicrosoft && authProviderMicrosoftUser" @click.native="onSignInProviderRemove('Microsoft')"><v-icon fa>windows</v-icon></v-btn>
                 </div>
             </v-card-row>
             <v-card-row v-if="submitting" class="activity-row">
