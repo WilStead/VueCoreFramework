@@ -305,7 +305,7 @@ export class Repository {
                     .then(data => {
                         return {
                             pageItems: data,
-                            totalItems: response.response
+                            totalItems: response.response - (except ? except.length : 0)
                         };
                     })
                     .catch(error => {

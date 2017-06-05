@@ -9,7 +9,7 @@ namespace MVCCoreVue.Data
     {
         Task<IDictionary<string, object>> AddAsync(DataItem item);
 
-        Task<IDictionary<string, object>> AddToParentCollectionAsync(DataItem parent, PropertyInfo childProp, IEnumerable<Guid> ids);
+        Task<IDictionary<string, object>> AddToParentCollectionAsync(DataItem parent, PropertyInfo childProp, IEnumerable<DataItem> children);
 
         Task<IDictionary<string, object>> FindAsync(Guid id);
 
@@ -31,7 +31,7 @@ namespace MVCCoreVue.Data
 
         Task RemoveAsync(Guid id);
 
-        Task<IDictionary<string, object>> RemoveFromParentCollectionAsync(DataItem parent, PropertyInfo childProp, IEnumerable<Guid> ids);
+        Task<IDictionary<string, object>> RemoveChildrenFromCollectionAsync(DataItem parent, PropertyInfo childProp, IEnumerable<DataItem> children);
 
         Task RemoveRangeAsync(IEnumerable<Guid> ids);
 

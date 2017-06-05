@@ -1,5 +1,6 @@
 ﻿using MVCCoreVue.Data;
 using MVCCoreVue.Data.Attributes;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -22,14 +23,17 @@ namespace MVCCoreVue.Models
         [Display(AutoGenerateField = false)]
         public Guid CapitolId { get; set; }
 
+        [JsonIgnore]
         public City Capitol { get; set; }
-        
+
+        [JsonIgnore]
         public ICollection<City> Cities { get; set; }
 
         [Display(AutoGenerateField = false)]
         public Guid LeaderId { get; set; }
 
         [Required]
+        [JsonIgnore]
         public Leader Leader { get; set; }
     }
 }

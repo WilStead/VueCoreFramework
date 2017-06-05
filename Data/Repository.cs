@@ -2,6 +2,7 @@
 using MVCCoreVue.Data.Attributes;
 using MVCCoreVue.Extensions;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -34,17 +35,25 @@ namespace MVCCoreVue.Data
             {
                 reference.Load();
             }
+            foreach (var collection in _context.Entry(item).Collections)
+            {
+                collection.Load();
+            }
             return GetViewModel(item as T);
         }
 
-        public async Task<IDictionary<string, object>> AddToParentCollectionAsync(DataItem parent, PropertyInfo childProp, IEnumerable<Guid> ids)
+        public async Task<IDictionary<string, object>> AddToParentCollectionAsync(DataItem parent, PropertyInfo childProp, IEnumerable<DataItem> children)
         {
-            ICollection<DataItem> children = childProp.GetValue(parent) as ICollection<DataItem>;
-            foreach (var id in ids)
+            var ptInfo = childProp.PropertyType.GetTypeInfo();
+            var add = ptInfo.GetGenericTypeDefinition()
+                        .MakeGenericType(ptInfo.GenericTypeArguments.FirstOrDefault())
+                        .GetMethod("Add");
+
+            foreach (var child in children)
             {
-                var child = await FindItemAsync(id);
-                children.Add(child as DataItem);
+                add.Invoke(childProp.GetValue(parent), new object[] { child });
             }
+            
             await _context.SaveChangesAsync();
             return GetViewModel(parent as T);
         }
@@ -91,6 +100,10 @@ namespace MVCCoreVue.Data
             {
                 reference.Load();
             }
+            foreach (var collection in _context.Entry(item).Collections)
+            {
+                collection.Load();
+            }
             return GetViewModel(item);
         }
 
@@ -104,6 +117,10 @@ namespace MVCCoreVue.Data
             foreach (var reference in _context.Entry(item).References)
             {
                 reference.Load();
+            }
+            foreach (var collection in _context.Entry(item).Collections)
+            {
+                collection.Load();
             }
             return item;
         }
@@ -439,7 +456,7 @@ namespace MVCCoreVue.Data
                 {
                     throw new ArgumentException($"{nameof(page)} cannot be < 1 if {nameof(rowsPerPage)} is > 0.", nameof(page));
                 }
-                filteredItems = filteredItems.Skip((page - 1) * rowsPerPage).Take(page * rowsPerPage);
+                filteredItems = filteredItems.Skip((page - 1) * rowsPerPage).Take(rowsPerPage);
             }
 
             return filteredItems.ToList().Select(i => GetViewModel(i));
@@ -495,14 +512,18 @@ namespace MVCCoreVue.Data
             await _context.SaveChangesAsync();
         }
 
-        public async Task<IDictionary<string, object>> RemoveFromParentCollectionAsync(DataItem parent, PropertyInfo childProp, IEnumerable<Guid> ids)
+        public async Task<IDictionary<string, object>> RemoveChildrenFromCollectionAsync(DataItem parent, PropertyInfo childProp, IEnumerable<DataItem> children)
         {
-            ICollection<DataItem> children = childProp.GetValue(parent) as ICollection<DataItem>;
-            foreach (var id in ids)
+            var ptInfo = childProp.PropertyType.GetTypeInfo();
+            var remove = ptInfo.GetGenericTypeDefinition()
+                        .MakeGenericType(ptInfo.GenericTypeArguments.FirstOrDefault())
+                        .GetMethod("Remove");
+
+            foreach (var child in children)
             {
-                var child = await FindItemAsync(id);
-                children.Remove(child as DataItem);
+                remove.Invoke(childProp.GetValue(parent), new object[] { child });
             }
+
             await _context.SaveChangesAsync();
             return GetViewModel(parent as T);
         }
@@ -524,6 +545,10 @@ namespace MVCCoreVue.Data
             foreach (var reference in _context.Entry(item).References)
             {
                 reference.Load();
+            }
+            foreach (var collection in _context.Entry(item).Collections)
+            {
+                collection.Load();
             }
             return GetViewModel(item as T);
         }

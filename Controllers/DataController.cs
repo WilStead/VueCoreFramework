@@ -96,13 +96,14 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            if (!TryGetRepository(pInfo.PropertyType.Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1), out IRepository childRepository))
+            if (!TryGetRepository(pInfo.PropertyType.GetTypeInfo().GenericTypeArguments.FirstOrDefault().Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1), out IRepository childRepository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
             try
             {
-                var updatedItem = await childRepository.AddToParentCollectionAsync(item, pInfo, childGuids);
+                var childrenAsync = childGuids.Select(async g => await childRepository.FindItemAsync(g));
+                var updatedItem = await repository.AddToParentCollectionAsync(item, pInfo, await Task.WhenAll(childrenAsync));
                 return Json(updatedItem);
             }
             catch
@@ -193,10 +194,26 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
+            var ptInfo = pInfo.PropertyType.GetTypeInfo();
             try
             {
-                var children = pInfo.GetValue(item) as ICollection<DataItem>;
-                return Json(children.Select(c => c.Id).ToList());
+                if (ptInfo.IsGenericType
+                    && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
+                    && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem)))
+                {
+                    var children = pInfo.GetValue(item) as IEnumerable;
+                    var idInfo = ptInfo.GenericTypeArguments.FirstOrDefault().GetProperty("Id");
+                    List<Guid> childIds = new List<Guid>();
+                    foreach (var child in children)
+                    {
+                        childIds.Add((Guid)idInfo.GetValue(child));
+                    }
+                    return Json(childIds);
+                }
+                else
+                {
+                    return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                }
             }
             catch
             {
@@ -250,10 +267,14 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
+            var ptInfo = pInfo.PropertyType.GetTypeInfo();
             try
             {
-                var children = pInfo.GetValue(item) as ICollection<DataItem>;
-                return Json(Repository<DataItem>.GetPageItems(children.AsQueryable(), search, sortBy, descending, page, rowsPerPage));
+                var repoMethod = typeof(Repository<>)
+                    .MakeGenericType(ptInfo.GenericTypeArguments.FirstOrDefault())
+                    .GetMethod("GetPageItems");
+                var children = pInfo.GetValue(item) as IEnumerable;
+                return Json(repoMethod.Invoke(null, new object[] { children.Cast<DataItem>().AsQueryable(), search, sortBy, descending, page, rowsPerPage }));
             }
             catch
             {
@@ -508,13 +529,14 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            if (!TryGetRepository(pInfo.PropertyType.Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1), out IRepository childRepository))
+            if (!TryGetRepository(pInfo.PropertyType.GetTypeInfo().GenericTypeArguments.FirstOrDefault().Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1), out IRepository childRepository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
             try
             {
-                var updatedItem = await childRepository.RemoveFromParentCollectionAsync(item, pInfo, childGuids);
+                var childrenAsync = childGuids.Select(async g => await childRepository.FindItemAsync(g));
+                var updatedItem = await repository.RemoveChildrenFromCollectionAsync(item, pInfo, await Task.WhenAll(childrenAsync));
                 return Json(updatedItem);
             }
             catch

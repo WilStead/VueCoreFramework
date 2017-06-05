@@ -78,7 +78,7 @@
                 <td v-for="field in headers" :class="{ 'text-xs-right': field.text !== 'Name' }">{{ props.item[field.value] }}</td>
                 <td v-if="deletePendingChildItems.indexOf(props.item.id) !== -1" colspan="3">Deleting...</td>
                 <td v-if="deletePendingChildItems.indexOf(props.item.id) === -1">
-                    <span v-if="deleteAskingChildItems.indexOf(props.item.id) === -1">Are you sure?</span>
+                    <span v-if="deleteAskingChildItems.indexOf(props.item.id) !== -1">Are you sure?</span>
                 </td>
                 <td v-if="deletePendingChildItems.indexOf(props.item.id) === -1">
                     <v-btn v-if="deleteAskingChildItems.indexOf(props.item.id) === -1" icon v-tooltip:left="{ html: 'view/edit' }" @click.native="onViewChildItem(props.item.id)"><v-icon class="info--text">edit</v-icon></v-btn>
@@ -96,7 +96,7 @@
         <v-card-row v-else>
             <div v-if="operation === 'select'" class="submit-row condensed">
                 <v-btn dark default @click.native="onCancel">Cancel</v-btn>
-                <v-btn dark primary @click.native="onSelectItems">Submit</v-btn>
+                <v-btn dark primary @click.native.stop="onSelectItems">Submit</v-btn>
             </div>
             <div v-else-if="operation === 'multiselect'" class="submit-row condensed">
                 <v-btn dark primary @click.native="onCancel">Finish</v-btn>

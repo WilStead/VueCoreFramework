@@ -54,8 +54,9 @@ export default class DynamicTableComponent extends Vue {
     selectedChildren: Array<any> = [];
     totalChildItems = 0;
     totalItems = 0;
+    updateTimeout = 0;
 
-    @Watch('childPagination', { immediate: true, deep: true })
+    @Watch('childPagination', { deep: true })
     onChildPaginationChange(val: any, oldVal: any) {
         this.updateChildData();
     }
@@ -65,12 +66,28 @@ export default class DynamicTableComponent extends Vue {
         this.updateChildData();
     }
 
+    @Watch('parentType')
+    onParentTypeChanged(val: string, oldVal: string) {
+        this.parentRepository = new Repository(val);
+        if (this.updateTimeout === 0) {
+            this.updateTimeout = setTimeout(this.updateTable, 125);
+        }
+    }
+
+    @Watch('repositoryType')
+    onRepositoryTypeChanged(val: string, oldVal: string) {
+        this.repository = new Repository(val);
+        if (this.updateTimeout === 0) {
+            this.updateTimeout = setTimeout(this.updateTable, 125);
+        }
+    }
+
     @Watch('search')
     onSearchChange(val: string, oldVal: string) {
         this.updateData();
     }
 
-    @Watch('pagination', { immediate: true, deep: true })
+    @Watch('pagination', { deep: true })
     onPaginationChange(val: any, oldVal: any) {
         this.updateData();
     }
@@ -80,40 +97,7 @@ export default class DynamicTableComponent extends Vue {
         if (this.parentType && this.parentId) {
             this.parentRepository = new Repository(this.parentType);
         }
-        this.activity = true;
-        this.repository.getFieldDefinitions(this.$route.fullPath)
-            .then(defData => {
-                defData.forEach(field => {
-                    if (!field.hideInTable && field.visible !== false) {
-                        let h: TableHeader = {
-                            text: field.label || field.placeholder,
-                            value: field.model,
-                            sortable: field.type === 'input'
-                            && (field.inputType === 'text'
-                                || field.inputType === 'number'
-                                || field.inputType === 'email'
-                                || field.inputType === 'telephone'
-                                || field.inputType === 'range'
-                                || field.inputType === 'time'
-                                || field.inputType === 'date'
-                                || field.inputType === 'datetime'
-                                || field.inputType === 'datetime-local')
-                        };
-                        if (h.text === 'Name') {
-                            h.left = true;
-                            this.headers.unshift(h);
-                        } else {
-                            this.headers.push(h);
-                        }
-                    }
-                });
-                this.activity = false;
-            })
-            .catch(error => {
-                this.errorMessage = "A problem occurred while updating the data.";
-                this.activity = false;
-                ErrorMsg.logError("dynamic-table.mounted", error);
-            });
+        this.updateTable();
     }
 
     cancelDelete(id: string) {
@@ -154,8 +138,8 @@ export default class DynamicTableComponent extends Vue {
         this.loading = true;
         return new Promise((resolve, reject) => {
             const { sortBy, descending, page, rowsPerPage } = this.pagination;
-            if (this.parentRepository) {
-                this.repository.getAllChildIds(this.$route.fullPath, this.parentId, this.parentProp)
+            if (this.parentRepository && this.operation === "multiselect") {
+                this.parentRepository.getAllChildIds(this.$route.fullPath, this.parentId, this.parentProp)
                     .then(childIds => {
                         this.repository.getPage(this.$route.fullPath, this.search, sortBy, descending, page, rowsPerPage, childIds)
                             .then(data => {
@@ -196,14 +180,15 @@ export default class DynamicTableComponent extends Vue {
 
     onAddSelect() {
         this.activity = true;
-        this.repository.addToParentCollection(this.$route.fullPath, this.parentId, this.parentProp, this.selected.map(c => c.id))
+        this.parentRepository.addToParentCollection(this.$route.fullPath, this.parentId, this.parentProp, this.selected.map(c => c.id))
             .then(data => {
                 if (data.error) {
                     this.errorMessage = data.error;
                 }
                 else {
-                    this.items = this.items.filter(v => !this.selected.find(c => c.id == v.id));
                     this.selected = [];
+                    this.updateData();
+                    this.updateChildData();
                 }
                 this.activity = false;
             })
@@ -297,14 +282,15 @@ export default class DynamicTableComponent extends Vue {
 
     onRemoveSelect() {
         this.activity = true;
-        this.repository.removeFromParentCollection(this.$route.fullPath, this.parentId, this.parentProp, this.selectedChildren.map(c => c.id))
+        this.parentRepository.removeFromParentCollection(this.$route.fullPath, this.parentId, this.parentProp, this.selectedChildren.map(c => c.id))
             .then(data => {
                 if (data.error) {
                     this.errorMessage = data.error;
                 }
                 else {
-                    this.childItems = this.childItems.filter(v => !this.selectedChildren.find(c => c.id == v.id));
                     this.selectedChildren = [];
+                    this.updateData();
+                    this.updateChildData();
                 }
                 this.activity = false;
             })
@@ -391,5 +377,46 @@ export default class DynamicTableComponent extends Vue {
                     ErrorMsg.logError("dynamic-table.updateData", new Error(error));
                 });
         }
+    }
+
+    updateTable() {
+        this.updateTimeout = 0;
+        this.activity = true;
+        this.headers = [];
+        this.repository.getFieldDefinitions(this.$route.fullPath)
+            .then(defData => {
+                defData.forEach(field => {
+                    if (!field.hideInTable && field.visible !== false) {
+                        let h: TableHeader = {
+                            text: field.label || field.placeholder,
+                            value: field.model,
+                            sortable: field.type === 'input'
+                            && (field.inputType === 'text'
+                                || field.inputType === 'number'
+                                || field.inputType === 'email'
+                                || field.inputType === 'telephone'
+                                || field.inputType === 'range'
+                                || field.inputType === 'time'
+                                || field.inputType === 'date'
+                                || field.inputType === 'datetime'
+                                || field.inputType === 'datetime-local')
+                        };
+                        if (h.text === 'Name') {
+                            h.left = true;
+                            this.headers.unshift(h);
+                        } else {
+                            this.headers.push(h);
+                        }
+                    }
+                });
+                this.updateData();
+                this.updateChildData();
+                this.activity = false;
+            })
+            .catch(error => {
+                this.errorMessage = "A problem occurred while updating the data.";
+                this.activity = false;
+                ErrorMsg.logError("dynamic-table.mounted", error);
+            });
     }
 }

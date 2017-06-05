@@ -135,20 +135,10 @@ export default class DynamicFormComponent extends Vue {
             }
             newField.type = "label";
         }
-        if (this.schema.groups) {
-            let group: any;
-            if (field.groupName) {
-                group = this.schema.groups.find(g => g.legend == field.groupName);
-            } else {
-                group = this.schema.groups.find(g => g.legend == "Other");
-                if (!group) {
-                    group = { legend: "Other", fields: [] };
-                    this.schema.groups.push(group);
-                }
-            }
+        if (field.groupName) {
+            let group = this.schema.groups.find(g => g.legend == field.groupName);
             group.fields.push(newField);
-        }
-        else {
+        } else {
             this.schema.fields.push(newField);
         }
     }
@@ -330,7 +320,7 @@ export default class DynamicFormComponent extends Vue {
                             this.vm = data.data;
                             let groups = this.vmDefinition.filter(v => v.groupName !== undefined && v.groupName !== null).map(v => v.groupName);
                             if (groups.length) {
-                                this.schema = { groups: [] };
+                                this.schema.groups = [];
                                 for (var i = 0; i < groups.length; i++) {
                                     this.schema.groups[i] = { fields: [] };
                                     this.schema.groups[i].legend = groups[i];
