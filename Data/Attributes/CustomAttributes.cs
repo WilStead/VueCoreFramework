@@ -99,6 +99,15 @@ namespace MVCCoreVue.Data.Attributes
         }
     }
 
+    internal class TextAttribute : Attribute
+    {
+        public string Icon { get; set; }
+        public string Prefix { get; set; }
+        public string Suffix { get; set; }
+
+        public TextAttribute() { }
+    }
+
     internal class ValidatorAttribute : Attribute
     {
         public string Validator { get; set; }

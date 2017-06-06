@@ -7,7 +7,6 @@ namespace MVCCoreVue.Models
     [MenuClass(Category = "Country")]
     public class City : DataItem
     {
-        [Display(Prompt = "Name")]
         [Required]
         [Range(3, 25)]
         public string Name { get; set; }

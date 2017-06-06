@@ -53,7 +53,7 @@ namespace MVCCoreVue.Data
             {
                 add.Invoke(childProp.GetValue(parent), new object[] { child });
             }
-            
+
             await _context.SaveChangesAsync();
             return GetViewModel(parent as T);
         }
@@ -161,7 +161,7 @@ namespace MVCCoreVue.Data
                 switch (dataType.DataType)
                 {
                     case DataType.Currency:
-                        fd.Type = "input";
+                        fd.Type = "vuetifyText";
                         fd.InputType = "number";
                         if (step != null)
                         {
@@ -194,39 +194,40 @@ namespace MVCCoreVue.Data
                         fd.Validator = "date";
                         break;
                     case DataType.EmailAddress:
-                        fd.Type = "input";
+                        fd.Type = "vuetifyText";
                         fd.InputType = "email";
                         fd.Validator = "email";
                         break;
                     case DataType.MultilineText:
-                        fd.Type = "textArea";
+                        fd.Type = "vuetifyText";
+                        fd.InputType = "textArea";
                         fd.Rows = pInfo.GetCustomAttribute<RowsAttribute>()?.Rows;
                         fd.Validator = "string";
                         break;
                     case DataType.Password:
-                        fd.Type = "input";
+                        fd.Type = "vuetifyText";
                         fd.InputType = "password";
                         fd.Validator = "string";
                         break;
                     case DataType.PhoneNumber:
-                        fd.Type = "input";
+                        fd.Type = "vuetifyText";
                         fd.InputType = "telephone";
                         fd.Validator = "string";
                         break;
                     case DataType.PostalCode:
-                        fd.Type = "input";
+                        fd.Type = "vuetifyText";
                         fd.InputType = "text";
                         fd.Pattern = @"(^(?!0{5})(\d{5})(?!-?0{4})(|-\d{4})?$)";
                         fd.Validator = "string_regexp";
                         break;
                     case DataType.ImageUrl:
                     case DataType.Url:
-                        fd.Type = "input";
+                        fd.Type = "vuetifyText";
                         fd.InputType = "url";
                         fd.Validator = "string";
                         break;
                     default:
-                        fd.Type = "input";
+                        fd.Type = "vuetifyText";
                         fd.InputType = "text";
                         fd.Validator = "string";
                         break;
@@ -234,7 +235,7 @@ namespace MVCCoreVue.Data
             }
             else if (pInfo.PropertyType == typeof(string))
             {
-                fd.Type = "input";
+                fd.Type = "vuetifyText";
                 fd.InputType = "text";
                 fd.Validator = "string";
             }
@@ -290,7 +291,7 @@ namespace MVCCoreVue.Data
             }
             else if (pInfo.PropertyType.IsNumeric())
             {
-                fd.Type = "input";
+                fd.Type = "vuetifyText";
                 fd.InputType = "number";
                 if (pInfo.PropertyType.IsRealNumeric())
                 {
@@ -335,11 +336,19 @@ namespace MVCCoreVue.Data
                 fd.Type = "label";
             }
 
+            if (fd.Type == "vuetifyText")
+            {
+                var textAttr = pInfo.GetCustomAttribute<TextAttribute>();
+                fd.Icon = textAttr?.Icon;
+                fd.Prefix = textAttr?.Prefix;
+                fd.Suffix = textAttr?.Suffix;
+            }
+
             fd.Default = pInfo.GetCustomAttribute<DefaultAttribute>()?.Default;
 
             if (pInfo.GetCustomAttribute<EditableAttribute>()?.AllowEdit == false)
             {
-                if (fd.Type == "input"
+                if (fd.Type == "vuetifyText"
                     && (fd.InputType == "text"
                     || fd.InputType == "url"
                     || fd.InputType == "telephone"
@@ -362,7 +371,14 @@ namespace MVCCoreVue.Data
             fd.Placeholder = display?.GetPrompt();
             if (fd.Hint == null && fd.Label == null && fd.Placeholder == null)
             {
-                fd.Label = pInfo.Name;
+                if (fd.Type == "vuetifyText")
+                {
+                    fd.Placeholder = pInfo.Name;
+                }
+                else
+                {
+                    fd.Label = pInfo.Name;
+                }
             }
             if (display?.GetAutoGenerateField() == false)
             {

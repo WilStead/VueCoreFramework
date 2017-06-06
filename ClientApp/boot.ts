@@ -10,8 +10,7 @@ Vue.use(Vuetify);
 
 import VueFormGenerator from 'vue-form-generator';
 
-import autoVuetifyTextField from './dynamic-data/dynamic-form/auto-vuetify-text-field';
-Vue.component("autoVuetifyTextField", autoVuetifyTextField);
+Vue.component("fieldVuetifyText", require('./dynamic-data/dynamic-form/fieldVuetifyText.vue'));
 
 Vue.use(VueFormGenerator);
 

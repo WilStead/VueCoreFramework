@@ -10,14 +10,15 @@ namespace MVCCoreVue.Models
     [MenuClass(IconClass = "public")]
     public class Country : DataItem
     {
-        [Display(Prompt = "Name")]
         [Required]
+        [RegularExpression("^[a-zA-Z]+$")]
         [Range(3, 25)]
         public string Name { get; set; }
 
-        [Display(Name = "EPI Index")]
+        [Display(Prompt = "EPI Index")]
         [Required]
         [Range(0, 100)]
+        [Step(0.01)]
         public double EpiIndex { get; set; }
 
         [Display(AutoGenerateField = false)]

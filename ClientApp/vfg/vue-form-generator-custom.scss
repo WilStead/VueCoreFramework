@@ -6,11 +6,10 @@
 .vue-form-generator {
     .error {
         background-color: inherit !important;
+    }
 
-        input {
-            background-color: #ffecec;
-            background-color: rgba(255, 0, 0, 0.10);
-        }
+    .field-vuetifyText .errors {
+        display: none;
     }
 
     .errors {
