@@ -9,7 +9,7 @@
 function msg(text: string, ...args: any[]) {
     if (text != null && args.length)
         for (let i = 0; i < args.length; i++)
-            text = text.replace("{" + (i - 1) + "}", args[i]);
+            text = text.replace("{" + i + "}", args[i]);
 
     return text;
 }

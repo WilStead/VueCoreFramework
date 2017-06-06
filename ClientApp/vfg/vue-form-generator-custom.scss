@@ -8,8 +8,13 @@
         background-color: inherit !important;
     }
 
-    .field-vuetifyText .errors {
-        display: none;
+    .field-vuetifyText {
+        .hint {
+            display: none;
+        }
+        .errors {
+            display: none;
+        }
     }
 
     .errors {

@@ -50,7 +50,7 @@ export default class LoginComponent extends Vue {
     schema = {
         fields: [
             {
-                type: 'input',
+                type: 'vuetifyText',
                 inputType: 'email',
                 model: 'email',
                 placeholder: 'Email',
@@ -64,7 +64,7 @@ export default class LoginComponent extends Vue {
                 ]
             },
             {
-                type: 'input',
+                type: 'vuetifyText',
                 inputType: 'password',
                 model: 'password',
                 placeholder: 'Password',

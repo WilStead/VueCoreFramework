@@ -11,7 +11,6 @@ namespace MVCCoreVue.Models
     public class Country : DataItem
     {
         [Required]
-        [RegularExpression("^[a-zA-Z]+$")]
         [Range(3, 25)]
         public string Name { get; set; }
 

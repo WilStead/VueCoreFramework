@@ -490,20 +490,7 @@ namespace MVCCoreVue.Data
             foreach (var pInfo in tInfo.GetProperties())
             {
                 var ptInfo = pInfo.PropertyType.GetTypeInfo();
-                if (pInfo.PropertyType == typeof(DataItem)
-                    || ptInfo.IsSubclassOf(typeof(DataItem)))
-                {
-                    object value = pInfo.GetValue(item);
-                    if (value == null)
-                    {
-                        vm[pInfo.Name.ToInitialLower()] = "[None]";
-                    }
-                    else
-                    {
-                        vm[pInfo.Name.ToInitialLower()] = value.ToString();
-                    }
-                }
-                else if (ptInfo.IsGenericType
+                if (ptInfo.IsGenericType
                     && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
                     && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem)))
                 {
@@ -515,7 +502,15 @@ namespace MVCCoreVue.Data
                 }
                 else
                 {
-                    vm[pInfo.Name.ToInitialLower()] = pInfo.GetValue(item);
+                    object value = pInfo.GetValue(item);
+                    if (value == null)
+                    {
+                        vm[pInfo.Name.ToInitialLower()] = "[None]";
+                    }
+                    else
+                    {
+                        vm[pInfo.Name.ToInitialLower()] = value.ToString();
+                    }
                 }
             }
             return vm;

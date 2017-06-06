@@ -34,7 +34,7 @@ export default class RegisterComponent extends Vue {
     schema = {
         fields: [
             {
-                type: 'input',
+                type: 'vuetifyText',
                 inputType: 'email',
                 model: 'email',
                 placeholder: 'Email',
@@ -48,7 +48,7 @@ export default class RegisterComponent extends Vue {
                 ]
             },
             {
-                type: 'input',
+                type: 'vuetifyText',
                 inputType: 'password',
                 model: 'password',
                 placeholder: 'Password',
@@ -64,7 +64,7 @@ export default class RegisterComponent extends Vue {
                 ]
             },
             {
-                type: 'input',
+                type: 'vuetifyText',
                 inputType: 'password',
                 model: 'confirmPassword',
                 placeholder: 'Confirm Password',

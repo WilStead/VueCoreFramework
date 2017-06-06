@@ -92,7 +92,7 @@ export default class ManageUserComponent extends Vue {
     schema = {
         fields: [
             {
-                type: 'input',
+                type: 'vuetifyText',
                 inputType: 'email',
                 model: 'email',
                 placeholder: 'Email',
@@ -101,7 +101,7 @@ export default class ManageUserComponent extends Vue {
                 visible: () => this.changingEmail
             },
             {
-                type: 'input',
+                type: 'vuetifyText',
                 inputType: 'password',
                 model: 'oldPassword',
                 placeholder: 'Old Password',
@@ -110,7 +110,7 @@ export default class ManageUserComponent extends Vue {
                 visible: () => this.changingPassword || this.settingPassword
             },
             {
-                type: 'input',
+                type: 'vuetifyText',
                 inputType: 'password',
                 model: 'newPassword',
                 placeholder: 'New Password',
@@ -120,7 +120,7 @@ export default class ManageUserComponent extends Vue {
                 visible: () => this.changingPassword || this.settingPassword
             },
             {
-                type: 'input',
+                type: 'vuetifyText',
                 inputType: 'password',
                 model: 'confirmPassword',
                 placeholder: 'Confirm Password',
