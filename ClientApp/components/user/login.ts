@@ -73,8 +73,8 @@ export default class LoginComponent extends Vue {
                 validator: [VueFormGenerator.validators.required]
             },
             {
-                type: 'checkbox',
-                label: 'Remember me',
+                type: 'vuetifyCheckbox',
+                placeholder: 'Remember me',
                 model: 'rememberUser'
             }
         ]

@@ -8,35 +8,36 @@
         background-color: inherit !important;
     }
 
-    .field-vuetifyText {
-        .hint {
-            display: none;
-        }
-        .errors {
-            display: none;
-        }
-    }
-
     .errors {
         color: red;
         font-size: 0.8em;
         padding-left: 1em;
     }
 
+    .field-vuetifyText {
+        .hint {
+            display: none;
+        }
+
+        .errors {
+            display: none;
+        }
+    }
+
+    .field-vuetifyCheckbox {
+        .hint {
+            display: none;
+        }
+
+        .errors {
+            display: none;
+        }
+    }
+
     label {
         display: block;
         margin-bottom: 0;
         font-weight: normal;
-    }
-
-    .field-checkbox {
-        display: flex;
-        flex-direction: row-reverse;
-        justify-content: flex-end;
-
-        label {
-            margin-left: 0.5em;
-        }
     }
 
     .field-label {

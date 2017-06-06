@@ -241,7 +241,7 @@ namespace MVCCoreVue.Data
             }
             else if (pInfo.PropertyType == typeof(bool))
             {
-                fd.Type = "checkbox";
+                fd.Type = "vuetifyCheckbox";
             }
             else if (pInfo.PropertyType == typeof(DateTime))
             {
@@ -343,6 +343,11 @@ namespace MVCCoreVue.Data
                 fd.Prefix = textAttr?.Prefix;
                 fd.Suffix = textAttr?.Suffix;
             }
+            else if (fd.Type == "vuetifyCheckbox")
+            {
+                var textAttr = pInfo.GetCustomAttribute<TextAttribute>();
+                fd.Icon = textAttr?.Icon;
+            }
 
             fd.Default = pInfo.GetCustomAttribute<DefaultAttribute>()?.Default;
 
@@ -371,7 +376,7 @@ namespace MVCCoreVue.Data
             fd.Placeholder = display?.GetPrompt();
             if (fd.Hint == null && fd.Label == null && fd.Placeholder == null)
             {
-                if (fd.Type == "vuetifyText")
+                if (fd.Type == "vuetifyText" || fd.Type == "vuetifyCheckbox")
                 {
                     fd.Placeholder = pInfo.Name;
                 }
