@@ -9,9 +9,10 @@ using MVCCoreVue.Models;
 namespace MVCCoreVue.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20170606232450_detailed city-leader model")]
+    partial class detailedcityleadermodel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.1.2")
@@ -195,6 +196,8 @@ namespace MVCCoreVue.Migrations
                     b.Property<int>("Population");
 
                     b.Property<int>("Transit");
+
+                    b.Property<int>("Type");
 
                     b.Property<DateTime>("UpdateTimestamp");
 

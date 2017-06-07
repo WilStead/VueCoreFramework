@@ -4,6 +4,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace MVCCoreVue.Models
 {
+    public enum MaritalStatus
+    {
+        Married,
+        Single
+    }
+
     [ChildClass(Category = "Country")]
     public class Leader : DataItem
     {
@@ -13,6 +19,9 @@ namespace MVCCoreVue.Models
 
         [Range(0, 150)]
         public int Age { get; set; }
+
+        [Display(Prompt = "Marital Status")]
+        public MaritalStatus MaritalStatus { get; set; }
 
         public override string ToString() => Name;
     }

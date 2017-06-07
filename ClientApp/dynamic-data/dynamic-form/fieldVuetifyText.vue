@@ -2,7 +2,6 @@
     <v-text-field :type="schema.inputType === 'password' ? (pwVis ? 'text' : schema.inputType) : schema.inputType"
                   :value="value"
                   @input="value = $event"
-                  @change="onChange"
                   :append-icon="schema.inputType === 'password' ? (pwVis ? 'visibility' : 'visibility_off') : ''"
                   :append-icon-cb="() => (pwVis = !pwVis)"
                   :counter="value.length > schema.max"

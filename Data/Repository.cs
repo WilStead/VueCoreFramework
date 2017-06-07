@@ -261,32 +261,28 @@ namespace MVCCoreVue.Data
                 fd.HideInTable = true;
                 fd.Visible = false;
             }
-            else if (pInfo.PropertyType.GetTypeInfo().IsEnum)
+            else if (ptInfo.IsEnum)
             {
-                if (pInfo.GetCustomAttribute<FlagsAttribute>() != null)
+                fd.Type = "vuetifySelect";
+                if (ptInfo.GetCustomAttribute<FlagsAttribute>() == null)
                 {
-                    fd.Type = "select";
-                    foreach (var value in Enum.GetValues(pInfo.PropertyType))
-                    {
-                        fd.Values.Add(new SelectOption
-                        {
-                            Name = Enum.GetName(pInfo.PropertyType, value),
-                            Id = value.ToString()
-                        });
-                    }
+                    fd.InputType = "single";
                 }
                 else
                 {
-                    fd.Type = "checklist";
-                    foreach (var value in Enum.GetValues(pInfo.PropertyType))
+                    fd.InputType = "multiple";
+                }
+                if (fd.Values == null)
+                {
+                    fd.Values = new List<ChoiceOption>();
+                }
+                foreach (var value in Enum.GetValues(pInfo.PropertyType))
+                {
+                    fd.Values.Add(new ChoiceOption
                     {
-                        fd.Values.Add(new ChecklistOption
-                        {
-                            Name = Enum.GetName(pInfo.PropertyType, value),
-                            Value = value.ToString()
-                        });
-                    }
-                    fd.Validator = "array";
+                        Text = Enum.GetName(pInfo.PropertyType, value),
+                        Value = (int)value
+                    });
                 }
             }
             else if (pInfo.PropertyType.IsNumeric())
@@ -343,7 +339,7 @@ namespace MVCCoreVue.Data
                 fd.Prefix = textAttr?.Prefix;
                 fd.Suffix = textAttr?.Suffix;
             }
-            else if (fd.Type == "vuetifyCheckbox")
+            else if (fd.Type == "vuetifyCheckbox" || fd.Type == "vuetifySelect")
             {
                 var textAttr = pInfo.GetCustomAttribute<TextAttribute>();
                 fd.Icon = textAttr?.Icon;
@@ -376,7 +372,7 @@ namespace MVCCoreVue.Data
             fd.Placeholder = display?.GetPrompt();
             if (fd.Hint == null && fd.Label == null && fd.Placeholder == null)
             {
-                if (fd.Type == "vuetifyText" || fd.Type == "vuetifyCheckbox")
+                if (fd.Type == "vuetifyText" || fd.Type == "vuetifyCheckbox" || fd.Type == "vuetifySelect")
                 {
                     fd.Placeholder = pInfo.Name;
                 }
@@ -504,6 +500,11 @@ namespace MVCCoreVue.Data
                         .GetProperty("Count")
                         .GetValue(pInfo.GetValue(item));
                     vm[pInfo.Name.ToInitialLower()] = count > 0 ? "..." : "[None]";
+                }
+                else if (ptInfo.IsEnum)
+                {
+                    object value = pInfo.GetValue(item);
+                    vm[pInfo.Name.ToInitialLower()] = (int)value;
                 }
                 else
                 {

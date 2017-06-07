@@ -12,6 +12,7 @@ import VueFormGenerator from 'vue-form-generator';
 
 Vue.component("fieldVuetifyText", require('./dynamic-data/dynamic-form/fieldVuetifyText.vue'));
 Vue.component("fieldVuetifyCheckbox", require('./dynamic-data/dynamic-form/fieldVuetifyCheckbox.vue'));
+Vue.component("fieldVuetifySelect", require('./dynamic-data/dynamic-form/fieldVuetifySelect.vue'));
 
 Vue.use(VueFormGenerator);
 

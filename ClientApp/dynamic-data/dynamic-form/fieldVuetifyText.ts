@@ -8,11 +8,6 @@ export default {
         };
     },
     methods: {
-        onChange(event) {
-            if (this.schema.inputType === "file") {
-                this.value = event.target.files;
-            }
-        },
         formatValueToModel(value) {
             if (value != null && this.schema.inputType === "number") {
                 return Number(value);

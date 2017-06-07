@@ -336,7 +336,7 @@ export default class DynamicFormComponent extends Vue {
                                 this.addFieldToSchema(field);
                             });
                             if (this.operation === 'details') {
-                                this.schema.fields.forEach(f => f.readonly = true);
+                                this.schema.fields.forEach(f => f.disabled = true);
                             }
                             this.errorMessage = '';
                             this.activity = false;
