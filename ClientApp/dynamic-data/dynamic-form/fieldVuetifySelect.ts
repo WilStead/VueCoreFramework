@@ -2,38 +2,45 @@
 
 export default {
     mixins: [abstractField],
-    methods: {
-        formatValueToField(value) {
-            if (this.schema.inputType === 'multiple') {
-                let val = [];
-                if (value) {
-                    for (var i = 131072; i > 0; i = Math.floor(i / 2)) {
-                        let x = i & value;
-                        if (x > 0) {
-                            val.push(x);
+    computed: {
+        selectedValue: {
+            get() {
+                if (this.schema.inputType === 'multiple') {
+                    let val = [];
+                    if (this.value) {
+                        for (var i = 131072; i > 0; i = Math.floor(i / 2)) {
+                            let x = i & this.value;
+                            if (x > 0) {
+                                val.push(x);
+                            }
                         }
                     }
-                }
-                if (val.length === 0) {
-                    val.push(0);
-                }
-                return val;
-            } else {
-                return value;
-            }
-        },
-        formatValueToModel(value) {
-            if (this.schema.inputType === 'multiple') {
-                let val = 0;
-                if (value && value.length) {
-                    for (var i = 0; i < value.length; i++) {
-                        val += value[i];
+                    if (val.length === 0) {
+                        val.push(0);
                     }
+                    return val;
+                } else {
+                    return this.value;
                 }
-                return val;
-            } else {
-                return value;
+            },
+            set(newValue) {
+                if(this.schema.inputType === 'multiple') {
+                    let val = 0;
+                    if (newValue && newValue.length) {
+                        for (var i = 0; i < newValue.length; i++) {
+                            val += newValue[i];
+                        }
+                    }
+                    this.value = val;
+                } else {
+                    this.value = newValue;
+                }
             }
+        }
+    },
+    methods: {
+        formatValueToModel(value) {
+            return value;
         },
         rules() {
             if (!this.errors.length) {

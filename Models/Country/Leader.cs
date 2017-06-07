@@ -1,5 +1,6 @@
 ﻿using MVCCoreVue.Data;
 using MVCCoreVue.Data.Attributes;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace MVCCoreVue.Models
@@ -19,6 +20,15 @@ namespace MVCCoreVue.Models
 
         [Range(0, 150)]
         public int Age { get; set; }
+
+        [DataType(DataType.Date)]
+        [Range(typeof(DateTime), "1/1/1917 12:00:00 AM", "1/1/2000 12:00:00 AM")]
+        public DateTime Birthdate { get; set; }
+
+        [Display(Prompt = "Time in Office")]
+        [DataType(DataType.Duration)]
+        [Range(typeof(TimeSpan), "00:00:00", "36500.00:00:00")]
+        public TimeSpan TimeInOffice { get; set; }
 
         [Display(Prompt = "Marital Status")]
         public MaritalStatus MaritalStatus { get; set; }

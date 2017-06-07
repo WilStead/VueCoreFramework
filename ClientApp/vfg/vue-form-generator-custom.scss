@@ -34,6 +34,41 @@
         }
     }
 
+    .field-vuetifySelect {
+        .hint {
+            display: none;
+        }
+
+        .errors {
+            display: none;
+        }
+    }
+
+    .field-vuetifyDateTime {
+        .hint {
+            display: none;
+        }
+
+        .errors {
+            display: none;
+        }
+    }
+
+    .field-vuetifyTimespan {
+        .hint {
+            display: none;
+        }
+
+        .errors {
+            display: none;
+        }
+    }
+
+    .field-vuetify-time-wrapper {
+        display: flex;
+        flex-flow: row wrap;
+    }
+
     label {
         display: block;
         margin-bottom: 0;

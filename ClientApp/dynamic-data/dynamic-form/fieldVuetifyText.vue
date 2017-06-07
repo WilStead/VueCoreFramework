@@ -1,8 +1,7 @@
 ﻿<template>
     <v-text-field :type="schema.inputType === 'password' ? (pwVis ? 'text' : schema.inputType) : schema.inputType"
-                  :value="value"
-                  @input="value = $event"
-                  :append-icon="schema.inputType === 'password' ? (pwVis ? 'visibility' : 'visibility_off') : ''"
+                  v-model="value"
+                  :append-icon="schema.inputType === 'password' ? (pwVis ? 'visibility_off' : 'visibility') : ''"
                   :append-icon-cb="() => (pwVis = !pwVis)"
                   :counter="value.length > schema.max"
                   :disabled="disabled || schema.readonly"

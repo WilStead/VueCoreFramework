@@ -42,9 +42,7 @@ function addMenuItem(menu: MenuItem, router: any, name: string, fullCategory: st
         }
         addMenuItem(menuItem, router, name, fullCategory, category, iconClass);
     } else {
-        let baseRoute = (fullCategory !== undefined && fullCategory !== null && fullCategory.length > 0 && fullCategory !== '/')
-            ? `/data/${fullCategory.toLowerCase()}/${lowerName}`
-            : `/data/${lowerName}`;
+        let baseRoute = `/data/${lowerName}`;
         let tableRoute = baseRoute + '/table';
 
         router.addRoutes([{
@@ -121,12 +119,8 @@ export function getChildItems(router: any): Promise<void> {
         .then(data => {
             for (var dataClass in data) {
                 let name = dataClass.toLowerCase();
-                let baseRoute = (data[dataClass].category !== undefined && data[dataClass].category !== null && data[dataClass].category.length > 0 && data[dataClass].category !== '/')
-                    ? `/data/${data[dataClass].category.toLowerCase()}/${name}`
-                    : `/data/${name}`;
-
                 router.addRoutes([{
-                    path: baseRoute,
+                    path: `/data/${name}`,
                     meta: { requiresAuth: true },
                     component: require('../../components/data/dashboard.vue'),
                     props: { title: dataClass },

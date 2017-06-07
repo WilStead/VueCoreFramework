@@ -3,6 +3,9 @@
 export default {
     mixins: [abstractField],
     methods: {
+        formatValueToModel(value) {
+            return value;
+        },
         rules() {
             if (!this.errors.length) {
                 return true;

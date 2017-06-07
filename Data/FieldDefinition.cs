@@ -4,7 +4,6 @@ namespace MVCCoreVue.Data
 {
     public class FieldDefinition
     {
-        public string DateTimePickerOptions { get; set; }
         public object Default { get; set; }
         public bool? Disabled { get; set; }
         public string GroupName { get; set; }

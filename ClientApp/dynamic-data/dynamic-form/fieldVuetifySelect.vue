@@ -1,5 +1,5 @@
 ﻿<template>
-    <v-select v-model="value"
+    <v-select v-model="selectedValue"
               :chips="schema.inputType === 'multiple'"
               :disabled="disabled"
               :errors="errors"
@@ -10,7 +10,7 @@
               :name="schema.inputName"
               :persistent-hint="schema.hint !== undefined"
               :prepend-icon="schema.icon"
-              :rules="[() => value !== undefined || 'Please select an option', rules]"
+              :rules="[() => (!schema.required || schema.inputType !== 'multiple' || selectedValue !== 0) || 'Please select an option', rules]"
               :single-line="schema.inputType === 'single'">
     </v-select>
 </template>

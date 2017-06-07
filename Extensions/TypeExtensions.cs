@@ -1,10 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 namespace MVCCoreVue.Extensions
 {
     public static class TypeExtensions
     {
+        public static T GetAttribute<T>(this object value) where T : Attribute
+        {
+            var type = value.GetType();
+            var memberInfo = type.GetMember(value.ToString());
+            var attributes = memberInfo.FirstOrDefault()?.GetCustomAttributes(typeof(T), false);
+            return attributes?.FirstOrDefault() as T;
+        }
+
         private static HashSet<Type> integralTypes = new HashSet<Type>
         {
             typeof(byte), typeof(sbyte),

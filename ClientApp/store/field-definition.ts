@@ -1,11 +1,6 @@
-﻿export interface DateTimePickerOptions {
-    format: string;
-}
-
-export interface FieldDefinition {
+﻿export interface FieldDefinition {
     autocomplete?: boolean;
     buttons?: Array<any>
-    dateTimePickerOptions?: DateTimePickerOptions;
     default?: any;
     disabled?: boolean | Function;
     groupName?: string;

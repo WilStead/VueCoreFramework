@@ -9,9 +9,10 @@ using MVCCoreVue.Models;
 namespace MVCCoreVue.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20170607154929_Add leader times")]
+    partial class Addleadertimes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.1.2")
@@ -188,8 +189,6 @@ namespace MVCCoreVue.Migrations
                     b.Property<Guid?>("CountryId");
 
                     b.Property<DateTime>("CreationTimestamp");
-
-                    b.Property<DateTime>("LocalTimeAtGMTMidnight");
 
                     b.Property<string>("Name")
                         .IsRequired();

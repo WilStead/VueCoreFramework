@@ -174,24 +174,19 @@ namespace MVCCoreVue.Data
                         fd.Validator = "number";
                         break;
                     case DataType.Date:
-                        fd.Type = "dateTime";
-                        fd.DateTimePickerOptions = "M/D/YYYY";
-                        fd.Validator = "date";
+                        fd.Type = "vuetifyDateTime";
+                        fd.InputType = "date";
                         break;
                     case DataType.DateTime:
-                        fd.Type = "dateTime";
-                        fd.DateTimePickerOptions = "M/D/YYYY h:mm A";
-                        fd.Validator = "date";
+                        fd.Type = "vuetifyDateTime";
+                        fd.InputType = "dateTime";
                         break;
                     case DataType.Time:
-                        fd.Type = "dateTime";
-                        fd.DateTimePickerOptions = "h:mm A";
-                        fd.Validator = "date";
+                        fd.Type = "vuetifyDateTime";
+                        fd.InputType = "time";
                         break;
                     case DataType.Duration:
-                        fd.Type = "dateTime";
-                        fd.DateTimePickerOptions = "H:mm:ss";
-                        fd.Validator = "date";
+                        fd.Type = "vuetifyTimespan";
                         break;
                     case DataType.EmailAddress:
                         fd.Type = "vuetifyText";
@@ -245,15 +240,12 @@ namespace MVCCoreVue.Data
             }
             else if (pInfo.PropertyType == typeof(DateTime))
             {
-                fd.Type = "dateTime";
-                fd.DateTimePickerOptions = "M/D/YYYY h:mm A";
-                fd.Validator = "date";
+                fd.Type = "vuetifyDateTime";
+                fd.InputType = "dateTime";
             }
             else if (pInfo.PropertyType == typeof(TimeSpan))
             {
-                fd.Type = "dateTime";
-                fd.DateTimePickerOptions = "H:mm:ss";
-                fd.Validator = "date";
+                fd.Type = "vuetifyTimespan";
             }
             else if (pInfo.PropertyType == typeof(Guid))
             {
@@ -280,7 +272,7 @@ namespace MVCCoreVue.Data
                 {
                     fd.Values.Add(new ChoiceOption
                     {
-                        Text = Enum.GetName(pInfo.PropertyType, value),
+                        Text = EnumExtensions.GetDescription(pInfo.PropertyType, value),
                         Value = (int)value
                     });
                 }
@@ -372,7 +364,8 @@ namespace MVCCoreVue.Data
             fd.Placeholder = display?.GetPrompt();
             if (fd.Hint == null && fd.Label == null && fd.Placeholder == null)
             {
-                if (fd.Type == "vuetifyText" || fd.Type == "vuetifyCheckbox" || fd.Type == "vuetifySelect")
+                if (fd.Type == "vuetifyText" || fd.Type == "vuetifyCheckbox"
+                    || fd.Type == "vuetifySelect" || fd.Type == "vuetifyDateTime")
                 {
                     fd.Placeholder = pInfo.Name;
                 }
@@ -491,6 +484,7 @@ namespace MVCCoreVue.Data
             foreach (var pInfo in tInfo.GetProperties())
             {
                 var ptInfo = pInfo.PropertyType.GetTypeInfo();
+                var dataType = pInfo.GetCustomAttribute<DataTypeAttribute>();
                 if (ptInfo.IsGenericType
                     && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
                     && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem)))
@@ -504,7 +498,39 @@ namespace MVCCoreVue.Data
                 else if (ptInfo.IsEnum)
                 {
                     object value = pInfo.GetValue(item);
-                    vm[pInfo.Name.ToInitialLower()] = (int)value;
+                    var name = pInfo.Name.ToInitialLower();
+                    vm[name] = (int)value;
+
+                    var desc = EnumExtensions.GetDescription(pInfo.PropertyType, value);
+                    vm[name + "Formatted"] = string.IsNullOrEmpty(desc) ? "..." : desc;
+                }
+                else if (dataType?.DataType == DataType.Date)
+                {
+                    var name = pInfo.Name.ToInitialLower();
+                    var value = (DateTime)pInfo.GetValue(item);
+                    vm[name] = value;
+                    vm[name + "Formatted"] = value.ToString("d");
+                }
+                else if (dataType?.DataType == DataType.Time)
+                {
+                    var name = pInfo.Name.ToInitialLower();
+                    var value = (DateTime)pInfo.GetValue(item);
+                    vm[name] = value;
+                    vm[name + "Formatted"] = value.ToString("t");
+                }
+                else if (dataType?.DataType == DataType.DateTime || pInfo.PropertyType == typeof(DateTime))
+                {
+                    var name = pInfo.Name.ToInitialLower();
+                    var value = (DateTime)pInfo.GetValue(item);
+                    vm[name] = value;
+                    vm[name + "Formatted"] = value.ToString("g");
+                }
+                else if (dataType?.DataType == DataType.Duration || pInfo.PropertyType == typeof(TimeSpan))
+                {
+                    var name = pInfo.Name.ToInitialLower();
+                    var value = (TimeSpan)pInfo.GetValue(item);
+                    vm[name] = value;
+                    vm[name + "Formatted"] = value.ToString("g");
                 }
                 else
                 {

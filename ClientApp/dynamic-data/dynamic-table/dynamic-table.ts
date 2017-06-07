@@ -390,17 +390,25 @@ export default class DynamicTableComponent extends Vue {
                         let h: TableHeader = {
                             text: field.label || field.placeholder,
                             value: field.model,
-                            sortable: field.type === 'input'
-                            && (field.inputType === 'text'
-                                || field.inputType === 'number'
-                                || field.inputType === 'email'
-                                || field.inputType === 'telephone'
-                                || field.inputType === 'range'
-                                || field.inputType === 'time'
-                                || field.inputType === 'date'
-                                || field.inputType === 'datetime'
-                                || field.inputType === 'datetime-local')
+                            sortable: ((field.type === 'input'
+                                && (field.inputType === 'text'
+                                    || field.inputType === 'number'
+                                    || field.inputType === 'email'
+                                    || field.inputType === 'telephone'
+                                    || field.inputType === 'range'
+                                    || field.inputType === 'time'
+                                    || field.inputType === 'date'
+                                    || field.inputType === 'datetime'
+                                    || field.inputType === 'datetime-local'))
+                                || field.type === 'vuetifyText'
+                                || field.type === 'vuetifyDateTime'
+                                || field.type === 'vuetifyTimespan')
                         };
+                        if (field.type === 'vuetifySelect'
+                            || field.type === 'vuetifyDateTime'
+                            || field.type === 'vuetifyTimespan') {
+                            h.value = field.model + "Formatted";
+                        }
                         if (h.text === 'Name') {
                             h.left = true;
                             this.headers.unshift(h);
