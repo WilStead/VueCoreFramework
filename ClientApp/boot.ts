@@ -15,6 +15,7 @@ Vue.component("fieldVuetifyCheckbox", require('./dynamic-data/dynamic-form/field
 Vue.component("fieldVuetifySelect", require('./dynamic-data/dynamic-form/fieldVuetifySelect.vue'));
 Vue.component("fieldVuetifyDateTime", require('./dynamic-data/dynamic-form/fieldVuetifyDateTime.vue'));
 Vue.component("fieldVuetifyTimespan", require('./dynamic-data/dynamic-form/fieldVuetifyTimespan.vue'));
+Vue.component("fieldVuetifyColor", require('./dynamic-data/dynamic-form/fieldVuetifyColor.vue'));
 
 Vue.use(VueFormGenerator);
 

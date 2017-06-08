@@ -45,6 +45,8 @@
     }
 
     .field-vuetifyDateTime {
+        margin-bottom: 0;
+
         .hint {
             display: none;
         }
@@ -54,7 +56,123 @@
         }
     }
 
+    .field-vuetifyColor {
+        .color-row {
+            width: 100%;
+            position: relative;
+        }
+
+        .color-spacer {
+            padding-top: 80%;
+        }
+
+        .color-picker {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        .color-field {
+            border: solid 1px #666;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 20%;
+        }
+
+        .saturation-field {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: linear-gradient(to right, #fff, rgba(204, 154, 129, 0));
+        }
+
+        .lightness-field {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: linear-gradient(to top, #000, rgba(204, 154, 129, 0));
+            cursor: pointer;
+        }
+
+        .color-dot {
+            border-radius: 5px;
+            height: 5px;
+            width: 5px;
+            border: 1px solid #fff;
+            background: #000;
+            cursor: pointer;
+            position: absolute;
+            user-select: none;
+            pointer-events: none;
+        }
+
+        .hue-field {
+            border: solid 1px #666;
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 84%;
+            height: 100%;
+            background: linear-gradient(to bottom, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+            cursor: pointer;
+        }
+
+        .hue-slider {
+            position: absolute;
+            top: 0;
+            left: -1px;
+            right: -1px;
+            cursor: pointer;
+            height: 3px;
+            border: solid 1px #000;
+            background: white;
+            opacity: 0.8;
+            pointer-events: none;
+            user-select: none;
+        }
+    }
+
     .field-vuetifyTimespan {
+        label {
+            display: none;
+        }
+
+        .subheader {
+            padding-left: 0;
+            align-items: flex-end;
+            height: auto;
+        }
+
+        .input-group--text-field {
+            margin: 0;
+
+            .input-group__details {
+                min-height: 0;
+                padding: 0;
+            }
+        }
+
+        .field-vuetify-time-wrapper {
+            flex-grow: 1;
+
+            > .input-group--text-field {
+                margin-left: 15px;
+
+                &:first-child {
+                    margin-left: 0;
+                }
+            }
+        }
+
         .hint {
             display: none;
         }
@@ -89,6 +207,10 @@
                 padding: 6px 12px;
             }
         }
+    }
+
+    .input-group--text-field.input-group--dark.input-group--disabled .input-group__selections__comma {
+        color: rgba(0,0,0,0.38);
     }
 
     .buttons {

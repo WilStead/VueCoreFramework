@@ -11,14 +11,12 @@
             <v-text-field slot="activator"
                           v-model="formattedDate"
                           :disabled="disabled"
-                          :errors="errors"
                           :hint="schema.hint"
                           :label="schema.placeholder"
                           :name="schema.inputName"
                           :persistent-hint="schema.hint !== undefined"
                           prepend-icon="event"
-                          readonly
-                          :rules="[rules]"></v-text-field>
+                          readonly></v-text-field>
             <v-date-picker v-model="value"
                            actions
                            :allowed-dates="{ min: schema.min, max: schema.max }"

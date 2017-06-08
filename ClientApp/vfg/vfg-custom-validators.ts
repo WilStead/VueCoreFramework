@@ -1,4 +1,8 @@
-﻿const resources = {
+﻿import * as moment from 'moment';
+
+const resources = {
+    durationTooShort: "Must be at least {0}",
+    durationTooLong: "Cannot be more than {0}",
     fieldIsRequired: "This field is required",
     invalidFormat: "Invalid format",
     textTooSmall: "Must be at least {1} characters long",
@@ -26,6 +30,31 @@ export function checkEmpty(value, required, messages = resources) {
 
 interface VFG_Validator { (value, field, model, messages): any; locale: any; }
 
+export const timespan = <VFG_Validator>function (value, field, model, messages = resources) {
+    let err = [];
+    if (typeof value === 'string') {
+        let d = moment.duration(value);
+        if (d.toISOString() === 'P0D' && value !== '00:00:00') {
+            return [msg(messages.invalidFormat)];
+        }
+        let dMin = moment.duration(field.min);
+        if ((dMin.toISOString() !== 'P0D' || field.min === '00:00:00')
+            && moment.duration(d.asMilliseconds()).subtract(dMin).asMilliseconds() < 0) {
+            err.push(msg(messages.durationTooShort, dMin.humanize()));
+        }
+        let dMax = moment.duration(field.max);
+        if ((dMax.toISOString() !== 'P0D' || field.max === '00:00:00')
+            && moment.duration(dMax.asMilliseconds()).subtract(d).asMilliseconds() < 0) {
+            err.push(msg(messages.durationTooLong, dMax.humanize()));
+        }
+    } else {
+        err.push(msg(messages.invalidFormat));
+    }
+
+    return err;
+}
+timespan.locale = customMessages => (value, field, model) => timespan(value, field, model, Object.assign({}, resources, customMessages));
+
 export const string_regexp = <VFG_Validator>function (value, field, model, messages = resources) {
     let res = checkEmpty(value, field.required, messages); if (res != null) return res;
 
@@ -39,12 +68,14 @@ export const string_regexp = <VFG_Validator>function (value, field, model, messa
 
         if (field.pattern) {
             let re = new RegExp(field.pattern);
-            if (!re.test(value))
-                return [msg(messages.invalidFormat)];
+            if (!re.test(value)) {
+                err.push(msg(messages.invalidFormat));
+            }
         }
 
-    } else
+    } else {
         err.push(msg(messages.thisNotText));
+    }
 
     return err;
 }
@@ -85,5 +116,6 @@ export const validators = {
     'number': 'number',
     'string_regexp': string_regexp,
     'date': 'date',
-    'array': 'array'
+    'array': 'array',
+    'timespan': timespan
 };

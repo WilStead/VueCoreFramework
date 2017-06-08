@@ -20,6 +20,10 @@ namespace MVCCoreVue.Models
         [Step(0.01)]
         public double EpiIndex { get; set; }
 
+        [Display(Name = "Primary flag color")]
+        [DataType("Color")]
+        public string FlagPrimaryColor { get; set; }
+
         [Display(AutoGenerateField = false)]
         public Guid CapitolId { get; set; }
 

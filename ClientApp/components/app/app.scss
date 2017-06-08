@@ -8,6 +8,10 @@ body {
     font-size: 1.6rem;
 }
 
+table.table tbody td:empty {
+    padding: 0;
+}
+
 .btn.active.focus,
 .btn.active:focus,
 .btn.focus,

@@ -1,43 +1,64 @@
 ﻿<template>
-    <div>
+    <div class="input-group input-group--dark">
+        <v-subheader>{{ schema.label }}</v-subheader>
         <div class="field-vuetify-time-wrapper">
-            <v-subheader>{{ schema.label }}</v-subheader>
-            <v-text-field :type="number"
+            <v-text-field v-if="showYear"
+                          type="number"
+                          :value="yearValue"
+                          @input="onYearChange"
+                          :disabled="disabled"
+                          :max="yearMax"
+                          :min="yearMin"
+                          suffix="years"></v-text-field>
+            <v-text-field v-if="showMonth"
+                          type="number"
+                          :value="monthValue"
+                          @input="onMonthChange"
+                          :disabled="disabled"
+                          :max="monthMax"
+                          :min="monthMin"
+                          suffix="months"></v-text-field>
+            <v-text-field v-if="showDay"
+                          type="number"
                           :value="dayValue"
-                          @input="onDayChange(newValue)"
+                          @input="onDayChange"
                           :disabled="disabled"
-                          :errors="errors"
                           :max="dayMax"
-                          min="0"
+                          :min="dayMin"
                           suffix="days"></v-text-field>
-            <v-text-field :type="number"
+            <v-text-field v-if="showHour"
+                          type="number"
                           :value="hourValue"
-                          @input="onHourChange(newValue)"
+                          @input="onHourChange"
                           :disabled="disabled"
-                          :errors="errors"
-                          max="24"
-                          min="-1"
+                          max="hourMax"
+                          min="hourMin"
                           suffix="hours"></v-text-field>
-            <v-text-field :type="number"
+            <v-text-field v-if="showMinute"
+                          type="number"
                           :value="minuteValue"
-                          @input="onMinuteChange(newValue)"
+                          @input="onMinuteChange"
                           :disabled="disabled"
-                          :errors="errors"
-                          max="60"
-                          min="-1"
+                          max="minuteMax"
+                          min="minuteMin"
                           suffix="minutes"></v-text-field>
-            <v-text-field :type="number"
+            <v-text-field v-if="showSecond"
+                          type="number"
                           :value="secondValue"
-                          @input="onSecondChange(newValue)"
+                          @input="onSecondChange"
                           :disabled="disabled"
-                          :errors="errors"
-                          max="60"
-                          min="0"
-                          step="0.001"
+                          max="secondMax"
+                          min="secondMin"
+                          step="schema.step"
                           suffix="seconds"></v-text-field>
         </div>
-        <div class="input-group__details">
-            <div class="input-group__hint">{{ schema.hint }}</div>
+        <div class="field-vuetify-time-details input-group__details">
+            <div class="input-group__messages">
+                <div class="input-group__hint" v-if="schema.hint.length">{{ schema.hint }}</div>
+                <div class="input-group__error" v-for="error in errors">{{ error }}</div>
+            </div>
         </div>
     </div>
 </template>
+
+<script src="./fieldVuetifyTimespan.ts"></script>

@@ -156,7 +156,20 @@ namespace MVCCoreVue.Data
             var dataType = pInfo.GetCustomAttribute<DataTypeAttribute>();
             var step = pInfo.GetCustomAttribute<StepAttribute>();
             var ptInfo = pInfo.PropertyType.GetTypeInfo();
-            if (dataType != null)
+            if (!string.IsNullOrEmpty(dataType.CustomDataType))
+            {
+                if (dataType.CustomDataType == "Color")
+                {
+                    fd.Type = "vuetifyColor";
+                }
+                else
+                {
+                    fd.Type = "vuetifyText";
+                    fd.InputType = "text";
+                    fd.Validator = "string";
+                }
+            }
+            else if (dataType != null)
             {
                 switch (dataType.DataType)
                 {
@@ -187,6 +200,17 @@ namespace MVCCoreVue.Data
                         break;
                     case DataType.Duration:
                         fd.Type = "vuetifyTimespan";
+                        var formatAttr = pInfo.GetCustomAttribute<DisplayFormatAttribute>();
+                        fd.InputType = formatAttr?.DataFormatString;
+                        fd.Validator = "timespan";
+                        if (step != null)
+                        {
+                            fd.Step = step.Step;
+                        }
+                        else
+                        {
+                            fd.Step = 0.001;
+                        }
                         break;
                     case DataType.EmailAddress:
                         fd.Type = "vuetifyText";
@@ -246,6 +270,17 @@ namespace MVCCoreVue.Data
             else if (pInfo.PropertyType == typeof(TimeSpan))
             {
                 fd.Type = "vuetifyTimespan";
+                var formatAttr = pInfo.GetCustomAttribute<DisplayFormatAttribute>();
+                fd.InputType = formatAttr?.DataFormatString;
+                fd.Validator = "timespan";
+                if (step != null)
+                {
+                    fd.Step = step.Step;
+                }
+                else
+                {
+                    fd.Step = 0.001;
+                }
             }
             else if (pInfo.PropertyType == typeof(Guid))
             {
@@ -362,7 +397,7 @@ namespace MVCCoreVue.Data
             fd.Hint = display?.GetDescription();
             fd.Label = display?.GetName();
             fd.Placeholder = display?.GetPrompt();
-            if (fd.Hint == null && fd.Label == null && fd.Placeholder == null)
+            if (fd.Label == null && fd.Placeholder == null)
             {
                 if (fd.Type == "vuetifyText" || fd.Type == "vuetifyCheckbox"
                     || fd.Type == "vuetifySelect" || fd.Type == "vuetifyDateTime")
@@ -530,7 +565,12 @@ namespace MVCCoreVue.Data
                     var name = pInfo.Name.ToInitialLower();
                     var value = (TimeSpan)pInfo.GetValue(item);
                     vm[name] = value;
-                    vm[name + "Formatted"] = value.ToString("g");
+                    vm[name + "Formatted"] = value.ToString("c");
+                }
+                else if (dataType?.CustomDataType == "Color")
+                {
+                    var name = pInfo.Name.ToInitialLower();
+                    vm[name] = "...";
                 }
                 else
                 {

@@ -9,9 +9,10 @@ using MVCCoreVue.Models;
 namespace MVCCoreVue.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20170608170630_Leader timespan fix")]
+    partial class Leadertimespanfix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.1.2")
@@ -217,8 +218,6 @@ namespace MVCCoreVue.Migrations
                     b.Property<DateTime>("CreationTimestamp");
 
                     b.Property<double>("EpiIndex");
-
-                    b.Property<string>("FlagPrimaryColor");
 
                     b.Property<Guid>("LeaderId");
 
