@@ -17,6 +17,7 @@
     "isomorphic-fetch": "^2.2.1",
     "jquery": "^3.2.1",
     "jsnlog": "^2.22.1",
+    "moment": "^2.18.1",
     "node-sass": "^4.5.2",
     "resolve-url-loader": "^2.0.2",
     "sass-loader": "^6.0.5",
