@@ -202,6 +202,13 @@ export default class DynamicFormComponent extends Vue {
                 updateTimestamp: timestamp
             }
         );
+        // Remove unsupported or null properties from the ViewModel before sending for update,
+        // to avoid errors when overwriting values with the placeholders.
+        for (var prop in d) {
+            if (d[prop] === "[None]" || d[prop] === "[...]") {
+                delete d[prop];
+            }
+        }
         delete d.dataType;
         this.repository.add(this.$route.fullPath, d)
             .then(data => {
@@ -284,6 +291,13 @@ export default class DynamicFormComponent extends Vue {
             updateTimestamp: Date.now()
         },
             this.model);
+        // Remove unsupported or null properties from the ViewModel before sending for update,
+        // to avoid errors when overwriting values with the placeholders.
+        for (var prop in d) {
+            if (d[prop] === "[None]" || d[prop] === "[...]") {
+                delete d[prop];
+            }
+        }
         delete d.dataType;
         this.repository.update(this.$route.fullPath, d)
             .then(data => {

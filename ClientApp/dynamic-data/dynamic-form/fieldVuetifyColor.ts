@@ -4,50 +4,60 @@ export default {
     mixins: [abstractField],
     data() {
         let color = this.value === "[None]" ? "#000000" : this.value;
-        let r = parseInt(color.substring(1, 2), 16);
-        let g = parseInt(color.substring(3, 2), 16);
-        let b = parseInt(color.substring(5, 2), 16);
-        let [h, s, l] = this.rgbToHsl(r, g, b);
+        let r = parseInt(color.substr(1, 2), 16);
+        let g = parseInt(color.substr(3, 2), 16);
+        let b = parseInt(color.substr(5, 2), 16);
+        let [h, s, v] = this.rgbToHsv(r, g, b);
+        let [h2, s2, l] = this.hsvToHsl(h, s, v);
         return {
             dialog: false,
             inputType: "RGB",
-            inputValue1: r,
-            inputValue2: g,
-            inputValue3: b,
             temp: color,
+            r, g, b,
             hue: h,
             saturation: s,
-            saturationWidth: 135.6,
-            lightness: l,
-            lightnessHeight: 135.6,
-            hueHeight: 135.6
-        }
-    },
-    watch: {
-        inputType(newValue) {
-            if (newValue === "RGB") {
-                this.inputValue1 = parseInt(this.value.substring(1, 2), 16);
-                this.inputValue2 = parseInt(this.value.substring(3, 2), 16);
-                this.inputValue3 = parseInt(this.value.substring(5, 2), 16);
-            } else {
-                this.inputValue1 = this.hue;
-                this.inputValue2 = this.saturation;
-                this.inputValue3 = this.lightness;
-            }
+            hslSaturation: s2,
+            brightness: v,
+            lightness: l
         }
     },
     computed: {
-        hueSliderY() {
-            let cf = this.getColorFieldDimension();
-            return this.hue * cf - 4 + "px";
-        },
         colorX() {
             let cf = this.getColorFieldDimension();
             return this.saturation * cf - 5 + "px";
         },
         colorY() {
             let cf = this.getColorFieldDimension();
-            return this.lightness * cf - 5 + "px";
+            return (1 - this.brightness) * cf - 5 + "px";
+        },
+        fullBright() {
+            let [r, g, b] = this.hsvToRgb(this.hue, 1, 1);
+            return this.rgbToHex(r, g, b);
+        },
+        hueSliderY() {
+            let cf = this.getColorFieldDimension();
+            return this.hue * cf - 4 + "px";
+        },
+        inputValue1() {
+            if (this.inputType === "RGB") {
+                return this.r;
+            } else {
+                return this.hue;
+            }
+        },
+        inputValue2() {
+            if (this.inputType === "RGB") {
+                return this.g;
+            } else {
+                return this.hslSaturation;
+            }
+        },
+        inputValue3() {
+            if (this.inputType === "RGB") {
+                return this.b;
+            } else {
+                return this.lightness;
+            }
         }
     },
     methods: {
@@ -65,99 +75,139 @@ export default {
             }
             return cf[0].clientHeight;
         },
-        hslToRgb(h, s, l) {
-            let r: number;
-            let g: number;
-            let b: number;
+        getColorFieldPosition() {
+            let d = document.getElementsByClassName("dialog--active");
+            if (!d.length) {
+                return 0;
+            }
+            let cf = d[0].getElementsByClassName("color-field");
+            if (!cf.length) {
+                return 0;
+            }
+            let pos = cf[0].getBoundingClientRect();
+            return [pos.left, pos.top];
+        },
+        getHueFieldPosition() {
+            let d = document.getElementsByClassName("dialog--active");
+            if (!d.length) {
+                return 0;
+            }
+            let hf = d[0].getElementsByClassName("hue-field");
+            if (!hf.length) {
+                return 0;
+            }
+            let pos = hf[0].getBoundingClientRect();
+            return [pos.left, pos.top];
+        },
+        hslToHsv(h, s, l) {
+            l *= 2;
+            s *= (l <= 1) ? l : 2 - l;
+            let v = (l + s) / 2;
+            let _s = (2 * s) / (l + s);
 
-            if (s == 0) {
-                r = g = b = l;
-            } else {
-                let hue2rgb = function hue2rgb(p, q, t) {
-                    if (t < 0) t++;
-                    if (t > 1) t--;
-                    if (t < 1 / 6) return p + (q - p) * 6 * t;
-                    if (t < 1 / 2) return q;
-                    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-                    return p;
-                }
-
-                let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-                let p = 2 * l - q;
-                r = hue2rgb(p, q, h + 1 / 3);
-                g = hue2rgb(p, q, h);
-                b = hue2rgb(p, q, h - 1 / 3);
+            return [h, _s, v];
+        },
+        hsvToHsl(h, s, v) {
+            let _s = s * v;
+            let l = (2 - s) * v;
+            _s /= (l <= 1) ? l : 2 - l;
+            _s = Math.round(_s * 1000) / 1000;
+            l /= 2;
+            l = Math.round(l * 1000) / 1000;
+            return [h, _s, l];
+        },
+        hsvToRgb(h, s, v) {
+            let i = Math.floor(h * 6);
+            let f = h * 6 - i;
+            let p = v * (1 - s);
+            let q = v * (1 - f * s);
+            let t = v * (1 - (1 - f) * s);
+            let r: number, g: number, b: number;
+            switch (i % 6) {
+                case 0: r = v, g = t, b = p; break;
+                case 1: r = q, g = v, b = p; break;
+                case 2: r = p, g = v, b = t; break;
+                case 3: r = p, g = q, b = v; break;
+                case 4: r = t, g = p, b = v; break;
+                case 5: r = v, g = p, b = q; break;
             }
             return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
         },
-        onColorPick(event) {
-            let cf = this.getColorFieldDimension();
-            this.saturation = event.offsetX / cf;
-            this.lightness = event.offsetY / cf;
-            this.updateColor();
-            this.updateInputs();
+        lightText() {
+            let color = this.value === "[None]" ? "#000000" : this.value;
+            let r = parseInt(color.substr(1, 2), 16);
+            let g = parseInt(color.substr(3, 2), 16);
+            let b = parseInt(color.substr(5, 2), 16);
+            let brightness = ((r * 299) + (g * 587) + (b * 114)) / 255000;
+            return brightness < 0.5;
         },
-        onHuePick(event) {
-            let cf = this.getColorFieldDimension();
-            this.hue = event.offsetY / cf;
-            this.updateColor();
-            this.updateInputs();
+        onColorMove(event) {
+            let cfD = this.getColorFieldDimension();
+            let [cfX, cfY] = this.getColorFieldPosition();
+            let x = Math.min(cfD, Math.max(0, event.clientX - cfX));
+            let y = Math.min(cfD, Math.max(0, event.clientY - cfY));
+            this.saturation = Math.round(x / cfD * 1000) / 1000;
+            this.brightness = Math.round((1 - y / cfD) * 1000) / 1000;
+            this.updateHsv();
+        },
+        onColorStop(event) {
+            this.onColorMove(event);
+            window.removeEventListener('mousemove', this.onColorMove, false);
+            window.removeEventListener('mouseup', this.onColorStop, true);
+        },
+        onHueMove(event) {
+            let cfD = this.getColorFieldDimension();
+            let [hfX, hfY] = this.getHueFieldPosition();
+            let y = Math.min(cfD, Math.max(0, event.clientY - hfY));
+            this.hue = Math.round(y / cfD * 1000) / 1000;
+            this.updateHsv();
+        },
+        onHueStop(event) {
+            this.onHueMove(event);
+            window.removeEventListener('mousemove', this.onHueMove, false);
+            window.removeEventListener('mouseup', this.onHueStop, true);
         },
         onInput1(newValue) {
+            if (newValue === undefined || isNaN(newValue)) {
+                return;
+            }
             if (this.inputType === "RGB") {
-                this.temp = "#" + newValue.toString(16) + this.value.substring(3);
+                this.r = Math.max(0, Math.min(255, newValue));
+                this.updateRGB();
             } else {
-                this.hue = newValue;
-                this.updateColor();
+                this.hue = Math.max(0, Math.min(1, newValue));
+                this.updateHsl();
             }
         },
         onInput2(newValue) {
+            if (newValue === undefined || isNaN(newValue)) {
+                return;
+            }
             if (this.inputType === "RGB") {
-                this.temp = this.value.substring(0, 3) + newValue.toString(16) + this.value.substring(5);
+                this.g = Math.max(0, Math.min(255, newValue));
+                this.updateRGB();
             } else {
-                this.saturation = newValue;
-                this.updateColor();
+                this.hslSaturation = Math.max(0, Math.min(1, newValue));
+                this.updateHsl();
             }
         },
         onInput3(newValue) {
+            if (newValue === undefined || isNaN(newValue)) {
+                return;
+            }
             if (this.inputType === "RGB") {
-                this.temp = this.value.substring(0, 5) + newValue.toString(16);
+                this.b = Math.max(0, Math.min(255, newValue));
+                this.updateRGB();
             } else {
-                this.lightness = newValue;
-                this.updateColor();
+                this.lightness = Math.max(0, Math.min(1, newValue));
+                this.updateHsl();
             }
         },
         onSelect() {
             this.value = this.temp;
             this.dialog = false;
         },
-        rgbToHsl(r, g, b) {
-            r /= 255;
-            g /= 255;
-            b /= 255;
-            let max = Math.max(r, g, b);
-            let min = Math.min(r, g, b);
-            let h: number;
-            let s: number;
-            let l = (max + min) / 2;
-
-            if (max == min) {
-                h = s = 0;
-            } else {
-                let d = max - min;
-                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-                switch (max) {
-                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-                    case g: h = (b - r) / d + 2; break;
-                    case b: h = (r - g) / d + 4; break;
-                }
-                h /= 6;
-            }
-
-            return [h, s, l];
-        },
-        updateColor() {
-            let [r, g, b] = this.hslToRgb(this.hue, this.saturation, this.lightness);
+        rgbToHex(r, g, b) {
             let rh = r.toString(16);
             if (rh.length < 2) {
                 rh = "0" + rh;
@@ -170,18 +220,60 @@ export default {
             if (bh.length < 2) {
                 bh = "0" + bh;
             }
-            this.temp = "#" + rh + gh + bh;
+            return "#" + rh + gh + bh;
         },
-        updateInputs() {
-            if (this.inputType === "RGB") {
-                this.inputValue1 = parseInt(this.temp.substring(1, 2), 16);
-                this.inputValue2 = parseInt(this.temp.substring(3, 2), 16);
-                this.inputValue3 = parseInt(this.temp.substring(5, 2), 16);
-            } else {
-                this.inputValue1 = this.hue;
-                this.inputValue2 = this.saturation;
-                this.inputValue3 = this.lightness;
+        rgbToHsv(r, g, b) {
+            let max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let d = max - min;
+            let h: number;
+            let s = max === 0 ? 0 : d / max;
+            let v = max / 255;
+            switch (max) {
+                case min: h = 0; break;
+                case r: h = (g - b) + d * (g < b ? 6 : 0); h /= 6 * d; break;
+                case g: h = (b - r) + d * 2; h /= 6 * d; break;
+                case b: h = (r - g) + d * 4; h /= 6 * d; break;
             }
+
+            return [h, s, v];
+        },
+        startColorDrag(event) {
+            window.addEventListener('mousemove', this.onColorMove, false);
+            window.addEventListener('mouseup', this.onColorStop, true);
+        },
+        startHueDrag(event) {
+            window.addEventListener('mousemove', this.onHueMove, false);
+            window.addEventListener('mouseup', this.onHueStop, true);
+        },
+        updateHsv() {
+            let [r, g, b] = this.hsvToRgb(this.hue, this.saturation, this.brightness);
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            let [h, s, l] = this.hsvToHsl(this.hue, this.saturation, this.brightness);
+            this.hslSaturation = s;
+            this.lightness = l;
+            this.temp = this.rgbToHex(r, g, b);
+        },
+        updateHsl() {
+            let [h, s, v] = this.hslToHsv(this.hue, this.hslSaturation, this.lightness);
+            this.saturation = s;
+            this.brightness = v;
+            let [r, g, b] = this.hsvToRgb(this.hue, this.saturation, this.brightness);
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            this.temp = this.rgbToHex(r, g, b);
+        },
+        updateRGB() {
+            let [h, s, v] = this.rgbToHsv(this.r, this.g, this.b);
+            this.hue = h;
+            this.saturation = s;
+            this.brightness = v;
+            let [h2, s2, l] = this.hsvToHsl(h, s, v);
+            this.hslSaturation = s2;
+            this.lightness = l;
+            this.temp = this.rgbToHex(this.r, this.g, this.b);
         }
     }
 };

@@ -1,11 +1,11 @@
 ﻿<template>
     <v-dialog v-model="dialog">
         <v-btn slot="activator"
-               :style="{ 'background-color': value === '[None]' ? '#000000' : value, color: value === '[None]' || value === '#000000' ? 'white' : value }"
+               :style="{ 'background-color': value === '[None]' ? '#000000' : value, color: lightText ? 'white' : 'black' }"
                :disabled="disabled"
                dark>
             {{ schema.label }}
-            <v-icon right :style="{ color: value === '[None]' || value === '#000000' ? 'white' : value }">format_color_fill</v-icon>
+            <v-icon right :style="{ color: lightText ? 'white' : 'black' }">format_color_fill</v-icon>
         </v-btn>
         <v-card class="color-picker-card">
             <v-card-row>
@@ -13,15 +13,15 @@
                     <div class="color-row">
                         <div class="color-spacer"></div>
                         <div class="color-picker">
-                            <div class="color-field" :style="{ 'background-color': temp }">
+                            <div class="color-field" :style="{ 'background-color': fullBright }">
                                 <div class="saturation-field">
-                                    <div class="lightness-field" @click.capture="onColorPick($event)">
+                                    <div class="brightness-field" @mousedown="startColorDrag($event)">
                                         <div class="color-dot" :style="{ top: colorY, left: colorX }"></div>
                                     </div>
                                 </div>
                             </div>
                             <div class="hue-field"
-                                 @click.capture="onHuePick($event)">
+                                 @mousedown="startHueDrag($event)">
                                 <div class="hue-slider" :style="{ top: hueSliderY }"></div>
                             </div>
                         </div>
@@ -43,23 +43,23 @@
             <v-card-row>
                 <v-container fluid class="pt-0 pb-0">
                     <v-layout row wrap>
-                        <v-flex xs9>
-                            <v-slider :label="inputType === 'RGB' ? 'R' : 'H'"></v-slider>
+                        <v-flex xs8>
+                            <v-slider dark :label="inputType === 'RGB' ? 'R' : 'H'" :max="inputType === 'RGB' ? 255 : 1" :value="inputValue1" @input="onInput1"></v-slider>
                         </v-flex>
-                        <v-flex xs3>
-                            <v-text-field dark type="number" :value="inputValue1" @input="onInput1" :step="inputType === 'RGB' ? 1 : 0.01"></v-text-field>
+                        <v-flex xs4>
+                            <v-text-field dark type="number" :value="inputValue1" @input="onInput1" :step="inputType === 'RGB' ? 1 : 0.001"></v-text-field>
                         </v-flex>
-                        <v-flex xs9>
-                            <v-slider :label="inputType === 'RGB' ? 'G' : 'S'"></v-slider>
+                        <v-flex xs8>
+                            <v-slider dark :label="inputType === 'RGB' ? 'G' : 'S'" :max="inputType === 'RGB' ? 255 : 1" :value="inputValue2" @input="onInput2"></v-slider>
                         </v-flex>
-                        <v-flex xs3>
-                            <v-text-field dark type="number" :value="inputValue2" @input="onInput2" :step="inputType === 'RGB' ? 1 : 0.01"></v-text-field>
+                        <v-flex xs4>
+                            <v-text-field dark type="number" :value="inputValue2" @input="onInput2" :step="inputType === 'RGB' ? 1 : 0.001"></v-text-field>
                         </v-flex>
-                        <v-flex xs9>
-                            <v-slider :label="inputType === 'RGB' ? 'B' : 'L'"></v-slider>
+                        <v-flex xs8>
+                            <v-slider dark :label="inputType === 'RGB' ? 'B' : 'L'" :max="inputType === 'RGB' ? 255 : 1" :value="inputValue3" @input="onInput3"></v-slider>
                         </v-flex>
-                        <v-flex xs3>
-                            <v-text-field dark type="number" :value="inputValue3" @input="onInput3" :step="inputType === 'RGB' ? 1 : 0.01"></v-text-field>
+                        <v-flex xs4>
+                            <v-text-field dark type="number" :value="inputValue3" @input="onInput3" :step="inputType === 'RGB' ? 1 : 0.001"></v-text-field>
                         </v-flex>
                     </v-layout>
                 </v-container>

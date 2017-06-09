@@ -528,7 +528,7 @@ namespace MVCCoreVue.Data
                         .MakeGenericType(ptInfo.GenericTypeArguments.FirstOrDefault())
                         .GetProperty("Count")
                         .GetValue(pInfo.GetValue(item));
-                    vm[pInfo.Name.ToInitialLower()] = count > 0 ? "..." : "[None]";
+                    vm[pInfo.Name.ToInitialLower()] = count > 0 ? "[...]" : "[None]";
                 }
                 else if (ptInfo.IsEnum)
                 {
@@ -537,7 +537,7 @@ namespace MVCCoreVue.Data
                     vm[name] = (int)value;
 
                     var desc = EnumExtensions.GetDescription(pInfo.PropertyType, value);
-                    vm[name + "Formatted"] = string.IsNullOrEmpty(desc) ? "..." : desc;
+                    vm[name + "Formatted"] = string.IsNullOrEmpty(desc) ? "[...]" : desc;
                 }
                 else if (dataType?.DataType == DataType.Date)
                 {
@@ -567,7 +567,12 @@ namespace MVCCoreVue.Data
                     vm[name] = value;
                     vm[name + "Formatted"] = value.ToString("c");
                 }
-                else
+                else if (pInfo.PropertyType == typeof(string)
+                    || pInfo.PropertyType.IsNumeric()
+                    || pInfo.PropertyType == typeof(bool)
+                    || pInfo.PropertyType == typeof(Guid)
+                    || pInfo.PropertyType == typeof(DataItem)
+                    || pInfo.PropertyType.GetTypeInfo().IsSubclassOf(typeof(DataItem)))
                 {
                     object value = pInfo.GetValue(item);
                     if (value == null)
@@ -577,6 +582,20 @@ namespace MVCCoreVue.Data
                     else
                     {
                         vm[pInfo.Name.ToInitialLower()] = value.ToString();
+                    }
+                }
+                else
+                {
+                    object value = pInfo.GetValue(item);
+                    if (value == null)
+                    {
+                        vm[pInfo.Name.ToInitialLower()] = "[None]";
+                    }
+                    else
+                    {
+                        // Unsupported types are not displayed with toString, to avoid
+                        // cases where this only shows the type name.
+                        vm[pInfo.Name.ToInitialLower()] = "[...]";
                     }
                 }
             }
