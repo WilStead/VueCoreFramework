@@ -54,8 +54,10 @@ router.beforeEach((to, from, next) => {
     if (to.matched.some(record => record.meta.requiresAuth)) {
         checkAuthorization(to, to.fullPath)
             .then(auth => {
-                if (auth) {
+                if (auth === "authorized") {
                     next();
+                } else if (auth === "unauthorized") {
+                    next({ path: '/error/401' });
                 } else {
                     next({ path: '/login', query: { returnUrl: to.fullPath } });
                 }
@@ -75,10 +77,26 @@ export interface ApiResponseViewModel {
 
 interface AuthorizationViewModel {
     email: string,
+    token: string,
     authorization: string
 }
-export function checkAuthorization(to, returnPath): Promise<boolean> {
-    return fetch('/api/Account/Authorize',
+export function checkAuthorization(to, returnPath): Promise<string> {
+    let url = '/api/Account/Authorize';
+    if (to.name && to.name.length) {
+        let n: string = to.name;
+        let op: string;
+        let id: string;
+        if (n.endsWith("DataTable")) {
+            n = n.substring(0, n.length - 5);
+        } else {
+            op = to.params.operation;
+            id = to.params.id;
+        }
+        url += `?dataType=${n}`;
+        if (op) url += `&operation=${op}`;
+        if (id) url += `&id=${id}`;
+    }
+    return fetch(url,
         {
             headers: {
                 'Authorization': `bearer ${store.state.token}`
@@ -95,18 +113,25 @@ export function checkAuthorization(to, returnPath): Promise<boolean> {
         })
         .then(response => response.json() as Promise<AuthorizationViewModel>)
         .then(data => {
-            if (data.authorization === "authorized") {
+            if (data.token) {
+                store.state.token = data.token;
+            }
+            if (data.email) {
                 store.state.email = data.email;
-                return true;
+            }
+            if (data.authorization === "authorized") {
+                return "authorized";
+            } else if (data.email) {
+                return "unauthorized";
             } else {
-                return false;
+                return "login";
             }
         })
         .catch(error => {
             if (error.message !== "unauthorized") {
                 ErrorMsg.logError("router.checkAuthorization", new Error(error));
             }
-            return false;
+            return "unauthorized";
         });
 }
 

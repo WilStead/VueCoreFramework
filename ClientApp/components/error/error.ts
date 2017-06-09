@@ -13,8 +13,11 @@ export default class LoginComponent extends Vue {
             case 400:
                 this.errorMsg = "Your request was invalid.";
                 break;
+            case 401:
+                this.errorMsg = "You don't have permission to access this page.";
+                break;
             case 403:
-                this.errorMsg = "You do not have access to this page.";
+                this.errorMsg = "You don't have access to this page.";
                 break;
             case 404:
                 this.errorMsg = "Nothing was found here.";

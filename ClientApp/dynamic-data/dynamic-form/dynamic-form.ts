@@ -97,7 +97,7 @@ export default class DynamicFormComponent extends Vue {
                 let idField = this.vmDefinition.find(v => v.model === newField.model + "Id");
                 if (idField) {
                     newField.buttons = [];
-                    if (newField.type === "objectSelect") {
+                    if (newField.type === "objectSelect" && this.operation === 'edit') {
                         newField.buttons.push({
                             classes: 'btn btn--dark btn--flat primary--text',
                             label: 'Select',

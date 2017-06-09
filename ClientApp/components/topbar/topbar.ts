@@ -26,7 +26,9 @@ export default class TopbarComponent extends Vue {
     updateAuth() {
         checkAuthorization(undefined, this.getReturnUrl())
             .then(auth => {
-                if (auth) {
+                // Regardless of the authorization result, the check process will
+                // set the cached email if the user is signed in.
+                if (this.$store.state.email) {
                     this.signedIn = true;
                 } else {
                     this.signedIn = false;

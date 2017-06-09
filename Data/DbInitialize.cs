@@ -9,6 +9,19 @@ namespace MVCCoreVue.Data
     {
         public static void Initialize(ApplicationDbContext context)
         {
+            if (!context.Roles.Any())
+            {
+                var admin = new Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole("Admin");
+                context.Roles.Add(admin);
+                context.SaveChanges();
+                context.RoleClaims.Add(new Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRoleClaim<string>
+                {
+                    ClaimType = "All",
+                    ClaimValue = "All",
+                    RoleId = context.Roles.FirstOrDefault().Id
+                });
+            }
+
             if (!context.Cities.Any())
             {
                 var cities = new City[]

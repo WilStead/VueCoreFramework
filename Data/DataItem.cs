@@ -33,7 +33,15 @@ namespace MVCCoreVue.Data
                 {
                     if (pInfo.PropertyType == typeof(string))
                     {
-                        pInfo.SetValue(this, "[None]");
+                        var dataType = pInfo.GetCustomAttribute<DataTypeAttribute>();
+                        if (dataType?.CustomDataType == "Color")
+                        {
+                            pInfo.SetValue(this, "#000000");
+                        }
+                        else
+                        {
+                            pInfo.SetValue(this, "[None]");
+                        }
                     }
                     else if (pInfo.PropertyType == typeof(DateTime))
                     {

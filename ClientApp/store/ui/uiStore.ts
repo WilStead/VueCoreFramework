@@ -52,7 +52,7 @@ function addMenuItem(menu: MenuItem, router: any, name: string, fullCategory: st
             props: { title: name },
             children: [
                 {
-                    name: lowerName + "Table",
+                    name: lowerName + "DataTable",
                     path: 'table/:operation?/:parentType?/:parentId?/:parentProp?',
                     component: require('../../dynamic-data/dynamic-table/dynamic-table.vue'),
                     props: (route) => ({

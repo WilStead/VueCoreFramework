@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MVCCoreVue.Data;
+using MVCCoreVue.Extensions;
 using MVCCoreVue.Models;
 using MVCCoreVue.Models.AccountViewModels;
 using MVCCoreVue.Services;
@@ -40,11 +42,64 @@ namespace MVCCoreVue.Controllers
 
         [Authorize]
         [HttpGet]
-        public async Task<JsonResult> Authorize()
+        public async Task<IActionResult> Authorize(string dataType = null, string operation = "View", string id = null)
         {
-            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            if (user != null) return Json(new AuthorizationViewModel { Email = user.Email, Authorization = "authorized" });
-            else return Json(new AuthorizationViewModel { Authorization = "unauthorized" });
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return Json(new AuthorizationViewModel { Authorization = "unauthorized" });
+            }
+
+            var token = await GetLoginToken(email, user);
+
+            // If no specific data is being requested, just being a recognized user is sufficient authorization.
+            if (string.IsNullOrEmpty(dataType))
+            {
+                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = "authorized" });
+            }
+
+            // First authorization for all data is checked.
+            if (user.Claims.Any(c => c.ClaimType == "All" && c.ClaimValue == "All"))
+            {
+                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = "authorized" });
+            }
+
+            // If not authorized for all data, authorization for the specific data type is checked.
+            var claimValue = dataType.ToInitialCaps();
+            // First, authorization for all operations on the data is checked.
+            if (user.Claims.Any(c => c.ClaimType == "All" && c.ClaimValue == claimValue))
+            {
+                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = "authorized" });
+            }
+
+            // If not authorized for all operations, the specific operation is checked.
+            // In the absence of a specific operation, the default action is View.
+            var claimType = operation.ToInitialCaps();
+            if (user.Claims.Any(c => c.ClaimType == claimType && c.ClaimValue == claimValue))
+            {
+                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = "authorized" });
+            }
+
+            // If not authorized for the operation on the data type and an id is provided,
+            // the specific item is checked.
+            if (!string.IsNullOrEmpty(id))
+            {
+                // First, authorization for all operations on the item is checked.
+                if (user.Claims.Any(c => c.ClaimType == "All" && c.ClaimValue == id))
+                {
+                    return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = "authorized" });
+                }
+
+                // If not authorized for all operations, the specific operation is checked.
+                if (user.Claims.Any(c => c.ClaimType == claimType && c.ClaimValue == id))
+                {
+                    return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = "authorized" });
+                }
+            }
+
+            // No authorizations found.
+            return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = "unauthorized" });
         }
 
         [HttpGet]
@@ -135,7 +190,7 @@ namespace MVCCoreVue.Controllers
                 _logger.LogInformation(LogEvent.LOGIN_EXTERNAL, "User {USER} logged in with {PROVIDER}.", info.Principal.FindFirstValue(ClaimTypes.Email), info.LoginProvider);
                 model.Redirect = true;
                 var user = await _userManager.FindByEmailAsync(email);
-                await GetLoginToken(model, user);
+                model.Token = await GetLoginToken(model.Email, user);
                 return model;
             }
             else
@@ -185,14 +240,14 @@ namespace MVCCoreVue.Controllers
             return Json(new { providers = _signInManager.GetExternalAuthenticationSchemes().Select(s => s.DisplayName).ToArray() });
         }
 
-        private async Task GetLoginToken(LoginViewModel model, ApplicationUser user)
+        private async Task<string> GetLoginToken(string email, ApplicationUser user)
         {
             var now = DateTime.UtcNow;
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, model.Email),
-                new Claim(ClaimTypes.NameIdentifier, model.Email),
-                new Claim(ClaimTypes.Name, model.Email),
+                new Claim(JwtRegisteredClaimNames.Sub, email),
+                new Claim(ClaimTypes.NameIdentifier, email),
+                new Claim(ClaimTypes.Name, email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, (now.Subtract(new DateTime(1970, 1, 1))).TotalSeconds.ToString(), ClaimValueTypes.Integer64)
             };
@@ -207,7 +262,7 @@ namespace MVCCoreVue.Controllers
                 expires: now.Add(_options.Expiration),
                 signingCredentials: _options.SigningCredentials);
             var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
-            model.Token = encodedJwt;
+            return encodedJwt;
         }
 
         [Authorize]
@@ -220,10 +275,11 @@ namespace MVCCoreVue.Controllers
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
             var userLogins = await _userManager.GetLoginsAsync(user);
-            return Json(new {
+            return Json(new
+            {
                 providers = _signInManager.GetExternalAuthenticationSchemes().Select(s => s.DisplayName).ToArray(),
                 userProviders = userLogins.Select(l => l.ProviderDisplayName).ToArray()
-        });
+            });
         }
 
         [Authorize]
@@ -267,7 +323,7 @@ namespace MVCCoreVue.Controllers
                 return model;
             }
 
-            await GetLoginToken(model, user);
+            model.Token = await GetLoginToken(model.Email, user);
 
             _logger.LogInformation(LogEvent.LOGIN, "User {USER} logged in.", user.Email);
             model.Redirect = true;
