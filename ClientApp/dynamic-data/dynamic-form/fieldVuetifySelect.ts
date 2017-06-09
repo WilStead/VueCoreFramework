@@ -41,13 +41,6 @@ export default {
     methods: {
         formatValueToModel(value) {
             return value;
-        },
-        rules() {
-            if (!this.errors.length) {
-                return true;
-            } else {
-                return this.errors.join('; ');
-            }
         }
     }
 };

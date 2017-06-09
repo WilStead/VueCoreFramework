@@ -13,13 +13,6 @@ export default {
                 return Number(value);
             }
             return value;
-        },
-        rules() {
-            if (!this.errors.length) {
-                return true;
-            } else {
-                return this.errors.join('; ');
-            }
         }
     }
 };

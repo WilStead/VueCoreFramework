@@ -19,7 +19,6 @@
                   :prefix="schema.prefix"
                   :required="schema.required"
                   :rows="schema.rows"
-                  :rules="[rules]"
                   :step="schema.step"
                   :suffix="schema.suffix"></v-text-field>
 </template>

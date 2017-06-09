@@ -3,35 +3,67 @@
 export default {
     mixins: [abstractField],
     data() {
+        let color = this.value === "[None]" ? "#000000" : this.value;
+        let r = parseInt(color.substring(1, 2), 16);
+        let g = parseInt(color.substring(3, 2), 16);
+        let b = parseInt(color.substring(5, 2), 16);
+        let [h, s, l] = this.rgbToHsl(r, g, b);
         return {
             dialog: false,
             inputType: "RGB",
-            inputValue1: parseInt(this.value.substring(1, 2)),
-            inputValue2: parseInt(this.value.substring(3, 2)),
-            inputValue3: parseInt(this.value.substring(5, 2)),
-            temp: "#000000",
-            hue: 0,
-            saturation: 0,
+            inputValue1: r,
+            inputValue2: g,
+            inputValue3: b,
+            temp: color,
+            hue: h,
+            saturation: s,
             saturationWidth: 135.6,
-            lightness: 0,
+            lightness: l,
             lightnessHeight: 135.6,
             hueHeight: 135.6
         }
     },
+    watch: {
+        inputType(newValue) {
+            if (newValue === "RGB") {
+                this.inputValue1 = parseInt(this.value.substring(1, 2), 16);
+                this.inputValue2 = parseInt(this.value.substring(3, 2), 16);
+                this.inputValue3 = parseInt(this.value.substring(5, 2), 16);
+            } else {
+                this.inputValue1 = this.hue;
+                this.inputValue2 = this.saturation;
+                this.inputValue3 = this.lightness;
+            }
+        }
+    },
     computed: {
         hueSliderY() {
-            return this.hue * this.hueHeight - 3;
+            let cf = this.getColorFieldDimension();
+            return this.hue * cf - 4 + "px";
         },
         colorX() {
-            return this.saturation * this.saturationWidth - 5;
+            let cf = this.getColorFieldDimension();
+            return this.saturation * cf - 5 + "px";
         },
         colorY() {
-            return this.lightness * this.lightnessHeight - 5;
+            let cf = this.getColorFieldDimension();
+            return this.lightness * cf - 5 + "px";
         }
     },
     methods: {
         formatValueToModel(value) {
             return value;
+        },
+        getColorFieldDimension() {
+            let d = document.getElementsByClassName("dialog--active");
+            if (!d.length) {
+                return 0;
+            }
+            let cf = d[0].getElementsByClassName("color-field");
+            if (!cf.length) {
+                return 0;
+            }
+            return cf[0].clientHeight;
         },
         hslToRgb(h, s, l) {
             let r: number;
@@ -59,17 +91,21 @@ export default {
             return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
         },
         onColorPick(event) {
-            this.saturation = event.offsetX / this.saturationWidth;
-            this.lightness = event.offsetY / this.lightnessHeight;
+            let cf = this.getColorFieldDimension();
+            this.saturation = event.offsetX / cf;
+            this.lightness = event.offsetY / cf;
             this.updateColor();
+            this.updateInputs();
         },
         onHuePick(event) {
-            this.hue = event.offsetY / this.hueHeight;
+            let cf = this.getColorFieldDimension();
+            this.hue = event.offsetY / cf;
             this.updateColor();
+            this.updateInputs();
         },
         onInput1(newValue) {
             if (this.inputType === "RGB") {
-                this.value = "#" + newValue.toString(16) + this.value.substring(3);
+                this.temp = "#" + newValue.toString(16) + this.value.substring(3);
             } else {
                 this.hue = newValue;
                 this.updateColor();
@@ -77,7 +113,7 @@ export default {
         },
         onInput2(newValue) {
             if (this.inputType === "RGB") {
-                this.value = this.value.substring(0, 3) + newValue.toString(16) + this.value.substring(5);
+                this.temp = this.value.substring(0, 3) + newValue.toString(16) + this.value.substring(5);
             } else {
                 this.saturation = newValue;
                 this.updateColor();
@@ -85,7 +121,7 @@ export default {
         },
         onInput3(newValue) {
             if (this.inputType === "RGB") {
-                this.value = this.value.substring(0, 5) + newValue.toString(16);
+                this.temp = this.value.substring(0, 5) + newValue.toString(16);
             } else {
                 this.lightness = newValue;
                 this.updateColor();
@@ -95,9 +131,57 @@ export default {
             this.value = this.temp;
             this.dialog = false;
         },
+        rgbToHsl(r, g, b) {
+            r /= 255;
+            g /= 255;
+            b /= 255;
+            let max = Math.max(r, g, b);
+            let min = Math.min(r, g, b);
+            let h: number;
+            let s: number;
+            let l = (max + min) / 2;
+
+            if (max == min) {
+                h = s = 0;
+            } else {
+                let d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+
+            return [h, s, l];
+        },
         updateColor() {
             let [r, g, b] = this.hslToRgb(this.hue, this.saturation, this.lightness);
-            this.value = "#" + r.toString(16) + g.toString(16) + b.toString(16);
+            let rh = r.toString(16);
+            if (rh.length < 2) {
+                rh = "0" + rh;
+            }
+            let gh = g.toString(16);
+            if (gh.length < 2) {
+                gh = "0" + gh;
+            }
+            let bh = b.toString(16);
+            if (bh.length < 2) {
+                bh = "0" + bh;
+            }
+            this.temp = "#" + rh + gh + bh;
+        },
+        updateInputs() {
+            if (this.inputType === "RGB") {
+                this.inputValue1 = parseInt(this.temp.substring(1, 2), 16);
+                this.inputValue2 = parseInt(this.temp.substring(3, 2), 16);
+                this.inputValue3 = parseInt(this.temp.substring(5, 2), 16);
+            } else {
+                this.inputValue1 = this.hue;
+                this.inputValue2 = this.saturation;
+                this.inputValue3 = this.lightness;
+            }
         }
     }
 };

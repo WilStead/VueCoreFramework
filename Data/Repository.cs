@@ -156,7 +156,7 @@ namespace MVCCoreVue.Data
             var dataType = pInfo.GetCustomAttribute<DataTypeAttribute>();
             var step = pInfo.GetCustomAttribute<StepAttribute>();
             var ptInfo = pInfo.PropertyType.GetTypeInfo();
-            if (!string.IsNullOrEmpty(dataType.CustomDataType))
+            if (!string.IsNullOrEmpty(dataType?.CustomDataType))
             {
                 if (dataType.CustomDataType == "Color")
                 {
@@ -566,11 +566,6 @@ namespace MVCCoreVue.Data
                     var value = (TimeSpan)pInfo.GetValue(item);
                     vm[name] = value;
                     vm[name + "Formatted"] = value.ToString("c");
-                }
-                else if (dataType?.CustomDataType == "Color")
-                {
-                    var name = pInfo.Name.ToInitialLower();
-                    vm[name] = "...";
                 }
                 else
                 {

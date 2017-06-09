@@ -10,7 +10,7 @@
               :name="schema.inputName"
               :persistent-hint="schema.hint !== undefined"
               :prepend-icon="schema.icon"
-              :rules="[() => (!schema.required || schema.inputType !== 'multiple' || selectedValue !== 0) || 'Please select an option', rules]"
+              :rules="[() => (!schema.required || schema.inputType !== 'multiple' || selectedValue !== 0) || 'Please select an option']"
               :single-line="schema.inputType === 'single'">
     </v-select>
 </template>
