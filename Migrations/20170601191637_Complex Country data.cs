@@ -73,7 +73,7 @@ namespace MVCCoreVue.Migrations
                 column: "CountryId",
                 principalTable: "Countries",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
+                onDelete: ReferentialAction.NoAction);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Countries_Cities_CapitolId",
@@ -81,7 +81,7 @@ namespace MVCCoreVue.Migrations
                 column: "CapitolId",
                 principalTable: "Cities",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.NoAction);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Countries_Leaders_LeaderId",

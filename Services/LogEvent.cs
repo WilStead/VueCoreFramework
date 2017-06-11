@@ -1,6 +1,6 @@
 ﻿namespace MVCCoreVue.Services
 {
-    public class LogEvent
+    public static class LogEvent
     {
         // User events
         public const int LOGIN = 1000;

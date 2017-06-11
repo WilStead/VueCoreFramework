@@ -73,7 +73,8 @@ namespace MVCCoreVue
 
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
-            services.Configure<AuthMessageSenderOptions>(Configuration);
+            services.Configure<AuthMessageSenderOptions>(Configuration.GetSection("AuthMessageSender"));
+            services.Configure<AdminOptions>(Configuration.GetSection("AdminOptions"));
 
             services.Configure<TokenProviderOptions>(options =>
             {
@@ -166,7 +167,7 @@ namespace MVCCoreVue
                     defaults: new { controller = "Home", action = "Index" });
             });
 
-            DbInitialize.Initialize(context);
+            DbInitialize.Initialize(app.ApplicationServices);
         }
     }
 }

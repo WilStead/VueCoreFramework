@@ -21,7 +21,7 @@ namespace MVCCoreVue.Data.Attributes
         public ChildClassAttribute() { }
     }
 
-    internal class DefaultAttribute: Attribute
+    internal class DefaultAttribute : Attribute
     {
         public object Default { get; set; }
 
@@ -29,6 +29,12 @@ namespace MVCCoreVue.Data.Attributes
         {
             Default = defaultValue;
         }
+    }
+
+    internal class DefaultPermissionAttribute : Attribute
+    {
+        public bool HasDefaultAllPermissions { get; set; }
+        public string DefaultPermissions { get; set; }
     }
 
     internal class HelpAttribute : Attribute
