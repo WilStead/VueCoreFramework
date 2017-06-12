@@ -9,27 +9,31 @@ using MVCCoreVue.Models.ManageViewModels;
 using MVCCoreVue.Services;
 using System.Security.Claims;
 using System;
+using Microsoft.Extensions.Options;
 
 namespace MVCCoreVue.Controllers
 {
     [Authorize]
     public class ManageController : Controller
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly AdminOptions _adminOptions;
         private readonly IEmailSender _emailSender;
         private readonly ILogger<ManageController> _logger;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         public ManageController(
-          UserManager<ApplicationUser> userManager,
-          SignInManager<ApplicationUser> signInManager,
-          IEmailSender emailSender,
-          ILogger<ManageController> logger)
+            IOptions<AdminOptions> adminOptions,
+            IEmailSender emailSender,
+            ILogger<ManageController> logger,
+            SignInManager<ApplicationUser> signInManager,
+            UserManager<ApplicationUser> userManager)
         {
-            _userManager = userManager;
-            _signInManager = signInManager;
+            _adminOptions = adminOptions.Value;
             _emailSender = emailSender;
             _logger = logger;
+            _signInManager = signInManager;
+            _userManager = userManager;
         }
 
         [HttpPost]
@@ -40,6 +44,11 @@ namespace MVCCoreVue.Controllers
             if (user == null)
             {
                 model.Errors.Add("An error has occurred.");
+                return model;
+            }
+            if (user.AdminLocked)
+            {
+                model.Errors.Add($"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance.");
                 return model;
             }
             if (user.LastEmailChange > DateTime.Now.Subtract(TimeSpan.FromDays(1)))
@@ -72,6 +81,11 @@ namespace MVCCoreVue.Controllers
                 model.Errors.Add("An error has occurred.");
                 return model;
             }
+            if (user.AdminLocked)
+            {
+                model.Errors.Add($"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance.");
+                return model;
+            }
             var result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
             if (result.Succeeded)
             {
@@ -82,7 +96,7 @@ namespace MVCCoreVue.Controllers
             model.Errors.AddRange(result.Errors.Select(e => e.Description));
             return model;
         }
-        
+
         [HttpPost]
         public IActionResult LinkLogin([FromBody]ManageUserViewModel model)
         {
@@ -98,7 +112,7 @@ namespace MVCCoreVue.Controllers
             var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider.AuthenticationScheme, redirectUrl, _userManager.GetUserId(User));
             return Challenge(properties, provider.AuthenticationScheme);
         }
-        
+
         [HttpGet]
         public async Task<ManageUserViewModel> LinkLoginCallback()
         {
@@ -107,6 +121,11 @@ namespace MVCCoreVue.Controllers
             if (user == null)
             {
                 model.Errors.Add("There was a problem authorizing with that provider.");
+                return model;
+            }
+            if (user.AdminLocked)
+            {
+                model.Errors.Add($"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance.");
                 return model;
             }
             var info = await _signInManager.GetExternalLoginInfoAsync(await _userManager.GetUserIdAsync(user));
@@ -124,7 +143,7 @@ namespace MVCCoreVue.Controllers
             model.Errors.AddRange(result.Errors.Select(e => e.Description));
             return model;
         }
-        
+
         [HttpPost]
         public async Task<ManageUserViewModel> RemoveLogin([FromBody]ManageUserViewModel model)
         {
@@ -132,6 +151,11 @@ namespace MVCCoreVue.Controllers
             if (user == null)
             {
                 model.Errors.Add("There was a problem with your request.");
+                return model;
+            }
+            if (user.AdminLocked)
+            {
+                model.Errors.Add($"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance.");
                 return model;
             }
             var userLogins = await _userManager.GetLoginsAsync(user);
@@ -161,6 +185,11 @@ namespace MVCCoreVue.Controllers
             if (user == null)
             {
                 model.Errors.Add("An error has occurred.");
+                return model;
+            }
+            if (user.AdminLocked)
+            {
+                model.Errors.Add($"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance.");
                 return model;
             }
             var result = await _userManager.AddPasswordAsync(user, model.NewPassword);

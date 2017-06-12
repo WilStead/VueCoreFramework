@@ -1,11 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MVCCoreVue.Data;
-using MVCCoreVue.Data.Attributes;
-using MVCCoreVue.Extensions;
 using MVCCoreVue.Models;
 using MVCCoreVue.Models.AccountViewModels;
 using MVCCoreVue.Services;
@@ -13,7 +11,6 @@ using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -22,121 +19,27 @@ namespace MVCCoreVue.Controllers
     [Route("api/[controller]/[action]")]
     public class AccountController : Controller
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
         private readonly ILogger<AccountController> _logger;
-        private readonly TokenProviderOptions _options;
-        private readonly ApplicationDbContext _context;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly TokenProviderOptions _tokenOptions;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly AdminOptions _adminOptions;
 
         public AccountController(
-            UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager,
+            IOptions<AdminOptions> adminOptions,
             IEmailSender emailSender,
             ILogger<AccountController> logger,
-            IOptions<TokenProviderOptions> options,
-            ApplicationDbContext context)
+            SignInManager<ApplicationUser> signInManager,
+            IOptions<TokenProviderOptions> tokenOptions,
+            UserManager<ApplicationUser> userManager)
         {
-            _userManager = userManager;
-            _signInManager = signInManager;
+            _adminOptions = adminOptions.Value;
             _emailSender = emailSender;
             _logger = logger;
-            _options = options.Value;
-            _context = context;
-        }
-
-        [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> Authorize(string dataType = null, string operation = "View", string id = null)
-        {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user == null)
-            {
-                return Json(new AuthorizationViewModel { Authorization = AuthorizationViewModel.Authorized });
-            }
-
-            var token = await GetLoginToken(email, user);
-
-            // If no specific data is being requested, just being a recognized user is sufficient authorization.
-            if (string.IsNullOrEmpty(dataType))
-            {
-                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
-            }
-
-            // First authorization for all data is checked.
-            if (user.Claims.Any(c => c.ClaimType == CustomClaimTypes.PermissionDataAll && c.ClaimValue == CustomClaimTypes.PermissionAll))
-            {
-                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
-            }
-
-            // If not authorized for all data, authorization for the specific operation on all data is checked.
-            // In the absence of a specific operation, the default action is View.
-            var claimType = operation.ToInitialCaps();
-            if (user.Claims.Any(c => c.ClaimType == claimType && c.ClaimValue == CustomClaimTypes.PermissionAll))
-            {
-                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
-            }
-
-            // If not authorized for the operation on all data, authorization for the specific data type is checked.
-            var claimValue = dataType.ToInitialCaps();
-            if (string.IsNullOrEmpty(dataType))
-            {
-                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Unauthorized });
-            }
-            var entity = _context.Model.GetEntityTypes().FirstOrDefault(e => e.Name.Substring(e.Name.LastIndexOf('.') + 1) == dataType);
-            if (entity == null)
-            {
-                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Unauthorized });
-            }
-            var type = entity.ClrType;
-            if (type == null)
-            {
-                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Unauthorized });
-            }
-            // First check whether the datatype requires no permissions.
-            var attrDefaultPermission = type.GetTypeInfo().GetCustomAttribute<DefaultPermissionAttribute>();
-            if (attrDefaultPermission?.HasDefaultAllPermissions == true)
-            {
-                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
-            }
-            // If not, see if it has default authorization for the specific operation
-            if (attrDefaultPermission?.DefaultPermissions != null && attrDefaultPermission.DefaultPermissions.IndexOf("claimType") != -1)
-            {
-                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
-            }
-
-            // If not, authorization for all operations on the data is checked.
-            if (user.Claims.Any(c => c.ClaimType == CustomClaimTypes.PermissionDataAll && c.ClaimValue == claimValue))
-            {
-                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
-            }
-
-            // If not authorized for all operations, the specific operation is checked.
-            if (user.Claims.Any(c => c.ClaimType == claimType && c.ClaimValue == claimValue))
-            {
-                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
-            }
-
-            // If not authorized for the operation on the data type and an id is provided,
-            // the specific item is checked.
-            if (!string.IsNullOrEmpty(id))
-            {
-                // First, authorization for all operations on the item is checked.
-                if (user.Claims.Any(c => c.ClaimType == CustomClaimTypes.PermissionDataAll && c.ClaimValue == id))
-                {
-                    return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
-                }
-
-                // If not authorized for all operations, the specific operation is checked.
-                if (user.Claims.Any(c => c.ClaimType == claimType && c.ClaimValue == id))
-                {
-                    return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
-                }
-            }
-
-            // No authorizations found.
-            return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Unauthorized });
+            _signInManager = signInManager;
+            _tokenOptions = tokenOptions.Value;
+            _userManager = userManager;
         }
 
         [HttpGet]
@@ -219,6 +122,12 @@ namespace MVCCoreVue.Controllers
             }
 
             var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user.AdminLocked)
+            {
+                model.Errors.Add($"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance.");
+                return model;
+            }
 
             // Sign in the user with this external login provider if the user already has a login.
             var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, rememberUser);
@@ -226,14 +135,13 @@ namespace MVCCoreVue.Controllers
             {
                 _logger.LogInformation(LogEvent.LOGIN_EXTERNAL, "User {USER} logged in with {PROVIDER}.", info.Principal.FindFirstValue(ClaimTypes.Email), info.LoginProvider);
                 model.Redirect = true;
-                var user = await _userManager.FindByEmailAsync(email);
-                model.Token = await GetLoginToken(model.Email, user);
+                model.Token = GetLoginToken(model.Email, user, _userManager, _tokenOptions);
                 return model;
             }
             else
             {
                 // If the user does not have an account, then create one.
-                var user = new ApplicationUser { UserName = email, Email = email };
+                user = new ApplicationUser { UserName = email, Email = email };
                 var newResult = await _userManager.CreateAsync(user);
                 if (newResult.Succeeded)
                 {
@@ -252,13 +160,17 @@ namespace MVCCoreVue.Controllers
         }
 
         [HttpPost]
-        public async Task ForgotPassword([FromBody]LoginViewModel model)
+        public async Task<IActionResult> ForgotPassword([FromBody]LoginViewModel model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
             {
                 // Don't reveal that the user does not exist or is not confirmed
-                return;
+                return Ok();
+            }
+            if (user.AdminLocked)
+            {
+                return Json(new { error = $"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance." });
             }
 
             // For more information on how to enable account confirmation and password reset please visit https://go.microsoft.com/fwlink/?LinkID=532713
@@ -268,7 +180,7 @@ namespace MVCCoreVue.Controllers
             await _emailSender.SendEmailAsync(model.Email, "Reset Password",
                 $"Please reset your password by clicking here: <a href='{callbackUrl}'>{callbackUrl}</a>");
             _logger.LogInformation(LogEvent.RESET_PW_REQUEST, "Password reset request received for {USER}.", user.Email);
-            return;
+            return Ok();
         }
 
         [HttpGet]
@@ -277,7 +189,11 @@ namespace MVCCoreVue.Controllers
             return Json(new { providers = _signInManager.GetExternalAuthenticationSchemes().Select(s => s.DisplayName).ToArray() });
         }
 
-        private async Task<string> GetLoginToken(string email, ApplicationUser user)
+        internal static string GetLoginToken(
+            string email,
+            ApplicationUser user,
+            UserManager<ApplicationUser> userManager,
+            TokenProviderOptions tokenOptions)
         {
             var now = DateTime.UtcNow;
             var claims = new List<Claim>
@@ -288,16 +204,11 @@ namespace MVCCoreVue.Controllers
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, (now.Subtract(new DateTime(1970, 1, 1))).TotalSeconds.ToString(), ClaimValueTypes.Integer64)
             };
-            var roles = await _userManager.GetRolesAsync(user);
-            if (roles != null)
-            {
-                claims.AddRange(roles.Select(r => new Claim("role", r)));
-            }
             var jwt = new JwtSecurityToken(
                 claims: claims,
                 notBefore: now,
-                expires: now.Add(_options.Expiration),
-                signingCredentials: _options.SigningCredentials);
+                expires: now.Add(tokenOptions.Expiration),
+                signingCredentials: tokenOptions.SigningCredentials);
             var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
             return encodedJwt;
         }
@@ -344,6 +255,11 @@ namespace MVCCoreVue.Controllers
             }
             else
             {
+                if (user.AdminLocked)
+                {
+                    model.Errors.Add($"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance.");
+                    return model;
+                }
                 if (!await _userManager.IsEmailConfirmedAsync(user))
                 {
                     model.Errors.Add("You must have a confirmed email to log in. Please check your email for your confirmation link. If you've lost the email, please register again.");
@@ -360,7 +276,7 @@ namespace MVCCoreVue.Controllers
                 return model;
             }
 
-            model.Token = await GetLoginToken(model.Email, user);
+            model.Token = GetLoginToken(model.Email, user, _userManager, _tokenOptions);
 
             _logger.LogInformation(LogEvent.LOGIN, "User {USER} logged in.", user.Email);
             model.Redirect = true;
@@ -382,7 +298,11 @@ namespace MVCCoreVue.Controllers
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user != null)
             {
-                if (!user.EmailConfirmed)
+                if (user.AdminLocked)
+                {
+                    model.Errors.Add($"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance.");
+                }
+                else if (!user.EmailConfirmed)
                 {
                     await SendConfirmationEmail(model, user);
                     model.Errors.Add("An account with this email has already been registered, but your email address has not been confirmed. A new link has just been sent, in case the last one got lost. Please check your spam if you don't see it after a few minutes.");
@@ -423,6 +343,11 @@ namespace MVCCoreVue.Controllers
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user != null)
             {
+                if (user.AdminLocked)
+                {
+                    model.Errors.Add($"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance.");
+                    return model;
+                }
                 var result = await _userManager.ResetPasswordAsync(user, model.Code, model.NewPassword);
                 if (result.Succeeded)
                 {
@@ -445,6 +370,10 @@ namespace MVCCoreVue.Controllers
             }
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null || (user.NewEmail == null && user.OldEmail == null))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (user.AdminLocked)
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }

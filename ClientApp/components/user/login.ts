@@ -1,6 +1,6 @@
 ﻿import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import { checkResponse } from '../../router';
+import { checkResponse, ApiResponseViewModel } from '../../router';
 import * as ErrorMsg from '../../error-msg';
 import VueFormGenerator from 'vue-form-generator';
 
@@ -106,6 +106,7 @@ export default class LoginComponent extends Vue {
 
     resetPassword() {
         if (!this.isValid) return;
+        this.submitting = true;
         this.model.errors = [];
         fetch('/api/Account/ForgotPassword',
             {
@@ -114,9 +115,20 @@ export default class LoginComponent extends Vue {
                     'Authorization': `bearer ${this.$store.state.token}`
                 }
             })
-            .catch(error => ErrorMsg.showErrorMsgAndLog("login.resetPassword", "A problem occurred. Your request was not received.", new Error(error)));
-        this.passwordReset = true;
-        this.forgottenPassword = false;
+            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(data => {
+                if (data.error) {
+                    this.model.errors.push(data.error);
+                } else {
+                    this.passwordReset = true;
+                    this.forgottenPassword = false;
+                    this.submitting = false;
+                }
+            })
+            .catch(error => {
+                this.model.errors.push("A problem occurred. Your request was not received.");
+                ErrorMsg.logError("login.resetPassword", new Error(error));
+            });
     }
 
     onSignInProvider(provider: string) {
@@ -149,7 +161,8 @@ export default class LoginComponent extends Vue {
                 this.submitting = false;
             })
             .catch(error => {
-                ErrorMsg.showErrorMsgAndLog("login.onSubmit", "A problem occurred. Login failed.", new Error(error));
+                this.model.errors.push("A problem occurred. Login failed.");
+                ErrorMsg.logError("login.onSubmit", new Error(error));
                 this.submitting = false;
             });
     }
@@ -183,7 +196,8 @@ export default class LoginComponent extends Vue {
                 this.submitting = false;
             })
             .catch(error => {
-                ErrorMsg.showErrorMsgAndLog("login.onSubmit", "A problem occurred. Login failed.", new Error(error));
+                this.model.errors.push("A problem occurred. Login failed.");
+                ErrorMsg.logError("login.onSubmit", new Error(error));
                 this.submitting = false;
             });
     }

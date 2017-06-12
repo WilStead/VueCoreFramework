@@ -9,5 +9,6 @@ namespace MVCCoreVue.Models
         public string NewEmail { get; set; }
         public string OldEmail { get; set; }
         public DateTime LastEmailChange { get; set; }
+        public bool AdminLocked { get; set; }
     }
 }

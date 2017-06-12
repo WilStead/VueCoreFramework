@@ -1,5 +1,5 @@
-﻿using MVCCoreVue.Data;
-using MVCCoreVue.Data.Attributes;
+﻿using MVCCoreVue.Data.Attributes;
+using Newtonsoft.Json;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -13,13 +13,9 @@ namespace MVCCoreVue.Models
     }
 
     [ChildClass(Category = "Country")]
-    public class Leader : DataItem
+    public class Leader : NamedDataItem
     {
-        [Required]
-        [Range(3, 25)]
-        public string Name { get; set; }
-
-        [Range(0, 150)]
+        [Range(17, 150)]
         public int Age { get; set; }
 
         [DataType(DataType.Date)]
@@ -43,6 +39,13 @@ namespace MVCCoreVue.Models
         [Display(Prompt = "Marital Status")]
         public MaritalStatus MaritalStatus { get; set; }
 
-        public override string ToString() => Name;
+        [ForeignKey(nameof(Country))]
+        [Display(AutoGenerateField = false)]
+        public Guid LeaderCountryId { get; set; }
+
+        [JsonIgnore]
+        [Required]
+        [Display(AutoGenerateField = false)]
+        public virtual Country Country { get; set; }
     }
 }

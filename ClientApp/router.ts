@@ -34,7 +34,7 @@ const routes = [
     },
     { path: '/fetchdata', component: resolve => require(['./components/fetchdata/fetchdata.vue'], resolve) },
     { path: '/error/notfound', component: resolve => require(['./components/error/notfound.vue'], resolve) },
-    { path: '/error/:code', component: resolve => require(['./components/error/error.vue'], resolve) }
+    { path: '/error/:code', component: resolve => require(['./components/error/error.vue'], resolve), props: true }
 ];
 
 export const router = new VueRouter({
@@ -72,6 +72,7 @@ router.beforeEach((to, from, next) => {
 });
 
 export interface ApiResponseViewModel {
+    error: string,
     response: string
 }
 
@@ -81,13 +82,13 @@ interface AuthorizationViewModel {
     authorization: string
 }
 export function checkAuthorization(to, returnPath): Promise<string> {
-    let url = '/api/Account/Authorize';
-    if (to.name && to.name.length) {
+    let url = '/api/Authorization/Authorize';
+    if (to && to.name && to.name.length) {
         let n: string = to.name;
         let op: string;
         let id: string;
         if (n.endsWith("DataTable")) {
-            n = n.substring(0, n.length - 5);
+            n = n.substring(0, n.length - 9);
         } else {
             op = to.params.operation;
             id = to.params.id;

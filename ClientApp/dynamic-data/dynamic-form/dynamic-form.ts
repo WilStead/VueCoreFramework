@@ -90,7 +90,7 @@ export default class DynamicFormComponent extends Vue {
         this.isValid = isValid;
     }
 
-    addFieldToSchema(field: FieldDefinition) {
+    addFieldToSchema(field: FieldDefinition, beginning: boolean) {
         let newField: FieldDefinition = Object.assign({}, field);
         if (newField.type.startsWith("object")) {
             if (newField.type === "object" || newField.type === "objectSelect") {
@@ -116,7 +116,7 @@ export default class DynamicFormComponent extends Vue {
                     }
                     this.addObjectButtons(newField, idField);
                 }
-            } else {
+            } else if (newField.type === "objectMultiSelect") {
                 newField.buttons = [{
                     classes: 'btn btn--dark btn--flat info--text',
                     label: 'View/Edit',
@@ -132,12 +132,34 @@ export default class DynamicFormComponent extends Vue {
                         });
                     }
                 }];
+            } else {
+                newField.buttons = [{
+                    classes: 'btn btn--dark btn--flat info--text',
+                    label: 'View/Edit',
+                    onclick: function (model, field) {
+                        router.push({
+                            name: newField.inputType + "Table",
+                            params: {
+                                operation: 'collection',
+                                parentType: model.dataType,
+                                parentId: model.id,
+                                parentProp: newField.model
+                            }
+                        });
+                    }
+                }];
             }
             newField.type = "label";
         }
         if (field.groupName) {
             let group = this.schema.groups.find(g => g.legend == field.groupName);
-            group.fields.push(newField);
+            if (beginning) {
+                group.fields.unshift(newField);
+            } else {
+                group.fields.push(newField);
+            }
+        } else if (beginning) {
+            this.schema.fields.unshift(newField);
         } else {
             this.schema.fields.push(newField);
         }
@@ -163,14 +185,16 @@ export default class DynamicFormComponent extends Vue {
                 }
             });
         }
-        newField.buttons.push({
-            classes: 'btn btn--dark btn--flat info--text',
-            label: 'View/Edit',
-            onclick: function (model, field) {
-                router.push({ name: newField.inputType, params: { operation: 'details', id: model[field.model + "Id"] } });
-            }
-        });
-        if (this.operation === "edit" && !newField.required) {
+        if (this.model[idField.model]) {
+            newField.buttons.push({
+                classes: 'btn btn--dark btn--flat info--text',
+                label: 'View/Edit',
+                onclick: function (model, field) {
+                    router.push({ name: newField.inputType, params: { operation: 'details', id: model[field.model + "Id"] } });
+                }
+            });
+        }
+        if (this.operation === "edit" && !newField.required && this.model[idField.model]) {
             newField.buttons.push({
                 classes: 'btn btn--dark btn--flat error--text',
                 label: 'Delete',
@@ -178,7 +202,6 @@ export default class DynamicFormComponent extends Vue {
                     event.stopPropagation();
                     Vue.set(model, 'deleteDialogShown', true);
                     model.deleteProp = field.model;
-                    model.deleteId = model[field.model + "Id"];
                 }
             });
         }
@@ -202,52 +225,26 @@ export default class DynamicFormComponent extends Vue {
                 updateTimestamp: timestamp
             }
         );
+        if (this.parentType && this.parentId) {
+            d[this.parentProp + this.parentType + 'Id'] = this.parentId;
+        }
         // Remove unsupported or null properties from the ViewModel before sending for update,
         // to avoid errors when overwriting values with the placeholders.
+        delete d.dataType;
+        delete d.deleteProp;
         for (var prop in d) {
-            if (d[prop] === "[None]" || d[prop] === "[...]") {
+            if (d[prop] === "[...]" || d[prop] === "[None]") {
                 delete d[prop];
             }
         }
-        delete d.dataType;
         this.repository.add(this.$route.fullPath, d)
             .then(data => {
                 if (data.error) {
                     this.errorMessage = data.error;
-                } else if (this.parentRepository && this.parentProp) {
-                    this.parentRepository.find(this.$route.fullPath, this.parentId)
-                        .then(data => {
-                            if (data.error) {
-                                this.errorMessage = data.error;
-                                this.activity = false;
-                            } else {
-                                let vm = data.data;
-                                vm[this.parentProp + "Id"] = data.data.id;
-                                this.parentRepository.update(this.$route.fullPath, vm)
-                                    .then(data => {
-                                        if (data.error) {
-                                            this.errorMessage = data.error;
-                                        } else {
-                                            this.$router.go(-1);
-                                        }
-                                        this.errorMessage = '';
-                                        this.activity = false;
-                                    })
-                                    .catch(error => {
-                                        this.errorMessage = "A problem occurred. The item could not be updated.";
-                                        this.activity = false;
-                                        ErrorMsg.logError("dynamic-form.onCreate", new Error(error));
-                                    });
-                            }
-                        })
-                        .catch(error => {
-                            this.errorMessage = "A problem occurred while updating the data.";
-                            this.activity = false;
-                            ErrorMsg.logError("dynamic-form.onCreate", new Error(error));
-                        });
                 } else {
                     this.$router.go(-1);
                 }
+                this.errorMessage = '';
                 this.activity = false;
             })
             .catch(error => {
@@ -293,12 +290,13 @@ export default class DynamicFormComponent extends Vue {
             this.model);
         // Remove unsupported or null properties from the ViewModel before sending for update,
         // to avoid errors when overwriting values with the placeholders.
+        delete d.dataType;
+        delete d.deleteProp;
         for (var prop in d) {
             if (d[prop] === "[None]" || d[prop] === "[...]") {
                 delete d[prop];
             }
         }
-        delete d.dataType;
         this.repository.update(this.$route.fullPath, d)
             .then(data => {
                 if (data.error) {
@@ -347,7 +345,7 @@ export default class DynamicFormComponent extends Vue {
                                 this.model[prop] = this.vm[prop];
                             }
                             this.vmDefinition.forEach(field => {
-                                this.addFieldToSchema(field);
+                                this.addFieldToSchema(field, field.label === "Name" || field.placeholder === "Name");
                             });
                             if (this.operation === 'details') {
                                 this.schema.fields.forEach(f => f.disabled = true);

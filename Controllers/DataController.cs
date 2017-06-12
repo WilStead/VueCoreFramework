@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using MVCCoreVue.Data;
 using MVCCoreVue.Data.Attributes;
 using MVCCoreVue.Extensions;
+using MVCCoreVue.Models;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
@@ -34,7 +35,7 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            IRepository repository = GetRepository(type);
+            IRepository repository = GetRepository(type, _context);
             try
             {
                 var newItem = await repository.AddAsync(obj);
@@ -49,7 +50,7 @@ namespace MVCCoreVue.Controllers
         [HttpPost("{id}/{childProp}")]
         public async Task<IActionResult> AddToParentCollection(string dataType, string id, string childProp, [FromBody]string[] childIds)
         {
-            if (!TryGetRepository(dataType, out IRepository repository))
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
@@ -96,7 +97,7 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            if (!TryGetRepository(pInfo.PropertyType.GetTypeInfo().GenericTypeArguments.FirstOrDefault().Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1), out IRepository childRepository))
+            if (!TryGetRepository(_context, pInfo.PropertyType.GetTypeInfo().GenericTypeArguments.FirstOrDefault().Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1), out IRepository childRepository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
@@ -115,7 +116,7 @@ namespace MVCCoreVue.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Find(string dataType, string id)
         {
-            if (!TryGetRepository(dataType, out IRepository repository))
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
@@ -146,7 +147,7 @@ namespace MVCCoreVue.Controllers
         [HttpGet]
         public IActionResult GetAll(string dataType)
         {
-            if (!TryGetRepository(dataType, out IRepository repository))
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
@@ -159,7 +160,7 @@ namespace MVCCoreVue.Controllers
             string id,
             string childProp)
         {
-            if (!TryGetRepository(dataType, out IRepository repository))
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
@@ -232,7 +233,7 @@ namespace MVCCoreVue.Controllers
             int page,
             int rowsPerPage)
         {
-            if (!TryGetRepository(dataType, out IRepository repository))
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
@@ -285,7 +286,7 @@ namespace MVCCoreVue.Controllers
         [HttpGet("{id}/{childProp}")]
         public async Task<IActionResult> GetChildTotal(string dataType, string id, string childProp)
         {
-            if (!TryGetRepository(dataType, out IRepository repository))
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
@@ -362,7 +363,7 @@ namespace MVCCoreVue.Controllers
         [HttpGet]
         public IActionResult GetFieldDefinitions(string dataType)
         {
-            if (!TryGetRepository(dataType, out IRepository repository))
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
@@ -386,7 +387,7 @@ namespace MVCCoreVue.Controllers
             int rowsPerPage,
             [FromBody]string[] except)
         {
-            if (!TryGetRepository(dataType, out IRepository repository))
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
@@ -415,7 +416,7 @@ namespace MVCCoreVue.Controllers
         [HttpGet]
         public async Task<IActionResult> GetTotal(string dataType)
         {
-            if (!TryGetRepository(dataType, out IRepository repository))
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
@@ -456,7 +457,7 @@ namespace MVCCoreVue.Controllers
         [HttpPost("{id}")]
         public async Task<IActionResult> Remove(string dataType, string id)
         {
-            if (!TryGetRepository(dataType, out IRepository repository))
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
@@ -474,7 +475,7 @@ namespace MVCCoreVue.Controllers
             }
             catch
             {
-                return Json(new { response = "Item could not be removed." });
+                return Json(new { error = "Item could not be removed." });
             }
             return Ok();
         }
@@ -482,7 +483,7 @@ namespace MVCCoreVue.Controllers
         [HttpPost("{id}/{childProp}")]
         public async Task<IActionResult> RemoveFromParentCollection(string dataType, string id, string childProp, [FromBody]string[] childIds)
         {
-            if (!TryGetRepository(dataType, out IRepository repository))
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
@@ -529,7 +530,7 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            if (!TryGetRepository(pInfo.PropertyType.GetTypeInfo().GenericTypeArguments.FirstOrDefault().Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1), out IRepository childRepository))
+            if (!TryGetRepository(_context, pInfo.PropertyType.GetTypeInfo().GenericTypeArguments.FirstOrDefault().Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1), out IRepository childRepository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
@@ -548,7 +549,7 @@ namespace MVCCoreVue.Controllers
         [HttpPost]
         public async Task<IActionResult> RemoveRange(string dataType, [FromBody]List<string> ids)
         {
-            if (!TryGetRepository(dataType, out IRepository repository))
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
@@ -574,19 +575,19 @@ namespace MVCCoreVue.Controllers
             }
             catch
             {
-                return Json(new { response = "One or more items could not be removed." });
+                return Json(new { error = "One or more items could not be removed." });
             }
             return Ok();
         }
 
-        private bool TryGetRepository(string dataType, out IRepository repository)
+        internal static bool TryGetRepository(ApplicationDbContext context, string dataType, out IRepository repository)
         {
             repository = null;
             if (string.IsNullOrEmpty(dataType))
             {
                 return false;
             }
-            var entity = _context.Model.GetEntityTypes().FirstOrDefault(e => e.Name.Substring(e.Name.LastIndexOf('.') + 1) == dataType);
+            var entity = context.Model.GetEntityTypes().FirstOrDefault(e => e.Name.Substring(e.Name.LastIndexOf('.') + 1) == dataType);
             if (entity == null)
             {
                 return false;
@@ -596,12 +597,12 @@ namespace MVCCoreVue.Controllers
             {
                 return false;
             }
-            repository = (IRepository)Activator.CreateInstance(typeof(Repository<>).MakeGenericType(type), _context);
+            repository = GetRepository(type, context);
             return true;
         }
 
-        private IRepository GetRepository(Type type)
-            => (IRepository)Activator.CreateInstance(typeof(Repository<>).MakeGenericType(type), _context);
+        private static IRepository GetRepository(Type type, ApplicationDbContext context)
+            => (IRepository)Activator.CreateInstance(typeof(Repository<>).MakeGenericType(type), context);
 
         private bool TryResolveObject(string dataType, JObject item, out DataItem obj, out Type type)
         {
@@ -639,7 +640,7 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            IRepository repository = GetRepository(type);
+            IRepository repository = GetRepository(type, _context);
             try
             {
                 var updatedItem = await repository.UpdateAsync(obj);

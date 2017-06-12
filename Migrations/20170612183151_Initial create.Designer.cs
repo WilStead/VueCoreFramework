@@ -9,8 +9,8 @@ using MVCCoreVue.Models;
 namespace MVCCoreVue.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20170607154929_Add leader times")]
-    partial class Addleadertimes
+    [Migration("20170612183151_Initial create")]
+    partial class Initialcreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -125,12 +125,50 @@ namespace MVCCoreVue.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
+            modelBuilder.Entity("MVCCoreVue.Models.Airline", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("AllPermissions");
+
+                    b.Property<Guid?>("CountryId");
+
+                    b.Property<DateTime>("CreationTimestamp");
+
+                    b.Property<string>("Name")
+                        .IsRequired();
+
+                    b.Property<DateTime>("UpdateTimestamp");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CountryId");
+
+                    b.ToTable("Airline");
+                });
+
+            modelBuilder.Entity("MVCCoreVue.Models.AirlineCountry", b =>
+                {
+                    b.Property<Guid>("CountryId");
+
+                    b.Property<Guid>("AirlineId");
+
+                    b.HasKey("CountryId", "AirlineId");
+
+                    b.HasIndex("AirlineId");
+
+                    b.ToTable("AirlineCountry");
+                });
+
             modelBuilder.Entity("MVCCoreVue.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<int>("AccessFailedCount");
+
+                    b.Property<bool>("AdminLocked");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken();
@@ -186,9 +224,13 @@ namespace MVCCoreVue.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<Guid?>("CountryId");
+                    b.Property<string>("AllPermissions");
+
+                    b.Property<Guid>("CitiesCountryId");
 
                     b.Property<DateTime>("CreationTimestamp");
+
+                    b.Property<DateTime>("LocalTimeAtGMTMidnight");
 
                     b.Property<string>("Name")
                         .IsRequired();
@@ -201,7 +243,7 @@ namespace MVCCoreVue.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CountryId");
+                    b.HasIndex("CitiesCountryId");
 
                     b.ToTable("Cities");
                 });
@@ -211,11 +253,15 @@ namespace MVCCoreVue.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<Guid>("CapitolId");
+                    b.Property<string>("AllPermissions");
+
+                    b.Property<Guid?>("CapitolId");
 
                     b.Property<DateTime>("CreationTimestamp");
 
                     b.Property<double>("EpiIndex");
+
+                    b.Property<string>("FlagPrimaryColor");
 
                     b.Property<Guid>("LeaderId");
 
@@ -228,8 +274,6 @@ namespace MVCCoreVue.Migrations
 
                     b.HasIndex("CapitolId");
 
-                    b.HasIndex("LeaderId");
-
                     b.ToTable("Countries");
                 });
 
@@ -240,20 +284,27 @@ namespace MVCCoreVue.Migrations
 
                     b.Property<int>("Age");
 
+                    b.Property<string>("AllPermissions");
+
                     b.Property<DateTime>("Birthdate");
 
                     b.Property<DateTime>("CreationTimestamp");
+
+                    b.Property<Guid>("LeaderCountryId");
 
                     b.Property<int>("MaritalStatus");
 
                     b.Property<string>("Name")
                         .IsRequired();
 
-                    b.Property<TimeSpan>("TimeInOffice");
+                    b.Property<long>("TimeInOfficeTicks");
 
                     b.Property<DateTime>("UpdateTimestamp");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("LeaderCountryId")
+                        .IsUnique();
 
                     b.ToTable("Leaders");
                 });
@@ -322,23 +373,46 @@ namespace MVCCoreVue.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("MVCCoreVue.Models.City", b =>
+            modelBuilder.Entity("MVCCoreVue.Models.Airline", b =>
                 {
                     b.HasOne("MVCCoreVue.Models.Country")
-                        .WithMany("Cities")
+                        .WithMany("Airlines")
                         .HasForeignKey("CountryId");
+                });
+
+            modelBuilder.Entity("MVCCoreVue.Models.AirlineCountry", b =>
+                {
+                    b.HasOne("MVCCoreVue.Models.Airline", "Airline")
+                        .WithMany("AirlineCountries")
+                        .HasForeignKey("AirlineId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("MVCCoreVue.Models.Country", "Country")
+                        .WithMany("CountryAirlines")
+                        .HasForeignKey("CountryId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("MVCCoreVue.Models.City", b =>
+                {
+                    b.HasOne("MVCCoreVue.Models.Country", "CitiesCountry")
+                        .WithMany("Cities")
+                        .HasForeignKey("CitiesCountryId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("MVCCoreVue.Models.Country", b =>
                 {
                     b.HasOne("MVCCoreVue.Models.City", "Capitol")
                         .WithMany()
-                        .HasForeignKey("CapitolId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("CapitolId");
+                });
 
-                    b.HasOne("MVCCoreVue.Models.Leader", "Leader")
-                        .WithMany()
-                        .HasForeignKey("LeaderId")
+            modelBuilder.Entity("MVCCoreVue.Models.Leader", b =>
+                {
+                    b.HasOne("MVCCoreVue.Models.Country", "Country")
+                        .WithOne("Leader")
+                        .HasForeignKey("MVCCoreVue.Models.Leader", "LeaderCountryId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
         }

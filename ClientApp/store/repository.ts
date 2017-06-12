@@ -332,10 +332,10 @@ export class Repository {
             .then(response => checkResponse(response, returnPath))
             .then(response => response.json() as Promise<ApiResponseViewModel>)
             .then(data => {
-                if (data.response) {
+                if (data.error) {
                     return {
                         data: undefined,
-                        error: data.response
+                        error: data.error
                     };
                 }
                 return { data: undefined, error: undefined };
@@ -376,7 +376,7 @@ export class Repository {
         if (ids === undefined || ids === null || !ids.length) {
             return Promise.reject("The item ids were missing from your request.");
         }
-        return fetch(`/api/Data/${this.dataType}/Remove`,
+        return fetch(`/api/Data/${this.dataType}/RemoveRange`,
             {
                 method: 'POST',
                 headers: {
@@ -389,10 +389,10 @@ export class Repository {
             .then(response => checkResponse(response, returnPath))
             .then(response => response.json() as Promise<ApiResponseViewModel>)
             .then(data => {
-                if (data.response) {
+                if (data.error) {
                     return {
                         data: undefined,
-                        error: data.response
+                        error: data.error
                     };
                 }
                 return { data: undefined, error: undefined };

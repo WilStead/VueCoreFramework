@@ -138,28 +138,44 @@ export default class DynamicTableComponent extends Vue {
         this.loading = true;
         return new Promise((resolve, reject) => {
             const { sortBy, descending, page, rowsPerPage } = this.pagination;
-            if (this.parentRepository && this.operation === "multiselect") {
-                this.parentRepository.getAllChildIds(this.$route.fullPath, this.parentId, this.parentProp)
-                    .then(childIds => {
-                        this.repository.getPage(this.$route.fullPath, this.search, sortBy, descending, page, rowsPerPage, childIds)
-                            .then(data => {
-                                this.loading = false;
-                                resolve({
-                                    items: data.pageItems,
-                                    total: data.totalItems
+            if (this.parentRepository) {
+                if (this.operation === "multiselect") {
+                    this.parentRepository.getAllChildIds(this.$route.fullPath, this.parentId, this.parentProp)
+                        .then(childIds => {
+                            this.repository.getPage(this.$route.fullPath, this.search, sortBy, descending, page, rowsPerPage, childIds)
+                                .then(data => {
+                                    this.loading = false;
+                                    resolve({
+                                        items: data.pageItems,
+                                        total: data.totalItems
+                                    });
+                                })
+                                .catch(error => {
+                                    this.loading = false;
+                                    ErrorMsg.logError("dynamic-table.getData", new Error(error));
+                                    reject("A problem occurred while loading the data.");
                                 });
-                            })
-                            .catch(error => {
-                                this.loading = false;
-                                ErrorMsg.logError("dynamic-table.getData", new Error(error));
-                                reject("A problem occurred while loading the data.");
+                        })
+                        .catch(error => {
+                            this.loading = false;
+                            ErrorMsg.logError("dynamic-table.getData", new Error(error));
+                            reject("A problem occurred while loading the data.");
+                        });
+                } else {
+                    this.parentRepository.getChildPage(this.$route.fullPath, this.parentId, this.parentProp, this.search, sortBy, descending, page, rowsPerPage)
+                        .then(data => {
+                            this.loading = false;
+                            resolve({
+                                items: data.pageItems,
+                                total: data.totalItems
                             });
-                    })
-                    .catch(error => {
-                        this.loading = false;
-                        ErrorMsg.logError("dynamic-table.getData", new Error(error));
-                        reject("A problem occurred while loading the data.");
-                    });
+                        })
+                        .catch(error => {
+                            this.loading = false;
+                            ErrorMsg.logError("dynamic-table.getData", new Error(error));
+                            reject("A problem occurred while loading the data.");
+                        });
+                }
             } else {
                 this.repository.getPage(this.$route.fullPath, this.search, sortBy, descending, page, rowsPerPage)
                     .then(data => {
@@ -277,7 +293,19 @@ export default class DynamicTableComponent extends Vue {
     }
 
     onNew() {
-        this.$router.push({ name: this.routeName, params: { operation: 'create', id: Date.now().toString() } });
+        if (this.operation === 'collection') {
+            this.$router.push({
+                name: this.routeName, params: {
+                    operation: 'create',
+                    id: Date.now().toString(),
+                    parentType: this.parentType,
+                    parentId: this.parentId,
+                    parentProp: this.parentProp
+                }
+            });
+        } else {
+            this.$router.push({ name: this.routeName, params: { operation: 'create', id: Date.now().toString() } });
+        }
     }
 
     onRemoveSelect() {

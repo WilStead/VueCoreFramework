@@ -1,8 +1,9 @@
-﻿using MVCCoreVue.Data;
-using MVCCoreVue.Data.Attributes;
+﻿using MVCCoreVue.Data.Attributes;
+using Newtonsoft.Json;
 using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MVCCoreVue.Models
 {
@@ -18,12 +19,8 @@ namespace MVCCoreVue.Models
     }
 
     [MenuClass(Category = "Country")]
-    public class City : DataItem
+    public class City : NamedDataItem
     {
-        [Required]
-        [Range(3, 25)]
-        public string Name { get; set; }
-
         [Display(Prompt = "Local time at GMT midnight")]
         [DataType(DataType.Time)]
         public DateTime LocalTimeAtGMTMidnight { get; set; }
@@ -33,6 +30,12 @@ namespace MVCCoreVue.Models
 
         public CityTransit Transit { get; set; }
 
-        public override string ToString() => Name;
+        [Display(AutoGenerateField = false)]
+        public Guid CitiesCountryId { get; set; }
+
+        [JsonIgnore]
+        [InverseProperty(nameof(Country.Cities))]
+        [Display(AutoGenerateField = false)]
+        public virtual Country CitiesCountry { get; set; }
     }
 }

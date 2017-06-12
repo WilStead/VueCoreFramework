@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MVCCoreVue.Data.Attributes;
 using MVCCoreVue.Extensions;
+using MVCCoreVue.Models;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -352,6 +352,14 @@ namespace MVCCoreVue.Data
             {
                 var name = ptInfo.GenericTypeArguments.FirstOrDefault().Name;
                 fd.InputType = name.Substring(name.LastIndexOf('.') + 1).ToInitialLower();
+                fd.Type = "objectCollection";
+            }
+            else if (ptInfo.IsGenericType
+                && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>))
+                && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem)))
+            {
+                var name = ptInfo.GenericTypeArguments.FirstOrDefault().Name;
+                fd.InputType = name.Substring(name.LastIndexOf('.') + 1).ToInitialLower();
                 fd.Type = "objectMultiSelect";
             }
             else
@@ -521,7 +529,8 @@ namespace MVCCoreVue.Data
                 var ptInfo = pInfo.PropertyType.GetTypeInfo();
                 var dataType = pInfo.GetCustomAttribute<DataTypeAttribute>();
                 if (ptInfo.IsGenericType
-                    && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
+                    && (ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>))
+                    || ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>)))
                     && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem)))
                 {
                     int count = (int)ptInfo.GetGenericTypeDefinition()

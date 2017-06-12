@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace MVCCoreVue.Migrations
 {
-    public partial class InitialCreate : Migration
+    public partial class Initialcreate : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -43,13 +43,17 @@ namespace MVCCoreVue.Migrations
                 {
                     Id = table.Column<string>(nullable: false),
                     AccessFailedCount = table.Column<int>(nullable: false),
+                    AdminLocked = table.Column<bool>(nullable: false),
                     ConcurrencyStamp = table.Column<string>(nullable: true),
                     Email = table.Column<string>(maxLength: 256, nullable: true),
                     EmailConfirmed = table.Column<bool>(nullable: false),
+                    LastEmailChange = table.Column<DateTime>(nullable: false),
                     LockoutEnabled = table.Column<bool>(nullable: false),
                     LockoutEnd = table.Column<DateTimeOffset>(nullable: true),
+                    NewEmail = table.Column<string>(nullable: true),
                     NormalizedEmail = table.Column<string>(maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(maxLength: 256, nullable: true),
+                    OldEmail = table.Column<string>(nullable: true),
                     PasswordHash = table.Column<string>(nullable: true),
                     PhoneNumber = table.Column<string>(nullable: true),
                     PhoneNumberConfirmed = table.Column<bool>(nullable: false),
@@ -60,6 +64,25 @@ namespace MVCCoreVue.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Logs",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    Callsite = table.Column<string>(nullable: true),
+                    Exception = table.Column<string>(nullable: true),
+                    Level = table.Column<string>(maxLength: 50, nullable: false),
+                    Logger = table.Column<string>(maxLength: 250, nullable: true),
+                    Message = table.Column<string>(nullable: true),
+                    Timestamp = table.Column<DateTime>(nullable: false),
+                    Url = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Logs", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -148,6 +171,110 @@ namespace MVCCoreVue.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "AirlineCountry",
+                columns: table => new
+                {
+                    CountryId = table.Column<Guid>(nullable: false),
+                    AirlineId = table.Column<Guid>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AirlineCountry", x => new { x.CountryId, x.AirlineId });
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Countries",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    AllPermissions = table.Column<string>(nullable: true),
+                    CapitolId = table.Column<Guid>(nullable: true),
+                    CreationTimestamp = table.Column<DateTime>(nullable: false),
+                    EpiIndex = table.Column<double>(nullable: false),
+                    FlagPrimaryColor = table.Column<string>(nullable: true),
+                    LeaderId = table.Column<Guid>(nullable: false),
+                    Name = table.Column<string>(nullable: false),
+                    UpdateTimestamp = table.Column<DateTime>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Countries", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Airline",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    AllPermissions = table.Column<string>(nullable: true),
+                    CountryId = table.Column<Guid>(nullable: true),
+                    CreationTimestamp = table.Column<DateTime>(nullable: false),
+                    Name = table.Column<string>(nullable: false),
+                    UpdateTimestamp = table.Column<DateTime>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Airline", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Airline_Countries_CountryId",
+                        column: x => x.CountryId,
+                        principalTable: "Countries",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Cities",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    AllPermissions = table.Column<string>(nullable: true),
+                    CitiesCountryId = table.Column<Guid>(nullable: false),
+                    CreationTimestamp = table.Column<DateTime>(nullable: false),
+                    LocalTimeAtGMTMidnight = table.Column<DateTime>(nullable: false),
+                    Name = table.Column<string>(nullable: false),
+                    Population = table.Column<int>(nullable: false),
+                    Transit = table.Column<int>(nullable: false),
+                    UpdateTimestamp = table.Column<DateTime>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Cities", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Cities_Countries_CitiesCountryId",
+                        column: x => x.CitiesCountryId,
+                        principalTable: "Countries",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Leaders",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    Age = table.Column<int>(nullable: false),
+                    AllPermissions = table.Column<string>(nullable: true),
+                    Birthdate = table.Column<DateTime>(nullable: false),
+                    CreationTimestamp = table.Column<DateTime>(nullable: false),
+                    LeaderCountryId = table.Column<Guid>(nullable: false),
+                    MaritalStatus = table.Column<int>(nullable: false),
+                    Name = table.Column<string>(nullable: false),
+                    TimeInOfficeTicks = table.Column<long>(nullable: false),
+                    UpdateTimestamp = table.Column<DateTime>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Leaders", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Leaders_Countries_LeaderCountryId",
+                        column: x => x.LeaderCountryId,
+                        principalTable: "Countries",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "RoleNameIndex",
                 table: "AspNetRoles",
@@ -175,6 +302,16 @@ namespace MVCCoreVue.Migrations
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Airline_CountryId",
+                table: "Airline",
+                column: "CountryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AirlineCountry_AirlineId",
+                table: "AirlineCountry",
+                column: "AirlineId");
+
+            migrationBuilder.CreateIndex(
                 name: "EmailIndex",
                 table: "AspNetUsers",
                 column: "NormalizedEmail");
@@ -184,10 +321,54 @@ namespace MVCCoreVue.Migrations
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Cities_CitiesCountryId",
+                table: "Cities",
+                column: "CitiesCountryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Countries_CapitolId",
+                table: "Countries",
+                column: "CapitolId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Leaders_LeaderCountryId",
+                table: "Leaders",
+                column: "LeaderCountryId",
+                unique: true);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_AirlineCountry_Countries_CountryId",
+                table: "AirlineCountry",
+                column: "CountryId",
+                principalTable: "Countries",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_AirlineCountry_Airline_AirlineId",
+                table: "AirlineCountry",
+                column: "AirlineId",
+                principalTable: "Airline",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Countries_Cities_CapitolId",
+                table: "Countries",
+                column: "CapitolId",
+                principalTable: "Cities",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_Cities_Countries_CitiesCountryId",
+                table: "Cities");
+
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 
@@ -204,10 +385,28 @@ namespace MVCCoreVue.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "AirlineCountry");
+
+            migrationBuilder.DropTable(
+                name: "Leaders");
+
+            migrationBuilder.DropTable(
+                name: "Logs");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "Airline");
+
+            migrationBuilder.DropTable(
+                name: "Countries");
+
+            migrationBuilder.DropTable(
+                name: "Cities");
         }
     }
 }
