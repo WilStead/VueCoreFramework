@@ -17,6 +17,7 @@
                   :persistent-hint="schema.hint !== undefined"
                   :prepend-icon="schema.icon"
                   :prefix="schema.prefix"
+                  :readonly="schema.readonly"
                   :required="schema.required"
                   :rows="schema.rows"
                   :step="schema.step"

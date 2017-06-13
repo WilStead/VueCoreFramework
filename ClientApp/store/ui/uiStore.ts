@@ -121,26 +121,43 @@ export function getChildItems(router: any): Promise<void> {
         .then(data => {
             for (var i = 0; i < data.length; i++) {
                 let name = data[i].toLowerCase();
+
                 router.addRoutes([{
                     path: `/data/${name}`,
                     meta: { requiresAuth: true },
                     component: require('../../components/data/dashboard.vue'),
                     props: { title: data[i] },
-                    children: [{
-                        name,
-                        path: ':operation/:id/:parentType?/:parentId?/:parentProp?/:childProp?',
-                        component: require('../../dynamic-data/dynamic-form/dynamic-form.vue'),
-                        props: (route) => ({
-                            childProp: route.params.childProp,
-                            id: route.params.id,
-                            operation: route.params.operation,
-                            parentId: route.params.parentId,
-                            parentProp: route.params.parentProp,
-                            parentType: route.params.parentType,
-                            repositoryType: data[i],
-                            routeName: name
-                        })
-                    }]
+                    children: [
+                        {
+                            name: name + "DataTable",
+                            path: 'table/:operation?/:parentType?/:parentId?/:parentProp?/:childProp?',
+                            component: require('../../dynamic-data/dynamic-table/dynamic-table.vue'),
+                            props: (route) => ({
+                                childProp: route.params.childProp,
+                                operation: route.params.operation,
+                                parentId: route.params.parentId,
+                                parentProp: route.params.parentProp,
+                                parentType: route.params.parentType,
+                                repositoryType: data[i],
+                                routeName: name
+                            })
+                        },
+                        {
+                            name: name,
+                            path: ':operation/:id/:parentType?/:parentId?/:parentProp?/:childProp?',
+                            component: require('../../dynamic-data/dynamic-form/dynamic-form.vue'),
+                            props: (route) => ({
+                                childProp: route.params.childProp,
+                                id: route.params.id,
+                                operation: route.params.operation,
+                                parentId: route.params.parentId,
+                                parentProp: route.params.parentProp,
+                                parentType: route.params.parentType,
+                                repositoryType: data[i],
+                                routeName: name
+                            })
+                        }
+                    ]
                 }]);
             }
         })

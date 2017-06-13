@@ -333,42 +333,29 @@ export default class DynamicTableComponent extends Vue {
             });
     }
 
-    onSelectItems() {
+    onSelectItem() {
         if (!this.selected.length) {
             this.selectErrorDialogMessage = "You have not selected an item.";
             this.selectErrorDialogShown = true;
         } else if (this.selected.length > 1) {
             this.selectErrorDialogMessage = "You can only select a single item.";
             this.selectErrorDialogShown = true;
-        } else if (this.parentRepository && this.parentProp) {
-            this.parentRepository.find(this.$route.fullPath, this.parentId)
+        } else if (this.childProp) {
+            let vm = this.selected[0];
+            vm[this.childProp + 'Id'] = this.parentId;
+            this.repository.update(this.$route.fullPath, this.selected[0])
                 .then(data => {
                     if (data.error) {
                         this.errorMessage = data.error;
-                        this.activity = false;
                     } else {
-                        let vm = data.data;
-                        vm[this.parentProp + "Id"] = this.selected[0].id;
-                        this.parentRepository.update(this.$route.fullPath, vm)
-                            .then(data => {
-                                if (data.error) {
-                                    this.errorMessage = data.error;
-                                } else {
-                                    this.$router.go(-1);
-                                }
-                                this.activity = false;
-                            })
-                            .catch(error => {
-                                this.errorMessage = "A problem occurred. The item could not be updated.";
-                                this.activity = false;
-                                ErrorMsg.logError("dynamic-table.onSelectItems", new Error(error));
-                            });
+                        this.$router.go(-1);
                     }
+                    this.activity = false;
                 })
                 .catch(error => {
-                    this.errorMessage = "A problem occurred while updating the data.";
+                    this.errorMessage = "A problem occurred. The item could not be updated.";
                     this.activity = false;
-                    ErrorMsg.logError("dynamic-table.onSelectItems", new Error(error));
+                    ErrorMsg.logError("dynamic-table.onSelectItem", new Error(error));
                 });
         } else {
             this.errorMessage = "There was a problem saving your selection. Please try going back to the previous page before trying again.";

@@ -81,18 +81,6 @@ namespace MVCCoreVue.Models
         public City Capitol { get; set; }
 
         /// <summary>
-        /// The foreign key for <see cref="Capitol"/>.
-        /// </summary>
-        /// <remarks>
-        /// Although Entity Framework can automatically create foreign keys, the SPA framework
-        /// requires explicitly defined foreign keys for one-to-one relationships, which must fit the
-        /// pattern {navigation property name}+'Id'. Guid properties are never shown by the
-        /// framework, so it isn't necessary to mark it as hidden. Since this key is nullable, the
-        /// relationship is zero-or-one-to-one, rather than one-to-one (i.e., not required).
-        /// </remarks>
-        public Guid? CapitolId { get; set; }
-
-        /// <summary>
         /// The cities of the country.
         /// </summary>
         /// <remarks>
@@ -114,13 +102,5 @@ namespace MVCCoreVue.Models
         [JsonIgnore]
         [InverseProperty(nameof(Models.Leader.Country))]
         public Leader Leader { get; set; }
-
-        /// <summary>
-        /// The foreign key for <see cref="Leader"/>.
-        /// </summary>
-        /// <remarks>
-        /// Since this relationship is required (one-to-one), the key is not nullable.
-        /// </remarks>
-        public Guid LeaderId { get; set; }
     }
 }

@@ -25,22 +25,6 @@ namespace MVCCoreVue.Data
             // For example, you can rename the ASP.NET Identity table names and more.
             // Add your customizations after calling base.OnModelCreating(builder);
 
-            builder.Entity<Country>()
-                .HasOne(c => c.Leader)
-                .WithOne(c => c.Country)
-                .HasForeignKey<Leader>(c => c.CountryId)
-                .OnDelete(Microsoft.EntityFrameworkCore.Metadata.DeleteBehavior.Cascade);
-            builder.Entity<Country>()
-                .HasOne(c => c.Capitol)
-                .WithOne(c => c.CountryCapitol)
-                .HasForeignKey<City>(c => c.CountryCapitolId)
-                .OnDelete(Microsoft.EntityFrameworkCore.Metadata.DeleteBehavior.Restrict);
-            builder.Entity<Country>()
-                .HasMany(c => c.Cities)
-                .WithOne(c => c.Country)
-                .HasForeignKey(c => c.CountryId)
-                .OnDelete(Microsoft.EntityFrameworkCore.Metadata.DeleteBehavior.Cascade);
-
             builder.Entity<AirlineCountry>()
                 .HasKey(c => new { c.CountriesId, c.AirlinesId });
             builder.Entity<AirlineCountry>()

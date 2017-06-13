@@ -92,6 +92,13 @@ namespace MVCCoreVue.Models
         /// <summary>
         /// The foreign key for <see cref="Country"/>.
         /// </summary>
+        /// <remarks>
+        /// Although Entity Framework can automatically create foreign keys, the SPA framework
+        /// requires explicitly defined foreign keys for one-to-one relationships, which must fit the
+        /// pattern {navigation property name}+'Id'. Guid properties are never shown by the
+        /// framework, so it isn't necessary to mark it as hidden. Since this key is nullable, the
+        /// relationship is zero-or-one-to-one, rather than one-to-one (i.e., not required).
+        /// </remarks>
         public Guid CountryId { get; set; }
 
         /// <summary>
@@ -105,6 +112,6 @@ namespace MVCCoreVue.Models
         /// <summary>
         /// The foreign key for <see cref="CountryCapitol"/>.
         /// </summary>
-        public Guid CountryCapitolId { get; set; }
+        public Guid? CountryCapitolId { get; set; }
     }
 }

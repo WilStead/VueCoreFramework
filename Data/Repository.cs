@@ -179,11 +179,15 @@ namespace MVCCoreVue.Data
                 return fd;
             }
 
-            if (hidden?.HideInTable == true) fd.HideInTable = true;
+            if (hidden?.HideInTable == true)
+            {
+                fd.HideInTable = true;
+            }
 
             var dataType = pInfo.GetCustomAttribute<DataTypeAttribute>();
             var step = pInfo.GetCustomAttribute<StepAttribute>();
             var ptInfo = pInfo.PropertyType.GetTypeInfo();
+            var nullable = Nullable.GetUnderlyingType(pInfo.PropertyType) != null;
 
             if (!string.IsNullOrEmpty(dataType?.CustomDataType))
             {
@@ -214,6 +218,7 @@ namespace MVCCoreVue.Data
                             fd.Step = 0.01;
                         }
                         fd.Validator = "number";
+                        fd.Required = !nullable;
                         break;
                     case DataType.Date:
                         fd.Type = "vuetifyDateTime";
@@ -240,6 +245,7 @@ namespace MVCCoreVue.Data
                         {
                             fd.Step = 0.001;
                         }
+                        fd.Required = !nullable;
                         break;
                     case DataType.EmailAddress:
                         fd.Type = "vuetifyText";
@@ -291,6 +297,7 @@ namespace MVCCoreVue.Data
                 || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(bool))
             {
                 fd.Type = "vuetifyCheckbox";
+                fd.Required = !nullable;
             }
             else if (pInfo.PropertyType == typeof(DateTime))
             {
@@ -312,6 +319,7 @@ namespace MVCCoreVue.Data
                 {
                     fd.Step = 0.001;
                 }
+                fd.Required = !nullable;
             }
             else if (ptInfo.IsEnum)
             {
@@ -357,6 +365,7 @@ namespace MVCCoreVue.Data
                     fd.Step = 1;
                 }
                 fd.Validator = "number";
+                fd.Required = !nullable;
             }
             else if (pInfo.PropertyType == typeof(DataItem) || ptInfo.IsSubclassOf(typeof(DataItem)))
             {
@@ -430,11 +439,24 @@ namespace MVCCoreVue.Data
             if (!string.IsNullOrWhiteSpace(help?.HelpText))
                 fd.Help = help?.HelpText;
 
-            fd.Required = pInfo.GetCustomAttribute<RequiredAttribute>() != null;
+            if (pInfo.GetCustomAttribute<RequiredAttribute>() != null)
+            {
+                fd.Required = true;
+            }
+
+            if (pInfo.GetCustomAttribute<EditableAttribute>()?.AllowEdit == false)
+            {
+                if (fd.Type == "vuetifyText")
+                {
+                    fd.Readonly = true;
+                }
+                else
+                {
+                    fd.Disabled = true;
+                }
+            }
 
             fd.Default = pInfo.GetCustomAttribute<DefaultAttribute>()?.Default;
-
-            fd.Disabled = pInfo.GetCustomAttribute<EditableAttribute>()?.AllowEdit == false;
 
             var range = pInfo.GetCustomAttribute<RangeAttribute>();
             fd.Min = range?.Minimum;
@@ -598,9 +620,18 @@ namespace MVCCoreVue.Data
                     || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(TimeSpan))
                 {
                     var name = pInfo.Name.ToInitialLower();
-                    var value = (TimeSpan)pInfo.GetValue(item);
-                    vm[name] = value;
-                    vm[name + "Formatted"] = value.ToString("c");
+                    var value = pInfo.GetValue(item);
+                    if (value == null)
+                    {
+                        vm[name] = value;
+                        vm[name + "Formatted"] = "[None]";
+                    }
+                    else
+                    {
+                        var ts = (TimeSpan)value;
+                        vm[name] = value;
+                        vm[name + "Formatted"] = ts.ToString("c");
+                    }
                 }
                 else if (pInfo.PropertyType == typeof(Guid)
                     || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(Guid))

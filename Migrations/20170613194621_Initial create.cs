@@ -87,11 +87,9 @@ namespace MVCCoreVue.Migrations
                 {
                     Id = table.Column<Guid>(nullable: false),
                     AllPermissions = table.Column<string>(nullable: true),
-                    CapitolId = table.Column<Guid>(nullable: true),
                     CreationTimestamp = table.Column<DateTime>(nullable: false),
                     EpiIndex = table.Column<double>(nullable: false),
                     FlagPrimaryColor = table.Column<string>(nullable: true),
-                    LeaderId = table.Column<Guid>(nullable: false),
                     Name = table.Column<string>(nullable: false),
                     UpdateTimestamp = table.Column<DateTime>(nullable: false)
                 },
@@ -235,7 +233,7 @@ namespace MVCCoreVue.Migrations
                 {
                     Id = table.Column<Guid>(nullable: false),
                     AllPermissions = table.Column<string>(nullable: true),
-                    CountryCapitolId = table.Column<Guid>(nullable: false),
+                    CountryCapitolId = table.Column<Guid>(nullable: true),
                     CountryId = table.Column<Guid>(nullable: false),
                     CreationTimestamp = table.Column<DateTime>(nullable: false),
                     LocalTimeAtGMTMidnight = table.Column<DateTime>(nullable: false),

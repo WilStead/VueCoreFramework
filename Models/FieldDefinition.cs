@@ -19,6 +19,7 @@ namespace MVCCoreVue.Models
         public string Pattern { get; set; }
         public string Placeholder { get; set; }
         public string Prefix { get; set; }
+        public bool? Readonly { get; set; }
         public bool? Required { get; set; }
         public int? Rows { get; set; }
         public double? Step { get; set; }

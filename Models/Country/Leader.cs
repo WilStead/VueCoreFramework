@@ -56,15 +56,18 @@ namespace MVCCoreVue.Models
         /// <summary>
         /// Foreign key for <see cref="Country"/>
         /// </summary>
+        /// <remarks>
+        /// Since this relationship is required (one-to-one), the key is not nullable.
+        /// </remarks>
         public Guid CountryId { get; set; }
 
         /// <summary>
         /// The marital status of the leader.
         /// </summary>
         /// <remarks>
-        /// Enum properties must not be nullable, since the selection controls have no way to
-        /// indicate an unset value. Use a 'None' value in your enum if you wish an unset value to be
-        /// represented in your data.
+        /// Mullable Enum properties are treated exactly the same as required ones by the framework,
+        /// since the selection controls have no way to indicate an unset value. Use a 'None' value
+        /// in your enum if you wish an unset value to be represented in your data.
         /// </remarks>
         [Display(Prompt = "Marital Status")]
         public MaritalStatus MaritalStatus { get; set; }

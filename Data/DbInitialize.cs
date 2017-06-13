@@ -423,16 +423,16 @@ namespace MVCCoreVue.Data
                 context.Cities.AddRange(cities);
                 context.SaveChanges();
                 var cityList = context.Cities.ToList();
-                countries[0].CapitolId = cityList[0].Id;
-                countries[1].CapitolId = cityList[2].Id;
-                countries[2].CapitolId = cityList[3].Id;
-                countries[3].CapitolId = cityList[5].Id;
-                countries[4].CapitolId = cityList[6].Id;
-                countries[5].CapitolId = cityList[8].Id;
-                countries[6].CapitolId = cityList[10].Id;
-                countries[7].CapitolId = cityList[12].Id;
-                countries[8].CapitolId = cityList[14].Id;
-                countries[9].CapitolId = cityList[16].Id;
+                countries[0].Capitol = cityList[0];
+                countries[1].Capitol = cityList[2];
+                countries[2].Capitol = cityList[3];
+                countries[3].Capitol = cityList[5];
+                countries[4].Capitol = cityList[6];
+                countries[5].Capitol = cityList[8];
+                countries[6].Capitol = cityList[10];
+                countries[7].Capitol = cityList[12];
+                countries[8].Capitol = cityList[14];
+                countries[9].Capitol = cityList[16];
                 context.SaveChanges();
             }
         }

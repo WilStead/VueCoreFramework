@@ -96,7 +96,7 @@
         <v-card-row v-else>
             <div v-if="operation === 'select'" class="submit-row condensed">
                 <v-btn dark default @click.native="onCancel">Cancel</v-btn>
-                <v-btn dark primary @click.native.stop="onSelectItems">Submit</v-btn>
+                <v-btn dark primary @click.native.stop="onSelectItem">Submit</v-btn>
             </div>
             <div v-else-if="operation === 'multiselect' || operation === 'collection'" class="submit-row condensed">
                 <v-btn dark primary @click.native="onCancel">Finish</v-btn>

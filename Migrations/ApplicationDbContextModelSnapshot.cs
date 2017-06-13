@@ -221,7 +221,7 @@ namespace MVCCoreVue.Migrations
 
                     b.Property<string>("AllPermissions");
 
-                    b.Property<Guid>("CountryCapitolId");
+                    b.Property<Guid?>("CountryCapitolId");
 
                     b.Property<Guid>("CountryId");
 
@@ -255,15 +255,11 @@ namespace MVCCoreVue.Migrations
 
                     b.Property<string>("AllPermissions");
 
-                    b.Property<Guid?>("CapitolId");
-
                     b.Property<DateTime>("CreationTimestamp");
 
                     b.Property<double>("EpiIndex");
 
                     b.Property<string>("FlagPrimaryColor");
-
-                    b.Property<Guid>("LeaderId");
 
                     b.Property<string>("Name")
                         .IsRequired();

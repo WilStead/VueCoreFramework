@@ -108,8 +108,9 @@ export default class DynamicFormComponent extends Vue {
                             label: 'Select',
                             onclick: function (model, field) {
                                 router.push({
-                                    name: newField.inputType + "Table",
+                                    name: newField.inputType + "DataTable",
                                     params: {
+                                        childProp: newField.placeholder,
                                         operation: 'select',
                                         parentType: model.dataType,
                                         parentId: model.id,
@@ -127,7 +128,7 @@ export default class DynamicFormComponent extends Vue {
                     label: 'View/Edit',
                     onclick: function (model, field) {
                         router.push({
-                            name: newField.inputType + "Table",
+                            name: newField.inputType + "DataTable",
                             params: {
                                 operation: 'multiselect',
                                 parentType: model.dataType,
@@ -143,7 +144,7 @@ export default class DynamicFormComponent extends Vue {
                     label: 'View/Edit',
                     onclick: function (model, field) {
                         router.push({
-                            name: newField.inputType + "Table",
+                            name: newField.inputType + "DataTable",
                             params: {
                                 childProp: newField.placeholder,
                                 operation: 'collection',
@@ -236,9 +237,6 @@ export default class DynamicFormComponent extends Vue {
                 updateTimestamp: timestamp
             }
         );
-        if (this.childProp && this.parentId) {
-            d[this.childProp + 'Id'] = this.parentId;
-        }
         // Remove unsupported or null properties from the ViewModel before sending for update,
         // to avoid errors when overwriting values with the placeholders.
         delete d.dataType;
@@ -247,6 +245,9 @@ export default class DynamicFormComponent extends Vue {
             if (d[prop] === "[...]" || d[prop] === "[None]") {
                 delete d[prop];
             }
+        }
+        if (this.childProp && this.parentId) {
+            d[this.childProp + 'Id'] = this.parentId;
         }
         this.repository.add(this.$route.fullPath, d)
             .then(data => {
