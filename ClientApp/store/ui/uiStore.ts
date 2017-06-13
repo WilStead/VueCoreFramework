@@ -53,9 +53,10 @@ function addMenuItem(menu: MenuItem, router: any, name: string, fullCategory: st
             children: [
                 {
                     name: lowerName + "DataTable",
-                    path: 'table/:operation?/:parentType?/:parentId?/:parentProp?',
+                    path: 'table/:operation?/:parentType?/:parentId?/:parentProp?/:childProp?',
                     component: require('../../dynamic-data/dynamic-table/dynamic-table.vue'),
                     props: (route) => ({
+                        childProp: route.params.childProp,
                         operation: route.params.operation,
                         parentId: route.params.parentId,
                         parentProp: route.params.parentProp,
@@ -66,9 +67,10 @@ function addMenuItem(menu: MenuItem, router: any, name: string, fullCategory: st
                 },
                 {
                     name: lowerName,
-                    path: ':operation/:id/:parentType?/:parentId?/:parentProp?',
+                    path: ':operation/:id/:parentType?/:parentId?/:parentProp?/:childProp?',
                     component: require('../../dynamic-data/dynamic-form/dynamic-form.vue'),
                     props: (route) => ({
+                        childProp: route.params.childProp,
                         id: route.params.id,
                         operation: route.params.operation,
                         parentId: route.params.parentId,
@@ -126,9 +128,10 @@ export function getChildItems(router: any): Promise<void> {
                     props: { title: data[i] },
                     children: [{
                         name,
-                        path: ':operation/:id/:parentType?/:parentId?/:parentProp?',
+                        path: ':operation/:id/:parentType?/:parentId?/:parentProp?/:childProp?',
                         component: require('../../dynamic-data/dynamic-form/dynamic-form.vue'),
                         props: (route) => ({
+                            childProp: route.params.childProp,
                             id: route.params.id,
                             operation: route.params.operation,
                             parentId: route.params.parentId,

@@ -9,8 +9,7 @@
     ///
     /// The navigation properties of an IDataItemMtM object *must* be named exactly the same as the
     /// navigation properties of the entities they join (change of pluralization is not allowed).
-    /// This allows the framework to find the correct property which represents the opposite side of
-    /// the relationship.
+    /// This allows the framework to find the correct properties in the relationship.
     /// </remarks>
     public interface IDataItemMtM { }
 }

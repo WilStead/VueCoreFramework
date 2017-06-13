@@ -9,6 +9,9 @@ import { router } from '../../router';
 @Component
 export default class DynamicFormComponent extends Vue {
     @Prop()
+    childProp: string;
+
+    @Prop()
     id: string;
 
     @Prop()
@@ -93,7 +96,9 @@ export default class DynamicFormComponent extends Vue {
     addFieldToSchema(field: FieldDefinition, beginning: boolean) {
         let newField: FieldDefinition = Object.assign({}, field);
         if (newField.type.startsWith("object")) {
-            if (newField.type === "object" || newField.type === "objectSelect") {
+            if (newField.type === "object"
+                || newField.type === "objectSelect"
+                || newField.type == "objectReference") {
                 let idField = this.vmDefinition.find(v => v.model === newField.model + "Id");
                 if (idField) {
                     newField.buttons = [];
@@ -140,6 +145,7 @@ export default class DynamicFormComponent extends Vue {
                         router.push({
                             name: newField.inputType + "Table",
                             params: {
+                                childProp: newField.placeholder,
                                 operation: 'collection',
                                 parentType: model.dataType,
                                 parentId: model.id,
@@ -167,7 +173,8 @@ export default class DynamicFormComponent extends Vue {
 
     addObjectButtons(newField: FieldDefinition, idField: FieldDefinition) {
         if (this.operation === "edit"
-            && (newField.type === "objectSelect" || !this.model[idField.model])) {
+            && (newField.type === "objectSelect"
+                || !this.model[idField.model])) {
             newField.buttons.push({
                 classes: 'btn btn--dark btn--flat success--text',
                 label: 'Add',
@@ -175,6 +182,7 @@ export default class DynamicFormComponent extends Vue {
                     router.push({
                         name: newField.inputType,
                         params: {
+                            childProp: newField.placeholder,
                             operation: 'create',
                             id: Date.now().toString(),
                             parentType: model.dataType,
@@ -194,7 +202,10 @@ export default class DynamicFormComponent extends Vue {
                 }
             });
         }
-        if (this.operation === "edit" && !newField.required && this.model[idField.model]) {
+        if (this.operation === "edit"
+            && newField.type !== "objectReference"
+            && !newField.required
+            && this.model[idField.model]) {
             newField.buttons.push({
                 classes: 'btn btn--dark btn--flat error--text',
                 label: 'Delete',
@@ -225,8 +236,8 @@ export default class DynamicFormComponent extends Vue {
                 updateTimestamp: timestamp
             }
         );
-        if (this.parentType && this.parentId) {
-            d[this.parentProp + this.parentType + 'Id'] = this.parentId;
+        if (this.childProp && this.parentId) {
+            d[this.childProp + 'Id'] = this.parentId;
         }
         // Remove unsupported or null properties from the ViewModel before sending for update,
         // to avoid errors when overwriting values with the placeholders.

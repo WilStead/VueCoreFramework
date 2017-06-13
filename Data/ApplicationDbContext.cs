@@ -7,9 +7,10 @@ namespace MVCCoreVue.Data
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public DbSet<Log> Logs { get; set; }
+
         public DbSet<Airline> Airlines { get; set; }
-        public DbSet<Country> Countries { get; set; }
         public DbSet<City> Cities { get; set; }
+        public DbSet<Country> Countries { get; set; }
         public DbSet<Leader> Leaders { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
@@ -23,10 +24,21 @@ namespace MVCCoreVue.Data
             // Customize the ASP.NET Identity model and override the defaults if needed.
             // For example, you can rename the ASP.NET Identity table names and more.
             // Add your customizations after calling base.OnModelCreating(builder);
+
             builder.Entity<Country>()
                 .HasOne(c => c.Leader)
                 .WithOne(c => c.Country)
-                .HasForeignKey<Leader>(c => c.LeaderCountryId)
+                .HasForeignKey<Leader>(c => c.CountryId)
+                .OnDelete(Microsoft.EntityFrameworkCore.Metadata.DeleteBehavior.Cascade);
+            builder.Entity<Country>()
+                .HasOne(c => c.Capitol)
+                .WithOne(c => c.CountryCapitol)
+                .HasForeignKey<City>(c => c.CountryCapitolId)
+                .OnDelete(Microsoft.EntityFrameworkCore.Metadata.DeleteBehavior.Restrict);
+            builder.Entity<Country>()
+                .HasMany(c => c.Cities)
+                .WithOne(c => c.Country)
+                .HasForeignKey(c => c.CountryId)
                 .OnDelete(Microsoft.EntityFrameworkCore.Metadata.DeleteBehavior.Cascade);
 
             builder.Entity<AirlineCountry>()

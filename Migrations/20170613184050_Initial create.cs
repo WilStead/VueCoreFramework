@@ -38,6 +38,21 @@ namespace MVCCoreVue.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Airlines",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    AllPermissions = table.Column<string>(nullable: true),
+                    CreationTimestamp = table.Column<DateTime>(nullable: false),
+                    Name = table.Column<string>(nullable: false),
+                    UpdateTimestamp = table.Column<DateTime>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Airlines", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AspNetUsers",
                 columns: table => new
                 {
@@ -64,6 +79,25 @@ namespace MVCCoreVue.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Countries",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    AllPermissions = table.Column<string>(nullable: true),
+                    CapitolId = table.Column<Guid>(nullable: true),
+                    CreationTimestamp = table.Column<DateTime>(nullable: false),
+                    EpiIndex = table.Column<double>(nullable: false),
+                    FlagPrimaryColor = table.Column<string>(nullable: true),
+                    LeaderId = table.Column<Guid>(nullable: false),
+                    Name = table.Column<string>(nullable: false),
+                    UpdateTimestamp = table.Column<DateTime>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Countries", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -175,53 +209,24 @@ namespace MVCCoreVue.Migrations
                 name: "AirlineCountry",
                 columns: table => new
                 {
-                    CountryId = table.Column<Guid>(nullable: false),
-                    AirlineId = table.Column<Guid>(nullable: false)
+                    CountriesId = table.Column<Guid>(nullable: false),
+                    AirlinesId = table.Column<Guid>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_AirlineCountry", x => new { x.CountryId, x.AirlineId });
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Countries",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(nullable: false),
-                    AllPermissions = table.Column<string>(nullable: true),
-                    CapitolId = table.Column<Guid>(nullable: true),
-                    CreationTimestamp = table.Column<DateTime>(nullable: false),
-                    EpiIndex = table.Column<double>(nullable: false),
-                    FlagPrimaryColor = table.Column<string>(nullable: true),
-                    LeaderId = table.Column<Guid>(nullable: false),
-                    Name = table.Column<string>(nullable: false),
-                    UpdateTimestamp = table.Column<DateTime>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Countries", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Airline",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(nullable: false),
-                    AllPermissions = table.Column<string>(nullable: true),
-                    CountryId = table.Column<Guid>(nullable: true),
-                    CreationTimestamp = table.Column<DateTime>(nullable: false),
-                    Name = table.Column<string>(nullable: false),
-                    UpdateTimestamp = table.Column<DateTime>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Airline", x => x.Id);
+                    table.PrimaryKey("PK_AirlineCountry", x => new { x.CountriesId, x.AirlinesId });
                     table.ForeignKey(
-                        name: "FK_Airline_Countries_CountryId",
-                        column: x => x.CountryId,
+                        name: "FK_AirlineCountry_Airlines_AirlinesId",
+                        column: x => x.AirlinesId,
+                        principalTable: "Airlines",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_AirlineCountry_Countries_CountriesId",
+                        column: x => x.CountriesId,
                         principalTable: "Countries",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -230,7 +235,8 @@ namespace MVCCoreVue.Migrations
                 {
                     Id = table.Column<Guid>(nullable: false),
                     AllPermissions = table.Column<string>(nullable: true),
-                    CitiesCountryId = table.Column<Guid>(nullable: false),
+                    CountryCapitolId = table.Column<Guid>(nullable: false),
+                    CountryId = table.Column<Guid>(nullable: false),
                     CreationTimestamp = table.Column<DateTime>(nullable: false),
                     LocalTimeAtGMTMidnight = table.Column<DateTime>(nullable: false),
                     Name = table.Column<string>(nullable: false),
@@ -242,8 +248,14 @@ namespace MVCCoreVue.Migrations
                 {
                     table.PrimaryKey("PK_Cities", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Cities_Countries_CitiesCountryId",
-                        column: x => x.CitiesCountryId,
+                        name: "FK_Cities_Countries_CountryCapitolId",
+                        column: x => x.CountryCapitolId,
+                        principalTable: "Countries",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Cities_Countries_CountryId",
+                        column: x => x.CountryId,
                         principalTable: "Countries",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -257,8 +269,8 @@ namespace MVCCoreVue.Migrations
                     Age = table.Column<int>(nullable: false),
                     AllPermissions = table.Column<string>(nullable: true),
                     Birthdate = table.Column<DateTime>(nullable: false),
+                    CountryId = table.Column<Guid>(nullable: false),
                     CreationTimestamp = table.Column<DateTime>(nullable: false),
-                    LeaderCountryId = table.Column<Guid>(nullable: false),
                     MaritalStatus = table.Column<int>(nullable: false),
                     Name = table.Column<string>(nullable: false),
                     TimeInOfficeTicks = table.Column<long>(nullable: false),
@@ -268,8 +280,8 @@ namespace MVCCoreVue.Migrations
                 {
                     table.PrimaryKey("PK_Leaders", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Leaders_Countries_LeaderCountryId",
-                        column: x => x.LeaderCountryId,
+                        name: "FK_Leaders_Countries_CountryId",
+                        column: x => x.CountryId,
                         principalTable: "Countries",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -302,14 +314,9 @@ namespace MVCCoreVue.Migrations
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Airline_CountryId",
-                table: "Airline",
-                column: "CountryId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_AirlineCountry_AirlineId",
+                name: "IX_AirlineCountry_AirlinesId",
                 table: "AirlineCountry",
-                column: "AirlineId");
+                column: "AirlinesId");
 
             migrationBuilder.CreateIndex(
                 name: "EmailIndex",
@@ -323,52 +330,25 @@ namespace MVCCoreVue.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Cities_CitiesCountryId",
+                name: "IX_Cities_CountryCapitolId",
                 table: "Cities",
-                column: "CitiesCountryId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Countries_CapitolId",
-                table: "Countries",
-                column: "CapitolId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Leaders_LeaderCountryId",
-                table: "Leaders",
-                column: "LeaderCountryId",
+                column: "CountryCapitolId",
                 unique: true);
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_AirlineCountry_Countries_CountryId",
-                table: "AirlineCountry",
+            migrationBuilder.CreateIndex(
+                name: "IX_Cities_CountryId",
+                table: "Cities",
+                column: "CountryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Leaders_CountryId",
+                table: "Leaders",
                 column: "CountryId",
-                principalTable: "Countries",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_AirlineCountry_Airline_AirlineId",
-                table: "AirlineCountry",
-                column: "AirlineId",
-                principalTable: "Airline",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Countries_Cities_CapitolId",
-                table: "Countries",
-                column: "CapitolId",
-                principalTable: "Cities",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
+                unique: true);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_Cities_Countries_CitiesCountryId",
-                table: "Cities");
-
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 
@@ -388,6 +368,9 @@ namespace MVCCoreVue.Migrations
                 name: "AirlineCountry");
 
             migrationBuilder.DropTable(
+                name: "Cities");
+
+            migrationBuilder.DropTable(
                 name: "Leaders");
 
             migrationBuilder.DropTable(
@@ -400,13 +383,10 @@ namespace MVCCoreVue.Migrations
                 name: "AspNetUsers");
 
             migrationBuilder.DropTable(
-                name: "Airline");
+                name: "Airlines");
 
             migrationBuilder.DropTable(
                 name: "Countries");
-
-            migrationBuilder.DropTable(
-                name: "Cities");
         }
     }
 }

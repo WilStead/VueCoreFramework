@@ -13,6 +13,9 @@ interface TableHeader {
 @Component
 export default class DynamicTableComponent extends Vue {
     @Prop()
+    childProp: string;
+
+    @Prop()
     operation: string;
 
     @Prop()
@@ -296,8 +299,9 @@ export default class DynamicTableComponent extends Vue {
         if (this.operation === 'collection') {
             this.$router.push({
                 name: this.routeName, params: {
-                    operation: 'create',
+                    childProp: this.childProp,
                     id: Date.now().toString(),
+                    operation: 'create',
                     parentType: this.parentType,
                     parentId: this.parentId,
                     parentProp: this.parentProp

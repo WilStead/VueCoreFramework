@@ -102,7 +102,7 @@ namespace MVCCoreVue.Controllers
                 return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
             }
             // If not, see if it has default authorization for the specific operation
-            if (attrDefaultPermission?.DefaultPermissions?.Contains(claimType) == true)
+            if (attrDefaultPermission?.DefaultPermissions?.Split(';').Any(s => s == claimType) == true)
             {
                 return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
             }
@@ -123,7 +123,7 @@ namespace MVCCoreVue.Controllers
                 {
                     var item = await repository.FindItemAsync(guid);
                     if (item?.AllPermissions?.Equals(CustomClaimTypes.PermissionDataAll) == true
-                        || item?.AllPermissions?.Contains(claimType) == true)
+                        || item?.AllPermissions?.Split(';').Any(s => s == claimType) == true)
                     {
                         return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
                     }

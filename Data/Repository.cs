@@ -5,6 +5,7 @@ using MVCCoreVue.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -45,13 +46,20 @@ namespace MVCCoreVue.Data
         public async Task<IDictionary<string, object>> AddToParentCollectionAsync(DataItem parent, PropertyInfo childProp, IEnumerable<DataItem> children)
         {
             var ptInfo = childProp.PropertyType.GetTypeInfo();
+            var mtmType = ptInfo.GenericTypeArguments.FirstOrDefault();
             var add = ptInfo.GetGenericTypeDefinition()
-                        .MakeGenericType(ptInfo.GenericTypeArguments.FirstOrDefault())
+                        .MakeGenericType(mtmType)
                         .GetMethod("Add");
+            var mtmCon = mtmType.GetConstructor(Type.EmptyTypes);
+            var mtmChildIdProp = mtmType.GetProperty(childProp.Name + "Id");
+            var mtmParentIdProp = mtmType.GetProperties().FirstOrDefault(t => t.PropertyType == typeof(Guid) && t != mtmChildIdProp);
 
             foreach (var child in children)
             {
-                add.Invoke(childProp.GetValue(parent), new object[] { child });
+                var mtm = mtmCon.Invoke(new object[] { });
+                mtmChildIdProp.SetValue(mtm, child.Id);
+                mtmParentIdProp.SetValue(mtm, parent.Id);
+                add.Invoke(childProp.GetValue(parent), new object[] { mtm });
             }
 
             await _context.SaveChangesAsync();
@@ -171,11 +179,11 @@ namespace MVCCoreVue.Data
                 return fd;
             }
 
+            if (hidden?.HideInTable == true) fd.HideInTable = true;
+
             var dataType = pInfo.GetCustomAttribute<DataTypeAttribute>();
             var step = pInfo.GetCustomAttribute<StepAttribute>();
             var ptInfo = pInfo.PropertyType.GetTypeInfo();
-
-            if (hidden?.HideInTable == true) fd.HideInTable = true;
 
             if (!string.IsNullOrEmpty(dataType?.CustomDataType))
             {
@@ -199,7 +207,7 @@ namespace MVCCoreVue.Data
                         fd.InputType = "number";
                         if (step != null)
                         {
-                            fd.Step = step.Step;
+                            fd.Step = Math.Abs(step.Step);
                         }
                         else
                         {
@@ -226,7 +234,7 @@ namespace MVCCoreVue.Data
                         fd.Validator = "timespan";
                         if (step != null)
                         {
-                            fd.Step = step.Step;
+                            fd.Step = Math.Abs(step.Step);
                         }
                         else
                         {
@@ -241,7 +249,6 @@ namespace MVCCoreVue.Data
                     case DataType.MultilineText:
                         fd.Type = "vuetifyText";
                         fd.InputType = "textArea";
-                        fd.Rows = pInfo.GetCustomAttribute<RowsAttribute>()?.Rows;
                         fd.Validator = "string";
                         break;
                     case DataType.Password:
@@ -252,7 +259,8 @@ namespace MVCCoreVue.Data
                     case DataType.PhoneNumber:
                         fd.Type = "vuetifyText";
                         fd.InputType = "telephone";
-                        fd.Validator = "string";
+                        fd.Pattern = @"1?(?:[.\s-]?[2-9]\d{2}[.\s-]?|\s?\([2-9]\d{2}\)\s?)(?:[1-9]\d{2}[.\s-]?\d{4}\s?(?:\s?([xX]|[eE][xX]|[eE][xX]\.|[eE][xX][tT]|[eE][xX][tT]\.)\s?\d{3,4})?|[a-zA-Z]{7})";
+                        fd.Validator = "string_regexp";
                         break;
                     case DataType.PostalCode:
                         fd.Type = "vuetifyText";
@@ -298,7 +306,7 @@ namespace MVCCoreVue.Data
                 fd.Validator = "timespan";
                 if (step != null)
                 {
-                    fd.Step = step.Step;
+                    fd.Step = Math.Abs(step.Step);
                 }
                 else
                 {
@@ -337,7 +345,7 @@ namespace MVCCoreVue.Data
                 {
                     if (step != null)
                     {
-                        fd.Step = step.Step;
+                        fd.Step = Math.Abs(step.Step);
                     }
                     else
                     {
@@ -353,51 +361,51 @@ namespace MVCCoreVue.Data
             else if (pInfo.PropertyType == typeof(DataItem) || ptInfo.IsSubclassOf(typeof(DataItem)))
             {
                 fd.InputType = pInfo.PropertyType.Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1).ToInitialLower();
-                var menuAttr = ptInfo.GetCustomAttribute<MenuClassAttribute>();
-                if (menuAttr != null)
+
+                var inverseAttr = pInfo.GetCustomAttribute<InversePropertyAttribute>();
+                fd.Placeholder = inverseAttr?.Property;
+
+                if (pInfo.GetGetMethod().IsVirtual)
                 {
-                    fd.Type = "objectSelect";
+                    fd.Type = "objectReference";
                 }
                 else
                 {
-                    fd.Type = "object";
+                    var menuAttr = ptInfo.GetCustomAttribute<MenuClassAttribute>();
+                    if (menuAttr != null)
+                    {
+                        fd.Type = "objectSelect";
+                    }
+                    else
+                    {
+                        fd.Type = "object";
+                    }
                 }
             }
             else if (ptInfo.IsGenericType
                 && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
                 && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem)))
             {
+                fd.Type = "objectCollection";
+
                 var name = ptInfo.GenericTypeArguments.FirstOrDefault().Name;
                 fd.InputType = name.Substring(name.LastIndexOf('.') + 1).ToInitialLower();
-                fd.Type = "objectCollection";
+
+                var inverseAttr = pInfo.GetCustomAttribute<InversePropertyAttribute>();
+                fd.Placeholder = inverseAttr?.Property;
             }
             else if (ptInfo.IsGenericType
                 && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
                 && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(IDataItemMtM)))
             {
+                fd.Type = "objectMultiSelect";
+
                 var name = ptInfo.GenericTypeArguments.FirstOrDefault(t => t != typeof(Guid) && !t.Name.EndsWith(pInfo.Name)).Name;
                 fd.InputType = name.Substring(name.LastIndexOf('.') + 1).ToInitialLower();
-                fd.Type = "objectMultiSelect";
             }
             else
             {
                 fd.Type = "label";
-            }
-
-            fd.Default = pInfo.GetCustomAttribute<DefaultAttribute>()?.Default;
-
-            fd.Disabled = pInfo.GetCustomAttribute<EditableAttribute>()?.AllowEdit == false;
-
-            if (fd.Type == "vuetifyText" || fd.Type == "vuetifyCheckbox" || fd.Type == "vuetifySelect")
-            {
-                fd.Icon = pInfo.GetCustomAttribute<IconAttribute>()?.Icon;
-            }
-
-            if (fd.Type == "vuetifyText")
-            {
-                var textAttr = pInfo.GetCustomAttribute<TextAttribute>();
-                fd.Prefix = textAttr?.Prefix;
-                fd.Suffix = textAttr?.Suffix;
             }
 
             var display = pInfo.GetCustomAttribute<DisplayAttribute>();
@@ -422,6 +430,12 @@ namespace MVCCoreVue.Data
             if (!string.IsNullOrWhiteSpace(help?.HelpText))
                 fd.Help = help?.HelpText;
 
+            fd.Required = pInfo.GetCustomAttribute<RequiredAttribute>() != null;
+
+            fd.Default = pInfo.GetCustomAttribute<DefaultAttribute>()?.Default;
+
+            fd.Disabled = pInfo.GetCustomAttribute<EditableAttribute>()?.AllowEdit == false;
+
             var range = pInfo.GetCustomAttribute<RangeAttribute>();
             fd.Min = range?.Minimum;
             fd.Max = range?.Maximum;
@@ -433,10 +447,28 @@ namespace MVCCoreVue.Data
                 fd.Validator = "string_regexp";
             }
 
-            if (pInfo.GetCustomAttribute<RequiredAttribute>() != null)
+            if (fd.Type == "vuetifyText" || fd.Type == "vuetifyCheckbox" || fd.Type == "vuetifySelect")
             {
-                fd.Required = true;
+                fd.Icon = pInfo.GetCustomAttribute<IconAttribute>()?.Icon;
             }
+
+            if (fd.Type == "vuetifyText")
+            {
+                var textAttr = pInfo.GetCustomAttribute<TextAttribute>();
+                fd.Prefix = textAttr?.Prefix;
+                fd.Suffix = textAttr?.Suffix;
+                fd.Rows = textAttr?.Rows;
+                if (fd.Rows < 1)
+                {
+                    fd.Rows = null;
+                }
+                if (fd.Rows > 1)
+                {
+                    fd.InputType = "textArea";
+                }
+            }
+
+            fd.Validator = pInfo.GetCustomAttribute<ValidatorAttribute>()?.Validator;
 
             return fd;
         }
@@ -631,14 +663,12 @@ namespace MVCCoreVue.Data
 
         public async Task<IDictionary<string, object>> RemoveChildrenFromCollectionAsync(DataItem parent, PropertyInfo childProp, IEnumerable<DataItem> children)
         {
-            var ptInfo = childProp.PropertyType.GetTypeInfo();
-            var remove = ptInfo.GetGenericTypeDefinition()
-                        .MakeGenericType(ptInfo.GenericTypeArguments.FirstOrDefault())
-                        .GetMethod("Remove");
+            var mtmType = childProp.PropertyType.GetTypeInfo().GenericTypeArguments.FirstOrDefault();
 
             foreach (var child in children)
             {
-                remove.Invoke(childProp.GetValue(parent), new object[] { child });
+                var mtm = _context.Find(mtmType, parent.Id, child.Id);
+                _context.Remove(mtm);
             }
 
             await _context.SaveChangesAsync();

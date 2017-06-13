@@ -13,26 +13,53 @@ namespace MVCCoreVue.Models
     /// </summary>
     public class DataItem
     {
+        /// <summary>
+        /// The unique ID (primary key) of the item.
+        /// </summary>
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }
 
+        /// <summary>
+        /// The date/time when the item was created.
+        /// </summary>
+        /// <remarks>
+        /// This is set when the item is created by a user on their client, not at time of database insert.
+        /// </remarks>
         [Hidden]
         public DateTime CreationTimestamp { get; set; }
 
+        /// <summary>
+        /// The date/time when the item was last updated.
+        /// </summary>
+        /// <remarks>
+        /// This is set when the item is sent for update by a user on their client, not at time of database update.
+        /// </remarks>
         [Hidden]
         public DateTime UpdateTimestamp { get; set; }
 
+        /// <summary>
+        /// Indicates permissions granted for this item to all users.
+        /// </summary>
+        /// <remarks>
+        /// This may either be <see cref="CustomClaimTypes.PermissionDataAll"/>, or may be any number
+        /// of specific operation permission types, delimited by semicolons (;).
+        /// </remarks>
         [Hidden]
         public string AllPermissions { get; set; }
 
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        /// <remarks>
+        /// The default constructor attempts to set required properties to a default value, and
+        /// properties with a min value to that min. This includes invoking the default parameterless
+        /// constructor for required child <see cref="DataItem"/> objects. Because of this behavior,
+        /// it is important to mark at least one navigation property in any relationship as virtual,
+        /// to avoid an infinite loop.
+        /// </remarks>
         public DataItem()
         {
-            // Default constructor attempts to set required properties to a default value, and
-            // properties with a min value to that min.
-
-            // This includes invoking the default parameterless constructor for required nested
-            // DataItem objects.
             foreach (var pInfo in GetType().GetTypeInfo().GetProperties())
             {
                 // Skip virtual navigation properties to avoid infinite loops.
