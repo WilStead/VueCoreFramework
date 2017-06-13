@@ -341,15 +341,13 @@ namespace MVCCoreVue.Controllers
                 var types = _context.Model.GetEntityTypes()
                     .Select(t => t.ClrType)
                     .Where(t => t.GetTypeInfo().IsSubclassOf(typeof(DataItem)));
-                IDictionary<string, dynamic> classes = new Dictionary<string, dynamic>();
+                List<string> classes = new List<string>();
                 foreach (var type in types)
                 {
                     var attr = type.GetTypeInfo().GetCustomAttribute<MenuClassAttribute>();
                     if (attr == null)
                     {
-                        var childAttr = type.GetTypeInfo().GetCustomAttribute<ChildClassAttribute>();
-                        var category = string.IsNullOrEmpty(childAttr?.Category) ? "/" : childAttr?.Category;
-                        classes.Add(type.Name, new { category = category });
+                        classes.Add(type.Name);
                     }
                 }
                 return Json(classes);

@@ -115,15 +115,15 @@ export function getChildItems(router: any): Promise<void> {
             }
             return response;
         })
-        .then(response => response.json() as Promise<any>)
+        .then(response => response.json() as Promise<Array<string>>)
         .then(data => {
-            for (var dataClass in data) {
-                let name = dataClass.toLowerCase();
+            for (var i = 0; i < data.length; i++) {
+                let name = data[i].toLowerCase();
                 router.addRoutes([{
                     path: `/data/${name}`,
                     meta: { requiresAuth: true },
                     component: require('../../components/data/dashboard.vue'),
-                    props: { title: dataClass },
+                    props: { title: data[i] },
                     children: [{
                         name,
                         path: ':operation/:id/:parentType?/:parentId?/:parentProp?',
@@ -134,7 +134,7 @@ export function getChildItems(router: any): Promise<void> {
                             parentId: route.params.parentId,
                             parentProp: route.params.parentProp,
                             parentType: route.params.parentType,
-                            repositoryType: dataClass,
+                            repositoryType: data[i],
                             routeName: name
                         })
                     }]

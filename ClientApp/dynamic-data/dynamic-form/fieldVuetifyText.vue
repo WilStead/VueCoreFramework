@@ -4,7 +4,7 @@
                   :append-icon="schema.inputType === 'password' ? (pwVis ? 'visibility_off' : 'visibility') : ''"
                   :append-icon-cb="() => (pwVis = !pwVis)"
                   :counter="value.length > schema.max"
-                  :disabled="disabled || schema.readonly"
+                  :disabled="disabled"
                   :errors="errors"
                   :hint="schema.hint"
                   :label="schema.placeholder"

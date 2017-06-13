@@ -11,16 +11,16 @@ namespace MVCCoreVue.Models
     public class Airline : NamedDataItem
     {
         [JsonIgnore]
-        [Display(AutoGenerateField = false)]
-        public ICollection<AirlineCountry> AirlineCountries { get; set; } = new Collection<AirlineCountry>();
+        [Hidden]
+        public ICollection<AirlineCountry> Countries { get; set; } = new Collection<AirlineCountry>();
     }
 
-    public class AirlineCountry
+    public class AirlineCountry : IDataItemMtM
     {
-        public Guid AirlineId { get; set; }
-        public Airline Airline { get; set; }
+        public Guid AirlinesId { get; set; }
+        public Airline Airlines { get; set; }
 
-        public Guid CountryId { get; set; }
-        public Country Country { get; set; }
+        public Guid CountriesId { get; set; }
+        public Country Countries { get; set; }
     }
 }

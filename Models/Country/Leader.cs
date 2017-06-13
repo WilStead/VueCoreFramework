@@ -12,7 +12,6 @@ namespace MVCCoreVue.Models
         Single
     }
 
-    [ChildClass(Category = "Country")]
     public class Leader : NamedDataItem
     {
         [Range(17, 150)]
@@ -40,12 +39,11 @@ namespace MVCCoreVue.Models
         public MaritalStatus MaritalStatus { get; set; }
 
         [ForeignKey(nameof(Country))]
-        [Display(AutoGenerateField = false)]
         public Guid LeaderCountryId { get; set; }
 
         [JsonIgnore]
         [Required]
-        [Display(AutoGenerateField = false)]
+        [Hidden]
         public virtual Country Country { get; set; }
     }
 }

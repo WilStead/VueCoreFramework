@@ -153,9 +153,30 @@ namespace MVCCoreVue.Data
                 Model = pInfo.Name.ToInitialLower()
             };
 
+            if (pInfo.PropertyType == typeof(Guid)
+                    || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(Guid))
+            {
+                fd.Type = "label";
+                fd.HideInTable = true;
+                fd.Visible = false;
+                return fd;
+            }
+
+            var hidden = pInfo.GetCustomAttribute<HiddenAttribute>();
+            if (hidden?.Hidden == true)
+            {
+                fd.Visible = false;
+                fd.HideInTable = true;
+                fd.Type = "label";
+                return fd;
+            }
+
             var dataType = pInfo.GetCustomAttribute<DataTypeAttribute>();
             var step = pInfo.GetCustomAttribute<StepAttribute>();
             var ptInfo = pInfo.PropertyType.GetTypeInfo();
+
+            if (hidden?.HideInTable == true) fd.HideInTable = true;
+
             if (!string.IsNullOrEmpty(dataType?.CustomDataType))
             {
                 if (dataType.CustomDataType == "Color")
@@ -258,7 +279,8 @@ namespace MVCCoreVue.Data
                 fd.InputType = "text";
                 fd.Validator = "string";
             }
-            else if (pInfo.PropertyType == typeof(bool))
+            else if (pInfo.PropertyType == typeof(bool)
+                || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(bool))
             {
                 fd.Type = "vuetifyCheckbox";
             }
@@ -267,7 +289,8 @@ namespace MVCCoreVue.Data
                 fd.Type = "vuetifyDateTime";
                 fd.InputType = "dateTime";
             }
-            else if (pInfo.PropertyType == typeof(TimeSpan))
+            else if (pInfo.PropertyType == typeof(TimeSpan)
+                || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(TimeSpan))
             {
                 fd.Type = "vuetifyTimespan";
                 var formatAttr = pInfo.GetCustomAttribute<DisplayFormatAttribute>();
@@ -281,12 +304,6 @@ namespace MVCCoreVue.Data
                 {
                     fd.Step = 0.001;
                 }
-            }
-            else if (pInfo.PropertyType == typeof(Guid))
-            {
-                fd.Type = "label";
-                fd.HideInTable = true;
-                fd.Visible = false;
             }
             else if (ptInfo.IsEnum)
             {
@@ -355,10 +372,10 @@ namespace MVCCoreVue.Data
                 fd.Type = "objectCollection";
             }
             else if (ptInfo.IsGenericType
-                && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>))
-                && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem)))
+                && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
+                && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(IDataItemMtM)))
             {
-                var name = ptInfo.GenericTypeArguments.FirstOrDefault().Name;
+                var name = ptInfo.GenericTypeArguments.FirstOrDefault(t => t != typeof(Guid) && !t.Name.EndsWith(pInfo.Name)).Name;
                 fd.InputType = name.Substring(name.LastIndexOf('.') + 1).ToInitialLower();
                 fd.Type = "objectMultiSelect";
             }
@@ -367,37 +384,20 @@ namespace MVCCoreVue.Data
                 fd.Type = "label";
             }
 
+            fd.Default = pInfo.GetCustomAttribute<DefaultAttribute>()?.Default;
+
+            fd.Disabled = pInfo.GetCustomAttribute<EditableAttribute>()?.AllowEdit == false;
+
+            if (fd.Type == "vuetifyText" || fd.Type == "vuetifyCheckbox" || fd.Type == "vuetifySelect")
+            {
+                fd.Icon = pInfo.GetCustomAttribute<IconAttribute>()?.Icon;
+            }
+
             if (fd.Type == "vuetifyText")
             {
                 var textAttr = pInfo.GetCustomAttribute<TextAttribute>();
-                fd.Icon = textAttr?.Icon;
                 fd.Prefix = textAttr?.Prefix;
                 fd.Suffix = textAttr?.Suffix;
-            }
-            else if (fd.Type == "vuetifyCheckbox" || fd.Type == "vuetifySelect")
-            {
-                var textAttr = pInfo.GetCustomAttribute<TextAttribute>();
-                fd.Icon = textAttr?.Icon;
-            }
-
-            fd.Default = pInfo.GetCustomAttribute<DefaultAttribute>()?.Default;
-
-            if (pInfo.GetCustomAttribute<EditableAttribute>()?.AllowEdit == false)
-            {
-                if (fd.Type == "vuetifyText"
-                    && (fd.InputType == "text"
-                    || fd.InputType == "url"
-                    || fd.InputType == "telephone"
-                    || fd.InputType == "email"
-                    || fd.InputType == "password"
-                    || fd.InputType == "number"))
-                {
-                    fd.Readonly = true;
-                }
-                else
-                {
-                    fd.Disabled = true;
-                }
             }
 
             var display = pInfo.GetCustomAttribute<DisplayAttribute>();
@@ -417,18 +417,10 @@ namespace MVCCoreVue.Data
                     fd.Label = pInfo.Name;
                 }
             }
-            if (display?.GetAutoGenerateField() == false)
-            {
-                fd.Visible = false;
-                fd.HideInTable = true;
-            }
 
             var help = pInfo.GetCustomAttribute<HelpAttribute>();
             if (!string.IsNullOrWhiteSpace(help?.HelpText))
                 fd.Help = help?.HelpText;
-
-            var hidden = pInfo.GetCustomAttribute<HiddenAttribute>();
-            if (hidden?.Hidden == true) fd.Visible = false;
 
             var range = pInfo.GetCustomAttribute<RangeAttribute>();
             fd.Min = range?.Minimum;
@@ -529,9 +521,9 @@ namespace MVCCoreVue.Data
                 var ptInfo = pInfo.PropertyType.GetTypeInfo();
                 var dataType = pInfo.GetCustomAttribute<DataTypeAttribute>();
                 if (ptInfo.IsGenericType
-                    && (ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>))
-                    || ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>)))
-                    && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem)))
+                    && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
+                    && (ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem))
+                    || ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(IDataItemMtM))))
                 {
                     int count = (int)ptInfo.GetGenericTypeDefinition()
                         .MakeGenericType(ptInfo.GenericTypeArguments.FirstOrDefault())
@@ -569,7 +561,9 @@ namespace MVCCoreVue.Data
                     vm[name] = value;
                     vm[name + "Formatted"] = value.ToString("g");
                 }
-                else if (dataType?.DataType == DataType.Duration || pInfo.PropertyType == typeof(TimeSpan))
+                else if (dataType?.DataType == DataType.Duration
+                    || pInfo.PropertyType == typeof(TimeSpan)
+                    || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(TimeSpan))
                 {
                     var name = pInfo.Name.ToInitialLower();
                     var value = (TimeSpan)pInfo.GetValue(item);

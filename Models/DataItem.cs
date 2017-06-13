@@ -8,30 +8,31 @@ using System.Text;
 
 namespace MVCCoreVue.Models
 {
+    /// <summary>
+    /// Represents a database object which can be displayed automatically by the framework.
+    /// </summary>
     public class DataItem
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        [Editable(false)]
-        [Hidden]
         public Guid Id { get; set; }
 
-        [Display(AutoGenerateField = false)]
+        [Hidden]
         public DateTime CreationTimestamp { get; set; }
 
-        [Display(AutoGenerateField = false)]
+        [Hidden]
         public DateTime UpdateTimestamp { get; set; }
 
-        [Display(AutoGenerateField = false)]
+        [Hidden]
         public string AllPermissions { get; set; }
 
         public DataItem()
         {
-            // Default constructor attempts to set required properties to
-            // a default value, and properties with a min value to that min.
+            // Default constructor attempts to set required properties to a default value, and
+            // properties with a min value to that min.
 
-            // This includes invoking the default parameterless constructor
-            // for required nested DataItem objects.
+            // This includes invoking the default parameterless constructor for required nested
+            // DataItem objects.
             foreach (var pInfo in GetType().GetTypeInfo().GetProperties())
             {
                 // Skip virtual navigation properties to avoid infinite loops.

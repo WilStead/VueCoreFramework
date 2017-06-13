@@ -30,15 +30,15 @@ namespace MVCCoreVue.Data
                 .OnDelete(Microsoft.EntityFrameworkCore.Metadata.DeleteBehavior.Cascade);
 
             builder.Entity<AirlineCountry>()
-                .HasKey(c => new { c.CountryId, c.AirlineId });
+                .HasKey(c => new { c.CountriesId, c.AirlinesId });
             builder.Entity<AirlineCountry>()
-                .HasOne(c => c.Airline)
-                .WithMany(c => c.AirlineCountries)
-                .HasForeignKey(c => c.AirlineId);
+                .HasOne(c => c.Airlines)
+                .WithMany(c => c.Countries)
+                .HasForeignKey(c => c.AirlinesId);
             builder.Entity<AirlineCountry>()
-                .HasOne(c => c.Country)
-                .WithMany(c => c.CountryAirlines)
-                .HasForeignKey(c => c.CountryId);
+                .HasOne(c => c.Countries)
+                .WithMany(c => c.Airlines)
+                .HasForeignKey(c => c.CountriesId);
         }
     }
 }

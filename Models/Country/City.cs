@@ -18,7 +18,6 @@ namespace MVCCoreVue.Models
         TrainDepot = 4
     }
 
-    [MenuClass(Category = "Country")]
     public class City : NamedDataItem
     {
         [Display(Prompt = "Local time at GMT midnight")]
@@ -30,12 +29,11 @@ namespace MVCCoreVue.Models
 
         public CityTransit Transit { get; set; }
 
-        [Display(AutoGenerateField = false)]
         public Guid CitiesCountryId { get; set; }
 
         [JsonIgnore]
         [InverseProperty(nameof(Country.Cities))]
-        [Display(AutoGenerateField = false)]
+        [Hidden]
         public virtual Country CitiesCountry { get; set; }
     }
 }
