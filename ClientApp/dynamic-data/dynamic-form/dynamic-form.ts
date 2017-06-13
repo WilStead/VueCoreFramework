@@ -110,7 +110,7 @@ export default class DynamicFormComponent extends Vue {
                                 router.push({
                                     name: newField.inputType + "DataTable",
                                     params: {
-                                        childProp: newField.placeholder,
+                                        childProp: newField.pattern,
                                         operation: 'select',
                                         parentType: model.dataType,
                                         parentId: model.id,
@@ -146,7 +146,7 @@ export default class DynamicFormComponent extends Vue {
                         router.push({
                             name: newField.inputType + "DataTable",
                             params: {
-                                childProp: newField.placeholder,
+                                childProp: newField.pattern,
                                 operation: 'collection',
                                 parentType: model.dataType,
                                 parentId: model.id,
@@ -183,7 +183,7 @@ export default class DynamicFormComponent extends Vue {
                     router.push({
                         name: newField.inputType,
                         params: {
-                            childProp: newField.placeholder,
+                            childProp: newField.pattern,
                             operation: 'create',
                             id: Date.now().toString(),
                             parentType: model.dataType,

@@ -96,6 +96,7 @@ export default class DynamicTableComponent extends Vue {
     }
 
     mounted() {
+        let p = this.$route.params;
         this.repository = new Repository(this.repositoryType);
         if (this.parentType && this.parentId) {
             this.parentRepository = new Repository(this.parentType);

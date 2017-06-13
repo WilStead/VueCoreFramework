@@ -372,7 +372,7 @@ namespace MVCCoreVue.Data
                 fd.InputType = pInfo.PropertyType.Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1).ToInitialLower();
 
                 var inverseAttr = pInfo.GetCustomAttribute<InversePropertyAttribute>();
-                fd.Placeholder = inverseAttr?.Property;
+                fd.Pattern = inverseAttr?.Property;
 
                 if (pInfo.GetGetMethod().IsVirtual)
                 {
@@ -401,7 +401,7 @@ namespace MVCCoreVue.Data
                 fd.InputType = name.Substring(name.LastIndexOf('.') + 1).ToInitialLower();
 
                 var inverseAttr = pInfo.GetCustomAttribute<InversePropertyAttribute>();
-                fd.Placeholder = inverseAttr?.Property;
+                fd.Pattern = inverseAttr?.Property;
             }
             else if (ptInfo.IsGenericType
                 && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
@@ -637,7 +637,7 @@ namespace MVCCoreVue.Data
                     || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(Guid))
                 {
                     object value = pInfo.GetValue(item);
-                    if (Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(Guid))
+                    if (value != null && Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(Guid))
                     {
                         value = ((Guid?)value).Value;
                     }
