@@ -576,10 +576,27 @@ namespace MVCCoreVue.Data
                     vm[name] = value;
                     vm[name + "Formatted"] = value.ToString("c");
                 }
+                else if (pInfo.PropertyType == typeof(Guid)
+                    || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(Guid))
+                {
+                    object value = pInfo.GetValue(item);
+                    if (Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(Guid))
+                    {
+                        value = ((Guid?)value).Value;
+                    }
+                    if (value == null || (Guid)value == Guid.Empty)
+                    {
+                        vm[pInfo.Name.ToInitialLower()] = null;
+                    }
+                    else
+                    {
+                        vm[pInfo.Name.ToInitialLower()] = value.ToString();
+                    }
+                }
                 else if (pInfo.PropertyType == typeof(string)
                     || pInfo.PropertyType.IsNumeric()
                     || pInfo.PropertyType == typeof(bool)
-                    || pInfo.PropertyType == typeof(Guid)
+                    || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(bool)
                     || pInfo.PropertyType == typeof(DataItem)
                     || pInfo.PropertyType.GetTypeInfo().IsSubclassOf(typeof(DataItem)))
                 {

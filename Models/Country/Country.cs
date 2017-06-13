@@ -31,6 +31,7 @@ namespace MVCCoreVue.Models
         [JsonIgnore]
         public ICollection<City> Cities { get; set; } = new Collection<City>();
 
+        [ForeignKey(nameof(Leader))]
         [Display(AutoGenerateField = false)]
         public Guid LeaderId { get; set; }
 
