@@ -369,7 +369,7 @@ namespace MVCCoreVue.Data
             }
             else if (pInfo.PropertyType == typeof(DataItem) || ptInfo.IsSubclassOf(typeof(DataItem)))
             {
-                fd.InputType = pInfo.PropertyType.Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1).ToInitialLower();
+                fd.InputType = pInfo.PropertyType.Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1);
 
                 var inverseAttr = pInfo.GetCustomAttribute<InversePropertyAttribute>();
                 fd.Pattern = inverseAttr?.Property;
@@ -398,7 +398,7 @@ namespace MVCCoreVue.Data
                 fd.Type = "objectCollection";
 
                 var name = ptInfo.GenericTypeArguments.FirstOrDefault().Name;
-                fd.InputType = name.Substring(name.LastIndexOf('.') + 1).ToInitialLower();
+                fd.InputType = name.Substring(name.LastIndexOf('.') + 1);
 
                 var inverseAttr = pInfo.GetCustomAttribute<InversePropertyAttribute>();
                 fd.Pattern = inverseAttr?.Property;
@@ -410,7 +410,7 @@ namespace MVCCoreVue.Data
                 fd.Type = "objectMultiSelect";
 
                 var name = ptInfo.GenericTypeArguments.FirstOrDefault(t => t != typeof(Guid) && !t.Name.EndsWith(pInfo.Name)).Name;
-                fd.InputType = name.Substring(name.LastIndexOf('.') + 1).ToInitialLower();
+                fd.InputType = name.Substring(name.LastIndexOf('.') + 1);
             }
             else
             {

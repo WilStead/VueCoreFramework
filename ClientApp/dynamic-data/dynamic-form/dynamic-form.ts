@@ -26,12 +26,6 @@ export default class DynamicFormComponent extends Vue {
     @Prop()
     parentType: string;
 
-    @Prop()
-    repositoryType: string;
-
-    @Prop()
-    routeName: string;
-
     @Watch('id')
     onIdChanged(val: string, oldVal: string) {
         if (this.updateTimeout === 0) {
@@ -54,14 +48,6 @@ export default class DynamicFormComponent extends Vue {
         }
     }
 
-    @Watch('repositoryType')
-    onRepositoryTypeChanged(val: string, oldVal: string) {
-        this.repository = new Repository(val);
-        if (this.updateTimeout === 0) {
-            this.updateTimeout = setTimeout(this.updateForm, 125);
-        }
-    }
-
     components = {
         'vue-form-generator': VueFormGenerator.component
     };
@@ -73,7 +59,7 @@ export default class DynamicFormComponent extends Vue {
         validateAfterChanged: true
     };
     isValid = false;
-    model: any = { dataType: this.repositoryType };
+    model: any = { dataType: this.$route.name };
     parentRepository: Repository = null;
     repository: Repository = null;
     schema: any = {};
@@ -81,12 +67,22 @@ export default class DynamicFormComponent extends Vue {
     vm: any;
     vmDefinition: Array<FieldDefinition>;
 
+    beforeRouteUpdate(to, from, next) {
+        this.repository = new Repository(this.$route.name);
+        if (this.updateTimeout === 0) {
+            this.updateTimeout = setTimeout(this.updateForm, 125);
+        }
+        next();
+    }
+
     mounted() {
-        this.repository = new Repository(this.repositoryType);
-        if (this.parentType && this.parentId) {
+        this.repository = new Repository(this.$route.name);
+        if (this.parentType) {
             this.parentRepository = new Repository(this.parentType);
         }
-        this.updateForm();
+        if (this.updateTimeout === 0) {
+            this.updateTimeout = setTimeout(this.updateForm, 125);
+        }
     }
 
     onValidated(isValid: boolean, errors: Array<any>) {
@@ -289,7 +285,7 @@ export default class DynamicFormComponent extends Vue {
     }
 
     onEdit() {
-        this.$router.push({ name: this.routeName, params: { operation: 'edit', id: this.id } });
+        this.$router.push({ name: this.$route.name, params: { operation: 'edit', id: this.id } });
     }
 
     onSave() {
@@ -332,7 +328,7 @@ export default class DynamicFormComponent extends Vue {
         this.errorMessage = '';
         this.repository.find(this.$route.fullPath, this.id)
             .then(data => {
-                this.model = { dataType: this.repositoryType };
+                this.model = { dataType: this.$route.name };
                 this.schema = { fields: [] };
                 if (data.error) {
                     this.errorMessage = data.error;

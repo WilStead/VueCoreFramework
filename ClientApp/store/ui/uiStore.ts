@@ -52,33 +52,16 @@ function addMenuItem(menu: MenuItem, router: any, name: string, fullCategory: st
             props: { title: name },
             children: [
                 {
-                    name: lowerName + "DataTable",
+                    name: name + "DataTable",
                     path: 'table/:operation?/:parentType?/:parentId?/:parentProp?/:childProp?',
                     component: require('../../dynamic-data/dynamic-table/dynamic-table.vue'),
-                    props: (route) => ({
-                        childProp: route.params.childProp,
-                        operation: route.params.operation,
-                        parentId: route.params.parentId,
-                        parentProp: route.params.parentProp,
-                        parentType: route.params.parentType,
-                        repositoryType: name,
-                        routeName: lowerName
-                    })
+                    props: true
                 },
                 {
-                    name: lowerName,
+                    name: name,
                     path: ':operation/:id/:parentType?/:parentId?/:parentProp?/:childProp?',
                     component: require('../../dynamic-data/dynamic-form/dynamic-form.vue'),
-                    props: (route) => ({
-                        childProp: route.params.childProp,
-                        id: route.params.id,
-                        operation: route.params.operation,
-                        parentId: route.params.parentId,
-                        parentProp: route.params.parentProp,
-                        parentType: route.params.parentType,
-                        repositoryType: name,
-                        routeName: lowerName
-                    })
+                    props: true
                 }
             ]
         }]);
@@ -120,42 +103,23 @@ export function getChildItems(router: any): Promise<void> {
         .then(response => response.json() as Promise<Array<string>>)
         .then(data => {
             for (var i = 0; i < data.length; i++) {
-                let name = data[i].toLowerCase();
-
                 router.addRoutes([{
-                    path: `/data/${name}`,
+                    path: `/data/${data[i].toLowerCase()}`,
                     meta: { requiresAuth: true },
                     component: require('../../components/data/dashboard.vue'),
                     props: { title: data[i] },
                     children: [
                         {
-                            name: name + "DataTable",
+                            name: data[i] + "DataTable",
                             path: 'table/:operation?/:parentType?/:parentId?/:parentProp?/:childProp?',
                             component: require('../../dynamic-data/dynamic-table/dynamic-table.vue'),
-                            props: (route) => ({
-                                childProp: route.params.childProp,
-                                operation: route.params.operation,
-                                parentId: route.params.parentId,
-                                parentProp: route.params.parentProp,
-                                parentType: route.params.parentType,
-                                repositoryType: data[i],
-                                routeName: name
-                            })
+                            props: true
                         },
                         {
-                            name: name,
+                            name: data[i],
                             path: ':operation/:id/:parentType?/:parentId?/:parentProp?/:childProp?',
                             component: require('../../dynamic-data/dynamic-form/dynamic-form.vue'),
-                            props: (route) => ({
-                                childProp: route.params.childProp,
-                                id: route.params.id,
-                                operation: route.params.operation,
-                                parentId: route.params.parentId,
-                                parentProp: route.params.parentProp,
-                                parentType: route.params.parentType,
-                                repositoryType: data[i],
-                                routeName: name
-                            })
+                            props: true
                         }
                     ]
                 }]);

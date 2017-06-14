@@ -27,12 +27,6 @@ export default class DynamicTableComponent extends Vue {
     @Prop()
     parentType: string;
 
-    @Prop()
-    repositoryType: string;
-
-    @Prop()
-    routeName: string;
-
     activity = false;
     childItems: Array<any> = [];
     childLoading = true;
@@ -50,6 +44,7 @@ export default class DynamicTableComponent extends Vue {
     pagination: any = {};
     parentRepository: Repository = null;
     repository: Repository = null;
+    routeName = '';
     search = '';
     selectErrorDialogMessage = '';
     selectErrorDialogShown = false;
@@ -77,14 +72,6 @@ export default class DynamicTableComponent extends Vue {
         }
     }
 
-    @Watch('repositoryType')
-    onRepositoryTypeChanged(val: string, oldVal: string) {
-        this.repository = new Repository(val);
-        if (this.updateTimeout === 0) {
-            this.updateTimeout = setTimeout(this.updateTable, 125);
-        }
-    }
-
     @Watch('search')
     onSearchChange(val: string, oldVal: string) {
         this.updateData();
@@ -95,13 +82,24 @@ export default class DynamicTableComponent extends Vue {
         this.updateData();
     }
 
+    beforeRouteUpdate(to, from, next) {
+        this.routeName = this.$route.name.substr(0, this.$route.name.length - 9); // remove 'DataTable'
+        this.repository = new Repository(this.routeName);
+        if (this.updateTimeout === 0) {
+            this.updateTimeout = setTimeout(this.updateTable, 125);
+        }
+        next();
+    }
+
     mounted() {
-        let p = this.$route.params;
-        this.repository = new Repository(this.repositoryType);
-        if (this.parentType && this.parentId) {
+        this.routeName = this.$route.name.substr(0, this.$route.name.length - 9); // remove 'DataTable'
+        this.repository = new Repository(this.routeName);
+        if (this.parentType) {
             this.parentRepository = new Repository(this.parentType);
         }
-        this.updateTable();
+        if (this.updateTimeout === 0) {
+            this.updateTimeout = setTimeout(this.updateTable, 125);
+        }
     }
 
     cancelDelete(id: string) {
