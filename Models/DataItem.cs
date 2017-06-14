@@ -1,16 +1,19 @@
 ﻿using MVCCoreVue.Data.Attributes;
-using MVCCoreVue.Extensions;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Reflection;
-using System.Text;
 
 namespace MVCCoreVue.Models
 {
     /// <summary>
     /// Represents a database object which can be displayed automatically by the framework.
     /// </summary>
+    /// <remarks>
+    /// All datatypes used by the framework *must* be a subclass of DataItem in order to function.
+    /// Any which are not will be represented merely by text labels. Bear in mind when subclassing
+    /// that the framework creates new items by invoking the default parameterless constructor, and
+    /// also invoking the constructor for any required child objects.
+    /// </remarks>
     public class DataItem
     {
         /// <summary>
@@ -47,72 +50,5 @@ namespace MVCCoreVue.Models
         /// </remarks>
         [Hidden]
         public string AllPermissions { get; set; }
-
-        /// <summary>
-        /// Default constructor.
-        /// </summary>
-        /// <remarks>
-        /// The default constructor attempts to set required properties to a default value, and
-        /// properties with a min value to that min. This includes invoking the default parameterless
-        /// constructor for required child <see cref="DataItem"/> objects. Because of this behavior,
-        /// it is important to mark at least one navigation property in any relationship as virtual,
-        /// to avoid an infinite loop.
-        /// </remarks>
-        public DataItem()
-        {
-            foreach (var pInfo in GetType().GetTypeInfo().GetProperties())
-            {
-                // Skip virtual navigation properties to avoid infinite loops.
-                if (pInfo.GetGetMethod().IsVirtual) continue;
-
-                var req = pInfo.GetCustomAttribute<RequiredAttribute>();
-                object min = pInfo.GetCustomAttribute<RangeAttribute>()?.Minimum;
-                if (req != null)
-                {
-                    if (pInfo.PropertyType == typeof(string))
-                    {
-                        var dataType = pInfo.GetCustomAttribute<DataTypeAttribute>();
-                        if (dataType?.CustomDataType == "Color")
-                        {
-                            pInfo.SetValue(this, "#000000");
-                        }
-                        else
-                        {
-                            StringBuilder val = new StringBuilder("[None]");
-                            if (min != null && (int)min > 6)
-                            {
-                                for (int i = 0; i < (int)min - 6; i++)
-                                {
-                                    val.Append(".");
-                                }
-                            }
-                            pInfo.SetValue(this, val.ToString());
-                        }
-                    }
-                    else if (pInfo.PropertyType == typeof(DateTime))
-                    {
-                        var minDT = min == null ? DateTime.MinValue : DateTime.Parse((string)min);
-                        pInfo.SetValue(this, minDT);
-                    }
-                    else if (pInfo.PropertyType == typeof(DataItem) ||
-                        pInfo.PropertyType.GetTypeInfo().IsSubclassOf(typeof(DataItem)))
-                    {
-                        pInfo.SetValue(this, pInfo.PropertyType.GetConstructor(Type.EmptyTypes).Invoke(new object[] { }));
-                    }
-                }
-                if (min != null)
-                {
-                    if (pInfo.PropertyType.IsNumeric())
-                    {
-                        pInfo.SetValue(this, min);
-                    }
-                    else if (pInfo.PropertyType == typeof(TimeSpan))
-                    {
-                        var minTS = min == null ? TimeSpan.Zero : TimeSpan.Parse((string)min);
-                        pInfo.SetValue(this, minTS);
-                    }
-                }
-            }
-        }
     }
 }

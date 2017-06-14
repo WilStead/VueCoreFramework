@@ -59,7 +59,7 @@ function addMenuItem(menu: MenuItem, router: any, name: string, fullCategory: st
                 },
                 {
                     name: name,
-                    path: ':operation/:id/:parentType?/:parentId?/:parentProp?/:childProp?',
+                    path: ':operation/:id',
                     component: require('../../dynamic-data/dynamic-form/dynamic-form.vue'),
                     props: true
                 }
@@ -117,7 +117,7 @@ export function getChildItems(router: any): Promise<void> {
                         },
                         {
                             name: data[i],
-                            path: ':operation/:id/:parentType?/:parentId?/:parentProp?/:childProp?',
+                            path: ':operation/:id',
                             component: require('../../dynamic-data/dynamic-form/dynamic-form.vue'),
                             props: true
                         }

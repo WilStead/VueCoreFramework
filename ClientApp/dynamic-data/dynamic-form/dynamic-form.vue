@@ -6,8 +6,19 @@
                     <v-card-title>Are you sure you want to delete this item?</v-card-title>
                 </v-card-row>
                 <v-card-row actions>
-                    <v-btn class="success--text" flat @click.native="model.deleteDialogShown = false">Cancel</v-btn>
+                    <v-btn class="success--text" flat @click.native="onCancelDelete">Cancel</v-btn>
                     <v-btn class="error--text" flat @click.native="onDelete">Delete</v-btn>
+                </v-card-row>
+            </v-card>
+        </v-dialog>
+        <v-dialog v-model="model.replaceDialogShown">
+            <v-card>
+                <v-card-row>
+                    <v-card-title>Are you sure you want to replace the current item? This action cannot be undone.</v-card-title>
+                </v-card-row>
+                <v-card-row actions>
+                    <v-btn class="success--text" flat @click.native="onCancelReplace">Cancel</v-btn>
+                    <v-btn class="error--text" flat @click.native="onReplace">Replace</v-btn>
                 </v-card-row>
             </v-card>
         </v-dialog>
@@ -23,13 +34,9 @@
                 <v-btn dark default @click.native="onCancel">Back</v-btn>
                 <v-btn dark primary @click.native="onEdit">Edit</v-btn>
             </div>
-            <div v-else-if="operation === 'edit'" class="submit-row condensed">
+            <div v-else-if="operation === 'edit' || operation === 'create'" class="submit-row condensed">
                 <v-btn dark default @click.native="onCancel">Cancel</v-btn>
                 <v-btn dark primary :class="{ 'btn--disabled': !isValid }" @click.native="onSave">Save</v-btn>
-            </div>
-            <div v-else-if="operation === 'create'" class="submit-row condensed">
-                <v-btn dark default @click.native="onCancel">Cancel</v-btn>
-                <v-btn dark primary :class="{ 'btn--disabled': !isValid }" @click.native="onCreate">Create</v-btn>
             </div>
         </v-card-row>
     </v-card>

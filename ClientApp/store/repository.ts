@@ -14,8 +14,8 @@ export interface DataItem {
     updateTimestamp: number;
 }
 
-export interface OperationReply<DataItem> {
-    data: DataItem;
+export interface OperationReply<T> {
+    data: T;
     error: string;
 }
 
@@ -29,23 +29,26 @@ export class Repository {
 
     constructor(dataType: string) { this.dataType = dataType; }
 
-    add(returnPath: string, vm: DataItem): Promise<OperationReply<DataItem>> {
-        return fetch(`/api/Data/${this.dataType}/Add`,
+    add(returnPath: string, childProp: string, parentId: string): Promise<OperationReply<DataItem>> {
+        let url = `/api/Data/${this.dataType}/Add`;
+        if (childProp && parentId) {
+            url += `/${childProp}/${parentId}`;
+        }
+        return fetch(url,
             {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
                     'Authorization': `bearer ${store.state.token}`
-                },
-                body: JSON.stringify(vm)
+                }
             })
             .then(response => checkResponse(response, returnPath))
             .then(response => response.json() as Promise<any>)
             .then(data => {
                 if (data.error) {
                     return {
-                        data: vm,
+                        data: undefined,
                         error: data.error
                     };
                 }
@@ -56,8 +59,8 @@ export class Repository {
             });
     }
 
-    addToParentCollection(returnPath: string, id: string, childProp: string, ids: Array<string>): Promise<OperationReply<DataItem>> {
-        return fetch(`/api/Data/${this.dataType}/AddToParentCollection/${id}/${childProp}`,
+    addChildrenToCollection(returnPath: string, id: string, childProp: string, ids: Array<string>): Promise<OperationReply<string>> {
+        return fetch(`/api/Data/${this.dataType}/AddChildrenToCollection/${id}/${childProp}`,
             {
                 method: 'POST',
                 headers: {
@@ -317,7 +320,7 @@ export class Repository {
             });
     }
 
-    remove(returnPath: string, id: string): Promise<OperationReply<DataItem>> {
+    remove(returnPath: string, id: string): Promise<OperationReply<string>> {
         if (id === undefined || id === null || id === '') {
             return Promise.reject("The item id was missing from your request.");
         }
@@ -345,8 +348,34 @@ export class Repository {
             });
     }
 
-    removeFromParentCollection(returnPath: string, id: string, childProp: string, ids: Array<string>): Promise<OperationReply<DataItem>> {
-        return fetch(`/api/Data/${this.dataType}/RemoveFromParentCollection/${id}/${childProp}`,
+    removeFromParent(returnPath: string, id: string, childProp: string): Promise<OperationReply<string>> {
+        return fetch(`/api/Data/${this.dataType}/RemoveFromParent/${id}/${childProp}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `bearer ${store.state.token}`
+                }
+            })
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<any>)
+            .then(data => {
+                if (data.error) {
+                    return {
+                        data: undefined,
+                        error: data.error
+                    };
+                }
+                return { data };
+            })
+            .catch(error => {
+                return Promise.reject(`There was a problem with your request. ${error}`);
+            });
+    }
+
+    removeChildrenFromCollection(returnPath: string, id: string, childProp: string, ids: Array<string>): Promise<OperationReply<string>> {
+        return fetch(`/api/Data/${this.dataType}/RemoveChildrenFromCollection/${id}/${childProp}`,
             {
                 method: 'POST',
                 headers: {
@@ -372,7 +401,7 @@ export class Repository {
             });
     }
 
-    removeRange(returnPath: string, ids: Array<string>): Promise<OperationReply<DataItem>> {
+    removeRange(returnPath: string, ids: Array<string>): Promise<OperationReply<string>> {
         if (ids === undefined || ids === null || !ids.length) {
             return Promise.reject("The item ids were missing from your request.");
         }
@@ -396,6 +425,85 @@ export class Repository {
                     };
                 }
                 return { data: undefined, error: undefined };
+            })
+            .catch(error => {
+                return Promise.reject(`There was a problem with your request. ${error}`);
+            });
+    }
+
+    removeRangeFromParent(returnPath: string, childProp: string, ids: Array<string>): Promise<OperationReply<string>> {
+        return fetch(`/api/Data/${this.dataType}/RemoveRangeFromParent/${childProp}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `bearer ${store.state.token}`
+                },
+                body: JSON.stringify(ids)
+            })
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<any>)
+            .then(data => {
+                if (data.error) {
+                    return {
+                        data: undefined,
+                        error: data.error
+                    };
+                }
+                return { data };
+            })
+            .catch(error => {
+                return Promise.reject(`There was a problem with your request. ${error}`);
+            });
+    }
+
+    replaceChild(returnPath: string, parentId: string, newChildId: string, childProp: string): Promise<OperationReply<string>> {
+        return fetch(`/api/Data/${this.dataType}/ReplaceChild/${parentId}/${newChildId}/${childProp}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `bearer ${store.state.token}`
+                }
+            })
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<any>)
+            .then(data => {
+                if (data.error) {
+                    return {
+                        data: undefined,
+                        error: data.error
+                    };
+                }
+                return { data };
+            })
+            .catch(error => {
+                return Promise.reject(`There was a problem with your request. ${error}`);
+            });
+    }
+
+    replaceChildWithNew(returnPath: string, parentId: string, childProp: string): Promise<OperationReply<DataItem>> {
+        return fetch(`/api/Data/${this.dataType}/ReplaceChildWithNew/${parentId}/${childProp}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `bearer ${store.state.token}`
+                }
+            })
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<any>)
+            .then(data => {
+                if (data.error) {
+                    return {
+                        data: undefined,
+                        error: data.error
+                    };
+                }
+                return { data };
             })
             .catch(error => {
                 return Promise.reject(`There was a problem with your request. ${error}`);

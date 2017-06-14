@@ -9,22 +9,10 @@ import { router } from '../../router';
 @Component
 export default class DynamicFormComponent extends Vue {
     @Prop()
-    childProp: string;
-
-    @Prop()
     id: string;
 
     @Prop()
     operation: string;
-
-    @Prop()
-    parentId: string;
-
-    @Prop()
-    parentProp: string;
-
-    @Prop()
-    parentType: string;
 
     @Watch('id')
     onIdChanged(val: string, oldVal: string) {
@@ -35,14 +23,6 @@ export default class DynamicFormComponent extends Vue {
 
     @Watch('operation')
     onOperationChanged(val: string, oldVal: string) {
-        if (this.updateTimeout === 0) {
-            this.updateTimeout = setTimeout(this.updateForm, 125);
-        }
-    }
-
-    @Watch('parentType')
-    onParentTypeChanged(val: string, oldVal: string) {
-        this.parentRepository = new Repository(val);
         if (this.updateTimeout === 0) {
             this.updateTimeout = setTimeout(this.updateForm, 125);
         }
@@ -77,9 +57,6 @@ export default class DynamicFormComponent extends Vue {
 
     mounted() {
         this.repository = new Repository(this.$route.name);
-        if (this.parentType) {
-            this.parentRepository = new Repository(this.parentType);
-        }
         if (this.updateTimeout === 0) {
             this.updateTimeout = setTimeout(this.updateForm, 125);
         }
@@ -98,7 +75,8 @@ export default class DynamicFormComponent extends Vue {
                 let idField = this.vmDefinition.find(v => v.model === newField.model + "Id");
                 if (idField) {
                     newField.buttons = [];
-                    if (newField.type === "objectSelect" && this.operation === 'edit') {
+                    if (newField.type === "objectSelect"
+                        && (this.operation === "edit" || this.operation === "create")) {
                         newField.buttons.push({
                             classes: 'btn btn--dark btn--flat primary--text',
                             label: 'Select',
@@ -168,26 +146,40 @@ export default class DynamicFormComponent extends Vue {
         }
     }
 
+    addNew: Function = function (model, field) {
+        this.repository.add(this.$route.fullPath, field.pattern, model.id)
+            .then(data => {
+                this.activity = false;
+                if (data.error) {
+                    this.errorMessage = data.error;
+                } else {
+                    this.errorMessage = '';
+                    this.$router.push({ name: field.inputType, params: { operation: 'create', id: data.data.id } });
+                }
+            })
+            .catch(error => {
+                this.activity = false;
+                this.errorMessage = "A problem occurred. The new item could not be added.";
+                ErrorMsg.logError("dynamic-form.addNew", new Error(error));
+            });
+    }.bind(this);
+
     addObjectButtons(newField: FieldDefinition, idField: FieldDefinition) {
-        if (this.operation === "edit"
+        if ((this.operation === "edit" || this.operation === "create")
+            && newField.type !== "objectReference"
             && (newField.type === "objectSelect"
                 || !this.model[idField.model])) {
             newField.buttons.push({
                 classes: 'btn btn--dark btn--flat success--text',
                 label: 'Add',
-                onclick: function (model, field) {
-                    router.push({
-                        name: newField.inputType,
-                        params: {
-                            childProp: newField.pattern,
-                            operation: 'create',
-                            id: Date.now().toString(),
-                            parentType: model.dataType,
-                            parentId: model.id,
-                            parentProp: newField.model
-                        }
-                    });
-                }
+                onclick: !this.model[idField.model]
+                    ? this.addNew
+                    : function (model, field, event) {
+                        event.stopPropagation();
+                        model.replaceProp = field.model;
+                        model.replaceType = field.inputType;
+                        Vue.set(model, 'replaceDialogShown', true);
+                    }
             });
         }
         if (this.model[idField.model]) {
@@ -199,7 +191,7 @@ export default class DynamicFormComponent extends Vue {
                 }
             });
         }
-        if (this.operation === "edit"
+        if ((this.operation === "edit" || this.operation === "create")
             && newField.type !== "objectReference"
             && !newField.required
             && this.model[idField.model]) {
@@ -208,8 +200,8 @@ export default class DynamicFormComponent extends Vue {
                 label: 'Delete',
                 onclick: function (model, field, event) {
                     event.stopPropagation();
-                    Vue.set(model, 'deleteDialogShown', true);
                     model.deleteProp = field.model;
+                    Vue.set(model, 'deleteDialogShown', true);
                 }
             });
         }
@@ -218,64 +210,50 @@ export default class DynamicFormComponent extends Vue {
     onCancel() {
         this.activity = false;
         this.errorMessage = '';
-        this.$router.go(-1);
+        if (this.operation === 'create') {
+            this.repository.remove(this.$route.fullPath, this.id)
+                .then(data => {
+                    this.activity = false;
+                    if (data.error) {
+                        this.errorMessage = data.error;
+                    }
+                    else {
+                        this.$router.go(-1);
+                    }
+                })
+                .catch(error => {
+                    this.errorMessage = "A problem occurred. The item could not be removed.";
+                    this.activity = false;
+                    ErrorMsg.logError("dynamic-form.onCancel", new Error(error));
+                });
+        } else {
+            this.$router.go(-1);
+        }
     }
 
-    onCreate() {
-        this.activity = true;
-        this.errorMessage = '';
-        let timestamp = Date.now();
-        let d = Object.assign({},
-            this.model,
-            {
-                id: this.id,
-                creationTimestamp: timestamp,
-                updateTimestamp: timestamp
-            }
-        );
-        // Remove unsupported or null properties from the ViewModel before sending for update,
-        // to avoid errors when overwriting values with the placeholders.
-        delete d.dataType;
-        delete d.deleteProp;
-        for (var prop in d) {
-            if (d[prop] === "[...]" || d[prop] === "[None]") {
-                delete d[prop];
-            }
-        }
-        if (this.childProp && this.parentId) {
-            d[this.childProp + 'Id'] = this.parentId;
-        }
-        this.repository.add(this.$route.fullPath, d)
-            .then(data => {
-                if (data.error) {
-                    this.errorMessage = data.error;
-                } else {
-                    this.$router.go(-1);
-                }
-                this.errorMessage = '';
-                this.activity = false;
-            })
-            .catch(error => {
-                this.activity = false;
-                this.errorMessage = "A problem occurred. The new item could not be added.";
-                ErrorMsg.logError("dynamic-form.onCreate", new Error(error));
-            });
+    onCancelDelete() {
+        delete this.model.deleteProp;
+        this.model.deleteDialogShown = false;
+    }
+
+    onCancelReplace() {
+        delete this.model.replaceProp;
+        delete this.model.replaceType;
+        this.model.replaceDialogShown = false;
     }
 
     onDelete() {
         this.activity = true;
-        this.model.deleteDialogShown = false;
-        this.vm[this.model.deleteProp] = null;
-        this.vm[this.model.deleteProp + "Id"] = null;
-        this.repository.update(this.$route.fullPath, this.vm)
+        this.repository.removeFromParent(this.$route.fullPath, this.id, this.model.deleteProp)
             .then(data => {
                 if (data.error) {
                     this.errorMessage = data.error;
-                } else {
+                    this.activity = false;
+                }
+                else {
                     this.updateForm();
                 }
-                this.errorMessage = '';
-                this.activity = false;
+                this.onCancelDelete();
             })
             .catch(error => {
                 this.errorMessage = "A problem occurred. The item could not be removed.";
@@ -299,7 +277,6 @@ export default class DynamicFormComponent extends Vue {
         // Remove unsupported or null properties from the ViewModel before sending for update,
         // to avoid errors when overwriting values with the placeholders.
         delete d.dataType;
-        delete d.deleteProp;
         for (var prop in d) {
             if (d[prop] === "[None]" || d[prop] === "[...]") {
                 delete d[prop];
@@ -319,6 +296,25 @@ export default class DynamicFormComponent extends Vue {
                 this.errorMessage = "A problem occurred. The item could not be updated.";
                 this.activity = false;
                 ErrorMsg.logError("dynamic-form.onSave", new Error(error));
+            });
+    }
+
+    onReplace() {
+        this.repository.replaceChildWithNew(this.$route.fullPath, this.id, this.model.replaceProp)
+            .then(data => {
+                if (data.error) {
+                    this.errorMessage = data.error;
+                } else {
+                    this.errorMessage = '';
+                    this.$router.push({ name: this.model.replaceType, params: { operation: 'create', id: data.data.id } });
+                }
+                this.onCancelReplace();
+                this.activity = false;
+            })
+            .catch(error => {
+                this.errorMessage = "A problem occurred. The item could not be added.";
+                this.activity = false;
+                ErrorMsg.logError("dynamic-form.onReplace", new Error(error));
             });
     }
 

@@ -22,19 +22,18 @@ namespace MVCCoreVue.Models
         /// The airlines operating in the country.
         /// </summary>
         /// <remarks>
-        /// A many-to-many relationship with another MenuClass entity. All relationships with objects
-        /// displayed on the menu must be many-to-many or many-to-one, since MenuClass objects can be
-        /// added and removed independently of any relationships they may have. Furthermore, only
-        /// MenuClass types should be in many-to-many relationships, because if a child type is
-        /// removed from all parents before being deleted, it will be left inaccessible.
-        /// AirlineCountry is a many-to-many join table entity class, and therefore implenents <see
+        /// A many-to-many relationship with another MenuClass entity. AirlineCountry is a
+        /// many-to-many join table entity class, and therefore implenents <see
         /// cref="IDataItemMtM"/>. It must have the JsonIgnore Attribute to prevent the model from
-        /// attempting to set its value to the placeholder text used in the viewmodel. It cannot be
-        /// Required, since a MenuClass object must be able to be deleted independently. It has a
-        /// property constructor in order to avoid a null collection during certain framework
+        /// attempting to set its value to the placeholder text used in the viewmodel. It isn't
+        /// necesary to hide navigation properties in data tables, but since all a table will show is
+        /// '[None]' for an empty collection and '[...]' for a non-empty collection, it usually
+        /// provides a better user experience not to fill a column with such placeholder text. It has
+        /// a property constructor in order to avoid a null collection during certain framework
         /// operations; this is a requirement for all collection properties of a DataItem.
         /// </remarks>
         [JsonIgnore]
+        [Hidden(false, HideInTable = true)]
         public ICollection<AirlineCountry> Airlines { get; set; } = new Collection<AirlineCountry>();
 
         /// <summary>
@@ -74,7 +73,9 @@ namespace MVCCoreVue.Models
         /// menu, and is only accessible through this parent object). The framework requires that all
         /// relationships except many-to-many relationships specify the InverseProperty explicitly on
         /// both ends (even when EntityFramework does not), in order to identify the correct
-        /// properties in the relationship.
+        /// properties in the relationship. This navigation property is not hidden in the table since
+        /// non-collections use their ToString representations, which in the case of City is its
+        /// Name property. Only if Capitol is null will placeholder text be shown.
         /// </remarks>
         [JsonIgnore]
         [InverseProperty(nameof(City.CountryCapitol))]
@@ -88,15 +89,16 @@ namespace MVCCoreVue.Models
         /// </remarks>
         [JsonIgnore]
         [InverseProperty(nameof(City.Country))]
+        [Hidden(false, HideInTable = true)]
         public ICollection<City> Cities { get; set; } = new Collection<City>();
 
         /// <summary>
         /// The country's head of government.
         /// </summary>
         /// <remarks>
-        /// A one-to-one relationship with a child object. Unlike Capitol, this one is required.
-        /// It is necessary to explicitly mark required child objects with the Required Attribute
-        /// so that the default constructor will know to create a new empty object.
+        /// A one-to-one relationship with a child object. Unlike Capitol, this one is required. It
+        /// is necessary to explicitly mark required child objects with the Required Attribute so
+        /// that the default constructor will know to generate a new child object when creating a new object.
         /// </remarks>
         [Required]
         [JsonIgnore]

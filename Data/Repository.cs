@@ -8,6 +8,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace MVCCoreVue.Data
@@ -24,14 +25,28 @@ namespace MVCCoreVue.Data
             items = _context.Set<T>();
         }
 
-        public async Task<IDictionary<string, object>> AddAsync(DataItem item)
+        public async Task<IDictionary<string, object>> AddAsync(PropertyInfo childProp, Guid? parentId)
         {
-            if (item == null)
+            var item = typeof(T).GetConstructor(Type.EmptyTypes).Invoke(new object[] { });
+
+            if (childProp != null && parentId.HasValue)
             {
-                throw new ArgumentNullException(nameof(item));
+                typeof(T).GetProperty(childProp.Name + "Id").SetValue(item, parentId.Value);
             }
+
+            // Add any required child objects.
+            foreach (var pInfo in typeof(T).GetProperties()
+                .Where(p =>
+                (p.PropertyType == typeof(DataItem) || p.PropertyType.GetTypeInfo().IsSubclassOf(typeof(DataItem)))
+                && p.GetCustomAttribute<RequiredAttribute>() != null))
+            {
+                var newChild = pInfo.PropertyType.GetConstructor(Type.EmptyTypes).Invoke(new object[] { });
+                pInfo.SetValue(item, newChild);
+            }
+
             await items.AddAsync(item as T);
             await _context.SaveChangesAsync();
+
             foreach (var reference in _context.Entry(item).References)
             {
                 reference.Load();
@@ -43,7 +58,7 @@ namespace MVCCoreVue.Data
             return GetViewModel(item as T);
         }
 
-        public async Task<IDictionary<string, object>> AddToParentCollectionAsync(DataItem parent, PropertyInfo childProp, IEnumerable<DataItem> children)
+        public async Task AddChildrenToCollectionAsync(Guid id, PropertyInfo childProp, IEnumerable<Guid> childIds)
         {
             var ptInfo = childProp.PropertyType.GetTypeInfo();
             var mtmType = ptInfo.GenericTypeArguments.FirstOrDefault();
@@ -51,19 +66,21 @@ namespace MVCCoreVue.Data
                         .MakeGenericType(mtmType)
                         .GetMethod("Add");
             var mtmCon = mtmType.GetConstructor(Type.EmptyTypes);
-            var mtmChildIdProp = mtmType.GetProperty(childProp.Name + "Id");
+            var singulars = childProp.Name.GetSingularForms();
+            var mtmChildProp = mtmType.GetProperties().Where(p => singulars.Contains(p.Name)).FirstOrDefault();
+            var mtmChildIdProp = mtmType.GetProperty(mtmChildProp.Name + "Id");
             var mtmParentIdProp = mtmType.GetProperties().FirstOrDefault(t => t.PropertyType == typeof(Guid) && t != mtmChildIdProp);
 
-            foreach (var child in children)
+            var parent = await FindItemAsync(id);
+            foreach (var childId in childIds)
             {
                 var mtm = mtmCon.Invoke(new object[] { });
-                mtmChildIdProp.SetValue(mtm, child.Id);
-                mtmParentIdProp.SetValue(mtm, parent.Id);
+                mtmChildIdProp.SetValue(mtm, childId);
+                mtmParentIdProp.SetValue(mtm, id);
                 add.Invoke(childProp.GetValue(parent), new object[] { mtm });
             }
 
             await _context.SaveChangesAsync();
-            return GetViewModel(parent as T);
         }
 
         private static bool AnyPropMatch(DataItem item, string search)
@@ -372,25 +389,46 @@ namespace MVCCoreVue.Data
                 fd.InputType = pInfo.PropertyType.Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1);
 
                 var inverseAttr = pInfo.GetCustomAttribute<InversePropertyAttribute>();
-                fd.Pattern = inverseAttr?.Property;
+                PropertyInfo inverseProp = null;
+                if (inverseAttr != null)
+                {
+                    inverseProp = pInfo.PropertyType.GetProperty(inverseAttr.Property);
+                    fd.Pattern = inverseProp?.Name;
+                }
 
+                // Reverse-navigation properties only allow view/edit. No adding/deleting, since the
+                // child object shouldn't add/delete a parent.
                 if (pInfo.GetGetMethod().IsVirtual)
                 {
                     fd.Type = "objectReference";
                 }
                 else
                 {
-                    var menuAttr = ptInfo.GetCustomAttribute<MenuClassAttribute>();
-                    if (menuAttr != null)
+                    // Children in a many-to-one relationship (i.e. which can have more than one
+                    // parent) can be selected from a list, as well as added/edited/deleted.
+                    var inversePTInfo = inverseProp?.PropertyType.GetTypeInfo();
+                    if (inversePTInfo?.IsGenericType == true
+                        && inversePTInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>)))
                     {
                         fd.Type = "objectSelect";
                     }
+                    // Children in a one-to-one relationship are treated as purely nested objects,
+                    // and can only be added, edited, and deleted, to prevent any child from being
+                    // referenced by more than one parent inappropriately. In fact the child may have
+                    // other relationships which result in it not being purely nested, or even be a
+                    // MenuClass item, but for this relationship the controls make no assumptions.
                     else
                     {
                         fd.Type = "object";
                     }
                 }
             }
+            // Children in a one-to-many relationship are manipulated in a table containing only
+            // those items in the parent collection. Adding or removing items to/from the collection
+            // is accomplished by creating new items or deleting them (which only deletes them fully
+            // when appropriate). This handles cases where the child objects are nested child
+            // objects, child objects with multiple parent relationships, and also MenuClass items in
+            // their own right.
             else if (ptInfo.IsGenericType
                 && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
                 && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem)))
@@ -403,9 +441,11 @@ namespace MVCCoreVue.Data
                 var inverseAttr = pInfo.GetCustomAttribute<InversePropertyAttribute>();
                 fd.Pattern = inverseAttr?.Property;
             }
+            // Children in a many-to-many relationship are manipulated in a table containing all the
+            // items of the child type, where items can be added to or removed from the parent's collection.
             else if (ptInfo.IsGenericType
                 && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
-                && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(IDataItemMtM)))
+                && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().ImplementedInterfaces.Any(i => i == typeof(IDataItemMtM)))
             {
                 fd.Type = "objectMultiSelect";
 
@@ -577,7 +617,7 @@ namespace MVCCoreVue.Data
                 if (ptInfo.IsGenericType
                     && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
                     && (ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem))
-                    || ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(IDataItemMtM))))
+                    || ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().ImplementedInterfaces.Any(i => i == typeof(IDataItemMtM))))
                 {
                     int count = (int)ptInfo.GetGenericTypeDefinition()
                         .MakeGenericType(ptInfo.GenericTypeArguments.FirstOrDefault())
@@ -688,28 +728,148 @@ namespace MVCCoreVue.Data
         public async Task RemoveAsync(Guid id)
         {
             var item = await FindItemAsync(id);
+            await RemoveItemAsync(item);
+        }
+
+        private async Task RemoveItemAsync(DataItem item)
+        {
             items.Remove(item as T);
             await _context.SaveChangesAsync();
         }
 
-        public async Task<IDictionary<string, object>> RemoveChildrenFromCollectionAsync(DataItem parent, PropertyInfo childProp, IEnumerable<DataItem> children)
+        public async Task RemoveChildrenFromCollectionAsync(Guid id, PropertyInfo childProp, IEnumerable<Guid> childIds)
         {
             var mtmType = childProp.PropertyType.GetTypeInfo().GenericTypeArguments.FirstOrDefault();
 
-            foreach (var child in children)
+            foreach (var childId in childIds)
             {
-                var mtm = _context.Find(mtmType, parent.Id, child.Id);
+                var mtm = _context.Find(mtmType, id, childId);
                 _context.Remove(mtm);
             }
 
             await _context.SaveChangesAsync();
-            return GetViewModel(parent as T);
+        }
+
+        public async Task RemoveFromParentAsync(Guid id, PropertyInfo childProp)
+        {
+            // If this is a required relationship, removing from the parent is the same as deletion.
+            var childFKProp = typeof(T).GetProperty(childProp.Name + "Id");
+
+            if (Nullable.GetUnderlyingType(childFKProp.PropertyType) != null)
+            {
+                await RemoveAsync(id);
+                return;
+            }
+
+            // For non-required relationships, null the FK.
+            var item = await FindItemAsync(id);
+            childProp.SetValue(item, null);
+            await _context.SaveChangesAsync();
+
+            // If the child is not a MenuClass item, it should be removed if it's now an orphan (has
+            // no remaining relationships).
+            if (childProp.PropertyType.GetTypeInfo().GetCustomAttribute<MenuClassAttribute>() == null)
+            {
+                // Check all navigation properties in the child item to see if it's an orphan.
+                var orphan = true;
+                foreach (var nav in _context.Entry(item).Navigations)
+                {
+                    await nav.LoadAsync();
+                    if (nav.CurrentValue != null)
+                    {
+                        orphan = false;
+                        break;
+                    }
+                }
+                // If the item is now an orphan, delete it.
+                if (orphan)
+                {
+                    await RemoveItemAsync(item);
+                }
+            }
         }
 
         public async Task RemoveRangeAsync(IEnumerable<Guid> ids)
         {
             items.RemoveRange(ids.Select(i => items.Find(i)));
             await _context.SaveChangesAsync();
+        }
+
+        public async Task RemoveRangeFromParentAsync(IEnumerable<Guid> ids, PropertyInfo childProp)
+        {
+            var childFKProp = typeof(T).GetProperty(childProp.Name + "Id");
+
+            // If this is a required relationship, removing from the parent is the same as deletion.
+            if (Nullable.GetUnderlyingType(childFKProp.PropertyType) != null)
+            {
+                await RemoveRangeAsync(ids);
+                return;
+            }
+
+            // If the child is not a MenuClass item, it should be removed if it's now an orphan (has
+            // no remaining relationships).
+            bool removeOrphans = false;
+            if (childProp.PropertyType.GetTypeInfo().GetCustomAttribute<MenuClassAttribute>() == null)
+            {
+                removeOrphans = true;
+            }
+
+            // For non-required relationships, null the prop.
+            foreach (var id in ids)
+            {
+                var item = await FindItemAsync(id);
+                childProp.SetValue(item, null);
+                await _context.SaveChangesAsync();
+
+                if (removeOrphans)
+                {
+                    // Check all navigation properties in the child item to see if it's now an orphan.
+                    var orphan = true;
+                    foreach (var nav in _context.Entry(item).Navigations)
+                    {
+                        await nav.LoadAsync();
+                        if (nav.CurrentValue != null)
+                        {
+                            orphan = false;
+                            break;
+                        }
+                    }
+                    // If the item is now an orphan, delete it.
+                    if (orphan)
+                    {
+                        await RemoveItemAsync(item);
+                    }
+                }
+            }
+        }
+
+        public async Task ReplaceChildAsync(Guid parentId, Guid newChildId, PropertyInfo childProp)
+        {
+            var parentRepo = (IRepository)Activator.CreateInstance(typeof(Repository<>).MakeGenericType(childProp.PropertyType), _context);
+            var parent = await parentRepo.FindItemAsync(parentId);
+            var oldChildId = (childProp.PropertyType
+                .GetProperty(childProp.GetCustomAttribute<InversePropertyAttribute>()?.Property)
+                .GetValue(parent) as DataItem).Id;
+
+            var newChild = await FindItemAsync(newChildId);
+            typeof(T).GetProperty(childProp.Name + "Id").SetValue(newChild, parentId);
+
+            await RemoveFromParentAsync(oldChildId, childProp);
+        }
+
+        public async Task<IDictionary<string, object>> ReplaceChildWithNewAsync(Guid parentId, PropertyInfo childProp)
+        {
+            var parentRepo = (IRepository)Activator.CreateInstance(typeof(Repository<>).MakeGenericType(childProp.PropertyType), _context);
+            var parent = await parentRepo.FindItemAsync(parentId);
+            var oldChildId = (childProp.PropertyType
+                .GetProperty(childProp.GetCustomAttribute<InversePropertyAttribute>()?.Property)
+                .GetValue(parent) as DataItem).Id;
+
+            var newItem = await AddAsync(childProp, parentId);
+
+            await RemoveFromParentAsync(oldChildId, childProp);
+
+            return newItem;
         }
 
         public async Task<IDictionary<string, object>> UpdateAsync(DataItem item)

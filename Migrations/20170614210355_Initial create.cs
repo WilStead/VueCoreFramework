@@ -207,21 +207,21 @@ namespace MVCCoreVue.Migrations
                 name: "AirlineCountry",
                 columns: table => new
                 {
-                    CountriesId = table.Column<Guid>(nullable: false),
-                    AirlinesId = table.Column<Guid>(nullable: false)
+                    CountryId = table.Column<Guid>(nullable: false),
+                    AirlineId = table.Column<Guid>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_AirlineCountry", x => new { x.CountriesId, x.AirlinesId });
+                    table.PrimaryKey("PK_AirlineCountry", x => new { x.CountryId, x.AirlineId });
                     table.ForeignKey(
-                        name: "FK_AirlineCountry_Airlines_AirlinesId",
-                        column: x => x.AirlinesId,
+                        name: "FK_AirlineCountry_Airlines_AirlineId",
+                        column: x => x.AirlineId,
                         principalTable: "Airlines",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_AirlineCountry_Countries_CountriesId",
-                        column: x => x.CountriesId,
+                        name: "FK_AirlineCountry_Countries_CountryId",
+                        column: x => x.CountryId,
                         principalTable: "Countries",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -312,9 +312,9 @@ namespace MVCCoreVue.Migrations
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AirlineCountry_AirlinesId",
+                name: "IX_AirlineCountry_AirlineId",
                 table: "AirlineCountry",
-                column: "AirlinesId");
+                column: "AirlineId");
 
             migrationBuilder.CreateIndex(
                 name: "EmailIndex",

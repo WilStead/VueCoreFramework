@@ -145,13 +145,13 @@ namespace MVCCoreVue.Migrations
 
             modelBuilder.Entity("MVCCoreVue.Models.AirlineCountry", b =>
                 {
-                    b.Property<Guid>("CountriesId");
+                    b.Property<Guid>("CountryId");
 
-                    b.Property<Guid>("AirlinesId");
+                    b.Property<Guid>("AirlineId");
 
-                    b.HasKey("CountriesId", "AirlinesId");
+                    b.HasKey("CountryId", "AirlineId");
 
-                    b.HasIndex("AirlinesId");
+                    b.HasIndex("AirlineId");
 
                     b.ToTable("AirlineCountry");
                 });
@@ -369,14 +369,14 @@ namespace MVCCoreVue.Migrations
 
             modelBuilder.Entity("MVCCoreVue.Models.AirlineCountry", b =>
                 {
-                    b.HasOne("MVCCoreVue.Models.Airline", "Airlines")
+                    b.HasOne("MVCCoreVue.Models.Airline", "Airline")
                         .WithMany("Countries")
-                        .HasForeignKey("AirlinesId")
+                        .HasForeignKey("AirlineId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("MVCCoreVue.Models.Country", "Countries")
+                    b.HasOne("MVCCoreVue.Models.Country", "Country")
                         .WithMany("Airlines")
-                        .HasForeignKey("CountriesId")
+                        .HasForeignKey("CountryId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

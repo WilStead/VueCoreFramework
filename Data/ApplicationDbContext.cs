@@ -26,15 +26,15 @@ namespace MVCCoreVue.Data
             // Add your customizations after calling base.OnModelCreating(builder);
 
             builder.Entity<AirlineCountry>()
-                .HasKey(c => new { c.CountriesId, c.AirlinesId });
+                .HasKey(c => new { c.CountryId, c.AirlineId });
             builder.Entity<AirlineCountry>()
-                .HasOne(c => c.Airlines)
+                .HasOne(c => c.Airline)
                 .WithMany(c => c.Countries)
-                .HasForeignKey(c => c.AirlinesId);
+                .HasForeignKey(c => c.AirlineId);
             builder.Entity<AirlineCountry>()
-                .HasOne(c => c.Countries)
+                .HasOne(c => c.Country)
                 .WithMany(c => c.Airlines)
-                .HasForeignKey(c => c.CountriesId);
+                .HasForeignKey(c => c.CountryId);
         }
     }
 }

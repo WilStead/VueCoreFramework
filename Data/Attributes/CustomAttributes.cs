@@ -120,9 +120,7 @@ namespace MVCCoreVue.Data.Attributes
     /// </summary>
     /// <remarks>
     /// Classes without this attribute will not appear on the site menu, and so will only be
-    /// accessible on the user interface as child objects within MenuClass objects. All relationships
-    /// with objects displayed on the menu must be many-to-many or many-to-one, since MenuClass
-    /// objects can be added and removed independently of any relationships they may have.
+    /// accessible on the user interface as child objects within MenuClass objects.
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class)]
     internal class MenuClassAttribute : Attribute
@@ -132,7 +130,10 @@ namespace MVCCoreVue.Data.Attributes
         /// </summary>
         /// <remarks>
         /// Used to generate menu and URL structure; doesn't need to reflect data relationships in
-        /// any way.
+        /// any way. Classes can be ordered in the framework's user interface according to a
+        /// conceptual scheme for ease of understanding or navigation, while the underlying data
+        /// structure is arranged according to business and/or programmatic needs, and the two
+        /// designs might be only loosely correlated.
         /// </remarks>
         public string Category { get; set; }
 

@@ -38,10 +38,7 @@ namespace MVCCoreVue.Models
     /// <remarks>
     /// Because this class doesn't have the <see cref="MenuClassAttribute"/>, it will not appear in
     /// the menu of the SPA, and items of this type will therefore only be available to view or edit
-    /// as children of another object (a <see cref="Models.Country"/>, in this case). This is required for
-    /// any class which has a one-to-one or one-to-many relationship with any MenuClass parent type,
-    /// since being listed in the menu would allow an item to be created and deleted independently of
-    /// its parent, and the framework would not be able to manage the necessary relationships correctly.
+    /// as children of another object (a <see cref="Models.Country"/>, in this case).
     /// </remarks>
     public class City : NamedDataItem
     {
@@ -50,11 +47,14 @@ namespace MVCCoreVue.Models
         /// </summary>
         /// <remarks>
         /// The DataType can control the type of field displayed in forms. Time will present a time
-        /// picker.
+        /// picker. As a required property without a non-null default value, it is necessary to
+        /// supply a property initializer in order for the framework to be able to generate new
+        /// objects correctly.
         /// </remarks>
+        [Required]
         [Display(Prompt = "Local time at GMT midnight")]
         [DataType(DataType.Time)]
-        public DateTime LocalTimeAtGMTMidnight { get; set; }
+        public DateTime LocalTimeAtGMTMidnight { get; set; } = new DateTime(2017, 1, 1, 0, 0, 0);
 
         /// <summary>
         /// The population of the city.
@@ -67,22 +67,27 @@ namespace MVCCoreVue.Models
         /// </summary>
         /// <remarks>
         /// A Flags enum property is represented by the framework as a multiselect input. In a data
-        /// table, no selection will be displayed as '[None]' and any other selection will be
-        /// displayed as '[...]', to avoid the expensive operations required to validate and break
-        /// down the flag value.
+        /// table, no selection will be displayed as '[None]', a selection with a valid name or
+        /// description will be displayed, and any other selection (e.g. a combination of Flags
+        /// values) will be displayed as '[...]', to avoid the expensive operations required to
+        /// validate and break down the flag value. For this reason, it may be best to hide Flags
+        /// enums in tables when it is expected that multiple selections will be common, as is done
+        /// here, to avoid a column full of unhelpful placeholder text.
         /// </remarks>
+        [Hidden(false, HideInTable = true)]
         public CityTransit Transit { get; set; }
 
         /// <summary>
         /// The country to which this city belongs.
         /// </summary>
         /// <remarks>
-        /// Inverse navigation properties on child objects must be marked virtual, to prevent
-        /// deleting parent objects incorrectly. It is not necessary to hide inverse references on
-        /// child objects, although it is recommended to avoid a confusing structure; the child
-        /// object should usually be accessible only from the parent in the first place, which means
-        /// the parent can be accessed simply by going 'back' or canceling the current operation,
-        /// which makes a reverse navigation field unnecessary.
+        /// Inverse navigation properties must be marked virtual for the framework to operate
+        /// correctly. It is not necessary to hide inverse references on child objects (a field with
+        /// a view/edit option will be generated). However, it will make your views cleaner when the
+        /// child object has just one parent, since the parent object can always be accessed from the
+        /// child by going back or cancelling the current operation, making a reverse navigation
+        /// field redundant. In cases where a child may be in relationships to different parents,
+        /// visible reverse navigation fields can be helpful.
         /// </remarks>
         [JsonIgnore]
         [InverseProperty(nameof(Models.Country.Cities))]
@@ -94,10 +99,9 @@ namespace MVCCoreVue.Models
         /// </summary>
         /// <remarks>
         /// Although Entity Framework can automatically create foreign keys, the SPA framework
-        /// requires explicitly defined foreign keys for one-to-one relationships, which must fit the
-        /// pattern {navigation property name}+'Id'. Guid properties are never shown by the
-        /// framework, so it isn't necessary to mark it as hidden. Since this key is nullable, the
-        /// relationship is zero-or-one-to-one, rather than one-to-one (i.e., not required).
+        /// requires explicitly defined foreign keys for one-to-one and many-to-one relationships,
+        /// which must fit the pattern {navigation property name}+'Id'. Guid properties are never
+        /// shown by the framework, so it isn't necessary to mark it as hidden.
         /// </remarks>
         public Guid CountryId { get; set; }
 
@@ -112,6 +116,10 @@ namespace MVCCoreVue.Models
         /// <summary>
         /// The foreign key for <see cref="CountryCapitol"/>.
         /// </summary>
+        /// <remarks>
+        /// Since this key is nullable, the relationship is zero-or-one-to-one, rather than
+        /// one-to-one (i.e., not required).
+        /// </remarks>
         public Guid? CountryCapitolId { get; set; }
     }
 }
