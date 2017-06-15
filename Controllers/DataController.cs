@@ -69,7 +69,7 @@ namespace MVCCoreVue.Controllers
             try
             {
                 var newItem = await repository.AddAsync(pInfo, hasParent ? guid : (Guid?)null);
-                return Json(newItem);
+                return Json(new { data = newItem });
             }
             catch
             {
@@ -178,7 +178,7 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/404" });
             }
-            return Json(item);
+            return Json(new { data = item });
         }
 
         /// <summary>
@@ -946,7 +946,7 @@ namespace MVCCoreVue.Controllers
             try
             {
                 var newItem = await repository.ReplaceChildWithNewAsync(parentGuid, pInfo);
-                return Json(newItem);
+                return Json(new { data = newItem });
             }
             catch
             {
@@ -1027,7 +1027,7 @@ namespace MVCCoreVue.Controllers
             try
             {
                 var updatedItem = await repository.UpdateAsync(obj);
-                return Json(updatedItem);
+                return Json(new { data = updatedItem });
             }
             catch
             {

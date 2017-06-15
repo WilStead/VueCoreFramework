@@ -45,7 +45,6 @@ export default class DynamicFormComponent extends Vue {
     repository: Repository = null;
     schema: Schema = {};
     updateTimeout = 0;
-    vm: any;
     vmDefinition: Array<FieldDefinition>;
 
     beforeRouteUpdate(to: VueRouter.Route, from: VueRouter.Route, next: Function) {
@@ -73,30 +72,27 @@ export default class DynamicFormComponent extends Vue {
             if (newField.type === "object"
                 || newField.type === "objectSelect"
                 || newField.type == "objectReference") {
-                let idField = this.vmDefinition.find(v => v.model === newField.model + "Id");
-                if (idField) {
-                    newField.buttons = [];
-                    if (newField.type === "objectSelect"
-                        && (this.operation === "edit" || this.operation === "create")) {
-                        newField.buttons.push({
-                            classes: 'btn btn--dark btn--flat primary--text',
-                            label: 'Select',
-                            onclick: function (model, field: FieldDefinition) {
-                                router.push({
-                                    name: newField.inputType + "DataTable",
-                                    params: {
-                                        childProp: newField.inverseType,
-                                        operation: 'select',
-                                        parentType: model.dataType,
-                                        parentId: model.id,
-                                        parentProp: newField.model
-                                    }
-                                });
-                            }
-                        });
-                    }
-                    this.addObjectButtons(newField, idField);
+                newField.buttons = [];
+                if (newField.type === "objectSelect"
+                    && (this.operation === "edit" || this.operation === "create")) {
+                    newField.buttons.push({
+                        classes: 'btn btn--dark btn--flat primary--text',
+                        label: 'Select',
+                        onclick: function (model, field: FieldDefinition) {
+                            router.push({
+                                name: newField.inputType + "DataTable",
+                                params: {
+                                    childProp: newField.inverseType,
+                                    operation: 'select',
+                                    parentType: model.dataType,
+                                    parentId: model.id,
+                                    parentProp: newField.model
+                                }
+                            });
+                        }
+                    });
                 }
+                this.addObjectButtons(newField);
             } else if (newField.type === "objectMultiSelect") {
                 newField.buttons = [{
                     classes: 'btn btn--dark btn--flat info--text',
@@ -165,15 +161,15 @@ export default class DynamicFormComponent extends Vue {
             });
     }.bind(this);
 
-    addObjectButtons(newField: FieldDefinition, idField: FieldDefinition) {
+    addObjectButtons(newField: FieldDefinition) {
         if ((this.operation === "edit" || this.operation === "create")
             && newField.type !== "objectReference"
             && (newField.type === "objectSelect"
-                || !this.model[idField.model])) {
+                || this.model[newField.model] === "[None]")) {
             newField.buttons.push({
                 classes: 'btn btn--dark btn--flat success--text',
                 label: 'Add',
-                onclick: !this.model[idField.model]
+                onclick: this.model[newField.model] === "[None]"
                     ? this.addNew
                     : function (model, field: FieldDefinition, event: Event) {
                         event.stopPropagation();
@@ -183,7 +179,7 @@ export default class DynamicFormComponent extends Vue {
                     }
             });
         }
-        if (this.model[idField.model]) {
+        if (this.model[newField.model] !== "[None]") {
             newField.buttons.push({
                 classes: 'btn btn--dark btn--flat info--text',
                 label: 'View/Edit',
@@ -195,7 +191,7 @@ export default class DynamicFormComponent extends Vue {
         if ((this.operation === "edit" || this.operation === "create")
             && newField.type !== "objectReference"
             && !newField.required
-            && this.model[idField.model]) {
+            && this.model[newField.model] !== "[None]") {
             newField.buttons.push({
                 classes: 'btn btn--dark btn--flat error--text',
                 label: 'Delete',
@@ -334,7 +330,6 @@ export default class DynamicFormComponent extends Vue {
                     this.repository.getFieldDefinitions(this.$route.fullPath)
                         .then(defData => {
                             this.vmDefinition = defData;
-                            this.vm = data.data;
                             let groups = this.vmDefinition.filter(v => v.groupName !== undefined && v.groupName !== null).map(v => v.groupName);
                             if (groups.length) {
                                 this.schema.groups = [];
@@ -348,8 +343,8 @@ export default class DynamicFormComponent extends Vue {
                             this.vmDefinition.forEach(field => {
                                 this.model[field.model] = field.default || null;
                             });
-                            for (var prop in this.vm) {
-                                this.model[prop] = this.vm[prop];
+                            for (var prop in data.data) {
+                                this.model[prop] = data.data[prop];
                             }
                             this.vmDefinition.forEach(field => {
                                 this.addFieldToSchema(field, field.label === "Name" || field.placeholder === "Name");
