@@ -4,6 +4,9 @@ using MVCCoreVue.Models;
 
 namespace MVCCoreVue.Data
 {
+    /// <summary>
+    /// The application's Entity Framework database context.
+    /// </summary>
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public DbSet<Log> Logs { get; set; }
@@ -13,16 +16,22 @@ namespace MVCCoreVue.Data
         public DbSet<Country> Countries { get; set; }
         public DbSet<Leader> Leaders { get; set; }
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="ApplicationDbContext"/>.
+        /// </summary>
+        /// <param name="options">The options to be used by a <see cref="DbContext"/>.</param>
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
         }
 
+        /// <summary>
+        /// Configures the schema required for the framework.
+        /// </summary>
+        /// <param name="builder">The builder being used to construct the model for this context.</param>
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            // Customize the ASP.NET Identity model and override the defaults if needed.
-            // For example, you can rename the ASP.NET Identity table names and more.
             // Add your customizations after calling base.OnModelCreating(builder);
 
             builder.Entity<AirlineCountry>()

@@ -7,15 +7,24 @@ using System.Threading.Tasks;
 
 namespace MVCCoreVue.Services
 {
-    // This class is used by the application to send Email and SMS
-    // when you turn on two-factor authentication in ASP.NET Identity.
-    // For more details see this link https://go.microsoft.com/fwlink/?LinkID=532713
+    /// <summary>
+    /// This class is used by the application to send email.
+    /// </summary>
+    /// <remarks>
+    /// See https://go.microsoft.com/fwlink/?LinkID=532713
+    /// </remarks>
     public class AuthMessageSender : IEmailSender
     {
         private readonly ILogger<AuthMessageSender> _logger;
 
+        /// <summary>
+        /// The email options configuration object.
+        /// </summary>
         public AuthMessageSenderOptions Options { get; }
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="AuthMessageSender"/>.
+        /// </summary>
         public AuthMessageSender(
             IOptions<AuthMessageSenderOptions> optionsAccessor,
             ILogger<AuthMessageSender> logger)
@@ -24,6 +33,12 @@ namespace MVCCoreVue.Services
             _logger = logger;
         }
 
+        /// <summary>
+        /// Sends an email message to the supplied address.
+        /// </summary>
+        /// <param name="email">The email address to which the message will be sent.</param>
+        /// <param name="subject">The subject of the email message.</param>
+        /// <param name="message">The body of the email message.</param>
         public async Task SendEmailAsync(string email, string subject, string message)
         {
             try

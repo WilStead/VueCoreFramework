@@ -10,8 +10,14 @@ using System.Security.Claims;
 
 namespace MVCCoreVue.Data
 {
+    /// <summary>
+    /// Used to seed the application's database.
+    /// </summary>
     public static class DbInitialize
     {
+        /// <summary>
+        /// Seeds the application's database.
+        /// </summary>
         public static void Initialize(IServiceProvider provider)
         {
             var context = provider.GetRequiredService<ApplicationDbContext>();

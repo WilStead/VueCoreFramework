@@ -1,5 +1,8 @@
 ﻿namespace MVCCoreVue.Services
 {
+    /// <summary>
+    /// A collection of log event codes.
+    /// </summary>
     public static class LogEvent
     {
         // User events
