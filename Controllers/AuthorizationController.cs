@@ -7,7 +7,6 @@ using MVCCoreVue.Data;
 using MVCCoreVue.Data.Attributes;
 using MVCCoreVue.Extensions;
 using MVCCoreVue.Models;
-using MVCCoreVue.Models.AccountViewModels;
 using MVCCoreVue.Services;
 using System;
 using System.Linq;
@@ -17,6 +16,9 @@ using System.Threading.Tasks;
 
 namespace MVCCoreVue.Controllers
 {
+    /// <summary>
+    /// An MVC controller for handling user authorization tasks.
+    /// </summary>
     [Route("api/[controller]/[action]")]
     public class AuthorizationController : Controller
     {
@@ -25,6 +27,9 @@ namespace MVCCoreVue.Controllers
         private readonly TokenProviderOptions _tokenOptions;
         private readonly UserManager<ApplicationUser> _userManager;
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="AuthorizationController"/>.
+        /// </summary>
         public AuthorizationController(
             ApplicationDbContext context,
             RoleManager<IdentityRole> roleManager,
@@ -37,6 +42,19 @@ namespace MVCCoreVue.Controllers
             _tokenOptions = tokenOptions.Value;
         }
 
+        /// <summary>
+        /// Called to authorize the current user for a particular operation, or simply to
+        /// authenticate the user if no oepration is specified.
+        /// </summary>
+        /// <param name="dataType">
+        /// An optional name indicating the type of data involved in the current operation.
+        /// </param>
+        /// <param name="operation">An optional operation being performed.</param>
+        /// <param name="id">An optional primary key for the item involved in the current operation.</param>
+        /// <returns>
+        /// An <see cref="AuthorizationViewModel"/> indicating whether the current user is authorized
+        /// (or authenticated).
+        /// </returns>
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> Authorize(string dataType = null, string operation = "View", string id = null)

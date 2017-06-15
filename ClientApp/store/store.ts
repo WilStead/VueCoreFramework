@@ -1,9 +1,12 @@
 ﻿import Vue from 'vue';
 import Vuex from 'vuex';
 Vue.use(Vuex);
-import { MenuItem, uiState, getMenuItems, getChildItems } from './ui/uiStore';
+import { uiState, getMenuItems, getChildItems } from './ui/uiStore';
 import * as ErrorLog from '../error-msg';
 
+/**
+ * The SPA framework's Vuex Store instance.
+ */
 export const store = new Vuex.Store({
     state: {
         count: 0,

@@ -2,7 +2,7 @@
 import { store } from './store/store';
 import * as ErrorMsg from './error-msg';
 
-const routes = [
+const routes: Array<VueRouter.RouteConfig> = [
     { path: '/', component: require('./components/home/home.vue') },
     {
         path: '/login',
@@ -37,6 +37,9 @@ const routes = [
     { path: '/error/:code', component: resolve => require(['./components/error/error.vue'], resolve), props: true }
 ];
 
+/**
+ * The SPA framework's VueRouter instance.
+ */
 export const router = new VueRouter({
     mode: 'history',
     routes,
@@ -52,7 +55,7 @@ export const router = new VueRouter({
 });
 router.beforeEach((to, from, next) => {
     if (to.matched.some(record => record.meta.requiresAuth)) {
-        checkAuthorization(to, to.fullPath)
+        checkAuthorization(to)
             .then(auth => {
                 if (auth === "authorized") {
                     next();
@@ -71,17 +74,40 @@ router.beforeEach((to, from, next) => {
     }
 });
 
+/**
+ * A ViewModel used to receive a response from an API call, with an error and response string.
+ */
 export interface ApiResponseViewModel {
     error: string,
     response: string
 }
 
+/**
+ * A ViewModel used to transfer information during user account authorization tasks.
+ */
 interface AuthorizationViewModel {
+    /**
+     * The email of the user account.
+     */
     email: string,
+
+    /**
+     * A JWT bearer token.
+     */
     token: string,
+
+    /**
+     * A value indicating whether the user is authorized for the requested action or not.
+     */
     authorization: string
 }
-export function checkAuthorization(to, returnPath): Promise<string> {
+
+/**
+ * Calls an API endpoint which authorizes the current user for the route being navigated to.
+ * @param to The Route being navigated to.
+ * @returns {string} Either 'authorized' or 'unauthorized' or 'login' if the user must sign in.
+ */
+export function checkAuthorization(to: VueRouter.Route): Promise<string> {
     let url = '/api/Authorization/Authorize';
     if (to && to.name && to.name.length) {
         let n: string = to.name;
@@ -136,7 +162,13 @@ export function checkAuthorization(to, returnPath): Promise<string> {
         });
 }
 
-export function checkResponse(response, returnPath) {
+/**
+ * Verifies that the response of an API call was an OK response. If not, redirects to the login
+ * page on 401, and throws an error otherwise.
+ * @param response
+ * @param {string} returnPath The page to redirect to after a successful login, if required.
+ */
+export function checkResponse(response: Response, returnPath: string) {
     if (!response.ok) {
         if (response.status === 401) {
             router.push({ path: '/login', query: { returnUrl: returnPath } });

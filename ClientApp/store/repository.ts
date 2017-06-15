@@ -4,31 +4,82 @@ import { FieldDefinition } from './field-definition';
 import { validators } from '../vfg/vfg-custom-validators';
 import * as ErrorMsg from '../error-msg';
 
+/**
+ * A ViewModel used to receive a numeric response from an API call.
+ */
 interface ApiNumericResponseViewModel {
     response: number;
 }
 
+/**
+ * Represents a database object which can be displayed automatically by the SPA framework.
+ */
 export interface DataItem {
+    /**
+     * The unique ID (primary key) of the item.
+     */
     id: string;
+
+    /**
+     * The date/time when the item was created.
+     */
     creationTimestamp: number;
+
+    /**
+     * The date/time when the item was last updated.
+     */
     updateTimestamp: number;
 }
 
+/**
+ * A ViewModel used to receive a generic response from an API call.
+ */
 export interface OperationReply<T> {
+    /**
+     * The data received from the API.
+     */
     data: T;
+
+    /**
+     * Any error message received from the API.
+     */
     error: string;
 }
 
+/**
+ * A ViewModel used to receive a page of DataItems from an API call.
+ */
 export interface PageData<DataItem> {
+    /**
+     * The array of DataItems received from the API.
+     */
     pageItems: Array<DataItem>;
+
+    /**
+     * The total number of DataItems in the type received from the API.
+     */
     totalItems: number;
 }
 
+/**
+ * Encapsulates data maniupulation calls to the API for a particular data type.
+ */
 export class Repository {
     dataType = '';
 
+    /**
+     * Initializes a new instance of Repository.
+     * @param {string} dataType The name of the data type managed by this Repository.
+     */
     constructor(dataType: string) { this.dataType = dataType; }
 
+    /**
+     * Called to create a new instance of the data type and add it to the database.
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @param {string} childProp An optional navigation property which will be set on the new object.
+     * @param {string} parentId The primary key of the entity which will be set on the childProp property.
+     * @returns {OperationReply<DataItem>} An OperationReply containing any error which occurred, or the newly added item.
+     */
     add(returnPath: string, childProp: string, parentId: string): Promise<OperationReply<DataItem>> {
         let url = `/api/Data/${this.dataType}/Add`;
         if (childProp && parentId) {
@@ -59,6 +110,15 @@ export class Repository {
             });
     }
 
+    /**
+     * Called to add an assortment of child entities to a parent entity under the given navigation
+     * property.
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @param {string} id The primary key of the parent entity.
+     * @param {string} childProp The navigation property to which the children will be added.
+     * @param {Array<string>} ids The primary keys of the child entities which will be added.
+     * @returns {OperationReply<string>} An OperationReply containing any error which occurred.
+     */
     addChildrenToCollection(returnPath: string, id: string, childProp: string, ids: Array<string>): Promise<OperationReply<string>> {
         return fetch(`/api/Data/${this.dataType}/AddChildrenToCollection/${id}/${childProp}`,
             {
@@ -86,6 +146,12 @@ export class Repository {
             });
     }
 
+    /**
+     * Called to find an entity with the given primary key value, or an empty ViewModel (not null).
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @param {string} id The primary key of the entity to be found.
+     * @returns {OperationReply<DataItem>} An OperationReply containing any error which occurred, or the item.
+     */
     find(returnPath: string, id: string): Promise<OperationReply<DataItem>> {
         if (id === undefined || id === null || id === '') {
             return Promise.reject("The item id was missing from your request.");
@@ -114,6 +180,12 @@ export class Repository {
             });
     }
 
+    /**
+     * Called to retrieve ViewModels representing all the entities in the database of the
+     * repository's type.
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @returns {Array<DataItem>} All the items.
+     */
     getAll(returnPath: string): Promise<Array<DataItem>> {
         return fetch(`/api/Data/${this.dataType}/GetAll`,
             {
@@ -131,6 +203,13 @@ export class Repository {
             });
     }
 
+    /**
+     * Called to retrieve all the primary keys of the entities in a given relationship.
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @param {string} id The primary key of the parent entity.
+     * @param {string} childProp The navigation property of the relationship on the parent entity.
+     * @returns {Array<string>} The primary keys of all the children.
+     */
     getAllChildIds(returnPath: string, id: string, childProp: string): Promise<Array<string>> {
         return fetch(`/api/Data/${this.dataType}/GetAllChildIds/${id}/${childProp}`,
             {
@@ -153,6 +232,20 @@ export class Repository {
             });
     }
 
+    /**
+     * Called to retrieve a page of child entities in a given relationship.
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @param {string} id The primary key of the parent entity.
+     * @param {string} childProp The navigation property of the relationship on the parent entity.
+     * @param {string} search An optional search term which will filter the results. Any string or
+     * numeric property with matching text will be included.
+     * @param {string} sortBy An optional property name which will be used to sort the items before
+     * calculating the page contents.
+     * @param {boolean} descending Indicates whether the sort is descending; if false, the sort is ascending.
+     * @param {number} page The page number requested.
+     * @param {number} rowsPerPage The number of items per page.
+     * @returns {PageData<DataItem>} The PageData for the page of children retrieved.
+     */
     getChildPage(returnPath: string, id: string, childProp: string, search: string, sortBy: string, descending: boolean, page: number, rowsPerPage: number): Promise<PageData<DataItem>> {
         var url = `/api/Data/${this.dataType}/GetChildPage/${id}/${childProp}`;
         if (search || sortBy || descending || page || rowsPerPage) {
@@ -221,6 +314,11 @@ export class Repository {
             });
     }
 
+    /**
+     * Called to retrieve a list of FieldDefinitions for the repository's data type.
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @returns {Array<FieldDefinition>} The FieldDefinitions for the properties of the repository's data type.
+     */
     getFieldDefinitions(returnPath: string): Promise<Array<FieldDefinition>> {
         return fetch(`/api/Data/${this.dataType}/GetFieldDefinitions`,
             {
@@ -250,6 +348,20 @@ export class Repository {
             });
     }
 
+    /**
+     * Called to retrieve the set of entities with the given paging parameters.
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @param {string} search An optional search term which will filter the results. Any string or
+     * numeric property with matching text will be included.
+     * @param {string} sortBy An optional property name which will be used to sort the items before
+     * calculating the page contents.
+     * @param {boolean} descending Indicates whether the sort is descending; if false, the sort is ascending.
+     * @param {number} page The page number requested.
+     * @param {number} rowsPerPage The number of items per page.
+     * @param {Array<string>} except The primary keys of items which should be excluded from the
+     * results before caluclating the page contents.
+     * @returns {PageData<DataItem>} The PageData for the page of items retrieved.
+     */
     getPage(returnPath: string, search: string, sortBy: string, descending: boolean, page: number, rowsPerPage: number, except: Array<string> = []): Promise<PageData<DataItem>> {
         var url = `/api/Data/${this.dataType}/GetPage`;
         if (search || sortBy || descending || page || rowsPerPage) {
@@ -320,6 +432,12 @@ export class Repository {
             });
     }
 
+    /**
+     * Called to remove an entity from the database.
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @param {string} id The primary key of the entity to remove.
+     * @returns {OperationReply<string>} An OperationReply containing any error which occurred.
+     */
     remove(returnPath: string, id: string): Promise<OperationReply<string>> {
         if (id === undefined || id === null || id === '') {
             return Promise.reject("The item id was missing from your request.");
@@ -348,15 +466,25 @@ export class Repository {
             });
     }
 
-    removeFromParent(returnPath: string, id: string, childProp: string): Promise<OperationReply<string>> {
-        return fetch(`/api/Data/${this.dataType}/RemoveFromParent/${id}/${childProp}`,
+    /**
+     * Called to remove an assortment of child entities from a parent entity under the given
+     * navigation property.
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @param {string} id The primary key of the parent entity.
+     * @param {string} childProp The navigation property from which the children will be removed.
+     * @param {Array<string>} childIds The primary keys of the child entities which will be removed.
+     * @returns {OperationReply<string>} An OperationReply containing any error which occurred.
+     */
+    removeChildrenFromCollection(returnPath: string, id: string, childProp: string, childIds: Array<string>): Promise<OperationReply<string>> {
+        return fetch(`/api/Data/${this.dataType}/RemoveChildrenFromCollection/${id}/${childProp}`,
             {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
                     'Authorization': `bearer ${store.state.token}`
-                }
+                },
+                body: JSON.stringify(childIds)
             })
             .then(response => checkResponse(response, returnPath))
             .then(response => response.json() as Promise<any>)
@@ -374,16 +502,24 @@ export class Repository {
             });
     }
 
-    removeChildrenFromCollection(returnPath: string, id: string, childProp: string, ids: Array<string>): Promise<OperationReply<string>> {
-        return fetch(`/api/Data/${this.dataType}/RemoveChildrenFromCollection/${id}/${childProp}`,
+    /**
+     * Called to terminate a relationship bewteen two entities. If the child entity is made an
+     * orphan by the removal and is not a MenuClass object, it is then removed from the database
+     * entirely.
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @param {string} id The primary key of the child entity whose relationship is being severed.
+     * @param {string} childProp The navigation property of the relationship being severed.
+     * @returns {OperationReply<string>} An OperationReply containing any error which occurred.
+     */
+    removeFromParent(returnPath: string, id: string, childProp: string): Promise<OperationReply<string>> {
+        return fetch(`/api/Data/${this.dataType}/RemoveFromParent/${id}/${childProp}`,
             {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
                     'Authorization': `bearer ${store.state.token}`
-                },
-                body: JSON.stringify(ids)
+                }
             })
             .then(response => checkResponse(response, returnPath))
             .then(response => response.json() as Promise<any>)

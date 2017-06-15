@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace MVCCoreVue.Models
 {
     /// <summary>
-    /// Represents a database object which can be displayed automatically by the framework.
+    /// Represents a database object which can be displayed automatically by the SPA framework.
     /// </summary>
     /// <remarks>
     /// All datatypes used by the framework *must* be a subclass of DataItem in order to function.

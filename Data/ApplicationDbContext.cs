@@ -9,11 +9,26 @@ namespace MVCCoreVue.Data
     /// </summary>
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
+        /// <summary>
+        /// Gets or sets the <see cref="DbSet{TEntity}"/> of <see cref="Log"/>s.
+        /// </summary>
         public DbSet<Log> Logs { get; set; }
 
+        /// <summary>
+        /// Gets or sets the <see cref="DbSet{TEntity}"/> of <see cref="Airline"/>s.
+        /// </summary>
         public DbSet<Airline> Airlines { get; set; }
+        /// <summary>
+        /// Gets or sets the <see cref="DbSet{TEntity}"/> of <see cref="City"/>s.
+        /// </summary>
         public DbSet<City> Cities { get; set; }
+        /// <summary>
+        /// Gets or sets the <see cref="DbSet{TEntity}"/> of <see cref="Country"/>s.
+        /// </summary>
         public DbSet<Country> Countries { get; set; }
+        /// <summary>
+        /// Gets or sets the <see cref="DbSet{TEntity}"/> of <see cref="Leader"/>s.
+        /// </summary>
         public DbSet<Leader> Leaders { get; set; }
 
         /// <summary>

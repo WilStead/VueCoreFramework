@@ -13,6 +13,9 @@ using Microsoft.Extensions.Options;
 
 namespace MVCCoreVue.Controllers
 {
+    /// <summary>
+    /// An MVC controller for handling user management tasks.
+    /// </summary>
     [Authorize]
     public class ManageController : Controller
     {
@@ -22,6 +25,9 @@ namespace MVCCoreVue.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="ManageController"/>.
+        /// </summary>
         public ManageController(
             IOptions<AdminOptions> adminOptions,
             IEmailSender emailSender,
@@ -36,6 +42,11 @@ namespace MVCCoreVue.Controllers
             _userManager = userManager;
         }
 
+        /// <summary>
+        /// Called to initiate an email address change for a user.
+        /// </summary>
+        /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
+        /// <returns>A <see cref="ManageUserViewModel"/> used to transfer task data.</returns>
         [HttpPost]
         [Route("api/[controller]/[action]")]
         public async Task<ManageUserViewModel> ChangeEmail([FromBody]ManageUserViewModel model)
@@ -59,18 +70,31 @@ namespace MVCCoreVue.Controllers
 
             user.NewEmail = model.Email;
 
+            // Generate an email with a callback URL pointing to the 'RestoreEmail' action in the
+            // 'Account' controller, so the current user can undo this change, if it was a mistake,
+            // or from an unauthorized source.
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var restoreCallbackUrl = Url.Action(nameof(AccountController.RestoreEmail), "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
             await _emailSender.SendEmailAsync(user.Email, "Confirm your email change",
                 $"A request was made to change the email address on your account from this email address to a new one. If this was a mistake, please click this link to reject the requested change: <a href='{restoreCallbackUrl}'>link</a>");
+
+            // Generate an email with a callback URL pointing to the 'ChangeEmail' action in the
+            // 'Account' controller, which will confirm the change by validating that the newly
+            // requested email belongs to the user.
             var changeCallbackUrl = Url.Action(nameof(AccountController.ChangeEmail), "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
             await _emailSender.SendEmailAsync(user.NewEmail, "Confirm your email change",
                 $"Please confirm your email address change by clicking this link: <a href='{changeCallbackUrl}'>link</a>");
+
             _logger.LogInformation(LogEvent.EMAIL_CHANGE_REQUEST, "Email change request received, from {OLDEMAIL} to {NEWEMAIL}.", user.Email, user.NewEmail);
 
             return model;
         }
 
+        /// <summary>
+        /// Called to initiate a password change for a user.
+        /// </summary>
+        /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
+        /// <returns>A <see cref="ManageUserViewModel"/> used to transfer task data.</returns>
         [HttpPost]
         [Route("api/[controller]/[action]")]
         public async Task<ManageUserViewModel> ChangePassword([FromBody]ManageUserViewModel model)
@@ -97,6 +121,14 @@ namespace MVCCoreVue.Controllers
             return model;
         }
 
+        /// <summary>
+        /// Called to link a user's external authentication provider account with their site account.
+        /// </summary>
+        /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
+        /// <returns>
+        /// A <see cref="ManageUserViewModel"/> used to transfer task data in the event of a problem,
+        /// or a <see cref="ChallengeResult"/> for the authentication provider.
+        /// </returns>
         [HttpPost]
         public IActionResult LinkLogin([FromBody]ManageUserViewModel model)
         {
@@ -113,6 +145,11 @@ namespace MVCCoreVue.Controllers
             return Challenge(properties, provider.AuthenticationScheme);
         }
 
+        /// <summary>
+        /// The endpoint reached when a user returns from an external authentication provider when
+        /// attempting to link that account with their site account.
+        /// </summary>
+        /// <returns>A <see cref="ManageUserViewModel"/> used to transfer task data.</returns>
         [HttpGet]
         public async Task<ManageUserViewModel> LinkLoginCallback()
         {
@@ -144,6 +181,11 @@ namespace MVCCoreVue.Controllers
             return model;
         }
 
+        /// <summary>
+        /// Called to remove a user's external authentication provider account from their site account.
+        /// </summary>
+        /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
+        /// <returns>A <see cref="ManageUserViewModel"/> used to transfer task data.</returns>
         [HttpPost]
         public async Task<ManageUserViewModel> RemoveLogin([FromBody]ManageUserViewModel model)
         {
@@ -177,6 +219,12 @@ namespace MVCCoreVue.Controllers
             return model;
         }
 
+        /// <summary>
+        /// Called to set a password for a user (for users who intiially registered with an external
+        /// authentication provider, rather than a local site account).
+        /// </summary>
+        /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
+        /// <returns>A <see cref="ManageUserViewModel"/> used to transfer task data.</returns>
         [HttpPost]
         [Route("api/[controller]/[action]")]
         public async Task<ManageUserViewModel> SetPassword([FromBody]ManageUserViewModel model)

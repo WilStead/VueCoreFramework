@@ -15,6 +15,9 @@ using System.Threading.Tasks;
 
 namespace MVCCoreVue.Controllers
 {
+    /// <summary>
+    /// An MVC controller for handling data manipulation tasks.
+    /// </summary>
     [Authorize]
     [Route("api/[controller]/{dataType}/[action]")]
     public class DataController : Controller
@@ -22,12 +25,30 @@ namespace MVCCoreVue.Controllers
         private readonly ILogger<AccountController> _logger;
         private readonly ApplicationDbContext _context;
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="DataController"/>.
+        /// </summary>
         public DataController(ILogger<AccountController> logger, ApplicationDbContext context)
         {
             _logger = logger;
             _context = context;
         }
 
+        /// <summary>
+        /// Called to create a new instance of <see cref="T"/> and add it to the <see
+        /// cref="ApplicationDbContext"/> instance.
+        /// </summary>
+        /// <param name="dataType">The type of entity to add.</param>
+        /// <param name="childProp">
+        /// An optional navigation property which will be set on the new object.
+        /// </param>
+        /// <param name="parentId">
+        /// The primary key of the entity which will be set on the <paramref name="childProp"/> property.
+        /// </param>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
+        /// or a ViewModel representing the newly added item (as JSON).
+        /// </returns>
         [HttpPost("{childProp}/{parentId}")]
         public async Task<IActionResult> Add(string dataType, string childProp, string parentId)
         {
@@ -56,6 +77,18 @@ namespace MVCCoreVue.Controllers
             }
         }
 
+        /// <summary>
+        /// Called to add an assortment of child entities to a parent entity under the given
+        /// navigation property.
+        /// </summary>
+        /// <param name="dataType">The type of entities to add.</param>
+        /// <param name="id">The primary key of the parent entity.</param>
+        /// <param name="childProp">The navigation property to which the children will be added.</param>
+        /// <param name="childIds">The primary keys of the child entities which will be added.</param>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
+        /// or an OK result.
+        /// </returns>
         [HttpPost("{id}/{childProp}")]
         public async Task<IActionResult> AddChildrenToCollection(string dataType, string id, string childProp, [FromBody]string[] childIds)
         {
@@ -107,6 +140,16 @@ namespace MVCCoreVue.Controllers
             }
         }
 
+        /// <summary>
+        /// Called to find an entity with the given primary key value and return a ViewModel for that
+        /// entity. If no entity is found, an empty ViewModel is returned (not null).
+        /// </summary>
+        /// <param name="dataType">The type of entity to find.</param>
+        /// <param name="id">The primary key of the entity to be found.</param>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
+        /// or a ViewModel representing the item found, or an empty ViewModel if none is found (as JSON).
+        /// </returns>
         [HttpGet("{id}")]
         public async Task<IActionResult> Find(string dataType, string id)
         {
@@ -138,6 +181,14 @@ namespace MVCCoreVue.Controllers
             return Json(item);
         }
 
+        /// <summary>
+        /// Called to retrieve ViewModels representing all the entities in the <see
+        /// cref="ApplicationDbContext"/>'s set.
+        /// </summary>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; or ViewModels representing the
+        /// items (as JSON).
+        /// </returns>
         [HttpGet]
         public IActionResult GetAll(string dataType)
         {
@@ -148,6 +199,16 @@ namespace MVCCoreVue.Controllers
             return Json(repository.GetAll());
         }
 
+        /// <summary>
+        /// Called to retrieve all the primary keys of the entities in a given relationship.
+        /// </summary>
+        /// <param name="dataType">The type of the parent entity.</param>
+        /// <param name="id">The primary key of the parent entity.</param>
+        /// <param name="childProp">The navigation property of the relationship on the parent entity.</param>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
+        /// or the list of child primary keys (as JSON).
+        /// </returns>
         [HttpGet("{id}/{childProp}")]
         public async Task<IActionResult> GetAllChildIds(
             string dataType,
@@ -216,6 +277,30 @@ namespace MVCCoreVue.Controllers
             }
         }
 
+        /// <summary>
+        /// Called to retrieve a page of child entities in a given relationship.
+        /// </summary>
+        /// <param name="dataType">The type of the parent entity.</param>
+        /// <param name="id">The primary key of the parent entity.</param>
+        /// <param name="childProp">The navigation property of the relationship on the parent entity.</param>
+        /// <param name="search">
+        /// An optional search term which will filter the results. Any string or numeric property
+        /// with matching text will be included.
+        /// </param>
+        /// <param name="sortBy">
+        /// An optional property name which will be used to sort the items before calculating the
+        /// page contents.
+        /// </param>
+        /// <param name="descending">
+        /// Indicates whether the sort is descending; if false, the sort is ascending.
+        /// </param>
+        /// <param name="page">The page number requested.</param>
+        /// <param name="rowsPerPage">The number of items per page.</param>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; return an error if there is a
+        /// problem; or the list of ViewModels representing the child objects on the requested page
+        /// (as JSON).
+        /// </returns>
         [HttpGet("{id}/{childProp}")]
         public async Task<IActionResult> GetChildPage(
             string dataType,
@@ -277,6 +362,16 @@ namespace MVCCoreVue.Controllers
             }
         }
 
+        /// <summary>
+        /// Called to retrieve the total number of child entities in the given relationship.
+        /// </summary>
+        /// <param name="dataType">The type of the parent entity.</param>
+        /// <param name="id">The primary key of the parent entity.</param>
+        /// <param name="childProp">The navigation property of the relationship on the parent entity.</param>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
+        /// or the total (as a JSON object with 'response' set to the value).
+        /// </returns>
         [HttpGet("{id}/{childProp}")]
         public async Task<IActionResult> GetChildTotal(string dataType, string id, string childProp)
         {
@@ -326,6 +421,12 @@ namespace MVCCoreVue.Controllers
             }
         }
 
+        /// <summary>
+        /// Called to retrieve a list of all entities which are not MenuClass types.
+        /// </summary>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; or the list of type names (as JSON).
+        /// </returns>
         [AllowAnonymous]
         [HttpGet("/api/[controller]/[action]")]
         public IActionResult GetChildTypes()
@@ -352,6 +453,13 @@ namespace MVCCoreVue.Controllers
             }
         }
 
+        /// <summary>
+        /// Called to retrieve a list of <see cref="FieldDefinition"/> s for the given data type.
+        /// </summary>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
+        /// or the list of <see cref="FieldDefinition"/> s (as JSON).
+        /// </returns>
         [HttpGet]
         public IActionResult GetFieldDefinitions(string dataType)
         {
@@ -369,6 +477,31 @@ namespace MVCCoreVue.Controllers
             }
         }
 
+        /// <summary>
+        /// Called to retrieve the set of entities with the given paging parameters.
+        /// </summary>
+        /// <param name="dataType">The type of the entity.</param>
+        /// <param name="search">
+        /// An optional search term which will filter the results. Any string or numeric property
+        /// with matching text will be included.
+        /// </param>
+        /// <param name="sortBy">
+        /// An optional property name which will be used to sort the items before calculating the
+        /// page contents.
+        /// </param>
+        /// <param name="descending">
+        /// Indicates whether the sort is descending; if false, the sort is ascending.
+        /// </param>
+        /// <param name="page">The page number requested.</param>
+        /// <param name="rowsPerPage">The number of items per page.</param>
+        /// <param name="except">
+        /// The primary keys of items which should be excluded from the results before
+        /// caluclating the page contents.
+        /// </param>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; return an error if there is a
+        /// problem; or the list of ViewModels representing the entities on the requested page (as JSON).
+        /// </returns>
         [HttpPost]
         public IActionResult GetPage(
             string dataType,
@@ -405,6 +538,14 @@ namespace MVCCoreVue.Controllers
             }
         }
 
+        /// <summary>
+        /// Called to retrieve the total number of entities of the given data type.
+        /// </summary>
+        /// <param name="dataType">The type of the entity.</param>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; or the total (as a JSON object
+        /// with 'response' set to the value).
+        /// </returns>
         [HttpGet]
         public async Task<IActionResult> GetTotal(string dataType)
         {
@@ -416,6 +557,12 @@ namespace MVCCoreVue.Controllers
             return Json(new { response = total });
         }
 
+        /// <summary>
+        /// Called to retrieve a list of all entities which are MenuClass types.
+        /// </summary>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; or the list of type names (as JSON).
+        /// </returns>
         [AllowAnonymous]
         [HttpGet("/api/[controller]/[action]")]
         public IActionResult GetTypes()
@@ -446,6 +593,15 @@ namespace MVCCoreVue.Controllers
             }
         }
 
+        /// <summary>
+        /// Called to remove an entity from the <see cref="ApplicationDbContext"/>.
+        /// </summary>
+        /// <param name="dataType">The type of entity to remove.</param>
+        /// <param name="id">The primary key of the entity to remove.</param>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
+        /// or an OK result.
+        /// </returns>
         [HttpPost("{id}")]
         public async Task<IActionResult> Remove(string dataType, string id)
         {
@@ -472,45 +628,18 @@ namespace MVCCoreVue.Controllers
             return Ok();
         }
 
-        [HttpPost("{id}/{childProp}")]
-        public async Task<IActionResult> RemoveFromParent(string dataType, string id, string childProp)
-        {
-            if (!TryGetRepository(_context, dataType, out IRepository repository))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
-            if (string.IsNullOrEmpty(id))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
-            if (!Guid.TryParse(id, out Guid guid))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
-            if (string.IsNullOrEmpty(childProp))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
-            var pInfo = repository.GetType()
-                .GenericTypeArguments
-                .FirstOrDefault()
-                .GetTypeInfo()
-                .GetProperty(childProp.ToInitialCaps());
-            if (pInfo == null)
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
-            try
-            {
-                await repository.RemoveFromParentAsync(guid, pInfo);
-                return Ok();
-            }
-            catch
-            {
-                return Json(new { error = "Item could not be removed." });
-            }
-        }
-
+        /// <summary>
+        /// Called to remove an assortment of child entities from a parent entity under the given
+        /// navigation property.
+        /// </summary>
+        /// <param name="dataType">The type of the parent entity.</param>
+        /// <param name="id">The primary key of the parent entity.</param>
+        /// <param name="childProp">The navigation property from which the children will be removed.</param>
+        /// <param name="childIds">The primary keys of the child entities which will be removed.</param>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
+        /// or an OK result.
+        /// </returns>
         [HttpPost("{id}/{childProp}")]
         public async Task<IActionResult> RemoveChildrenFromCollection(string dataType, string id, string childProp, [FromBody]string[] childIds)
         {
@@ -562,6 +691,66 @@ namespace MVCCoreVue.Controllers
             }
         }
 
+        /// <summary>
+        /// Called to terminate a relationship bewteen two entities. If the child entity is made an
+        /// orphan by the removal and is not a MenuClass object, it is then removed from the <see
+        /// cref="ApplicationDbContext"/> entirely.
+        /// </summary>
+        /// <param name="dataType">The type of the child entity.</param>
+        /// <param name="id">The primary key of the child entity whose relationship is being severed.</param>
+        /// <param name="childProp">The navigation property of the relationship being severed.</param>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
+        /// or an OK result.
+        /// </returns>
+        [HttpPost("{id}/{childProp}")]
+        public async Task<IActionResult> RemoveFromParent(string dataType, string id, string childProp)
+        {
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (string.IsNullOrEmpty(id))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (!Guid.TryParse(id, out Guid guid))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (string.IsNullOrEmpty(childProp))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var pInfo = repository.GetType()
+                .GenericTypeArguments
+                .FirstOrDefault()
+                .GetTypeInfo()
+                .GetProperty(childProp.ToInitialCaps());
+            if (pInfo == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            try
+            {
+                await repository.RemoveFromParentAsync(guid, pInfo);
+                return Ok();
+            }
+            catch
+            {
+                return Json(new { error = "Item could not be removed." });
+            }
+        }
+
+        /// <summary>
+        /// Called to remove a collection of entities from the <see cref="ApplicationDbContext"/>.
+        /// </summary>
+        /// <param name="dataType">The type of entity to remove.</param>
+        /// <param name="ids">The primary keys of the entities to remove.</param>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
+        /// or an OK result.
+        /// </returns>
         [HttpPost]
         public async Task<IActionResult> RemoveRange(string dataType, [FromBody]List<string> ids)
         {
@@ -596,6 +785,20 @@ namespace MVCCoreVue.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Called to terminate a relationship for multiple entities. If any child entity is made an
+        /// orphan by the removal and is not a MenuClass object, it is then removed from the <see
+        /// cref="ApplicationDbContext"/> entirely.
+        /// </summary>
+        /// <param name="dataType">The type of the child entity.</param>
+        /// <param name="childProp">The navigation property of the relationship being severed.</param>
+        /// <param name="ids">
+        /// The primary keys of child entities whose relationships are being severed.
+        /// </param>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
+        /// or an OK result.
+        /// </returns>
         [HttpPost("{id}/{childFKProp}")]
         public async Task<IActionResult> RemoveRangeFromParent(string dataType, string childProp, [FromBody]List<string> ids)
         {
@@ -643,6 +846,22 @@ namespace MVCCoreVue.Controllers
             }
         }
 
+        /// <summary>
+        /// Called to create a relationship between two entities, replacing another entity which was
+        /// previously in that relationship with another one. If the replaced entity is made an
+        /// orphan by the removal and is not a MenuClass object, it is then removed from the <see
+        /// cref="ApplicationDbContext"/> entirely.
+        /// </summary>
+        /// <param name="dataType">The type of the parent entity.</param>
+        /// <param name="parentId">The primary key of the parent entity in the relationship.</param>
+        /// <param name="newChildId">
+        /// The primary key of the new child entity entering into the relationship.
+        /// </param>
+        /// <param name="childProp">The navigation property of the relationship on the child entity.</param>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
+        /// or an OK result.
+        /// </returns>
         [HttpPost("{parentId}/{newChildId}/{childProp}")]
         public async Task<IActionResult> ReplaceChild(string dataType, string parentId, string newChildId, string childProp)
         {
@@ -683,6 +902,19 @@ namespace MVCCoreVue.Controllers
             }
         }
 
+        /// <summary>
+        /// Called to create a relationship between two entities, replacing another entity which was
+        /// previously in that relationship with a new entity. If the replaced entity is made an
+        /// orphan by the removal and is not a MenuClass object, it is then removed from the <see
+        /// cref="ApplicationDbContext"/> entirely.
+        /// </summary>
+        /// <param name="dataType">The type of the parent entity.</param>
+        /// <param name="parentId">The primary key of the parent entity in the relationship.</param>
+        /// <param name="childProp">The navigation property of the relationship on the child entity.</param>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
+        /// or an OK result.
+        /// </returns>
         [HttpPost("{parentId}/{childProp}")]
         public async Task<IActionResult> ReplaceChildWithNew(string dataType, string parentId, string childProp)
         {
@@ -775,6 +1007,15 @@ namespace MVCCoreVue.Controllers
             return true;
         }
 
+        /// <summary>
+        /// Called to update an entity in the <see cref="ApplicationDbContext"/>.
+        /// </summary>
+        /// <param name="dataType">The type of entity to update.</param>
+        /// <param name="item">The item to update.</param>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
+        /// or a ViewModel representing the updated item (as JSON).
+        /// </returns>
         [HttpPost]
         public async Task<IActionResult> Update(string dataType, [FromBody]JObject item)
         {

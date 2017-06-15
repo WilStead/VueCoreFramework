@@ -18,7 +18,7 @@ function msg(text: string, ...args: any[]) {
     return text;
 }
 
-export function checkEmpty(value, required, messages = resources) {
+function checkEmpty(value, required, messages = resources) {
     if (value === undefined || value === null || value === "") {
         if (required)
             return [msg(messages.fieldIsRequired)];
@@ -28,9 +28,14 @@ export function checkEmpty(value, required, messages = resources) {
     return null;
 }
 
-interface VFG_Validator { (value, field, model, messages): any; locale: any; }
+interface VFG_Validator { (value, field, model, messages): any; locale: Function; }
 
+/**
+ * A vue-form-generator validator for TimeSpan fields.
+ */
 export const timespan = <VFG_Validator>function (value, field, model, messages = resources) {
+    let res = checkEmpty(value, field.required, messages); if (res != null) return res;
+
     let err = [];
     if (typeof value === 'string') {
         let d = moment.duration(value);
@@ -47,7 +52,7 @@ export const timespan = <VFG_Validator>function (value, field, model, messages =
             && moment.duration(dMax.asMilliseconds()).subtract(d).asMilliseconds() < 0) {
             err.push(msg(messages.durationTooLong, dMax.humanize()));
         }
-    } else {
+    } else if (value !== undefined) {
         err.push(msg(messages.invalidFormat));
     }
 
@@ -55,6 +60,9 @@ export const timespan = <VFG_Validator>function (value, field, model, messages =
 }
 timespan.locale = customMessages => (value, field, model) => timespan(value, field, model, Object.assign({}, resources, customMessages));
 
+/**
+ * A vue-form-generator validator for text fields with a regex pattern.
+ */
 export const string_regexp = <VFG_Validator>function (value, field, model, messages = resources) {
     let res = checkEmpty(value, field.required, messages); if (res != null) return res;
 
@@ -81,6 +89,9 @@ export const string_regexp = <VFG_Validator>function (value, field, model, messa
 }
 string_regexp.locale = customMessages => (value, field, model) => string_regexp(value, field, model, Object.assign({}, resources, customMessages));
 
+/**
+ * A vue-form-generator validator for text fields which represent a required email address.
+ */
 export const requireEmail = <VFG_Validator>function (value, field, model, messages = resources) {
     if (value === undefined || value === null || value === "") {
         return ["A valid email address is required"];
@@ -90,6 +101,10 @@ export const requireEmail = <VFG_Validator>function (value, field, model, messag
         return ["A valid email address is required"];
 }
 
+/**
+ * A vue-form-generator validator for text fields which represent a 'confirm password' field.
+ * Requires a field called 'newPassword' in the model to match against.
+ */
 export const requirePasswordMatch = <VFG_Validator>function (value, field, model, messages = resources) {
     if (value === undefined || value === null || value === "") {
         return ["You must confirm your new password"];
@@ -99,6 +114,10 @@ export const requirePasswordMatch = <VFG_Validator>function (value, field, model
     }
 }
 
+/**
+ * A vue-form-generator validator for text fields which represent a required password, with the
+ * following requirements: a lower-case and upper-case letter, a number, and a special character.
+ */
 export const requireNewPassword = <VFG_Validator>function (value, field, model, messages = resources) {
     if (value === undefined || value === null || value === "") {
         return ["A password is required"];
@@ -111,6 +130,9 @@ export const requireNewPassword = <VFG_Validator>function (value, field, model, 
         return ["Passwords must contain at least one of each of the following: lower-case letter, upper-case letter, number, and special character like !@#$%^&*"];
 }
 
+/**
+ * An object which maps keys to validator objects.
+ */
 export const validators = {
     'string': 'string',
     'number': 'number',

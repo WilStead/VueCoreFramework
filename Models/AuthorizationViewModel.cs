@@ -1,4 +1,4 @@
-﻿namespace MVCCoreVue.Models.AccountViewModels
+﻿namespace MVCCoreVue.Models
 {
     /// <summary>
     /// A ViewModel used to transfer information during user account authorization tasks.
