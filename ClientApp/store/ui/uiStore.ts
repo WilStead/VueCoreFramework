@@ -1,14 +1,33 @@
-﻿import * as ErrorMsg from '../../error-msg';
+﻿import VueRouter from 'vue-router';
+import * as ErrorMsg from '../../error-msg';
 import { Repository } from '../repository';
 
+/**
+ * Describes an item in the SPA framework's main menu.
+ */
 export interface MenuItem {
-    text: string,
-    iconClass: string,
-    route?: string,
-    submenu?: Array<MenuItem>
+    /**
+     * The text displayed on the menu item.
+     */
+    text: string;
+
+    /**
+     * The name of a Material Icon used to decorate the menu item.
+     */
+    iconClass: string;
+
+    /**
+     * An optional route name which will be navigated to when the menu item is selected.
+     */
+    route?: string;
+
+    /**
+     * An optional collection of sub-items contained within this menu item.
+     */
+    submenu?: Array<MenuItem>;
 }
 
-function addMenuItem(menu: MenuItem, router: any, name: string, fullCategory: string, category: string, iconClass: string) {
+function addMenuItem(menu: MenuItem, router: VueRouter, name: string, fullCategory: string, category: string, iconClass: string) {
     let lowerName = name.toLowerCase();
     if (!iconClass) {
         iconClass = 'view_list';
@@ -92,7 +111,11 @@ function addMenuItem(menu: MenuItem, router: any, name: string, fullCategory: st
     }
 }
 
-export function getChildItems(router: any): Promise<void> {
+/**
+ * Retrieves the child data types (non-MenuClass types) from the API and generates routes for each.
+ * @param {VueRouter} router The SPA framework's VueRouter instance.
+ */
+export function getChildItems(router: VueRouter): Promise<void> {
     return fetch('/api/Data/GetChildTypes')
         .then(response => {
             if (!response.ok) {
@@ -130,7 +153,12 @@ export function getChildItems(router: any): Promise<void> {
         });
 }
 
-export function getMenuItems(router: any, menu: MenuItem): Promise<void> {
+/**
+ * Retrieves the MenuClass data types from the API and generates routes and MenuItems for each.
+ * @param {VueRouter} router The SPA framework's VueRouter instance.
+ * @param {MenuItem} menu The top-level MenuItem under which all data types will be added.
+ */
+export function getMenuItems(router: VueRouter, menu: MenuItem): Promise<void> {
     return fetch('/api/Data/GetTypes')
         .then(response => {
             if (!response.ok) {
@@ -149,7 +177,13 @@ export function getMenuItems(router: any, menu: MenuItem): Promise<void> {
         });
 }
 
+/**
+ * An object containing information about the state of the UI.
+ */
 export const uiState = {
+    /**
+     * The MenuItems displayed in the SPA framework's main menu.
+     */
     menuItems: <MenuItem[]>[
         {
             text: 'Home',

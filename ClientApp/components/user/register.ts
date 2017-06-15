@@ -2,21 +2,48 @@
 import { Component, Prop } from 'vue-property-decorator';
 import * as ErrorMsg from '../../error-msg';
 import VueFormGenerator from 'vue-form-generator';
+import { Schema, VFGOptions } from '../../vfg/vfg';
 import * as VFG_Custom from '../../vfg/vfg-custom-validators';
 
+/**
+ * A ViewModel used to transfer information during user account registration tasks.
+ */
 interface RegisterViewModel {
-    email: string,
-    password: string,
-    confirmPassword: string,
-    returnUrl: string,
-    redirect: boolean,
-    errors: Array<string>
+    /**
+     * The email address of the user account.
+     */
+    email: string;
+
+    /**
+     * The password for the user account.
+     */
+    password: string;
+
+    /**
+     * The password for the user account, repeated.
+     */
+    confirmPassword: string;
+
+    /**
+     * An optional URL to which the user will be redirected.
+     */
+    returnUrl: string;
+
+    /**
+     * Indicates that the user is to be redirected to another page.
+     */
+    redirect: boolean;
+
+    /**
+     * A list of errors generated during the operation.
+     */
+    errors: Array<string>;
 }
 
 @Component
 export default class RegisterComponent extends Vue {
     @Prop()
-    returnUrl: any
+    returnUrl: string
 
     components = {
         'vue-form-generator': VueFormGenerator.component
@@ -31,7 +58,7 @@ export default class RegisterComponent extends Vue {
         errors: []
     };
 
-    schema = {
+    schema: Schema = {
         fields: [
             {
                 type: 'vuetifyText',
@@ -73,7 +100,7 @@ export default class RegisterComponent extends Vue {
         ]
     };
 
-    formOptions = {
+    formOptions: VFGOptions = {
         validateAfterChanged: true
     };
 

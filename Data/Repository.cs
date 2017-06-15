@@ -473,7 +473,7 @@ namespace MVCCoreVue.Data
                 {
                     inverseProp = pInfo.PropertyType.GetProperty(inverseAttr.Property);
                     // The pattern for navigation properties is the name of the inverse property.
-                    fd.Pattern = inverseProp?.Name;
+                    fd.InverseType = inverseProp?.Name;
                 }
 
                 // Reverse-navigation properties only allow view/edit. No adding/deleting, since the
@@ -520,7 +520,7 @@ namespace MVCCoreVue.Data
                 fd.InputType = name.Substring(name.LastIndexOf('.') + 1);
 
                 var inverseAttr = pInfo.GetCustomAttribute<InversePropertyAttribute>();
-                fd.Pattern = inverseAttr?.Property;
+                fd.InverseType = inverseAttr?.Property;
             }
             // Children in a many-to-many relationship are manipulated in a table containing all the
             // items of the child type, where items can be added to or removed from the parent's collection.

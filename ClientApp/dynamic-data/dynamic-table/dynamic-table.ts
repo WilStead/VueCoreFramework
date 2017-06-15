@@ -1,13 +1,57 @@
 ﻿import Vue from 'vue';
+import VueRouter from 'vue-router';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import * as ErrorMsg from '../../error-msg';
-import { DataItem, Repository } from '../../store/repository';
+import { DataItem, PageData, Repository } from '../../store/repository';
 
+/**
+ * Describes the header of a Vuetify data table.
+ */
 interface TableHeader {
+    /**
+     * The text displayed in the header.
+     */
     text: string;
+
+    /**
+     * The name of the model property used to get the value for the column.
+     */
     value: string;
+
+    /**
+     * Optionally indicates that this column is left-aligned (right-align is the default).
+     */
     left?: boolean;
+
+    /**
+     * Optionally indicates that this column is sortable (false by default).
+     */
     sortable?: boolean;
+}
+
+/**
+ * A set of pagination options used by the Vuetify data table.
+ */
+interface Pagination {
+    /**
+     * An optional property name which will be used to sort the items before calculating the page contents.
+     */
+    sortBy?: string;
+
+    /**
+     * Optionally indicates that the sort is descending (ascending by default).
+     */
+    descending?: boolean;
+
+    /**
+     * The page number requested.
+     */
+    page?: number;
+
+    /**
+     * The number of items per page.
+     */
+    rowsPerPage?: number;
 }
 
 @Component
@@ -28,9 +72,9 @@ export default class DynamicTableComponent extends Vue {
     parentType: string;
 
     activity = false;
-    childItems: Array<any> = [];
+    childItems: Array<DataItem> = [];
     childLoading = true;
-    childPagination: any = {};
+    childPagination: Pagination = {};
     childSearch = '';
     deleteDialogShown = false;
     deleteAskingChildItems = [];
@@ -39,23 +83,23 @@ export default class DynamicTableComponent extends Vue {
     deletePendingItems = [];
     errorMessage = '';
     headers: Array<TableHeader> = [];
-    items: Array<any> = [];
+    items: Array<DataItem> = [];
     loading = true;
-    pagination: any = {};
+    pagination: Pagination = {};
     parentRepository: Repository = null;
     repository: Repository = null;
     routeName = '';
     search = '';
     selectErrorDialogMessage = '';
     selectErrorDialogShown = false;
-    selected: Array<any> = [];
-    selectedChildren: Array<any> = [];
+    selected: Array<DataItem> = [];
+    selectedChildren: Array<DataItem> = [];
     totalChildItems = 0;
     totalItems = 0;
     updateTimeout = 0;
 
     @Watch('childPagination', { deep: true })
-    onChildPaginationChange(val: any, oldVal: any) {
+    onChildPaginationChange(val: Pagination, oldVal: Pagination) {
         this.updateChildData();
     }
 
@@ -78,11 +122,11 @@ export default class DynamicTableComponent extends Vue {
     }
 
     @Watch('pagination', { deep: true })
-    onPaginationChange(val: any, oldVal: any) {
+    onPaginationChange(val: Pagination, oldVal: Pagination) {
         this.updateData();
     }
 
-    beforeRouteUpdate(to, from, next) {
+    beforeRouteUpdate(to: VueRouter.Route, from: VueRouter.Route, next: Function) {
         this.routeName = this.$route.name.substr(0, this.$route.name.length - 9); // remove 'DataTable'
         this.repository = new Repository(this.routeName);
         if (this.updateTimeout === 0) {
@@ -116,7 +160,7 @@ export default class DynamicTableComponent extends Vue {
         }
     }
 
-    getChildData() {
+    getChildData(): Promise<PageData<DataItem>> {
         this.childLoading = true;
         return new Promise((resolve, reject) => {
             const { sortBy, descending, page, rowsPerPage } = this.childPagination;
@@ -124,8 +168,8 @@ export default class DynamicTableComponent extends Vue {
                 .then(data => {
                     this.childLoading = false;
                     resolve({
-                        items: data.pageItems,
-                        total: data.totalItems
+                        pageItems: data.pageItems,
+                        totalItems: data.totalItems
                     });
                 })
                 .catch(error => {
@@ -136,7 +180,7 @@ export default class DynamicTableComponent extends Vue {
         });
     }
 
-    getData() {
+    getData(): Promise<PageData<DataItem>> {
         this.loading = true;
         return new Promise((resolve, reject) => {
             const { sortBy, descending, page, rowsPerPage } = this.pagination;
@@ -148,8 +192,8 @@ export default class DynamicTableComponent extends Vue {
                                 .then(data => {
                                     this.loading = false;
                                     resolve({
-                                        items: data.pageItems,
-                                        total: data.totalItems
+                                        pageItems: data.pageItems,
+                                        totalItems: data.totalItems
                                     });
                                 })
                                 .catch(error => {
@@ -168,8 +212,8 @@ export default class DynamicTableComponent extends Vue {
                         .then(data => {
                             this.loading = false;
                             resolve({
-                                items: data.pageItems,
-                                total: data.totalItems
+                                pageItems: data.pageItems,
+                                totalItems: data.totalItems
                             });
                         })
                         .catch(error => {
@@ -183,8 +227,8 @@ export default class DynamicTableComponent extends Vue {
                     .then(data => {
                         this.loading = false;
                         resolve({
-                            items: data.pageItems,
-                            total: data.totalItems
+                            pageItems: data.pageItems,
+                            totalItems: data.totalItems
                         });
                     })
                     .catch(error => {
@@ -408,7 +452,7 @@ export default class DynamicTableComponent extends Vue {
             this.selectErrorDialogMessage = "You can only select a single item.";
             this.selectErrorDialogShown = true;
         } else if (this.childProp) {
-            this.repository.replaceChild(this.$route.fullPath, this.parentId, this.selected[0], this.childProp)
+            this.repository.replaceChild(this.$route.fullPath, this.parentId, this.selected[0].id, this.childProp)
                 .then(data => {
                     if (data.error) {
                         this.errorMessage = data.error;
@@ -438,9 +482,9 @@ export default class DynamicTableComponent extends Vue {
     updateChildData() {
         if (this.parentRepository) {
             this.getChildData()
-                .then((data: any) => {
-                    this.childItems = data.items;
-                    this.totalChildItems = data.total;
+                .then((data: PageData<DataItem>) => {
+                    this.childItems = data.pageItems;
+                    this.totalChildItems = data.totalItems;
                 })
                 .catch(error => {
                     this.errorMessage = "A problem occurred while loading the data.";
@@ -452,9 +496,9 @@ export default class DynamicTableComponent extends Vue {
     updateData() {
         if (this.repository) {
             this.getData()
-                .then((data: any) => {
-                    this.items = data.items;
-                    this.totalItems = data.total;
+                .then((data: PageData<DataItem>) => {
+                    this.items = data.pageItems;
+                    this.totalItems = data.totalItems;
                 })
                 .catch(error => {
                     this.errorMessage = "A problem occurred while loading the data.";

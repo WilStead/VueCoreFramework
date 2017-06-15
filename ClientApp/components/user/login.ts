@@ -3,19 +3,61 @@ import { Component, Prop } from 'vue-property-decorator';
 import { checkResponse, ApiResponseViewModel } from '../../router';
 import * as ErrorMsg from '../../error-msg';
 import VueFormGenerator from 'vue-form-generator';
+import { Schema, VFGOptions } from '../../vfg/vfg';
 
+/**
+ * A ViewModel used to transfer information during user account login tasks.
+ */
 interface LoginViewModel {
-    email: string,
-    password: string,
-    authProvider: string,
-    rememberUser: boolean,
-    returnUrl: string,
-    redirect: boolean,
-    token: string
-    errors: Array<string>
+    /**
+     * The email address of the user account.
+     */
+    email: string;
+
+    /**
+     * The password for the user account.
+     */
+    password: string;
+
+    /**
+     * The name of a third-party authorization provider.
+     */
+    authProvider: string;
+
+    /**
+     * Indicates that the user wishes their authorization to be stored in the browser and used
+     * again during future sessions, rather than forgotten after navigating away from the site.
+     */
+    rememberUser: boolean;
+
+    /**
+     * An optional URL to which the user will be redirected.
+     */
+    returnUrl: string;
+
+    /**
+     * Indicates that the user is to be redirected to another page.
+     */
+    redirect: boolean;
+
+    /**
+     * A JWT bearer token.
+     */
+    token: string;
+
+    /**
+     * A list of errors generated during the operation.
+     */
+    errors: Array<string>;
 }
 
+/**
+ * Contains a list of all external authentication providers supported by the SPA framework.
+ */
 interface AuthProviders {
+    /**
+     * A list of all external authentication providers supported by the SPA framework.
+     */
     providers: Array<string>
 }
 
@@ -32,11 +74,11 @@ export default class LoginComponent extends Vue {
     authProviderGoogle = false;
     authProviderMicrosoft = false;
     forgottenPassword = false;
-    formOptions = {
+    formOptions: VFGOptions = {
         validateAfterChanged: true
     };
     isValid = false;
-    model = {
+    model: LoginViewModel = {
         email: '',
         password: '',
         authProvider: '',
@@ -47,7 +89,7 @@ export default class LoginComponent extends Vue {
         errors: []
     };
     passwordReset = false;
-    schema = {
+    schema: Schema = {
         fields: [
             {
                 type: 'vuetifyText',

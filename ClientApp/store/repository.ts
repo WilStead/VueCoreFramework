@@ -1,6 +1,6 @@
 ﻿import { router, checkResponse, ApiResponseViewModel } from '../router';
 import { store } from './store';
-import { FieldDefinition } from './field-definition';
+import { FieldDefinition } from '../vfg/vfg';
 import { validators } from '../vfg/vfg-custom-validators';
 import * as ErrorMsg from '../error-msg';
 
@@ -47,16 +47,16 @@ export interface OperationReply<T> {
 }
 
 /**
- * A ViewModel used to receive a page of DataItems from an API call.
+ * A ViewModel used to receive a page of items from an API call.
  */
-export interface PageData<DataItem> {
+export interface PageData<T> {
     /**
-     * The array of DataItems received from the API.
+     * The array of items received from the API.
      */
-    pageItems: Array<DataItem>;
+    pageItems: Array<T>;
 
     /**
-     * The total number of DataItems in the type received from the API.
+     * The total number of items in the type received from the API.
      */
     totalItems: number;
 }
@@ -95,7 +95,7 @@ export class Repository {
                 }
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<any>)
+            .then(response => response.json() as Promise<OperationReply<DataItem>>)
             .then(data => {
                 if (data.error) {
                     return {
@@ -131,7 +131,7 @@ export class Repository {
                 body: JSON.stringify(ids)
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<any>)
+            .then(response => response.json() as Promise<OperationReply<string>>)
             .then(data => {
                 if (data.error) {
                     return {
@@ -165,7 +165,7 @@ export class Repository {
                 }
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<any>)
+            .then(response => response.json() as Promise<OperationReply<DataItem>>)
             .then(data => {
                 if (data.error) {
                     return {
@@ -220,10 +220,10 @@ export class Repository {
                 }
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<any>)
+            .then(response => response.json() as Promise<Array<string> | OperationReply<string>>)
             .then(data => {
-                if (data.error) {
-                    return Promise.reject(`There was a problem with your request. ${data.error}`);
+                if (data['error']) {
+                    return Promise.reject(`There was a problem with your request. ${data['error']}`);
                 }
                 return data;
             })
@@ -329,13 +329,13 @@ export class Repository {
                 }
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<any>)
+            .then(response => response.json() as Promise<Array<FieldDefinition> | OperationReply<string>>)
             .then(data => {
-                if (data.error) {
-                    return Promise.reject(`There was a problem with your request. ${data.error}`);
+                if (data['error']) {
+                    return Promise.reject(`There was a problem with your request. ${data['error']}`);
                 } else {
                     let defs = data;
-                    for (var i = 0; i < defs.length; i++) {
+                    for (var i = 0; i < defs['length']; i++) {
                         if (defs[i].validator && validators[defs[i].validator]) {
                             defs[i].validator = validators[defs[i].validator];
                         }
@@ -487,7 +487,7 @@ export class Repository {
                 body: JSON.stringify(childIds)
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<any>)
+            .then(response => response.json() as Promise<OperationReply<string>>)
             .then(data => {
                 if (data.error) {
                     return {
@@ -522,7 +522,7 @@ export class Repository {
                 }
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<any>)
+            .then(response => response.json() as Promise<OperationReply<string>>)
             .then(data => {
                 if (data.error) {
                     return {
@@ -537,6 +537,12 @@ export class Repository {
             });
     }
 
+    /**
+     * Called to remove a collection of entities from the database.
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @param {Array<string>} ids The primary keys of the entities to remove.
+     * @returns {OperationReply<string>} An OperationReply containing any error which occurred.
+     */
     removeRange(returnPath: string, ids: Array<string>): Promise<OperationReply<string>> {
         if (ids === undefined || ids === null || !ids.length) {
             return Promise.reject("The item ids were missing from your request.");
@@ -567,6 +573,15 @@ export class Repository {
             });
     }
 
+    /**
+     * Called to terminate a relationship for multiple entities. If any child entity is made an
+     * orphan by the removal and is not a MenuClass object, it is then removed from the database
+     * entirely.
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @param {string} childProp The navigation property of the relationship being severed.
+     * @param {Array<string>} ids The primary keys of child entities whose relationships are being severed.
+     * @returns {OperationReply<string>} An OperationReply containing any error which occurred.
+     */
     removeRangeFromParent(returnPath: string, childProp: string, ids: Array<string>): Promise<OperationReply<string>> {
         return fetch(`/api/Data/${this.dataType}/RemoveRangeFromParent/${childProp}`,
             {
@@ -579,7 +594,7 @@ export class Repository {
                 body: JSON.stringify(ids)
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<any>)
+            .then(response => response.json() as Promise<OperationReply<string>>)
             .then(data => {
                 if (data.error) {
                     return {
@@ -594,6 +609,16 @@ export class Repository {
             });
     }
 
+    /**
+     * Called to create a relationship between two entities, replacing another entity which was
+     * previously in that relationship with another one. If the replaced entity is made an orphan
+     * by the removal and is not a MenuClass object, it is then removed from the database entirely.
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @param {string} parentId The primary key of the parent entity in the relationship.
+     * @param {string} newChildId The primary key of the new child entity entering into the relationship.
+     * @param {string} childProp The navigation property of the relationship on the child entity.
+     * @returns {OperationReply<string>} An OperationReply containing any error which occurred.
+     */
     replaceChild(returnPath: string, parentId: string, newChildId: string, childProp: string): Promise<OperationReply<string>> {
         return fetch(`/api/Data/${this.dataType}/ReplaceChild/${parentId}/${newChildId}/${childProp}`,
             {
@@ -605,7 +630,7 @@ export class Repository {
                 }
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<any>)
+            .then(response => response.json() as Promise<OperationReply<string>>)
             .then(data => {
                 if (data.error) {
                     return {
@@ -620,6 +645,15 @@ export class Repository {
             });
     }
 
+    /**
+     * Called to create a relationship between two entities, replacing another entity which was
+     * previously in that relationship with a new entity. If the replaced entity is made an orphan
+     * by the removal and is not a MenuClass object, it is then removed from the database entirely.
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @param {string} parentId The primary key of the parent entity in the relationship.
+     * @param {string} childProp The navigation property of the relationship on the child entity.
+     * @returns {OperationReply<string>} An OperationReply containing any error which occurred.
+     */
     replaceChildWithNew(returnPath: string, parentId: string, childProp: string): Promise<OperationReply<DataItem>> {
         return fetch(`/api/Data/${this.dataType}/ReplaceChildWithNew/${parentId}/${childProp}`,
             {
@@ -631,7 +665,7 @@ export class Repository {
                 }
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<any>)
+            .then(response => response.json() as Promise<OperationReply<DataItem>>)
             .then(data => {
                 if (data.error) {
                     return {
@@ -646,6 +680,12 @@ export class Repository {
             });
     }
 
+    /**
+     * Called to update an entity in the database.
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @param {DataItem} vm The item to update.
+     * @returns {OperationReply<DataItem>} An OperationReply containing any error which occurred, or the updated item.
+     */
     update(returnPath: string, vm: DataItem): Promise<OperationReply<DataItem>> {
         return fetch(`/api/Data/${this.dataType}/Update`,
             {
@@ -658,7 +698,7 @@ export class Repository {
                 body: JSON.stringify(vm)
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<any>)
+            .then(response => response.json() as Promise<OperationReply<DataItem>>)
             .then(data => {
                 if (data.error) {
                     return {

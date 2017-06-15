@@ -1,7 +1,8 @@
 ﻿import Vue from 'vue';
+import VueRouter from 'vue-router';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import * as ErrorMsg from '../../error-msg';
-import { FieldDefinition } from '../../store/field-definition';
+import { FieldDefinition, Schema, VFGOptions } from '../../vfg/vfg';
 import VueFormGenerator from 'vue-form-generator';
 import { DataItem, Repository, OperationReply } from '../../store/repository';
 import { router } from '../../router';
@@ -34,7 +35,7 @@ export default class DynamicFormComponent extends Vue {
 
     activity = false;
     errorMessage = '';
-    formOptions = {
+    formOptions: VFGOptions = {
         validateAfterLoad: true,
         validateAfterChanged: true
     };
@@ -42,12 +43,12 @@ export default class DynamicFormComponent extends Vue {
     model: any = { dataType: this.$route.name };
     parentRepository: Repository = null;
     repository: Repository = null;
-    schema: any = {};
+    schema: Schema = {};
     updateTimeout = 0;
     vm: any;
     vmDefinition: Array<FieldDefinition>;
 
-    beforeRouteUpdate(to, from, next) {
+    beforeRouteUpdate(to: VueRouter.Route, from: VueRouter.Route, next: Function) {
         this.repository = new Repository(this.$route.name);
         if (this.updateTimeout === 0) {
             this.updateTimeout = setTimeout(this.updateForm, 125);
@@ -80,11 +81,11 @@ export default class DynamicFormComponent extends Vue {
                         newField.buttons.push({
                             classes: 'btn btn--dark btn--flat primary--text',
                             label: 'Select',
-                            onclick: function (model, field) {
+                            onclick: function (model, field: FieldDefinition) {
                                 router.push({
                                     name: newField.inputType + "DataTable",
                                     params: {
-                                        childProp: newField.pattern,
+                                        childProp: newField.inverseType,
                                         operation: 'select',
                                         parentType: model.dataType,
                                         parentId: model.id,
@@ -100,7 +101,7 @@ export default class DynamicFormComponent extends Vue {
                 newField.buttons = [{
                     classes: 'btn btn--dark btn--flat info--text',
                     label: 'View/Edit',
-                    onclick: function (model, field) {
+                    onclick: function (model, field: FieldDefinition) {
                         router.push({
                             name: newField.inputType + "DataTable",
                             params: {
@@ -116,11 +117,11 @@ export default class DynamicFormComponent extends Vue {
                 newField.buttons = [{
                     classes: 'btn btn--dark btn--flat info--text',
                     label: 'View/Edit',
-                    onclick: function (model, field) {
+                    onclick: function (model, field: FieldDefinition) {
                         router.push({
                             name: newField.inputType + "DataTable",
                             params: {
-                                childProp: newField.pattern,
+                                childProp: newField.inverseType,
                                 operation: 'collection',
                                 parentType: model.dataType,
                                 parentId: model.id,
@@ -146,8 +147,8 @@ export default class DynamicFormComponent extends Vue {
         }
     }
 
-    addNew: Function = function (model, field) {
-        this.repository.add(this.$route.fullPath, field.pattern, model.id)
+    addNew: Function = function (model, field: FieldDefinition) {
+        this.repository.add(this.$route.fullPath, field.inverseType, model.id)
             .then(data => {
                 this.activity = false;
                 if (data.error) {
@@ -174,7 +175,7 @@ export default class DynamicFormComponent extends Vue {
                 label: 'Add',
                 onclick: !this.model[idField.model]
                     ? this.addNew
-                    : function (model, field, event) {
+                    : function (model, field: FieldDefinition, event: Event) {
                         event.stopPropagation();
                         model.replaceProp = field.model;
                         model.replaceType = field.inputType;
@@ -186,7 +187,7 @@ export default class DynamicFormComponent extends Vue {
             newField.buttons.push({
                 classes: 'btn btn--dark btn--flat info--text',
                 label: 'View/Edit',
-                onclick: function (model, field) {
+                onclick: function (model, field: FieldDefinition) {
                     router.push({ name: newField.inputType, params: { operation: 'details', id: model[field.model + "Id"] } });
                 }
             });
@@ -198,7 +199,7 @@ export default class DynamicFormComponent extends Vue {
             newField.buttons.push({
                 classes: 'btn btn--dark btn--flat error--text',
                 label: 'Delete',
-                onclick: function (model, field, event) {
+                onclick: function (model, field: FieldDefinition, event: Event) {
                     event.stopPropagation();
                     model.deleteProp = field.model;
                     Vue.set(model, 'deleteDialogShown', true);
@@ -338,8 +339,10 @@ export default class DynamicFormComponent extends Vue {
                             if (groups.length) {
                                 this.schema.groups = [];
                                 for (var i = 0; i < groups.length; i++) {
-                                    this.schema.groups[i] = { fields: [] };
-                                    this.schema.groups[i].legend = groups[i];
+                                    this.schema.groups[i] = {
+                                        legend: groups[i],
+                                        fields: []
+                                    };
                                 }
                             }
                             this.vmDefinition.forEach(field => {

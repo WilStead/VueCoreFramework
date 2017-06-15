@@ -32,7 +32,7 @@ namespace MVCCoreVue.Models.AccountViewModels
         /// again during future sessions, rather than forgotten after navigating away from the site.
         /// </summary>
         [Display(Name = "Remember me?")]
-        public bool RememberMe { get; set; }
+        public bool RememberUser { get; set; }
 
         /// <summary>
         /// An optional URL to which the user will be redirected.

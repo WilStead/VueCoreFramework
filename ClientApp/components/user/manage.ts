@@ -2,21 +2,58 @@
 import { Component, Prop } from 'vue-property-decorator';
 import { checkResponse, ApiResponseViewModel } from '../../router';
 import VueFormGenerator from 'vue-form-generator';
+import { Schema, VFGOptions } from '../../vfg/vfg';
 import * as VFG_Custom from '../../vfg/vfg-custom-validators';
 import * as ErrorMsg from '../../error-msg';
 
+/**
+ * A ViewModel used to transfer information during user account management tasks.
+ */
 interface ManageUserViewModel {
-    email: string,
-    oldPassword: string,
-    newPassword: string,
-    confirmPassword: string,
-    authProvider: string,
-    errors: Array<String>
+    /**
+     * The email address of the user account.
+     */
+    email: string;
+
+    /**
+     * The original password of the user account.
+     */
+    oldPassword: string;
+
+    /**
+     * The new password for the user account.
+     */
+    newPassword: string;
+
+    /**
+     * The new password for the user account, repeated.
+     */
+    confirmPassword: string;
+
+    /**
+     * The name of a third-party authorization provider.
+     */
+    authProvider: string;
+
+    /**
+     * A list of errors generated during the operation.
+     */
+    errors: Array<String>;
 }
 
+/**
+ * Contains lists of external authentication providers supported by the SPA framework.
+ */
 interface AuthProviders {
-    providers: Array<string>,
-    userProviders: Array<string>
+    /**
+     * A list of all external authentication providers supported by the SPA framework.
+     */
+    providers: Array<string>;
+
+    /**
+     * A list of the external authentication providers registered for the current user.
+     */
+    userProviders: Array<string>;
 }
 
 @Component
@@ -76,7 +113,7 @@ export default class ManageUserComponent extends Vue {
     changeSuccess = false;
     changingEmail = false;
     changingPassword = false;
-    formOptions = {
+    formOptions: VFGOptions = {
         validateAfterChanged: true
     };
     hasPassword = false;
@@ -89,7 +126,7 @@ export default class ManageUserComponent extends Vue {
         authProvider: '',
         errors: []
     };
-    schema = {
+    schema: Schema = {
         fields: [
             {
                 type: 'vuetifyText',

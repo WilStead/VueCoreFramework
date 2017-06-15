@@ -123,7 +123,7 @@ namespace MVCCoreVue.Controllers
                 return new JsonResult(model);
             }
             // Request a redirect to the external login provider.
-            var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Account", new { ReturnUrl = model.ReturnUrl, RememberUser = model.RememberMe });
+            var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Account", new { ReturnUrl = model.ReturnUrl, RememberUser = model.RememberUser });
             var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider.AuthenticationScheme, redirectUrl);
             return Challenge(properties, provider.AuthenticationScheme);
         }
@@ -139,7 +139,7 @@ namespace MVCCoreVue.Controllers
             var model = new LoginViewModel
             {
                 ReturnUrl = returnUrl,
-                RememberMe = rememberUser
+                RememberUser = rememberUser
             };
             if (remoteError != null)
             {
@@ -328,7 +328,7 @@ namespace MVCCoreVue.Controllers
 
             // This doesn't count login failures towards account lockout
             // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-            var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+            var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberUser, lockoutOnFailure: false);
             if (!result.Succeeded)
             {
                 model.Errors.Add("Invalid login attempt.");

@@ -3,7 +3,7 @@
 namespace MVCCoreVue.Models
 {
     /// <summary>
-    /// A ViewModel for field definitions used by the AutoFormGenerator.
+    /// A ViewModel for field definitions used by vue-form-generator.
     /// </summary>
     public class FieldDefinition
     {
@@ -48,6 +48,11 @@ namespace MVCCoreVue.Models
         public string InputType { get; set; }
 
         /// <summary>
+        /// For navigation properties, indicates the name of the inverse navigation property.
+        /// </summary>
+        public string InverseType { get; set; }
+
+        /// <summary>
         /// Optional label text displayed with the field.
         /// </summary>
         public string Label { get; set; }
@@ -68,8 +73,7 @@ namespace MVCCoreVue.Models
         public string Model { get; set; }
 
         /// <summary>
-        /// An optional regex pattern used to validate the field. In the case of objects, indicates
-        /// the name of the inverse navigation property.
+        /// An optional regex pattern used to validate the field.
         /// </summary>
         public string Pattern { get; set; }
 
@@ -79,12 +83,12 @@ namespace MVCCoreVue.Models
         public string Placeholder { get; set; }
 
         /// <summary>
-        /// Optional text displayed before the field.
+        /// Optional text displayed before a text field.
         /// </summary>
         public string Prefix { get; set; }
 
         /// <summary>
-        /// Indicates that the field is read-only.
+        /// Indicates that the text field is read-only.
         /// </summary>
         public bool? Readonly { get; set; }
 
@@ -99,12 +103,12 @@ namespace MVCCoreVue.Models
         public int? Rows { get; set; }
 
         /// <summary>
-        /// An optional step value for numeric text fields.
+        /// An optional step value for numeric text fields, and TimeSpan fields.
         /// </summary>
         public double? Step { get; set; }
 
         /// <summary>
-        /// Optional text displayed after the field.
+        /// Optional text displayed after a text field.
         /// </summary>
         public string Suffix { get; set; }
 
