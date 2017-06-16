@@ -278,6 +278,55 @@ namespace MVCCoreVue.Controllers
         }
 
         /// <summary>
+        /// Called to retrieve the primary key of a child entity in the given relationship.
+        /// </summary>
+        /// <param name="dataType">The type of the parent entity.</param>
+        /// <param name="id">The primary key of the parent entity.</param>
+        /// <param name="childProp">The navigation property of the relationship.</param>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
+        /// or the primary key of the child entity (as a JSON object with 'response' set to the value).
+        /// </returns>
+        [HttpGet("{id}/{childProp}")]
+        public async Task<IActionResult> GetChildId(string dataType, string id, string childProp)
+        {
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (string.IsNullOrEmpty(id))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (!Guid.TryParse(id, out Guid guid))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (string.IsNullOrEmpty(childProp))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var pInfo = repository.GetType()
+                .GenericTypeArguments
+                .FirstOrDefault()
+                .GetTypeInfo()
+                .GetProperty(childProp.ToInitialCaps());
+            if (pInfo == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            try
+            {
+                var childGuid = await repository.GetChildIdAsync(guid, pInfo);
+                return Json(new { response = childGuid });
+            }
+            catch
+            {
+                return Json(new { error = "Item could not be accessed." });
+            }
+        }
+
+        /// <summary>
         /// Called to retrieve a page of child entities in a given relationship.
         /// </summary>
         /// <param name="dataType">The type of the parent entity.</param>
@@ -391,29 +440,19 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            object item = null;
-            try
-            {
-                item = await repository.FindItemAsync(guid);
-            }
-            catch
-            {
-                return Json(new { error = "Item could not be accessed." });
-            }
-            if (item == null)
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/404" });
-            }
-            var typeInfo = item.GetType().GetTypeInfo();
-            var pInfo = typeInfo.GetProperty(childProp.ToInitialCaps());
+            var pInfo = repository.GetType()
+                .GenericTypeArguments
+                .FirstOrDefault()
+                .GetTypeInfo()
+                .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
             try
             {
-                var children = pInfo.GetValue(item) as ICollection<DataItem>;
-                return Json(new { response = children.Count });
+                var count = await repository.GetChildTotalAsync(guid, pInfo);
+                return Json(new { response = count });
             }
             catch
             {

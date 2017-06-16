@@ -143,24 +143,6 @@ export default class DynamicFormComponent extends Vue {
         }
     }
 
-    addNew: Function = function (model, field: FieldDefinition) {
-        this.repository.add(this.$route.fullPath, field.inverseType, model.id)
-            .then(data => {
-                this.activity = false;
-                if (data.error) {
-                    this.errorMessage = data.error;
-                } else {
-                    this.errorMessage = '';
-                    this.$router.push({ name: field.inputType, params: { operation: 'create', id: data.data.id } });
-                }
-            })
-            .catch(error => {
-                this.activity = false;
-                this.errorMessage = "A problem occurred. The new item could not be added.";
-                ErrorMsg.logError("dynamic-form.addNew", new Error(error));
-            });
-    }.bind(this);
-
     addObjectButtons(newField: FieldDefinition) {
         if ((this.operation === "edit" || this.operation === "create")
             && newField.type !== "objectReference"
@@ -170,7 +152,7 @@ export default class DynamicFormComponent extends Vue {
                 classes: 'btn btn--dark btn--flat success--text',
                 label: 'Add',
                 onclick: this.model[newField.model] === "[None]"
-                    ? this.addNew
+                    ? this.onAddNew
                     : function (model, field: FieldDefinition, event: Event) {
                         event.stopPropagation();
                         model.replaceProp = field.model;
@@ -183,9 +165,7 @@ export default class DynamicFormComponent extends Vue {
             newField.buttons.push({
                 classes: 'btn btn--dark btn--flat info--text',
                 label: 'View/Edit',
-                onclick: function (model, field: FieldDefinition) {
-                    router.push({ name: newField.inputType, params: { operation: 'details', id: model[field.model + "Id"] } });
-                }
+                onclick: this.onView
             });
         }
         if ((this.operation === "edit" || this.operation === "create")
@@ -203,6 +183,25 @@ export default class DynamicFormComponent extends Vue {
             });
         }
     }
+
+    onAddNew: Function = function (model, field: FieldDefinition) {
+        this.activity = true;
+        this.repository.add(this.$route.fullPath, field.inverseType, model.id)
+            .then(data => {
+                this.activity = false;
+                if (data.error) {
+                    this.errorMessage = data.error;
+                } else {
+                    this.errorMessage = '';
+                    this.$router.push({ name: field.inputType, params: { operation: 'create', id: data.data.id } });
+                }
+            })
+            .catch(error => {
+                this.activity = false;
+                this.errorMessage = "A problem occurred. The new item could not be added.";
+                ErrorMsg.logError("dynamic-form.onAddNew", new Error(error));
+            });
+    }.bind(this);
 
     onCancel() {
         this.activity = false;
@@ -314,6 +313,25 @@ export default class DynamicFormComponent extends Vue {
                 ErrorMsg.logError("dynamic-form.onReplace", new Error(error));
             });
     }
+
+    onView: Function = function (model, field: FieldDefinition) {
+        this.activity = true;
+        this.repository.getChildId(this.$route.fullPath, this.id, field.model)
+            .then(data => {
+                this.activity = false;
+                if (data.error) {
+                    this.errorMessage = data.error;
+                } else {
+                    this.errorMessage = '';
+                    router.push({ name: field.inputType, params: { operation: 'details', id: data.response } });
+                }
+            })
+            .catch(error => {
+                this.activity = false;
+                this.errorMessage = "A problem occurred. The item could not be accessed.";
+                ErrorMsg.logError("dynamic-form.onView", new Error(error));
+            });
+    }.bind(this);
 
     updateForm() {
         this.activity = true;

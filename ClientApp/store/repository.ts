@@ -205,6 +205,29 @@ export class Repository {
     }
 
     /**
+     * Called to retrieve the primary key of a child entity in the given relationship.
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @param {string} id The primary key of the parent entity.
+     * @param {string} childProp The navigation property of the relationship on the parent entity.
+     * @returns {ApiResponseViewModel} A response object containing the primary key of the child entity.
+     */
+    getChildId(returnPath: string, id: string, childProp: string): Promise<ApiResponseViewModel> {
+        return fetch(`/api/Data/${this.dataType}/GetChildId/${id}/${childProp}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${store.state.token}`
+                }
+            })
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .catch(error => {
+                throw new Error(`There was a problem with your request. ${error}`);
+            });
+    }
+
+    /**
      * Called to retrieve a page of child entities in a given relationship.
      * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
      * @param {string} id The primary key of the parent entity.

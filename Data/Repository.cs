@@ -218,6 +218,35 @@ namespace MVCCoreVue.Data
             return filteredItems.Select(i => GetViewModel(i)).AsEnumerable();
         }
 
+        /// <summary>
+        /// Finds the primary key of a child entity in the given relationship.
+        /// </summary>
+        /// <param name="id">The primary key of the parent entity.</param>
+        /// <param name="childProp">The navigation property of the relationship.</param>
+        /// <returns></returns>
+        public async Task<Guid> GetChildIdAsync(Guid id, PropertyInfo childProp)
+        {
+            var item = await FindItemAsync(id);
+            await _context.Entry(item).Reference(childProp.Name).LoadAsync();
+            return (childProp.GetValue(item) as DataItem).Id;
+        }
+
+        /// <summary>
+        /// Retrieves the total number of child entities in the given relationship.
+        /// </summary>
+        /// <param name="id">The primary key of the parent entity.</param>
+        /// <param name="childProp">The navigation property of the relationship on the parent entity.</param>
+        /// <returns>
+        /// A <see cref="long"/> that represents the total number of children in the relationship.
+        /// </returns>
+        public async Task<long> GetChildTotalAsync(Guid id, PropertyInfo childProp)
+        {
+            var item = await FindItemAsync(id);
+            await _context.Entry(item).Collection(childProp.Name).LoadAsync();
+            var children = childProp.GetValue(item) as ICollection<object>;
+            return children.LongCount();
+        }
+
         private FieldDefinition GetFieldDefinition(PropertyInfo pInfo)
         {
             var fd = new FieldDefinition
