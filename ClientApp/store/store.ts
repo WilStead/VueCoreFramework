@@ -9,27 +9,62 @@ import * as ErrorLog from '../error-msg';
  */
 export const store = new Vuex.Store({
     state: {
-        count: 0,
+        /**
+         * The site author(s).
+         */
         author: 'Wil Stead',
+
+        /**
+         * The copyright year(s) for the site.
+         */
         year: '2017',
+
+        /**
+         * The contact email address for the site.
+         */
         contact: 'wil.stead@williamstead.com',
+
+        /**
+         * A JWT bearer token.
+         */
         token: localStorage.getItem('token') || '',
-        email: '',
+
+        /**
+         * The username of the current user (if any).
+         */
+        username: 'user',
+
+        /**
+         * The email address of the current user (if any).
+         */
+        email: 'user@example.com',
+
+        /**
+         * An object containing information about the state of the UI.
+         */
         uiState,
+
+        /**
+         * Info used to display a model error dialog.
+         */
         error: {
             dialogShown: false,
             message: ''
         }
     },
     mutations: {
-        increment(state) {
-            state.count++;
-        },
+        /**
+         * Sets the current JWT bearer token.
+         */
         setToken(state, token) {
             state.token = token;
         },
+
+        /**
+         * Initializes the VueRouter with data type info from the API.
+         */
         addTypeRoutes(state, router) {
-            let dataItemIndex = state.uiState.menuItems.findIndex(v => v.text === "Data");
+            let dataItemIndex = state.uiState.menuItems.findIndex(v => v.dataHook);
             getMenuItems(router, state.uiState.menuItems[dataItemIndex])
                 .then(data => {
                     if (!state.uiState.menuItems[dataItemIndex].submenu

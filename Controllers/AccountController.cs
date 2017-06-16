@@ -167,13 +167,16 @@ namespace MVCCoreVue.Controllers
             {
                 _logger.LogInformation(LogEvent.LOGIN_EXTERNAL, "User {USER} logged in with {PROVIDER}.", info.Principal.FindFirstValue(ClaimTypes.Email), info.LoginProvider);
                 model.Redirect = true;
-                model.Token = GetLoginToken(model.Email, user, _userManager, _tokenOptions);
+                model.Token = GetLoginToken(user, _userManager, _tokenOptions);
                 return model;
             }
             else
             {
-                // If the user does not have an account, then create one.
-                user = new ApplicationUser { UserName = email, Email = email };
+                // If the user does not have an account, then create one. Use the first part of the
+                // email (before '@') as the username, since not every provider will have a unique,
+                // human-readable, non-personally-identifying username available. The user can always
+                // change it.
+                user = new ApplicationUser { UserName = email.Substring(0, email.IndexOf('@')), Email = email };
                 var newResult = await _userManager.CreateAsync(user);
                 if (newResult.Succeeded)
                 {
@@ -231,7 +234,6 @@ namespace MVCCoreVue.Controllers
         }
 
         internal static string GetLoginToken(
-            string email,
             ApplicationUser user,
             UserManager<ApplicationUser> userManager,
             TokenProviderOptions tokenOptions)
@@ -239,9 +241,9 @@ namespace MVCCoreVue.Controllers
             var now = DateTime.UtcNow;
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, email),
-                new Claim(ClaimTypes.NameIdentifier, email),
-                new Claim(ClaimTypes.Name, email),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+                new Claim(ClaimTypes.NameIdentifier, user.Email),
+                new Claim(ClaimTypes.Name, user.UserName),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, (now.Subtract(new DateTime(1970, 1, 1))).TotalSeconds.ToString(), ClaimValueTypes.Integer64)
             };
@@ -335,7 +337,7 @@ namespace MVCCoreVue.Controllers
                 return model;
             }
 
-            model.Token = GetLoginToken(model.Email, user, _userManager, _tokenOptions);
+            model.Token = GetLoginToken(user, _userManager, _tokenOptions);
 
             _logger.LogInformation(LogEvent.LOGIN, "User {USER} logged in.", user.Email);
             model.Redirect = true;
@@ -382,13 +384,19 @@ namespace MVCCoreVue.Controllers
                 }
                 return model;
             }
-            user = new ApplicationUser { UserName = model.Email, Email = model.Email };
+            var existingUser = await _userManager.FindByNameAsync(model.Username);
+            if (existingUser != null)
+            {
+                model.Errors.Add("This username is already in use.");
+                return model;
+            }
+            user = new ApplicationUser { UserName = model.Username, Email = model.Email };
             var result = await _userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
                 await SendConfirmationEmail(model, user);
 
-                _logger.LogInformation(LogEvent.NEW_ACCOUNT, "New account created for {USER}.", user.Email);
+                _logger.LogInformation(LogEvent.NEW_ACCOUNT, "New account created for {USER} with username {USERNAME}.", user.Email, user.UserName);
 
                 model.Redirect = true;
             }

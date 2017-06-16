@@ -57,6 +57,7 @@ namespace MVCCoreVue
 
             services.AddIdentity<ApplicationUser, IdentityRole>(config =>
             {
+                config.User.RequireUniqueEmail = true;
                 config.SignIn.RequireConfirmedEmail = true;
                 config.Cookies.ApplicationCookie.AutomaticChallenge = false;
                 config.Cookies.ApplicationCookie.LoginPath = new PathString("/Home/Index?forwardUrl=%2Flogin");

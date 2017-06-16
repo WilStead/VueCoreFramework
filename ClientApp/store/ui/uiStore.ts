@@ -1,6 +1,7 @@
 ﻿import VueRouter from 'vue-router';
 import * as ErrorMsg from '../../error-msg';
 import { Repository } from '../repository';
+import { router } from '../../router';
 
 /**
  * Describes an item in the SPA framework's main menu.
@@ -17,6 +18,27 @@ export interface MenuItem {
     iconClass: string;
 
     /**
+     * Indicates that the iconClass is a FontAwesome icon, rather than a Material Icon.
+     */
+    fontAwesome?: boolean;
+
+    /**
+     * Indicates that this menu item is where all auto-generated menu items will be nested. Only
+     * the first such item found will be used, if more than one is set.
+     */
+    dataHook?: boolean;
+
+    /**
+     * Indicates that this menu item is a divider. Overrides all other properties.
+     */
+    divider?: boolean;
+
+    /**
+     * Indicates that this menu item is a heading. Overrides all other properties except text.
+     */
+    header?: boolean;
+
+    /**
      * An optional route name which will be navigated to when the menu item is selected.
      */
     route?: string;
@@ -27,8 +49,7 @@ export interface MenuItem {
     submenu?: Array<MenuItem>;
 }
 
-function addMenuItem(menu: MenuItem, router: VueRouter, name: string, fullCategory: string, category: string, iconClass: string) {
-    let lowerName = name.toLowerCase();
+function addMenuItem(menu: MenuItem, router: VueRouter, data: any, dataClass: string, category: string, iconClass: string) {
     if (!iconClass) {
         iconClass = 'view_list';
     }
@@ -54,33 +75,48 @@ function addMenuItem(menu: MenuItem, router: VueRouter, name: string, fullCatego
             }
             menuItem = {
                 text: currentCategory,
+                fontAwesome: data[dataClass].fontAwesome,
                 iconClass,
                 submenu: []
             };
             menu.submenu.push(menuItem);
         }
-        addMenuItem(menuItem, router, name, fullCategory, category, iconClass);
+        addMenuItem(menuItem, router, data, dataClass, category, iconClass);
     } else {
-        let baseRoute = `/data/${lowerName}`;
+        let baseRoute = `/data/${dataClass.toLowerCase()}`;
         let tableRoute = baseRoute + '/table';
 
         router.addRoutes([{
             path: baseRoute,
             meta: { requiresAuth: true },
             component: require('../../components/data/dashboard.vue'),
-            props: { title: name },
+            props: {
+                title: dataClass,
+                iconClass,
+                fontAwesome: data[dataClass].fontAwesome
+            },
             children: [
                 {
-                    name: name + "DataTable",
+                    name: dataClass + "DataTable",
                     path: 'table/:operation?/:parentType?/:parentId?/:parentProp?/:childProp?',
-                    component: require('../../dynamic-data/dynamic-table/dynamic-table.vue'),
-                    props: true
+                    components: {
+                        content: data[dataClass].dashboardTableContent
+                            ? require(`../../components/data/${data[dataClass].dashboardTableContent}.vue`)
+                            : require('../../components/data/empty.vue'),
+                        data: require('../../dynamic-data/dynamic-table/dynamic-table.vue')
+                    },
+                    props: { content: false, data: true }
                 },
                 {
-                    name: name,
+                    name: dataClass,
                     path: ':operation/:id',
-                    component: require('../../dynamic-data/dynamic-form/dynamic-form.vue'),
-                    props: true
+                    components: {
+                        content: data[dataClass].dashboardFormContent
+                            ? require(`../../components/data/${data[dataClass].dashboardFormContent}.vue`)
+                            : require('../../components/data/empty.vue'),
+                        data: require('../../dynamic-data/dynamic-form/dynamic-form.vue')
+                    },
+                    props: { content: true, data: true }
                 }
             ]
         }]);
@@ -88,7 +124,7 @@ function addMenuItem(menu: MenuItem, router: VueRouter, name: string, fullCatego
         let menuItem: MenuItem = null;
         if (menu.submenu && menu.submenu.length) {
             for (var i = 0; i < menu.submenu.length; i++) {
-                if (menu.submenu[i].text === name) {
+                if (menu.submenu[i].text === dataClass) {
                     menuItem = menu.submenu[i];
                     break;
                 }
@@ -99,13 +135,15 @@ function addMenuItem(menu: MenuItem, router: VueRouter, name: string, fullCatego
                 menu.submenu = [];
             }
             menuItem = {
-                text: name,
+                text: dataClass,
                 iconClass,
+                fontAwesome: data[dataClass].fontAwesome,
                 route: tableRoute
             };
             menu.submenu.push(menuItem);
         } else {
             menuItem.iconClass = iconClass;
+            menuItem.fontAwesome = data[dataClass].fontAwesome;
             menuItem.route = tableRoute;
         }
     }
@@ -123,26 +161,43 @@ export function getChildItems(router: VueRouter): Promise<void> {
             }
             return response;
         })
-        .then(response => response.json() as Promise<Array<string>>)
+        .then(response => response.json() as Promise<Array<any>>)
         .then(data => {
+            for (var dataClass in data) {
+                let name = dataClass;
+            }
             for (var i = 0; i < data.length; i++) {
                 router.addRoutes([{
-                    path: `/data/${data[i].toLowerCase()}`,
+                    path: `/data/${dataClass.toLowerCase()}`,
                     meta: { requiresAuth: true },
                     component: require('../../components/data/dashboard.vue'),
-                    props: { title: data[i] },
+                    props: {
+                        title: dataClass,
+                        iconClass: data[dataClass].iconClass || 'view_list',
+                        fontAwesome: data[dataClass].fontAwesome
+                    },
                     children: [
                         {
-                            name: data[i] + "DataTable",
+                            name: dataClass + "DataTable",
                             path: 'table/:operation?/:parentType?/:parentId?/:parentProp?/:childProp?',
-                            component: require('../../dynamic-data/dynamic-table/dynamic-table.vue'),
-                            props: true
+                            components: {
+                                content: data[dataClass].dashboardTableContent
+                                    ? require(`../../components/data/${data[dataClass].dashboardTableContent}.vue`)
+                                    : require('../../components/data/empty.vue'),
+                                data: require('../../dynamic-data/dynamic-table/dynamic-table.vue')
+                            },
+                            props: { content: false, data: true }
                         },
                         {
-                            name: data[i],
+                            name: dataClass,
                             path: ':operation/:id',
-                            component: require('../../dynamic-data/dynamic-form/dynamic-form.vue'),
-                            props: true
+                            components: {
+                                content: data[dataClass].dashboardFormContent
+                                    ? require(`../../components/data/${data[dataClass].dashboardFormContent}.vue`)
+                                    : require('../../components/data/empty.vue'),
+                                data: require('../../dynamic-data/dynamic-form/dynamic-form.vue')
+                            },
+                            props: { content: true, data: true }
                         }
                     ]
                 }]);
@@ -169,7 +224,7 @@ export function getMenuItems(router: VueRouter, menu: MenuItem): Promise<void> {
         .then(response => response.json() as Promise<any>)
         .then(data => {
             for (var dataClass in data) {
-                addMenuItem(menu, router, dataClass, data[dataClass].category, data[dataClass].category, data[dataClass].iconClass);
+                addMenuItem(menu, router, data, dataClass, data[dataClass].category, data[dataClass].iconClass);
             }
         })
         .catch(error => {
@@ -191,13 +246,16 @@ export const uiState = {
             route: '/'
         },
         {
-            text: 'Data',
-            iconClass: 'view_list'
+            divider: true
         },
         {
-            text: 'Fetch data',
-            iconClass: 'wb_cloudy',
-            route: '/fetchdata'
+            text: 'Data',
+            header: true
+        },
+        {
+            text: 'Data',
+            iconClass: 'view_list',
+            dataHook: true
         }
     ]
 };

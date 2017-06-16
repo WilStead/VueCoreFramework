@@ -26,6 +26,11 @@ namespace MVCCoreVue.Models
     /// <summary>
     /// A <see cref="DataItem"/> representing a country's head of government.
     /// </summary>
+    /// <remarks>
+    /// The DashboardFormContent property indicates that a custom component exists which will be
+    /// displayed above data forms when viewing leaders.
+    /// </remarks>
+    [DataClass(DashboardFormContent = "country/leader", IconClass = "person")]
     public class Leader : NamedDataItem
     {
         /// <summary>

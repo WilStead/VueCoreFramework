@@ -50,7 +50,7 @@ namespace MVCCoreVue.Data
                 var user = context.Users.FirstOrDefault(u => u.Email == adminOptions.AdminEmailAddress);
                 if (user == null)
                 {
-                    user = new ApplicationUser { UserName = adminOptions.AdminEmailAddress, Email = adminOptions.AdminEmailAddress };
+                    user = new ApplicationUser { UserName = "Admin", Email = adminOptions.AdminEmailAddress };
                     userManager.CreateAsync(user, adminOptions.AdminPassword).Wait();
                     userManager.Users.FirstOrDefault().EmailConfirmed = true;
                     userManager.UpdateAsync(user).Wait();

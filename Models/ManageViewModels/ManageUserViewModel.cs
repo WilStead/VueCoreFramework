@@ -9,6 +9,13 @@ namespace MVCCoreVue.Models.ManageViewModels
     public class ManageUserViewModel
     {
         /// <summary>
+        /// The username of the account.
+        /// </summary>
+        [EmailAddress]
+        [Display(Name = "Username")]
+        public string Username { get; set; }
+
+        /// <summary>
         /// The email address of the user account.
         /// </summary>
         [EmailAddress]

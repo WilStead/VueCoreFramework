@@ -16,6 +16,11 @@
         public const string Unauthorized = "unauthorized";
 
         /// <summary>
+        /// The username of the user account.
+        /// </summary>
+        public string Username { get; set; }
+
+        /// <summary>
         /// The email address of the user account.
         /// </summary>
         public string Email { get; set; }

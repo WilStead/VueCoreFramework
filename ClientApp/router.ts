@@ -32,7 +32,6 @@ const routes: Array<VueRouter.RouteConfig> = [
         component: require('./components/user/password/reset.vue'),
         props: true
     },
-    { path: '/fetchdata', component: resolve => require(['./components/fetchdata/fetchdata.vue'], resolve) },
     { path: '/error/notfound', component: resolve => require(['./components/error/notfound.vue'], resolve) },
     { path: '/error/:code', component: resolve => require(['./components/error/error.vue'], resolve), props: true }
 ];
@@ -87,19 +86,24 @@ export interface ApiResponseViewModel {
  */
 interface AuthorizationViewModel {
     /**
+     * The username of the user account.
+     */
+    username: string;
+
+    /**
      * The email of the user account.
      */
-    email: string,
+    email: string;
 
     /**
      * A JWT bearer token.
      */
-    token: string,
+    token: string;
 
     /**
      * A value indicating whether the user is authorized for the requested action or not.
      */
-    authorization: string
+    authorization: string;
 }
 
 /**
@@ -142,6 +146,9 @@ export function checkAuthorization(to: VueRouter.Route): Promise<string> {
         .then(data => {
             if (data.token) {
                 store.state.token = data.token;
+            }
+            if (data.username) {
+                store.state.username = data.username;
             }
             if (data.email) {
                 store.state.email = data.email;

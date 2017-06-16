@@ -131,6 +131,18 @@ export const requireNewPassword = <VFG_Validator>function (value, field, model, 
 }
 
 /**
+ * A vue-form-generator validator for text fields which represent a required email address.
+ */
+export const requireUsername = <VFG_Validator>function (value, field, model, messages = resources) {
+    if (value === undefined || value === null || value === "") {
+        return ["A username is required"];
+    }
+    let re = /^[\w.@-]+&/;
+    if (!re.test(value))
+        return ["Usernames can contain only letters, numbers, underscores, hyphens, and periods"];
+}
+
+/**
  * An object which maps keys to validator objects.
  */
 export const validators = {

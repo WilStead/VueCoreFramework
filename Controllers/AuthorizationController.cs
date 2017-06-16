@@ -66,12 +66,12 @@ namespace MVCCoreVue.Controllers
                 return Json(new AuthorizationViewModel { Authorization = AuthorizationViewModel.Unauthorized });
             }
 
-            var token = AccountController.GetLoginToken(email, user, _userManager, _tokenOptions);
+            var token = AccountController.GetLoginToken(user, _userManager, _tokenOptions);
 
             // If no specific data is being requested, just being a recognized user is sufficient authorization.
             if (string.IsNullOrEmpty(dataType))
             {
-                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
+                return Json(new AuthorizationViewModel { Username = user.UserName, Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
             }
             dataType = dataType.ToInitialCaps();
 
@@ -87,7 +87,7 @@ namespace MVCCoreVue.Controllers
             // First authorization for all data is checked.
             if (claims.Any(c => c.Type == CustomClaimTypes.PermissionDataAll && c.Value == CustomClaimTypes.PermissionAll))
             {
-                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
+                return Json(new AuthorizationViewModel { Username = user.UserName, Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
             }
 
             // If not authorized for all data, authorization for the specific operation on all data is checked.
@@ -95,34 +95,34 @@ namespace MVCCoreVue.Controllers
             var claimType = operation.ToInitialCaps();
             if (claims.Any(c => c.Type == claimType && c.Value == CustomClaimTypes.PermissionAll))
             {
-                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
+                return Json(new AuthorizationViewModel { Username = user.UserName, Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
             }
 
             // If not authorized for the operation on all data, authorization for the specific data type is checked.
             if (string.IsNullOrEmpty(dataType))
             {
-                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Unauthorized });
+                return Json(new AuthorizationViewModel { Username = user.UserName, Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Unauthorized });
             }
             var entity = _context.Model.GetEntityTypes().FirstOrDefault(e => e.Name.Substring(e.Name.LastIndexOf('.') + 1) == dataType);
             if (entity == null)
             {
-                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Unauthorized });
+                return Json(new AuthorizationViewModel { Username = user.UserName, Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Unauthorized });
             }
             var type = entity.ClrType;
             if (type == null)
             {
-                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Unauthorized });
+                return Json(new AuthorizationViewModel { Username = user.UserName, Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Unauthorized });
             }
             // First check whether the datatype requires no permissions.
             var attrDefaultPermission = type.GetTypeInfo().GetCustomAttribute<DefaultPermissionAttribute>();
             if (attrDefaultPermission?.HasDefaultAllPermissions == true)
             {
-                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
+                return Json(new AuthorizationViewModel { Username = user.UserName, Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
             }
             // If not, see if it has default authorization for the specific operation
             if (attrDefaultPermission?.DefaultPermissions?.Split(';').Any(s => s == claimType) == true)
             {
-                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
+                return Json(new AuthorizationViewModel { Username = user.UserName, Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
             }
 
             // If not, authorization for either all operations, or the specific operation is checked.
@@ -130,7 +130,7 @@ namespace MVCCoreVue.Controllers
             if (claims.Any(c => c.Value == claimValue
                 && (c.Type == CustomClaimTypes.PermissionDataAll || c.Type == claimType)))
             {
-                return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
+                return Json(new AuthorizationViewModel { Username = user.UserName, Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
             }
 
             // If not authorized for the operation on the data type and an id is provided, the specific item is checked.
@@ -143,20 +143,21 @@ namespace MVCCoreVue.Controllers
                     if (item?.AllPermissions?.Equals(CustomClaimTypes.PermissionDataAll) == true
                         || item?.AllPermissions?.Split(';').Any(s => s == claimType) == true)
                     {
-                        return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
+                        return Json(new AuthorizationViewModel { Username = user.UserName, Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
                     }
                 }
 
                 // If not, authorization for either all operations or the specific operation is checked.
-                if (claims.Any(c => c.Value == id
-                    && (c.Type == CustomClaimTypes.PermissionDataAll || c.Type == claimType)))
+                if (claims.Any(c => c.Value == $"{dataType}{{{id}}}"
+                    && (c.Type == CustomClaimTypes.PermissionDataAll
+                    || c.Type == claimType)))
                 {
-                    return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
+                    return Json(new AuthorizationViewModel { Username = user.UserName, Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Authorized });
                 }
             }
 
             // No authorizations found.
-            return Json(new AuthorizationViewModel { Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Unauthorized });
+            return Json(new AuthorizationViewModel { Username = user.UserName, Email = user.Email, Token = token, Authorization = AuthorizationViewModel.Unauthorized });
         }
     }
 }

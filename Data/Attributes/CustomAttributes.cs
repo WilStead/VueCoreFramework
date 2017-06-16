@@ -3,6 +3,37 @@
 namespace MVCCoreVue.Data.Attributes
 {
     /// <summary>
+    /// Sets data type-specific information for use in the SPA framework.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class)]
+    internal class DataClassAttribute : Attribute
+    {
+        /// <summary>
+        /// The name of a Material Icon, will appear as the class's icon in the dashboard.
+        /// </summary>
+        /// <remarks>Spaces should be replaced by underscores in icon names.</remarks>
+        public string IconClass { get; set; }
+
+        /// <summary>
+        /// Indicates that the IconClass is a FontAwesome icon, rather than a Material Icon.
+        /// </summary>
+        public bool FontAwesome { get; set; }
+
+        /// <summary>
+        /// An optional path to a Vue component which is shown on the data class' dashboard above
+        /// data tables. Paths are relative to the components/data folder.
+        /// </summary>
+        public string DashboardTableContent { get; set; }
+
+        /// <summary>
+        /// An optional path to a Vue component which is shown on the data class' dashboard above
+        /// forms. Paths are relative to the components/data folder. This component will receive the
+        /// operation being performed and the id of the item as props.
+        /// </summary>
+        public string DashboardFormContent { get; set; }
+    }
+
+    /// <summary>
     /// Allows setting a default value for a property.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
@@ -123,7 +154,7 @@ namespace MVCCoreVue.Data.Attributes
     /// accessible on the user interface as child objects within MenuClass objects.
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class)]
-    internal class MenuClassAttribute : Attribute
+    internal class MenuClassAttribute : DataClassAttribute
     {
         /// <summary>
         /// A string with the format "supertype/type/subtype"
@@ -136,15 +167,6 @@ namespace MVCCoreVue.Data.Attributes
         /// designs might be only loosely correlated.
         /// </remarks>
         public string Category { get; set; }
-
-        /// <summary>
-        /// The name of a Material Icon, will appear as the class's icon in the menu, and will also
-        /// be the icon of every category above the class if it is the first item added to that category.
-        /// </summary>
-        /// <remarks>Spaces should be replaced by underscores in icon names.</remarks>
-        public string IconClass { get; set; }
-
-        public MenuClassAttribute() { }
     }
 
     /// <summary>

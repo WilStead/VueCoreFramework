@@ -10,6 +10,9 @@ using MVCCoreVue.Services;
 using System.Security.Claims;
 using System;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using MVCCoreVue.Data;
+using System.Collections.Generic;
 
 namespace MVCCoreVue.Controllers
 {
@@ -20,8 +23,10 @@ namespace MVCCoreVue.Controllers
     public class ManageController : Controller
     {
         private readonly AdminOptions _adminOptions;
+        private readonly ApplicationDbContext _context;
         private readonly IEmailSender _emailSender;
         private readonly ILogger<ManageController> _logger;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
 
@@ -30,14 +35,18 @@ namespace MVCCoreVue.Controllers
         /// </summary>
         public ManageController(
             IOptions<AdminOptions> adminOptions,
+            ApplicationDbContext context,
             IEmailSender emailSender,
             ILogger<ManageController> logger,
+            RoleManager<IdentityRole> roleManager,
             SignInManager<ApplicationUser> signInManager,
             UserManager<ApplicationUser> userManager)
         {
             _adminOptions = adminOptions.Value;
+            _context = context;
             _emailSender = emailSender;
             _logger = logger;
+            _roleManager = roleManager;
             _signInManager = signInManager;
             _userManager = userManager;
         }
@@ -47,8 +56,7 @@ namespace MVCCoreVue.Controllers
         /// </summary>
         /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
         /// <returns>A <see cref="ManageUserViewModel"/> used to transfer task data.</returns>
-        [HttpPost]
-        [Route("api/[controller]/[action]")]
+        [HttpPost("api/[controller]/[action]")]
         public async Task<ManageUserViewModel> ChangeEmail([FromBody]ManageUserViewModel model)
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
@@ -60,6 +68,12 @@ namespace MVCCoreVue.Controllers
             if (user.AdminLocked)
             {
                 model.Errors.Add($"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance.");
+                return model;
+            }
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+            if (existingUser != null)
+            {
+                model.Errors.Add("An account with this email already exists. If you've forgotten your password, please use the link on the login page.");
                 return model;
             }
             if (user.LastEmailChange > DateTime.Now.Subtract(TimeSpan.FromDays(1)))
@@ -95,8 +109,7 @@ namespace MVCCoreVue.Controllers
         /// </summary>
         /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
         /// <returns>A <see cref="ManageUserViewModel"/> used to transfer task data.</returns>
-        [HttpPost]
-        [Route("api/[controller]/[action]")]
+        [HttpPost("api/[controller]/[action]")]
         public async Task<ManageUserViewModel> ChangePassword([FromBody]ManageUserViewModel model)
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
@@ -119,6 +132,134 @@ namespace MVCCoreVue.Controllers
             }
             model.Errors.AddRange(result.Errors.Select(e => e.Description));
             return model;
+        }
+
+        /// <summary>
+        /// Called to initiate a username change for a user.
+        /// </summary>
+        /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
+        /// <returns>A <see cref="ManageUserViewModel"/> used to transfer task data.</returns>
+        [HttpPost("api/[controller]/[action]")]
+        public async Task<ManageUserViewModel> ChangeUsername([FromBody]ManageUserViewModel model)
+        {
+            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            if (user == null)
+            {
+                model.Errors.Add("An error has occurred.");
+                return model;
+            }
+            if (user.AdminLocked)
+            {
+                model.Errors.Add($"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance.");
+                return model;
+            }
+            var existingUser = await _userManager.FindByNameAsync(model.Username);
+            if (existingUser != null)
+            {
+                model.Errors.Add("This username is already in use.");
+                return model;
+            }
+
+            var old = user.UserName;
+            user.UserName = model.Username;
+
+            _logger.LogInformation(LogEvent.USERNAME_CHANGE, "Username changed for {USER}, from {OLDUSERNAME} to {NEWUSERNAME}.", user.Email, old, user.UserName);
+
+            return model;
+        }
+
+        /// <summary>
+        /// Called to delete a user account.
+        /// </summary>
+        /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
+        /// <returns>A <see cref="ManageUserViewModel"/> used to transfer task data.</returns>
+        [HttpPost("api/[controller]/[action]/{xferUsername?}")]
+        public async Task<IActionResult> DeleteAccount(string xferUsername)
+        {
+            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            if (user == null)
+            {
+                return Json(new { error = "An error has occurred. Your account was not deleted." });
+            }
+            if (user.AdminLocked)
+            {
+                return Json(new { error = $"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance." });
+            }
+
+            var ownerClaims = await _userManager.GetClaimsAsync(user);
+            ownerClaims = ownerClaims.Where(c => c.Type == CustomClaimTypes.PermissionDataOwner).ToList();
+
+            ApplicationUser xferUser = null;
+            if (!string.IsNullOrEmpty(xferUsername))
+            {
+                xferUser = await _userManager.FindByNameAsync(xferUsername);
+                if (xferUser == null)
+                {
+                    return Json(new { error = "There was a problem with the account you specified for data transfer. Your account was not deleted." });
+                }
+                await _userManager.AddClaimsAsync(xferUser, ownerClaims);
+            }
+            else
+            {
+                foreach (var ownerClaim in ownerClaims)
+                {
+                    List<ApplicationUser> managerShares = new List<ApplicationUser>();
+                    foreach (var role in _roleManager.Roles)
+                    {
+                        var roleClaims = await _roleManager.GetClaimsAsync(role);
+                        if (roleClaims.Any(c => c.Value == ownerClaim.Value))
+                        {
+                            var managers = await _userManager.GetUsersForClaimAsync(new Claim(CustomClaimTypes.PermissionGroupManager, role.Name));
+                            var manager = managers.FirstOrDefault();
+                            if (manager != null)
+                            {
+                                managerShares.Add(manager);
+                            }
+                        }
+                    }
+
+                    var shares = await _userManager.GetUsersForClaimAsync(new Claim(CustomClaimTypes.PermissionDataView, ownerClaim.Value));
+                    shares = shares.Concat(await _userManager.GetUsersForClaimAsync(new Claim(CustomClaimTypes.PermissionDataEdit, ownerClaim.Value))).ToList();
+
+
+                    // Prefer a previously-selected user, if it's within the share group.
+                    ApplicationUser candidate = null;
+                    if (xferUser == null || (!managerShares.Contains(xferUser) && !shares.Contains(xferUser)))
+                    {
+                        // Otherwise prefer a manager of a group share over an individual.
+                        candidate = managerShares.FirstOrDefault();
+                        if (candidate == null)
+                        {
+                            candidate = shares.FirstOrDefault();
+                        }
+                    }
+
+                    // If no share was found, delete the item.
+                    if (candidate == null)
+                    {
+                        var index = ownerClaim.Value.IndexOf('{');
+                        // If the claim value is improperly formed or outdated, ignore it.
+                        if (index != -1)
+                        {
+                            var dataType = ownerClaim.Value.Substring(0, index);
+                            var id = ownerClaim.Value.Substring(index + 1, ownerClaim.Value.Length - index - 2);
+                            if (Guid.TryParse(id, out Guid guid) && DataController.TryGetRepository(_context, dataType, out IRepository repository))
+                            {
+                                await repository.RemoveAsync(guid);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        xferUser = candidate;
+                        await _userManager.AddClaimAsync(xferUser, ownerClaim);
+                    }
+                }
+            }
+
+            _logger.LogInformation(LogEvent.DELETE_ACCOUNT, "User {USER} has deleted their account.", user.Email);
+
+            return Ok();
         }
 
         /// <summary>
@@ -182,6 +323,35 @@ namespace MVCCoreVue.Controllers
         }
 
         /// <summary>
+        /// Gets a list of the usernames of members who are in groups with the current user.
+        /// </summary>
+        /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
+        /// <returns>An error if there is a problem; or the list (as JSON).</returns>
+        [HttpGet("api/[controller]/[action]")]
+        public async Task<IActionResult> LoadXferUsernames()
+        {
+            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            if (user == null)
+            {
+                return Json(new { error = "An error has occurred." });
+            }
+            if (user.AdminLocked)
+            {
+                return Json(new { error = $"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance." });
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            List<ApplicationUser> xferUsers = new List<ApplicationUser>();
+            foreach (var role in roles)
+            {
+                var groupMembers = await _userManager.GetUsersInRoleAsync(role);
+                xferUsers = xferUsers.Union(groupMembers).ToList();
+            }
+
+            return Json(xferUsers.Select(u => u.UserName).ToArray());
+        }
+
+        /// <summary>
         /// Called to remove a user's external authentication provider account from their site account.
         /// </summary>
         /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
@@ -225,8 +395,7 @@ namespace MVCCoreVue.Controllers
         /// </summary>
         /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
         /// <returns>A <see cref="ManageUserViewModel"/> used to transfer task data.</returns>
-        [HttpPost]
-        [Route("api/[controller]/[action]")]
+        [HttpPost("api/[controller]/[action]")]
         public async Task<ManageUserViewModel> SetPassword([FromBody]ManageUserViewModel model)
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);

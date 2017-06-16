@@ -26,6 +26,21 @@
         public const string PermissionDataAll = "permission/data/all";
 
         /// <summary>
+        /// Indicates permission for viewing data.
+        /// </summary>
+        public const string PermissionDataView = "permission/data/view";
+
+        /// <summary>
+        /// Indicates permission for editing data.
+        /// </summary>
+        public const string PermissionDataEdit = "permission/data/edit";
+
+        /// <summary>
+        /// Indicates permission for creating data.
+        /// </summary>
+        public const string PermissionDataAdd = "permission/data/add";
+
+        /// <summary>
         /// Indicates ownership permissions for a data item.
         /// </summary>
         public const string PermissionDataOwner = "permission/data/owner";

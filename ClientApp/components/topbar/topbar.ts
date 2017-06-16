@@ -25,6 +25,8 @@ export default class TopbarComponent extends Vue {
     }
 
     logout() {
+        this.$store.state.username = 'user';
+        this.$store.state.email = 'user@example.com';
         this.$store.state.token = '';
         localStorage.removeItem('token');
         fetch('/api/Account/Logout', { method: 'POST' });

@@ -10,6 +10,11 @@ import * as VFG_Custom from '../../vfg/vfg-custom-validators';
  */
 interface RegisterViewModel {
     /**
+     * The username of the user account.
+     */
+    username: string;
+
+    /**
      * The email address of the user account.
      */
     email: string;
@@ -50,6 +55,7 @@ export default class RegisterComponent extends Vue {
     };
 
     model: RegisterViewModel = {
+        username: '',
         email: '',
         password: '',
         confirmPassword: '',
@@ -62,17 +68,23 @@ export default class RegisterComponent extends Vue {
         fields: [
             {
                 type: 'vuetifyText',
+                inputType: 'string',
+                model: 'username',
+                placeholder: 'Username',
+                autocomplete: true,
+                required: true,
+                min: 6,
+                max: 24,
+                validator: VFG_Custom.requireUsername
+            },
+            {
+                type: 'vuetifyText',
                 inputType: 'email',
                 model: 'email',
                 placeholder: 'Email',
                 autocomplete: true,
                 required: true,
-                validator: [
-                    VueFormGenerator.validators.email.locale({
-                        fieldIsRequired: "A valid email address is required",
-                        invalidEmail: "A valid email address is required"
-                    })
-                ]
+                validator: VFG_Custom.requireEmail
             },
             {
                 type: 'vuetifyText',
@@ -81,14 +93,8 @@ export default class RegisterComponent extends Vue {
                 placeholder: 'Password',
                 min: 6,
                 max: 24,
-                pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*_])/,
                 required: true,
-                validator: [
-                    VFG_Custom.string_regexp.locale({
-                        fieldIsRequired: "A password is required",
-                        invalidFormat: "Passwords must contain a lower-case letter, upper-case letter, number, and special character like !@#$%^&*_"
-                    })
-                ]
+                validator: VFG_Custom.requireNewPassword
             },
             {
                 type: 'vuetifyText',

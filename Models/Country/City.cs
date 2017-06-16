@@ -40,6 +40,7 @@ namespace MVCCoreVue.Models
     /// the menu of the SPA, and items of this type will therefore only be available to view or edit
     /// as children of another object (a <see cref="Models.Country"/>, in this case).
     /// </remarks>
+    [DataClass(IconClass = "location_city")]
     public class City : NamedDataItem
     {
         /// <summary>

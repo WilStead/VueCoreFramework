@@ -9,6 +9,14 @@ namespace MVCCoreVue.Models.AccountViewModels
     public class RegisterViewModel
     {
         /// <summary>
+        /// The username for the account.
+        /// </summary>
+        [Required]
+        [StringLength(24, MinimumLength = 6, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.")]
+        [Display(Name = "Username")]
+        public string Username { get; set; }
+
+        /// <summary>
         /// The email address of the user account.
         /// </summary>
         [Required]
@@ -20,7 +28,7 @@ namespace MVCCoreVue.Models.AccountViewModels
         /// The password for the user account.
         /// </summary>
         [Required]
-        [StringLength(24, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [StringLength(24, MinimumLength = 6, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.")]
         [DataType(DataType.Password)]
         [Display(Name = "Password")]
         public string Password { get; set; }

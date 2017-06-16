@@ -475,13 +475,30 @@ namespace MVCCoreVue.Controllers
                 var types = _context.Model.GetEntityTypes()
                     .Select(t => t.ClrType)
                     .Where(t => t.GetTypeInfo().IsSubclassOf(typeof(DataItem)));
-                List<string> classes = new List<string>();
+                IDictionary<string, dynamic> classes = new Dictionary<string, dynamic>();
                 foreach (var type in types)
                 {
                     var attr = type.GetTypeInfo().GetCustomAttribute<MenuClassAttribute>();
                     if (attr == null)
                     {
-                        classes.Add(type.Name);
+                        var childAttr = type.GetTypeInfo().GetCustomAttribute<DataClassAttribute>();
+                        if (childAttr == null)
+                        {
+                            // False fontAwesome used as a placeholder property since an empty one
+                            // isn't serialized, and the key must be present.
+                            classes.Add(type.Name, new { fontAwesome = false });
+                        }
+                        else
+                        {
+                            classes.Add(type.Name,
+                                new
+                                {
+                                    iconClass = childAttr.IconClass,
+                                    fontAwesome = childAttr.FontAwesome,
+                                    dashboardTableContent = childAttr.DashboardTableContent,
+                                    dashboardFormContent = childAttr.DashboardFormContent
+                                });
+                        }
                     }
                 }
                 return Json(classes);
@@ -620,7 +637,10 @@ namespace MVCCoreVue.Controllers
                         classes.Add(type.Name,
                             new {
                                 category = string.IsNullOrEmpty(attr.Category) ? "/" : attr.Category,
-                                iconClass = attr.IconClass
+                                iconClass = attr.IconClass,
+                                fontAwesome = attr.FontAwesome,
+                                dashboardTableContent = attr.DashboardTableContent,
+                                dashboardFormContent = attr.DashboardFormContent
                             });
                     }
                 }

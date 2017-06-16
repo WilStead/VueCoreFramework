@@ -15,7 +15,7 @@ namespace MVCCoreVue.Models
     /// deleted independently of any Countries. MenuClass types can be organized in the framework
     /// menu in any order and hierarchy, regardless of the database relationships they share (if any).
     /// </remarks>
-    [MenuClass(Category = "Country")]
+    [MenuClass(Category = "Country", IconClass = "airplanemode_active")]
     public class Airline : NamedDataItem
     {
         /// <summary>

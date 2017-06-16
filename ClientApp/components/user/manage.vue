@@ -1,13 +1,19 @@
 ﻿<template>
     <v-layout row wrap justify-center>
         <v-card>
-            <v-card-row><v-card-title>Manage your account</v-card-title></v-card-row>
+            <v-card-row>
+                <v-card-title>
+                    <span>Welcome, {{ $store.state.username }}</span>
+                    <v-spacer></v-spacer>
+                    <span>Manage your account</span>
+                </v-card-title>
+            </v-card-row>
             <v-alert error :value="model.errors.length > 0">
                 <ul>
                     <li v-for="error in model.errors" class="error--text">{{ error }}</li>
                 </ul>
             </v-alert>
-            <v-alert success v-model="success">Success!</v-alert>
+            <v-alert success v-model="success">{{ successMessage }}</v-alert>
             <v-card-row>
                 <vue-form-generator class="vfg-container" :schema="schema" :model="model" :options="formOptions" @validated="onValidated"></vue-form-generator>
             </v-card-row>
@@ -30,14 +36,16 @@
             <v-card-row v-if="submitting" class="activity-row">
                 <v-progress-circular indeterminate class="primary--text"></v-progress-circular>
             </v-card-row>
-            <v-card-row v-if="changingEmail || changingPassword || settingPassword" class="submit-row">
+            <v-card-row v-else-if="changingUsername || changingEmail || changingPassword || settingPassword" class="submit-row">
                 <v-btn default @click.native.stop.prevent="cancelChange">Cancel</v-btn>
                 <v-btn primary @click.native.stop.prevent="onSubmit">Submit</v-btn>
             </v-card-row>
             <v-card-row v-else>
-                <v-card-text>
+                <v-card-row>
                     <dl class="dl-horizontal">
-                        <dt>Email</dt>
+                        <dt>Username: {{ $store.state.username }}</dt>
+                        <dd><a href="#" @click.stop.prevent="changeUsername">Change username</a></dd>
+                        <dt>Email: {{ $store.state.email }}</dt>
                         <dd><a href="#" @click.stop.prevent="changeEmail">Change email</a></dd>
                         <dt>Password</dt>
                         <dd>
@@ -45,7 +53,43 @@
                             <a v-if="!hasPassword" href="#" @click.stop.prevent="setPassword">Add a local password</a>
                         </dd>
                     </dl>
-                </v-card-text>
+                    <v-dialog v-model="deleteAccountDialog">
+                        <v-btn error dark slot="activator">Delete Account</v-btn>
+                        <v-card>
+                            <v-card-row error>
+                                <v-card-title class="white--text">Are you sure you want to delete your account?</v-card-title>
+                            </v-card-row>
+                            <v-card-row>
+                                <v-card-text class="error--text">This will delete all data associated with your account that isn't being shared with others (unless you choose to transfer it, below). Even if you sign up again later with the same account information, any deleted data will remain lost.</v-card-text>
+                            </v-card-row>
+                            <v-card-row>
+                                <v-card-text class="warning--text">Any data you have shared will remain available, and ownership (full control over the data) will be automatically transferred to one of the users with whom it is currently shared, unless you explicitly choose a user who will receive ownership of all your data below.</v-card-text>
+                            </v-card-row>
+                            <v-card-row>
+                                <v-card-text class="warning--text">If there is any data you have previously shared which you do not with to be transferred to other users after your account has been deleted, you should delete that data before deleting your account.</v-card-text>
+                            </v-card-row>
+                            <v-divider></v-divider>
+                            <v-card-row>
+                                <v-checkbox dark label="Transfer my data to another user" :value="xferData" @input="onXferChange"></v-checkbox>
+                                <div v-if="xferData">
+                                    <v-text-field label="Username"
+                                                  hint="Type or select below"
+                                                  v-model="selectedXferUsername"
+                                                  rules="[usernameValidation]"></v-text-field>
+                                    <v-select dark single-line auto :items="xferUsernames" v-model="selectedXferUsername"></v-select>
+                                </div>
+                            </v-card-row>
+                            <v-divider></v-divider>
+                            <v-card-row v-if="xferLoading" class="activity-row">
+                                <v-progress-circular indeterminate class="primary--text"></v-progress-circular>
+                            </v-card-row>
+                            <v-card-row v-else actions>
+                                <v-btn primary dark flat @click.native="deleteAccountDialog = false">Cancel</v-btn>
+                                <v-btn :disabled="xferData && !validXferUsername" error dark flat @click.native="onDeleteAccount">Delete Account</v-btn>
+                            </v-card-row>
+                        </v-card>
+                    </v-dialog>
+                </v-card-row>
             </v-card-row>
         </v-card>
     </v-layout>
