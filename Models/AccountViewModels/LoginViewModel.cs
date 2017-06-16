@@ -9,11 +9,10 @@ namespace MVCCoreVue.Models.AccountViewModels
     public class LoginViewModel
     {
         /// <summary>
-        /// The email address of the user account.
+        /// The username or email address of the user account.
         /// </summary>
         [Required]
-        [EmailAddress]
-        public string Email { get; set; }
+        public string Username { get; set; }
 
         /// <summary>
         /// The password for the user account.

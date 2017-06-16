@@ -10,9 +10,9 @@ import { Schema, VFGOptions } from '../../vfg/vfg';
  */
 interface LoginViewModel {
     /**
-     * The email address of the user account.
+     * The username or email address of the user account.
      */
-    email: string;
+    username: string;
 
     /**
      * The password for the user account.
@@ -79,7 +79,7 @@ export default class LoginComponent extends Vue {
     };
     isValid = false;
     model: LoginViewModel = {
-        email: '',
+        username: '',
         password: '',
         authProvider: '',
         rememberUser: false,
@@ -93,15 +93,14 @@ export default class LoginComponent extends Vue {
         fields: [
             {
                 type: 'vuetifyText',
-                inputType: 'email',
-                model: 'email',
-                placeholder: 'Email',
+                inputType: 'string',
+                model: 'username',
+                placeholder: 'Username or email address',
                 autocomplete: true,
                 required: true,
                 validator: [
-                    VueFormGenerator.validators.email.locale({
-                        fieldIsRequired: "A valid email address is required",
-                        invalidEmail: "A valid email address is required"
+                    VueFormGenerator.validators.string.locale({
+                        fieldIsRequired: "A username or email address is required"
                     })
                 ]
             },

@@ -8,6 +8,10 @@ body {
     font-size: 1.6rem;
 }
 
+hr.divider {
+    margin: 0;
+}
+
 table.table tbody td:empty {
     padding: 0;
 }

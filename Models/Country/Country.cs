@@ -48,7 +48,7 @@ namespace MVCCoreVue.Models
         [Display(Prompt = "EPI Index")]
         [Range(0, 100)]
         [Step(0.01)]
-        public double EpiIndex { get; set; }
+        public double? EpiIndex { get; set; }
 
         /// <summary>
         /// The main color of the country's flag.

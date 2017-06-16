@@ -1,5 +1,5 @@
 ﻿import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
+import { Component, Prop, Watch } from 'vue-property-decorator';
 import { checkResponse, ApiResponseViewModel } from '../../router';
 import { OperationReply } from '../../store/repository';
 import VueFormGenerator from 'vue-form-generator';
@@ -150,6 +150,13 @@ export default class ManageUserComponent extends Vue {
     xferData = false;
     xferLoading = false;
     xferUsernames: Array<string> = [];
+
+    @Watch('xferData')
+    onXferChange(val: boolean, oldVal: boolean) {
+        if (val) {
+            this.loadXferUsernames();
+        }
+    }
 
     created() {
         fetch('/api/Account/HasPassword',
@@ -384,12 +391,6 @@ export default class ManageUserComponent extends Vue {
 
     onValidated(isValid: boolean, errors: Array<any>) {
         this.isValid = isValid;
-    }
-
-    onXferChange(newValue: boolean) {
-        if (newValue) {
-            this.loadXferUsernames();
-        }
     }
 
     requireEmail(value, field, model) {

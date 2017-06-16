@@ -70,7 +70,7 @@
                             </v-card-row>
                             <v-divider></v-divider>
                             <v-card-row>
-                                <v-checkbox dark label="Transfer my data to another user" :value="xferData" @input="onXferChange"></v-checkbox>
+                                <v-checkbox dark label="Transfer my data to another user" v-model="xferData"></v-checkbox>
                                 <div v-if="xferData">
                                     <v-text-field label="Username"
                                                   hint="Type or select below"

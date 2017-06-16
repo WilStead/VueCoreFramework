@@ -202,7 +202,7 @@ namespace MVCCoreVue.Controllers
         [HttpPost]
         public async Task<IActionResult> ForgotPassword([FromBody]LoginViewModel model)
         {
-            var user = await _userManager.FindByEmailAsync(model.Email);
+            var user = await _userManager.FindByEmailAsync(model.Username);
             if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
             {
                 // Don't reveal that the user does not exist or is not confirmed
@@ -217,7 +217,7 @@ namespace MVCCoreVue.Controllers
             // Send an email with this link
             var code = await _userManager.GeneratePasswordResetTokenAsync(user);
             var callbackUrl = Url.Action(nameof(ResetPassword), "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
-            await _emailSender.SendEmailAsync(model.Email, "Reset Password",
+            await _emailSender.SendEmailAsync(model.Username, "Reset Password",
                 $"Please reset your password by clicking here: <a href='{callbackUrl}'>{callbackUrl}</a>");
             _logger.LogInformation(LogEvent.RESET_PW_REQUEST, "Password reset request received for {USER}.", user.Email);
             return Ok();
@@ -307,8 +307,12 @@ namespace MVCCoreVue.Controllers
         [HttpPost]
         public async Task<LoginViewModel> Login([FromBody]LoginViewModel model)
         {
-            // Require the user to have a confirmed email before they can log in.
-            var user = await _userManager.FindByEmailAsync(model.Email);
+            // Users can sign is with a username or email address.
+            var user = await _userManager.FindByNameAsync(model.Username);
+            if (user == null)
+            {
+                user = await _userManager.FindByEmailAsync(model.Username);
+            }
             if (user == null)
             {
                 model.Errors.Add("Invalid login attempt.");
@@ -321,6 +325,7 @@ namespace MVCCoreVue.Controllers
                     model.Errors.Add($"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance.");
                     return model;
                 }
+                // Require the user to have a confirmed email before they can log in.
                 if (!await _userManager.IsEmailConfirmedAsync(user))
                 {
                     model.Errors.Add("You must have a confirmed email to log in. Please check your email for your confirmation link. If you've lost the email, please register again.");
@@ -330,7 +335,7 @@ namespace MVCCoreVue.Controllers
 
             // This doesn't count login failures towards account lockout
             // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-            var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberUser, lockoutOnFailure: false);
+            var result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, model.RememberUser, lockoutOnFailure: false);
             if (!result.Succeeded)
             {
                 model.Errors.Add("Invalid login attempt.");
