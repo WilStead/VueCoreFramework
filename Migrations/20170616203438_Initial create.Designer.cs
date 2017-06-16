@@ -9,7 +9,7 @@ using MVCCoreVue.Models;
 namespace MVCCoreVue.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20170614210355_Initial create")]
+    [Migration("20170616203438_Initial create")]
     partial class Initialcreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -133,6 +133,8 @@ namespace MVCCoreVue.Migrations
                     b.Property<string>("AllPermissions");
 
                     b.Property<DateTime>("CreationTimestamp");
+
+                    b.Property<bool?>("International");
 
                     b.Property<string>("Name")
                         .IsRequired();
@@ -258,7 +260,7 @@ namespace MVCCoreVue.Migrations
 
                     b.Property<DateTime>("CreationTimestamp");
 
-                    b.Property<double>("EpiIndex");
+                    b.Property<double?>("EpiIndex");
 
                     b.Property<string>("FlagPrimaryColor");
 
@@ -292,7 +294,7 @@ namespace MVCCoreVue.Migrations
                     b.Property<string>("Name")
                         .IsRequired();
 
-                    b.Property<long>("TimeInOfficeTicks");
+                    b.Property<long?>("TimeInOfficeTicks");
 
                     b.Property<DateTime>("UpdateTimestamp");
 

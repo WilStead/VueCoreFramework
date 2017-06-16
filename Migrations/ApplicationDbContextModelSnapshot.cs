@@ -133,6 +133,8 @@ namespace MVCCoreVue.Migrations
 
                     b.Property<DateTime>("CreationTimestamp");
 
+                    b.Property<bool?>("International");
+
                     b.Property<string>("Name")
                         .IsRequired();
 
@@ -291,7 +293,7 @@ namespace MVCCoreVue.Migrations
                     b.Property<string>("Name")
                         .IsRequired();
 
-                    b.Property<long>("TimeInOfficeTicks");
+                    b.Property<long?>("TimeInOfficeTicks");
 
                     b.Property<DateTime>("UpdateTimestamp");
 

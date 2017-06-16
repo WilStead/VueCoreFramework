@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace MVCCoreVue.Models
 {
@@ -31,6 +32,17 @@ namespace MVCCoreVue.Models
         [JsonIgnore]
         [Hidden]
         public ICollection<AirlineCountry> Countries { get; set; } = new Collection<AirlineCountry>();
+
+        /// <summary>
+        /// Indicates whether the airline offers international flights.
+        /// </summary>
+        /// <remarks>
+        /// Obviously this would be a caluclated property in a real application. It is implemented in
+        /// this way for the purpose of demonstrating nullable boolean fields. The Description
+        /// property of the Display Attribute is used to set help text.
+        /// </remarks>
+        [Display(Description = "The indeterminate state indicates 'unknown' for this airline.")]
+        public bool? International { get; set; }
     }
 
     /// <summary>

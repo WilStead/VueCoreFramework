@@ -44,6 +44,7 @@ namespace MVCCoreVue.Migrations
                     Id = table.Column<Guid>(nullable: false),
                     AllPermissions = table.Column<string>(nullable: true),
                     CreationTimestamp = table.Column<DateTime>(nullable: false),
+                    International = table.Column<bool>(nullable: true),
                     Name = table.Column<string>(nullable: false),
                     UpdateTimestamp = table.Column<DateTime>(nullable: false)
                 },
@@ -88,7 +89,7 @@ namespace MVCCoreVue.Migrations
                     Id = table.Column<Guid>(nullable: false),
                     AllPermissions = table.Column<string>(nullable: true),
                     CreationTimestamp = table.Column<DateTime>(nullable: false),
-                    EpiIndex = table.Column<double>(nullable: false),
+                    EpiIndex = table.Column<double>(nullable: true),
                     FlagPrimaryColor = table.Column<string>(nullable: true),
                     Name = table.Column<string>(nullable: false),
                     UpdateTimestamp = table.Column<DateTime>(nullable: false)
@@ -271,7 +272,7 @@ namespace MVCCoreVue.Migrations
                     CreationTimestamp = table.Column<DateTime>(nullable: false),
                     MaritalStatus = table.Column<int>(nullable: false),
                     Name = table.Column<string>(nullable: false),
-                    TimeInOfficeTicks = table.Column<long>(nullable: false),
+                    TimeInOfficeTicks = table.Column<long>(nullable: true),
                     UpdateTimestamp = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>

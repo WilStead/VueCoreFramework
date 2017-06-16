@@ -116,7 +116,8 @@ export default class LoginComponent extends Vue {
             {
                 type: 'vuetifyCheckbox',
                 placeholder: 'Remember me',
-                model: 'rememberUser'
+                model: 'rememberUser',
+                required: true
             }
         ]
     };

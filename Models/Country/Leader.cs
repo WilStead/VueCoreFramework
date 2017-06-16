@@ -92,10 +92,10 @@ namespace MVCCoreVue.Models
         [DataType(DataType.Duration)]
         [DisplayFormat(DataFormatString = "y:M:d")]
         [Range(typeof(TimeSpan), "00:00:00", "36500.00:00:00")]
-        public TimeSpan TimeInOffice
+        public TimeSpan? TimeInOffice
         {
-            get => TimeSpan.FromTicks(TimeInOfficeTicks);
-            set => TimeInOfficeTicks = value.Ticks;
+            get => TimeInOfficeTicks.HasValue ? TimeSpan.FromTicks(TimeInOfficeTicks.Value) : (TimeSpan?)null;
+            set => TimeInOfficeTicks = value.HasValue ? value.Value.Ticks : (long?)null;
         }
 
         /// <summary>
@@ -107,6 +107,6 @@ namespace MVCCoreVue.Models
         /// keep it in sync with the TimeSpan fields during edit (only when data is reloaded).
         /// </remarks>
         [Hidden]
-        public long TimeInOfficeTicks { get; set; }
+        public long? TimeInOfficeTicks { get; set; }
     }
 }

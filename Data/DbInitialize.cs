@@ -244,7 +244,7 @@ namespace MVCCoreVue.Data
                 var countries = context.Countries.ToList();
                 var now = DateTime.Now;
                 var cities = new City[]
-            {
+                {
                     new City
                     {
                         CreationTimestamp = DateTime.Now,
@@ -425,7 +425,7 @@ namespace MVCCoreVue.Data
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
                         CountryId = countries[9].Id
                     }
-            };
+                };
                 context.Cities.AddRange(cities);
                 context.SaveChanges();
                 var cityList = context.Cities.ToList();
@@ -440,6 +440,90 @@ namespace MVCCoreVue.Data
                 countries[8].Capitol = cityList[14];
                 countries[9].Capitol = cityList[16];
                 context.SaveChanges();
+            }
+
+            if (!context.Airlines.Any())
+            {
+                var airlines = new Airline[]
+                {
+                    new Airline
+                    {
+                        Name = "Lufthansa",
+                        International = true
+                    },
+                    new Airline
+                    {
+                        Name = "SAS",
+                        International = true
+                    },
+                    new Airline
+                    {
+                        Name = "International Airlines",
+                        International = true
+                    },
+                    new Airline
+                    {
+                        Name = "Air Europa"
+                    },
+                    new Airline
+                    {
+                        Name = "Travel Service",
+                        International = false
+                    },
+                    new Airline
+                    {
+                        Name = "Luxair"
+                    }
+                };
+                context.Airlines.AddRange(airlines);
+                context.SaveChanges();
+                var countries = context.Countries.ToList();
+                var airlineList = context.Airlines.ToList();
+                airlineList[0].Countries.Add(new AirlineCountry
+                {
+                    Airline = airlineList[0],
+                    Country = countries[0]
+                });
+                airlineList[0].Countries.Add(new AirlineCountry
+                {
+                    Airline = airlineList[0],
+                    Country = countries[5]
+                });
+                airlineList[0].Countries.Add(new AirlineCountry
+                {
+                    Airline = airlineList[0],
+                    Country = countries[7]
+                });
+                airlineList[1].Countries.Add(new AirlineCountry
+                {
+                    Airline = airlineList[1],
+                    Country = countries[8]
+                });
+                airlineList[1].Countries.Add(new AirlineCountry
+                {
+                    Airline = airlineList[1],
+                    Country = countries[9]
+                });
+                airlineList[2].Countries.Add(new AirlineCountry
+                {
+                    Airline = airlineList[2],
+                    Country = countries[6]
+                });
+                airlineList[3].Countries.Add(new AirlineCountry
+                {
+                    Airline = airlineList[3],
+                    Country = countries[6]
+                });
+                airlineList[4].Countries.Add(new AirlineCountry
+                {
+                    Airline = airlineList[4],
+                    Country = countries[4]
+                });
+                airlineList[5].Countries.Add(new AirlineCountry
+                {
+                    Airline = airlineList[5],
+                    Country = countries[1]
+                });
             }
         }
     }
