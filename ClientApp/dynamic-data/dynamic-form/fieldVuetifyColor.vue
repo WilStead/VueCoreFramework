@@ -31,11 +31,14 @@
             <v-card-row>
                 <v-container fluid class="pt-0 pb-0">
                     <v-layout row wrap>
-                        <v-flex xs6>
+                        <v-flex xs4 pl-0>
                             <v-radio dark label="RGB" value="RGB" v-model="inputType"></v-radio>
                         </v-flex>
-                        <v-flex xs6>
+                        <v-flex xs4>
                             <v-radio dark label="HSL" value="HSL" v-model="inputType"></v-radio>
+                        </v-flex>
+                        <v-flex xs4 pr-0 style="display: flex; justify-content: flex-end;">
+                            <v-btn v-if="!schema.required" class="btn-null-clear" dark floating primary @click.native="onClear"><v-icon light>remove</v-icon></v-btn>
                         </v-flex>
                     </v-layout>
                 </v-container>

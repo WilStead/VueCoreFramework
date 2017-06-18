@@ -164,9 +164,6 @@ export function getChildItems(router: VueRouter): Promise<void> {
         .then(response => response.json() as Promise<Array<any>>)
         .then(data => {
             for (var dataClass in data) {
-                let name = dataClass;
-            }
-            for (var i = 0; i < data.length; i++) {
                 router.addRoutes([{
                     path: `/data/${dataClass.toLowerCase()}`,
                     meta: { requiresAuth: true },

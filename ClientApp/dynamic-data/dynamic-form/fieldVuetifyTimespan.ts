@@ -87,7 +87,9 @@ export default {
         if (!showHour && lowest < 3 && highest > 3) showHour = true;
         if (!showMinute && lowest < 2 && highest > 2) showMinute = true;
 
-        let duration = moment.duration(this.value);
+        let nullCheck = this.value !== undefined && this.value !== null && this.value !== '[None]';
+
+        let duration = nullCheck ? moment.duration(this.value) : moment.duration();
         let yearValue = duration.years();
         let monthValue = showYear ? duration.months() : this.floorMonthAbs(duration);
         let dayValue = showYear || showMonth
@@ -109,8 +111,18 @@ export default {
             hourMax, hourMin,
             minuteMax, minuteMin,
             secondMax, secondMin,
-            yearValue, monthValue, dayValue, hourValue, minuteValue, secondValue
+            yearValue, monthValue, dayValue, hourValue, minuteValue, secondValue,
+            nullCheck
         };
+    },
+    watch: {
+        nullCheck(newVal) {
+            if (!newVal) {
+                this.duration = moment.duration();
+                this.updateValue();
+                this.value = null;
+            }
+        }
     },
     methods: {
         floorYearAbs(value) {

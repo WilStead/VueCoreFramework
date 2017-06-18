@@ -51,7 +51,7 @@ namespace MVCCoreVue.Models
         /// </remarks>
         [DataType(DataType.Date)]
         [Range(typeof(DateTime), "1/1/1917 12:00:00 AM", "1/1/2000 12:00:00 AM")]
-        public DateTime Birthdate { get; set; }
+        public DateTime? Birthdate { get; set; }
 
         /// <summary>
         /// The country represented by this leader.
@@ -102,11 +102,11 @@ namespace MVCCoreVue.Models
         /// Time in office as a ticks value.
         /// </summary>
         /// <remarks>
-        /// It is not necessary for this 'pseudo-backing-store' to be hidden, but it is recommended,
-        /// since users will not likely want to see a raw Ticks value, and the framework will not
-        /// keep it in sync with the TimeSpan fields during edit (only when data is reloaded).
+        /// This 'pseudo-backing-store' must be ignored by the JSON mapping, otherwise changes to the
+        /// TimeSpan property will be disregarded.
         /// </remarks>
         [Hidden]
+        [JsonIgnore]
         public long? TimeInOfficeTicks { get; set; }
     }
 }

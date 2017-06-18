@@ -5,7 +5,7 @@ export default {
     mixins: [abstractField],
     data() {
         return {
-            formattedDate: new Date(this.value).toDateString(),
+            formattedDate: this.value === undefined || this.value === null || this.value === "[None]" ? "" : new Date(this.value).toDateString(),
             menuDate: false,
             menuTime: false,
             valueTime: moment(this.value).format("h:mma")
@@ -14,6 +14,10 @@ export default {
     methods: {
         formatValueToModel(value) {
             return value;
+        },
+        onClear() {
+            this.value = null;
+            this.formattedDate = "";
         }
     },
     watch: {

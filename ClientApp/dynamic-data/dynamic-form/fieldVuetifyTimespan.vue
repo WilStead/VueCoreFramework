@@ -2,11 +2,14 @@
     <div class="input-group input-group--dark">
         <v-subheader>{{ schema.label }}</v-subheader>
         <div class="field-vuetify-time-wrapper">
+            <div v-if="!schema.required" style="margin-right: 12px;">
+                <v-checkbox dark v-model="nullCheck" :disabled="disabled"></v-checkbox>
+            </div>
             <v-text-field v-if="showYear"
                           type="number"
                           :value="yearValue"
                           @input="onYearChange"
-                          :disabled="disabled"
+                          :disabled="disabled || !nullCheck"
                           :max="yearMax"
                           :min="yearMin"
                           suffix="years"></v-text-field>
@@ -14,7 +17,7 @@
                           type="number"
                           :value="monthValue"
                           @input="onMonthChange"
-                          :disabled="disabled"
+                          :disabled="disabled || !nullCheck"
                           :max="monthMax"
                           :min="monthMin"
                           suffix="months"></v-text-field>
@@ -22,7 +25,7 @@
                           type="number"
                           :value="dayValue"
                           @input="onDayChange"
-                          :disabled="disabled"
+                          :disabled="disabled || !nullCheck"
                           :max="dayMax"
                           :min="dayMin"
                           suffix="days"></v-text-field>
@@ -30,7 +33,7 @@
                           type="number"
                           :value="hourValue"
                           @input="onHourChange"
-                          :disabled="disabled"
+                          :disabled="disabled || !nullCheck"
                           max="hourMax"
                           min="hourMin"
                           suffix="hours"></v-text-field>
@@ -38,7 +41,7 @@
                           type="number"
                           :value="minuteValue"
                           @input="onMinuteChange"
-                          :disabled="disabled"
+                          :disabled="disabled || !nullCheck"
                           max="minuteMax"
                           min="minuteMin"
                           suffix="minutes"></v-text-field>
@@ -46,7 +49,7 @@
                           type="number"
                           :value="secondValue"
                           @input="onSecondChange"
-                          :disabled="disabled"
+                          :disabled="disabled || !nullCheck"
                           max="secondMax"
                           min="secondMin"
                           step="schema.step"

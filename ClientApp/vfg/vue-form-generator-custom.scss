@@ -6,6 +6,12 @@
 }
 
 .vue-form-generator {
+    .null-clear-container {
+        margin-left: 12px;
+        display: flex;
+        align-items: center;
+    }
+
     .error {
         background-color: inherit !important;
     }
@@ -255,4 +261,9 @@
         pointer-events: none;
         user-select: none;
     }
+}
+
+.btn-null-clear {
+    height: 26px;
+    width: 26px;
 }

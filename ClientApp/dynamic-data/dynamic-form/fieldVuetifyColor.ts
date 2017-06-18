@@ -141,6 +141,17 @@ export default {
             let brightness = ((r * 299) + (g * 587) + (b * 114)) / 255000;
             return brightness < 0.5;
         },
+        onClear() {
+            this.r = 0;
+            this.g = 0;
+            this.b = 0;
+            this.hue = 0;
+            this.saturation = 0;
+            this.brightness = 0;
+            this.hslSaturation = 0;
+            this.lightness = 0;
+            this.temp = null;
+        },
         onColorMove(event) {
             let cfD = this.getColorFieldDimension();
             let [cfX, cfY] = this.getColorFieldPosition();

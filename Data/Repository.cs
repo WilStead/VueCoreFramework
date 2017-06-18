@@ -818,9 +818,17 @@ namespace MVCCoreVue.Data
                 else if (dataType?.DataType == DataType.Date)
                 {
                     var name = pInfo.Name.ToInitialLower();
-                    var value = (DateTime)pInfo.GetValue(item);
+                    var value = pInfo.GetValue(item);
                     vm[name] = value;
-                    vm[name + "Formatted"] = value.ToString("d");
+                    if (value == null)
+                    {
+                        vm[name + "Formatted"] = "[None]";
+                    }
+                    else
+                    {
+                        DateTime dt = (DateTime)value;
+                        vm[name + "Formatted"] = dt.ToString("d");
+                    }
                 }
                 // Time properties are given their actual value, but are also given a 'Formatted'
                 // property in the ViewModel which contains their short time formatted string. This
@@ -828,9 +836,17 @@ namespace MVCCoreVue.Data
                 else if (dataType?.DataType == DataType.Time)
                 {
                     var name = pInfo.Name.ToInitialLower();
-                    var value = (DateTime)pInfo.GetValue(item);
+                    var value = pInfo.GetValue(item);
                     vm[name] = value;
-                    vm[name + "Formatted"] = value.ToString("t");
+                    if (value == null)
+                    {
+                        vm[name + "Formatted"] = "[None]";
+                    }
+                    else
+                    {
+                        DateTime dt = (DateTime)value;
+                        vm[name + "Formatted"] = dt.ToString("t");
+                    }
                 }
                 // DateTime properties which are not marked as either Date or Time are given their
                 // actual value, but are also given a 'Formatted' property in the ViewModel which
@@ -838,9 +854,17 @@ namespace MVCCoreVue.Data
                 else if (dataType?.DataType == DataType.DateTime || pInfo.PropertyType == typeof(DateTime))
                 {
                     var name = pInfo.Name.ToInitialLower();
-                    var value = (DateTime)pInfo.GetValue(item);
+                    var value = pInfo.GetValue(item);
                     vm[name] = value;
-                    vm[name + "Formatted"] = value.ToString("g");
+                    if (value == null)
+                    {
+                        vm[name + "Formatted"] = "[None]";
+                    }
+                    else
+                    {
+                        DateTime dt = (DateTime)value;
+                        vm[name + "Formatted"] = dt.ToString("g");
+                    }
                 }
                 // Duration properties are given their actual value, but are also given a 'Formatted'
                 // property in the ViewModel which contains their formatted string. This formatted
@@ -851,15 +875,14 @@ namespace MVCCoreVue.Data
                 {
                     var name = pInfo.Name.ToInitialLower();
                     var value = pInfo.GetValue(item);
+                        vm[name] = value;
                     if (value == null)
                     {
-                        vm[name] = value;
                         vm[name + "Formatted"] = "[None]";
                     }
                     else
                     {
                         var ts = (TimeSpan)value;
-                        vm[name] = value;
                         vm[name + "Formatted"] = ts.ToString("c");
                     }
                 }

@@ -47,12 +47,12 @@ export default class DynamicFormComponent extends Vue {
     updateTimeout = 0;
     vmDefinition: Array<FieldDefinition>;
 
-    beforeRouteUpdate(to: VueRouter.Route, from: VueRouter.Route, next: Function) {
+    @Watch('$route')
+    onRouteChange(val: VueRouter.Route, oldVal: VueRouter.Route) {
         this.repository = new Repository(this.$route.name);
         if (this.updateTimeout === 0) {
             this.updateTimeout = setTimeout(this.updateForm, 125);
         }
-        next();
     }
 
     mounted() {
@@ -184,7 +184,7 @@ export default class DynamicFormComponent extends Vue {
         }
     }
 
-    onAddNew: Function = function (model, field: FieldDefinition) {
+    onAddNew(model, field: FieldDefinition) {
         this.activity = true;
         this.repository.add(this.$route.fullPath, field.inverseType, model.id)
             .then(data => {
@@ -201,7 +201,7 @@ export default class DynamicFormComponent extends Vue {
                 this.errorMessage = "A problem occurred. The new item could not be added.";
                 ErrorMsg.logError("dynamic-form.onAddNew", new Error(error));
             });
-    }.bind(this);
+    }
 
     onCancel() {
         this.activity = false;
@@ -314,7 +314,7 @@ export default class DynamicFormComponent extends Vue {
             });
     }
 
-    onView: Function = function (model, field: FieldDefinition) {
+    onView(model, field: FieldDefinition) {
         this.activity = true;
         this.repository.getChildId(this.$route.fullPath, this.id, field.model)
             .then(data => {
@@ -323,7 +323,7 @@ export default class DynamicFormComponent extends Vue {
                     this.errorMessage = data.error;
                 } else {
                     this.errorMessage = '';
-                    router.push({ name: field.inputType, params: { operation: 'details', id: data.response } });
+                    this.$router.push({ name: field.inputType, params: { operation: 'details', id: data.response } });
                 }
             })
             .catch(error => {
@@ -331,7 +331,7 @@ export default class DynamicFormComponent extends Vue {
                 this.errorMessage = "A problem occurred. The item could not be accessed.";
                 ErrorMsg.logError("dynamic-form.onView", new Error(error));
             });
-    }.bind(this);
+    }
 
     updateForm() {
         this.activity = true;

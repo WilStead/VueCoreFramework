@@ -48,14 +48,11 @@ namespace MVCCoreVue.Models
         /// </summary>
         /// <remarks>
         /// The DataType can control the type of field displayed in forms. Time will present a time
-        /// picker. As a required property without a non-null default value, it is necessary to
-        /// supply a property initializer in order for the framework to be able to generate new
-        /// objects correctly.
+        /// picker.
         /// </remarks>
-        [Required]
         [Display(Prompt = "Local time at GMT midnight")]
         [DataType(DataType.Time)]
-        public DateTime LocalTimeAtGMTMidnight { get; set; } = new DateTime(2017, 1, 1, 0, 0, 0);
+        public DateTime LocalTimeAtGMTMidnight { get; set; }
 
         /// <summary>
         /// The population of the city.

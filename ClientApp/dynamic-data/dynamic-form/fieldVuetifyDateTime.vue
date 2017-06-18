@@ -1,5 +1,5 @@
 ﻿<template>
-    <div class="field-vuetify-time-wrapper">
+    <div class="field-vuetify-time-wrapper" style="display: flex;">
         <v-menu v-if="schema.inputType === 'date' || schema.inputType === 'dateTime'"
                 v-model="menuDate"
                 :close-on-content-click="false"
@@ -7,7 +7,8 @@
                 lazy
                 :nudge-left="40"
                 offset-y
-                transition="v-scale-transition">
+                transition="v-scale-transition"
+                style="flex-grow: 1;">
             <v-text-field slot="activator"
                           v-model="formattedDate"
                           :disabled="disabled"
@@ -39,7 +40,8 @@
                 lazy
                 :nudge-left="40"
                 offset-y
-                transition="v-scale-transition">
+                transition="v-scale-transition"
+                :style="{ 'margin-left': (schema.inputType === 'time' || schema.inputType === 'dateTime') ? '15px' : 0, 'flex-grow': 1 }">
             <v-text-field slot="activator"
                           v-model="valueTime"
                           :disabled="disabled"
@@ -59,6 +61,9 @@
                 </template>
             </v-time-picker>
         </v-menu>
+        <div v-if="!schema.required" class="null-clear-container">
+            <v-btn class="btn-null-clear" dark floating primary :disabled="disabled" @click.native="onClear"><v-icon light>remove</v-icon></v-btn>
+        </div>
     </div>
 </template>
 

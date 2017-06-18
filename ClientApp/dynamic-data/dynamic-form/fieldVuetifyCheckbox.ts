@@ -5,7 +5,7 @@ export default {
     data() {
         return {
             checkState: this.value,
-            indeterminate: !this.schema.required && (this.value === undefined || this.value === null)
+            indeterminate: !this.schema.required && (this.value === undefined || this.value === null || this.value === "[None]")
         };
     },
     watch: {
@@ -18,15 +18,15 @@ export default {
         formatValueToModel(value) {
             if (!this.schema.required && this.indeterminate) {
                 return null;
-            } else if (!this.value) {
+            } else if (!value) {
                 return false;
             } else {
                 return true;
             }
         },
         onClear() {
-            this.value = null;
             this.indeterminate = true;
+            this.value = null;
         }
     }
 };

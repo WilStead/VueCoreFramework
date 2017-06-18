@@ -10,8 +10,8 @@
                         :persistent-hint="schema.hint !== undefined"
                         :prepend-icon="schema.icon"></v-checkbox>
         </div>
-        <div v-if="!schema.required" style="margin-left: 12px;">
-            <v-btn dark floating small primary :disabled="disabled" @click.native="onClear"><v-icon light>remove</v-icon></v-btn>
+        <div v-if="!schema.required" class="null-clear-container">
+            <v-btn class="btn-null-clear" dark floating primary :disabled="disabled" @click.native="onClear"><v-icon light>remove</v-icon></v-btn>
         </div>
     </v-layout>
 </template>
