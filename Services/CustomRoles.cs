@@ -26,5 +26,15 @@
         /// Can lock/unlock user accounts (except admin accounts).
         /// </remarks>
         public const string Admin = "Admin";
+
+        /// <summary>
+        /// The default user role.
+        /// </summary>
+        /// <remarks>
+        /// Implemented as a role so that data permission claims may be added to all users as a
+        /// group. No individual users are expected to have this role added, and doing so will have
+        /// no effect. Rather, claims for this role are automatically included for every user.
+        /// </remarks>
+        public const string AllUsers = "User";
     }
 }

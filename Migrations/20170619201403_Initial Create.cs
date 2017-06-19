@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace MVCCoreVue.Migrations
 {
-    public partial class Initialcreate : Migration
+    public partial class InitialCreate : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -42,7 +42,6 @@ namespace MVCCoreVue.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
-                    AllPermissions = table.Column<string>(nullable: true),
                     CreationTimestamp = table.Column<DateTime>(nullable: false),
                     International = table.Column<bool>(nullable: true),
                     Name = table.Column<string>(nullable: false),
@@ -87,7 +86,6 @@ namespace MVCCoreVue.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
-                    AllPermissions = table.Column<string>(nullable: true),
                     CreationTimestamp = table.Column<DateTime>(nullable: false),
                     EpiIndex = table.Column<double>(nullable: true),
                     FlagPrimaryColor = table.Column<string>(nullable: true),
@@ -233,7 +231,6 @@ namespace MVCCoreVue.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
-                    AllPermissions = table.Column<string>(nullable: true),
                     CountryCapitolId = table.Column<Guid>(nullable: true),
                     CountryId = table.Column<Guid>(nullable: false),
                     CreationTimestamp = table.Column<DateTime>(nullable: false),
@@ -266,8 +263,7 @@ namespace MVCCoreVue.Migrations
                 {
                     Id = table.Column<Guid>(nullable: false),
                     Age = table.Column<int>(nullable: false),
-                    AllPermissions = table.Column<string>(nullable: true),
-                    Birthdate = table.Column<DateTime>(nullable: false),
+                    Birthdate = table.Column<DateTime>(nullable: true),
                     CountryId = table.Column<Guid>(nullable: false),
                     CreationTimestamp = table.Column<DateTime>(nullable: false),
                     MaritalStatus = table.Column<int>(nullable: false),

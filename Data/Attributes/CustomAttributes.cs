@@ -55,26 +55,6 @@ namespace MVCCoreVue.Data.Attributes
     }
 
     /// <summary>
-    /// Allows indicating a set of default permissions for the data type represented by this class.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class)]
-    internal class DefaultPermissionAttribute : Attribute
-    {
-        /// <summary>
-        /// Indicates that all permissions are grated for this data type by default.
-        /// </summary>
-        public bool HasDefaultAllPermissions { get; set; }
-
-        /// <summary>
-        /// A string containing operations for which all users have permission by default, separated by semicolons (;).
-        /// </summary>
-        /// <remarks>
-        /// Superceded if <see cref="HasDefaultAllPermissions"/> is true.
-        /// </remarks>
-        public string DefaultPermissions { get; set; }
-    }
-
-    /// <summary>
     /// Allows setting help text for a property's field.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]

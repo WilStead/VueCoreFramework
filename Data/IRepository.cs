@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace MVCCoreVue.Data
@@ -107,7 +108,8 @@ namespace MVCCoreVue.Data
             bool descending,
             int page,
             int rowsPerPage,
-            IEnumerable<Guid> except);
+            IEnumerable<Guid> except,
+            IList<Claim> claims);
 
         /// <summary>
         /// Asynchronously returns a <see cref="long"/> that represents the total number of entities
@@ -137,7 +139,7 @@ namespace MVCCoreVue.Data
         /// </summary>
         /// <param name="id">The primary key of the child entity whose relationship is being severed.</param>
         /// <param name="childProp">The navigation property of the relationship being severed.</param>
-        Task RemoveFromParentAsync(Guid id, PropertyInfo childProp);
+        Task<bool> RemoveFromParentAsync(Guid id, PropertyInfo childProp);
 
         /// <summary>
         /// Asynchronously removes a collection of entities from the <see cref="ApplicationDbContext"/>.
@@ -154,7 +156,7 @@ namespace MVCCoreVue.Data
         /// An enumeration of primary keys of child entities whose relationships are being severed.
         /// </param>
         /// <param name="childProp">The navigation property of the relationship being severed.</param>
-        Task RemoveRangeFromParentAsync(IEnumerable<Guid> ids, PropertyInfo childProp);
+        Task<IList<Guid>> RemoveRangeFromParentAsync(IEnumerable<Guid> ids, PropertyInfo childProp);
 
         /// <summary>
         /// Asynchronously creates a relationship between two entities, replacing another entity
@@ -167,7 +169,7 @@ namespace MVCCoreVue.Data
         /// The primary key of the new child entity entering into the relationship.
         /// </param>
         /// <param name="childProp">The navigation property of the relationship on the child entity.</param>
-        Task ReplaceChildAsync(Guid parentId, Guid newChildId, PropertyInfo childProp);
+        Task<Guid?> ReplaceChildAsync(Guid parentId, Guid newChildId, PropertyInfo childProp);
 
         /// <summary>
         /// Asynchronously creates a relationship between two entities, replacing another entity
@@ -177,7 +179,7 @@ namespace MVCCoreVue.Data
         /// </summary>
         /// <param name="parentId">The primary key of the parent entity in the relationship.</param>
         /// <param name="childProp">The navigation property of the relationship on the child entity.</param>
-        Task<IDictionary<string, object>> ReplaceChildWithNewAsync(Guid parentId, PropertyInfo childProp);
+        Task<(IDictionary<string, object>, Guid?)> ReplaceChildWithNewAsync(Guid parentId, PropertyInfo childProp);
 
         /// <summary>
         /// Asynchronously updates an entity in the <see cref="ApplicationDbContext"/>. Returns a

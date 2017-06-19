@@ -14,7 +14,8 @@ namespace MVCCoreVue.Models
     /// Note that Airlines are being nested within the Country category, although they are both
     /// MenuClass types, and in fact the Airline type is a peer of Country, which can be created and
     /// deleted independently of any Countries. MenuClass types can be organized in the framework
-    /// menu in any order and hierarchy, regardless of the database relationships they share (if any).
+    /// menu in any order and hierarchy, regardless of the database relationships they share (if
+    /// any).
     /// </remarks>
     [MenuClass(Category = "Country", IconClass = "airplanemode_active")]
     public class Airline : NamedDataItem

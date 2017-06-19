@@ -1,5 +1,6 @@
 ﻿import Vue from 'vue';
-import Component from 'vue-class-component';
+import VueRouter from 'vue-router';
+import { Component, Prop, Watch } from 'vue-property-decorator';
 import { checkAuthorization } from '../../router';
 import * as moment from 'moment';
 
@@ -7,12 +8,14 @@ import * as moment from 'moment';
 export default class TopbarComponent extends Vue {
     signedIn = false;
     lastUpdate: number = 0;
+    updateTimeout = 0;
 
     mounted() { this.updateAuth(); }
-    beforeUpdate() {
-        if (this.lastUpdate < moment().subtract(30, 's').valueOf()) {
-            this.updateAuth();
-            this.lastUpdate = moment().valueOf();
+
+    @Watch('$route')
+    onRouteChange(val: VueRouter.Route, oldVal: VueRouter.Route) {
+        if (this.updateTimeout === 0) {
+            this.updateTimeout = setTimeout(this.updateAuth, 500);
         }
     }
 
@@ -25,6 +28,7 @@ export default class TopbarComponent extends Vue {
     }
 
     logout() {
+        this.signedIn = false;
         this.$store.state.username = 'user';
         this.$store.state.email = 'user@example.com';
         this.$store.state.token = '';
@@ -34,6 +38,7 @@ export default class TopbarComponent extends Vue {
     }
 
     updateAuth() {
+        this.updateTimeout = 0;
         checkAuthorization(undefined)
             .then(auth => {
                 // Regardless of the authorization result, the check process will

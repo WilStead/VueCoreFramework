@@ -351,6 +351,50 @@ namespace MVCCoreVue.Controllers
             return Json(xferUsers.Select(u => u.UserName).ToArray());
         }
 
+        [HttpPost("{username}")]
+        public async Task<IActionResult> LockAccount(string username)
+        {
+            if (string.IsNullOrEmpty(username))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (user.AdminLocked)
+            {
+                return Json(new { error = $"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance." });
+            }
+
+            var admins = await _userManager.GetUsersInRoleAsync(CustomRoles.Admin);
+            if (!admins.Contains(user))
+            {
+                return Json(new { error = "Only an administrator can lock user accounts." });
+            }
+
+            var lockUser = await _userManager.FindByNameAsync(username);
+            if (lockUser == null)
+            {
+                return Json(new { error = "There was a problem with the account you specified." });
+            }
+            if (admins.Contains(lockUser))
+            {
+                return Json(new { error = "Admin accounts can't be locked." });
+            }
+            if (lockUser.AdminLocked)
+            {
+                return Json(new { error = "The account you specified is already locked." });
+            }
+            lockUser.AdminLocked = true;
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation(LogEvent.LOCK_ACCOUNT, "The account belonging to User {USER} has been locked by Admin {ADMIN}.", lockUser.Email, user.Email);
+
+            return Ok();
+        }
+
         /// <summary>
         /// Called to remove a user's external authentication provider account from their site account.
         /// </summary>
@@ -418,6 +462,46 @@ namespace MVCCoreVue.Controllers
             }
             model.Errors.AddRange(result.Errors.Select(e => e.Description));
             return model;
+        }
+
+        [HttpPost("{username}")]
+        public async Task<IActionResult> UnlockAccount(string username)
+        {
+            if (string.IsNullOrEmpty(username))
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (user.AdminLocked)
+            {
+                return Json(new { error = $"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance." });
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            if (!roles.Contains(CustomRoles.Admin))
+            {
+                return Json(new { error = "Only an administrator can unlock user accounts." });
+            }
+
+            var lockUser = await _userManager.FindByNameAsync(username);
+            if (lockUser == null)
+            {
+                return Json(new { error = "There was a problem with the account you specified." });
+            }
+            if (!lockUser.AdminLocked)
+            {
+                return Json(new { error = "The account you specified is not locked." });
+            }
+            lockUser.AdminLocked = false;
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation(LogEvent.UNLOCK_ACCOUNT, "The account belonging to User {USER} has been unlocked by Admin {ADMIN}.", lockUser.Email, user.Email);
+
+            return Ok();
         }
     }
 }

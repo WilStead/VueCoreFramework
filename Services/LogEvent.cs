@@ -25,6 +25,8 @@
         public const int RESET_PW_CONFIRM = 1053;
         public const int USERNAME_CHANGE = 1060;
         public const int DELETE_ACCOUNT = 1070;
+        public const int LOCK_ACCOUNT = 1080;
+        public const int UNLOCK_ACCOUNT = 1081;
 
         // Repository events
         public const int CLASS_NOTFOUND = 2000;

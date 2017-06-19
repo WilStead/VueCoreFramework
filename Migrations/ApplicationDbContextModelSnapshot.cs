@@ -129,8 +129,6 @@ namespace MVCCoreVue.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("AllPermissions");
-
                     b.Property<DateTime>("CreationTimestamp");
 
                     b.Property<bool?>("International");
@@ -221,8 +219,6 @@ namespace MVCCoreVue.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("AllPermissions");
-
                     b.Property<Guid?>("CountryCapitolId");
 
                     b.Property<Guid>("CountryId");
@@ -255,8 +251,6 @@ namespace MVCCoreVue.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("AllPermissions");
-
                     b.Property<DateTime>("CreationTimestamp");
 
                     b.Property<double?>("EpiIndex");
@@ -279,8 +273,6 @@ namespace MVCCoreVue.Migrations
                         .ValueGeneratedOnAdd();
 
                     b.Property<int>("Age");
-
-                    b.Property<string>("AllPermissions");
 
                     b.Property<DateTime?>("Birthdate");
 

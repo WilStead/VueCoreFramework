@@ -74,7 +74,7 @@ export default class DynamicFormComponent extends Vue {
                 || newField.type == "objectReference") {
                 newField.buttons = [];
                 if (newField.type === "objectSelect"
-                    && (this.operation === "edit" || this.operation === "create")) {
+                    && (this.operation === "edit" || this.operation === "add")) {
                     newField.buttons.push({
                         classes: 'btn btn--dark btn--flat primary--text',
                         label: 'Select',
@@ -144,7 +144,7 @@ export default class DynamicFormComponent extends Vue {
     }
 
     addObjectButtons(newField: FieldDefinition) {
-        if ((this.operation === "edit" || this.operation === "create")
+        if ((this.operation === "edit" || this.operation === "add")
             && newField.type !== "objectReference"
             && (newField.type === "objectSelect"
                 || this.model[newField.model] === "[None]")) {
@@ -168,7 +168,7 @@ export default class DynamicFormComponent extends Vue {
                 onclick: this.onView
             });
         }
-        if ((this.operation === "edit" || this.operation === "create")
+        if ((this.operation === "edit" || this.operation === "add")
             && newField.type !== "objectReference"
             && !newField.required
             && this.model[newField.model] !== "[None]") {
@@ -193,7 +193,7 @@ export default class DynamicFormComponent extends Vue {
                     this.errorMessage = data.error;
                 } else {
                     this.errorMessage = '';
-                    this.$router.push({ name: field.inputType, params: { operation: 'create', id: data.data.id } });
+                    this.$router.push({ name: field.inputType, params: { operation: 'add', id: data.data.id } });
                 }
             })
             .catch(error => {
@@ -206,7 +206,7 @@ export default class DynamicFormComponent extends Vue {
     onCancel() {
         this.activity = false;
         this.errorMessage = '';
-        if (this.operation === 'create') {
+        if (this.operation === 'add') {
             this.repository.remove(this.$route.fullPath, this.id)
                 .then(data => {
                     this.activity = false;
@@ -302,7 +302,7 @@ export default class DynamicFormComponent extends Vue {
                     this.errorMessage = data.error;
                 } else {
                     this.errorMessage = '';
-                    this.$router.push({ name: this.model.replaceType, params: { operation: 'create', id: data.data.id } });
+                    this.$router.push({ name: this.model.replaceType, params: { operation: 'add', id: data.data.id } });
                 }
                 this.onCancelReplace();
                 this.activity = false;
@@ -323,7 +323,7 @@ export default class DynamicFormComponent extends Vue {
                     this.errorMessage = data.error;
                 } else {
                     this.errorMessage = '';
-                    this.$router.push({ name: field.inputType, params: { operation: 'details', id: data.response } });
+                    this.$router.push({ name: field.inputType, params: { operation: 'view', id: data.response } });
                 }
             })
             .catch(error => {
@@ -367,7 +367,7 @@ export default class DynamicFormComponent extends Vue {
                             this.vmDefinition.forEach(field => {
                                 this.addFieldToSchema(field, field.label === "Name" || field.placeholder === "Name");
                             });
-                            if (this.operation === 'details') {
+                            if (this.operation === 'view') {
                                 this.schema.fields.forEach(f => f.disabled = true);
                             }
                             this.errorMessage = '';

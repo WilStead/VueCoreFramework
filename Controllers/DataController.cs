@@ -1,16 +1,21 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MVCCoreVue.Data;
 using MVCCoreVue.Data.Attributes;
 using MVCCoreVue.Extensions;
 using MVCCoreVue.Models;
+using MVCCoreVue.Services;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace MVCCoreVue.Controllers
@@ -24,14 +29,22 @@ namespace MVCCoreVue.Controllers
     {
         private readonly ILogger<AccountController> _logger;
         private readonly ApplicationDbContext _context;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         /// <summary>
         /// Initializes a new instance of <see cref="DataController"/>.
         /// </summary>
-        public DataController(ILogger<AccountController> logger, ApplicationDbContext context)
+        public DataController(
+            ILogger<AccountController> logger,
+            ApplicationDbContext context,
+            RoleManager<IdentityRole> roleManager,
+            UserManager<ApplicationUser> userManager)
         {
             _logger = logger;
             _context = context;
+            _roleManager = roleManager;
+            _userManager = userManager;
         }
 
         /// <summary>
@@ -52,6 +65,25 @@ namespace MVCCoreVue.Controllers
         [HttpPost("{childProp}/{parentId}")]
         public async Task<IActionResult> Add(string dataType, string childProp, string parentId)
         {
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataAdd))
+            {
+                return Json(new { error = "You don't have permission to add new items of this type." });
+            }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
@@ -69,6 +101,11 @@ namespace MVCCoreVue.Controllers
             try
             {
                 var newItem = await repository.AddAsync(pInfo, hasParent ? guid : (Guid?)null);
+                var claimValue = $"{dataType}{{{newItem["id"]}}}";
+                await _userManager.AddClaimsAsync(user, new Claim[] {
+                    new Claim(CustomClaimTypes.PermissionDataOwner, claimValue),
+                    new Claim(CustomClaimTypes.PermissionDataAll, claimValue)
+                });
                 return Json(new { data = newItem });
             }
             catch
@@ -103,6 +140,25 @@ namespace MVCCoreVue.Controllers
             if (!Guid.TryParse(id, out Guid guid))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, id))
+            {
+                return Json(new { error = "You don't have permission to edit this item." });
             }
             if (string.IsNullOrEmpty(childProp))
             {
@@ -165,6 +221,25 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView, id))
+            {
+                return Json(new { error = "You don't have permission to view this item." });
+            }
             object item = null;
             try
             {
@@ -190,8 +265,27 @@ namespace MVCCoreVue.Controllers
         /// items (as JSON).
         /// </returns>
         [HttpGet]
-        public IActionResult GetAll(string dataType)
+        public async Task<IActionResult> GetAll(string dataType)
         {
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView))
+            {
+                return Json(new { error = "You don't have permission to view items of this type." });
+            }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
@@ -215,6 +309,25 @@ namespace MVCCoreVue.Controllers
             string id,
             string childProp)
         {
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView))
+            {
+                return Json(new { error = "You don't have permission to view items of this type." });
+            }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
@@ -254,17 +367,34 @@ namespace MVCCoreVue.Controllers
             try
             {
                 if (ptInfo.IsGenericType
-                    && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
-                    && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem)))
+                    && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>)))
                 {
                     var children = pInfo.GetValue(item) as IEnumerable;
-                    var idInfo = ptInfo.GenericTypeArguments.FirstOrDefault().GetProperty("Id");
-                    List<Guid> childIds = new List<Guid>();
-                    foreach (var child in children)
+                    if (ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem)))
                     {
-                        childIds.Add((Guid)idInfo.GetValue(child));
+                        var idInfo = ptInfo.GenericTypeArguments.FirstOrDefault().GetProperty("Id");
+                        List<Guid> childIds = new List<Guid>();
+                        foreach (var child in children)
+                        {
+                            childIds.Add((Guid)idInfo.GetValue(child));
+                        }
+                        return Json(childIds);
                     }
-                    return Json(childIds);
+                    else if (ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().ImplementedInterfaces.Any(i => i == typeof(IDataItemMtM)))
+                    {
+                        var idInfo = ptInfo.GenericTypeArguments.FirstOrDefault().GetProperties().FirstOrDefault(p =>
+                            p.Name == pInfo.Name + "Id" || pInfo.Name.GetSingularForms().Any(s => p.Name == s + "Id"));
+                        List<Guid> childIds = new List<Guid>();
+                        foreach (var child in children)
+                        {
+                            childIds.Add((Guid)idInfo.GetValue(child));
+                        }
+                        return Json(childIds);
+                    }
+                    else
+                    {
+                        return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                    }
                 }
                 else
                 {
@@ -301,6 +431,25 @@ namespace MVCCoreVue.Controllers
             if (!Guid.TryParse(id, out Guid guid))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView, id))
+            {
+                return Json(new { error = "You don't have permission to view this item." });
             }
             if (string.IsNullOrEmpty(childProp))
             {
@@ -373,6 +522,25 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView, id))
+            {
+                return Json(new { error = "You don't have permission to view this item." });
+            }
             if (string.IsNullOrEmpty(childProp))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
@@ -397,13 +565,52 @@ namespace MVCCoreVue.Controllers
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
             var ptInfo = pInfo.PropertyType.GetTypeInfo();
+            IEnumerable children = null;
+            Type childType = null;
+            if (ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem)))
+            {
+                children = pInfo.GetValue(item) as IEnumerable;
+                childType = ptInfo.GenericTypeArguments.FirstOrDefault();
+            }
+            else if (ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().ImplementedInterfaces.Any(i => i == typeof(IDataItemMtM)))
+            {
+                var mtmChildren = pInfo.GetValue(item) as IEnumerable;
+                var nav = ptInfo.GenericTypeArguments.FirstOrDefault().GetProperties().FirstOrDefault(p =>
+                    p.Name == pInfo.Name || pInfo.Name.GetSingularForms().Contains(p.Name));
+                List<DataItem> navChildren = new List<DataItem>();
+                foreach (object mtmChild in mtmChildren)
+                {
+                    foreach (var reference in _context.Entry(mtmChild).References)
+                    {
+                        reference.Load();
+                    }
+                    navChildren.Add(nav.GetValue(mtmChild) as DataItem);
+                }
+                children = navChildren;
+                childType = nav.PropertyType;
+            }
+            else
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (!AuthorizationController.IsAuthorized(claims, childType.Name, CustomClaimTypes.PermissionDataView))
+            {
+                return Json(new { error = "You don't have permission to view items of this type." });
+            }
             try
             {
                 var repoMethod = typeof(Repository<>)
-                    .MakeGenericType(ptInfo.GenericTypeArguments.FirstOrDefault())
+                    .MakeGenericType(childType)
                     .GetMethod("GetPageItems");
-                var children = pInfo.GetValue(item) as IEnumerable;
-                return Json(repoMethod.Invoke(null, new object[] { children.Cast<DataItem>().AsQueryable(), search, sortBy, descending, page, rowsPerPage }));
+                return Json(repoMethod.Invoke(null, new object[] {
+                    children.Cast<DataItem>().AsQueryable(),
+                    search,
+                    sortBy,
+                    descending,
+                    page,
+                    rowsPerPage,
+                    claims
+                }));
             }
             catch
             {
@@ -435,6 +642,25 @@ namespace MVCCoreVue.Controllers
             if (!Guid.TryParse(id, out Guid guid))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView, id))
+            {
+                return Json(new { error = "You don't have permission to view this item." });
             }
             if (string.IsNullOrEmpty(childProp))
             {
@@ -559,7 +785,7 @@ namespace MVCCoreVue.Controllers
         /// problem; or the list of ViewModels representing the entities on the requested page (as JSON).
         /// </returns>
         [HttpPost]
-        public IActionResult GetPage(
+        public async Task<IActionResult> GetPage(
             string dataType,
             string search,
             string sortBy,
@@ -568,6 +794,25 @@ namespace MVCCoreVue.Controllers
             int rowsPerPage,
             [FromBody]string[] except)
         {
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView))
+            {
+                return Json(new { error = "You don't have permission to view items of this type." });
+            }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
@@ -586,7 +831,7 @@ namespace MVCCoreVue.Controllers
             }
             try
             {
-                return Json(repository.GetPage(search, sortBy, descending, page, rowsPerPage, exceptGuids));
+                return Json(repository.GetPage(search, sortBy, descending, page, rowsPerPage, exceptGuids, claims));
             }
             catch
             {
@@ -605,6 +850,25 @@ namespace MVCCoreVue.Controllers
         [HttpGet]
         public async Task<IActionResult> GetTotal(string dataType)
         {
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView))
+            {
+                return Json(new { error = "You don't have permission to view items of this type." });
+            }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
@@ -635,7 +899,8 @@ namespace MVCCoreVue.Controllers
                     if (attr != null)
                     {
                         classes.Add(type.Name,
-                            new {
+                            new
+                            {
                                 category = string.IsNullOrEmpty(attr.Category) ? "/" : attr.Category,
                                 iconClass = attr.IconClass,
                                 fontAwesome = attr.FontAwesome,
@@ -676,9 +941,31 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataAll, id))
+            {
+                return Json(new { error = "You don't have permission to remove this item." });
+            }
             try
             {
                 await repository.RemoveAsync(guid);
+                _context.UserClaims.RemoveRange(_context.UserClaims.Where(c => c.ClaimValue == $"{dataType}{{{id}}}"));
+                _context.RoleClaims.RemoveRange(_context.RoleClaims.Where(c => c.ClaimValue == $"{dataType}{{{id}}}"));
+                await _context.SaveChangesAsync();
             }
             catch
             {
@@ -713,6 +1000,25 @@ namespace MVCCoreVue.Controllers
             if (!Guid.TryParse(id, out Guid guid))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, id))
+            {
+                return Json(new { error = "You don't have permission to edit this item." });
             }
             if (string.IsNullOrEmpty(childProp))
             {
@@ -777,6 +1083,25 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, id))
+            {
+                return Json(new { error = "You don't have permission to edit this item." });
+            }
             if (string.IsNullOrEmpty(childProp))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
@@ -792,7 +1117,13 @@ namespace MVCCoreVue.Controllers
             }
             try
             {
-                await repository.RemoveFromParentAsync(guid, pInfo);
+                var removed = await repository.RemoveFromParentAsync(guid, pInfo);
+                if (removed)
+                {
+                    _context.UserClaims.RemoveRange(_context.UserClaims.Where(c => c.ClaimValue == $"{dataType}{{{id}}}"));
+                    _context.RoleClaims.RemoveRange(_context.RoleClaims.Where(c => c.ClaimValue == $"{dataType}{{{id}}}"));
+                    await _context.SaveChangesAsync();
+                }
                 return Ok();
             }
             catch
@@ -821,11 +1152,30 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
             List<Guid> guids = new List<Guid>();
             foreach (var id in ids)
             {
-                if (!Guid.TryParse(id, out Guid guid))
+                if (Guid.TryParse(id, out Guid guid))
                 {
+                    if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataAll, id))
+                    {
+                        return Json(new { error = "You don't have permission to remove one or more of these items." });
+                    }
                     guids.Add(guid);
                 }
                 else
@@ -836,6 +1186,9 @@ namespace MVCCoreVue.Controllers
             try
             {
                 await repository.RemoveRangeAsync(guids);
+                _context.UserClaims.RemoveRange(_context.UserClaims.Where(c => ids.Any(id => c.ClaimValue == $"{dataType}{{{id}}}")));
+                _context.RoleClaims.RemoveRange(_context.RoleClaims.Where(c => ids.Any(id => c.ClaimValue == $"{dataType}{{{id}}}")));
+                await _context.SaveChangesAsync();
             }
             catch
             {
@@ -858,7 +1211,7 @@ namespace MVCCoreVue.Controllers
         /// Redirect to an error page in the event of a bad request; an error if there is a problem;
         /// or an OK result.
         /// </returns>
-        [HttpPost("{id}/{childFKProp}")]
+        [HttpPost("{id}/{childProp}")]
         public async Task<IActionResult> RemoveRangeFromParent(string dataType, string childProp, [FromBody]List<string> ids)
         {
             if (ids == null || ids.Count == 0)
@@ -869,11 +1222,30 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
             List<Guid> guids = new List<Guid>();
             foreach (var id in ids)
             {
-                if (!Guid.TryParse(id, out Guid guid))
+                if (Guid.TryParse(id, out Guid guid))
                 {
+                    if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, id))
+                    {
+                        return Json(new { error = "You don't have permission to edit one or more of these items." });
+                    }
                     guids.Add(guid);
                 }
                 else
@@ -896,7 +1268,10 @@ namespace MVCCoreVue.Controllers
             }
             try
             {
-                await repository.RemoveRangeFromParentAsync(guids, pInfo);
+                var removedIds = await repository.RemoveRangeFromParentAsync(guids, pInfo);
+                _context.UserClaims.RemoveRange(_context.UserClaims.Where(c => removedIds.Any(id => c.ClaimValue == $"{dataType}{{{id}}}")));
+                _context.RoleClaims.RemoveRange(_context.RoleClaims.Where(c => removedIds.Any(id => c.ClaimValue == $"{dataType}{{{id}}}")));
+                await _context.SaveChangesAsync();
                 return Ok();
             }
             catch
@@ -950,9 +1325,34 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, parentId))
+            {
+                return Json(new { error = "You don't have permission to edit this item." });
+            }
             try
             {
-                await repository.ReplaceChildAsync(parentGuid, newChildGuid, pInfo);
+                var replacedId = await repository.ReplaceChildAsync(parentGuid, newChildGuid, pInfo);
+                if (replacedId.HasValue)
+                {
+                    _context.UserClaims.RemoveRange(_context.UserClaims.Where(c => c.ClaimValue == $"{dataType}{{{replacedId.Value}}}"));
+                    _context.RoleClaims.RemoveRange(_context.RoleClaims.Where(c => c.ClaimValue == $"{dataType}{{{replacedId.Value}}}"));
+                    await _context.SaveChangesAsync();
+                }
                 return Ok();
             }
             catch
@@ -977,6 +1377,12 @@ namespace MVCCoreVue.Controllers
         [HttpPost("{parentId}/{childProp}")]
         public async Task<IActionResult> ReplaceChildWithNew(string dataType, string parentId, string childProp)
         {
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
@@ -1002,9 +1408,33 @@ namespace MVCCoreVue.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, parentId))
+            {
+                return Json(new { error = "You don't have permission to edit this item." });
+            }
             try
             {
-                var newItem = await repository.ReplaceChildWithNewAsync(parentGuid, pInfo);
+                var (newItem, replacedId) = await repository.ReplaceChildWithNewAsync(parentGuid, pInfo);
+                var claimValue = $"{dataType}{{{newItem["id"]}}}";
+                await _userManager.AddClaimsAsync(user, new Claim[] {
+                    new Claim(CustomClaimTypes.PermissionDataOwner, claimValue),
+                    new Claim(CustomClaimTypes.PermissionDataAll, claimValue)
+                });
+                if (replacedId.HasValue)
+                {
+                    _context.UserClaims.RemoveRange(_context.UserClaims.Where(c => c.ClaimValue == $"{dataType}{{{replacedId.Value}}}"));
+                    _context.RoleClaims.RemoveRange(_context.RoleClaims.Where(c => c.ClaimValue == $"{dataType}{{{replacedId.Value}}}"));
+                    await _context.SaveChangesAsync();
+                }
                 return Json(new { data = newItem });
             }
             catch
@@ -1081,6 +1511,25 @@ namespace MVCCoreVue.Controllers
             if (!TryResolveObject(dataType, item, out DataItem obj, out Type type))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, obj.Id.ToString()))
+            {
+                return Json(new { error = "You don't have permission to edit this item." });
             }
             IRepository repository = GetRepository(type, _context);
             try

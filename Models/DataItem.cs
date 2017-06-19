@@ -40,15 +40,5 @@ namespace MVCCoreVue.Models
         /// </remarks>
         [Hidden]
         public DateTime UpdateTimestamp { get; set; }
-
-        /// <summary>
-        /// Indicates permissions granted for this item to all users.
-        /// </summary>
-        /// <remarks>
-        /// This may either be <see cref="CustomClaimTypes.PermissionDataAll"/>, or may be any number
-        /// of specific operation permission types, delimited by semicolons (;).
-        /// </remarks>
-        [Hidden]
-        public string AllPermissions { get; set; }
     }
 }

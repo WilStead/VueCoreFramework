@@ -413,7 +413,7 @@ export default class DynamicTableComponent extends Vue {
                     this.errorMessage = data.error;
                 } else {
                     this.errorMessage = '';
-                    this.$router.push({ name: this.routeName, params: { operation: 'create', id: data.data.id } });
+                    this.$router.push({ name: this.routeName, params: { operation: 'add', id: data.data.id } });
                 }
             })
             .catch(error => {
@@ -472,11 +472,11 @@ export default class DynamicTableComponent extends Vue {
     }
 
     onViewChildItem(id: string) {
-        this.$router.push({ name: this.parentType.toLowerCase(), params: { operation: 'details', id } });
+        this.$router.push({ name: this.parentType.toLowerCase(), params: { operation: 'view', id } });
     }
 
     onViewItem(id: string) {
-        this.$router.push({ name: this.routeName, params: { operation: 'details', id } });
+        this.$router.push({ name: this.routeName, params: { operation: 'view', id } });
     }
 
     updateChildData() {

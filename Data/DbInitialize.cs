@@ -22,9 +22,9 @@ namespace MVCCoreVue.Data
         {
             var context = provider.GetRequiredService<ApplicationDbContext>();
 
+            var roleManager = provider.GetRequiredService<RoleManager<IdentityRole>>();
             if (!context.Roles.Any(r => r.Name == CustomRoles.SiteAdmin))
             {
-                var roleManager = provider.GetRequiredService<RoleManager<IdentityRole>>();
                 var admin = new IdentityRole(CustomRoles.SiteAdmin);
                 roleManager.CreateAsync(admin).Wait();
                 roleManager.AddClaimAsync(admin, new Claim(CustomClaimTypes.PermissionGroupSiteAdmin, CustomClaimTypes.PermissionAll)).Wait();
@@ -33,15 +33,14 @@ namespace MVCCoreVue.Data
             }
             if (!context.Roles.Any(r => r.Name == CustomRoles.Admin))
             {
-                var roleManager = provider.GetRequiredService<RoleManager<IdentityRole>>();
                 var admin = new IdentityRole(CustomRoles.Admin);
                 roleManager.CreateAsync(admin).Wait();
                 roleManager.AddClaimAsync(admin, new Claim(CustomClaimTypes.PermissionGroupAdmin, CustomClaimTypes.PermissionAll)).Wait();
                 roleManager.AddClaimAsync(admin, new Claim(CustomClaimTypes.PermissionDataAll, CustomClaimTypes.PermissionAll)).Wait();
                 context.SaveChanges();
             }
-            var siteAdminRole = context.Roles.FirstOrDefault(r => r.Name == CustomRoles.SiteAdmin);
 
+            var siteAdminRole = context.Roles.FirstOrDefault(r => r.Name == CustomRoles.SiteAdmin);
             if (!context.Users.Any(u => u.Roles.Any(r => r.RoleId == siteAdminRole.Id)))
             {
                 var userManager = provider.GetRequiredService<UserManager<ApplicationUser>>();
@@ -57,6 +56,14 @@ namespace MVCCoreVue.Data
                 }
                 userManager.AddToRoleAsync(user, CustomRoles.SiteAdmin).Wait();
                 userManager.AddToRoleAsync(user, CustomRoles.Admin).Wait();
+                user = context.Users.FirstOrDefault(u => u.Email == "test_user@example.com");
+                if (user == null)
+                {
+                    user = new ApplicationUser { UserName = "Test_User", Email = "test_user@example.com" };
+                    userManager.CreateAsync(user, "Password_1").Wait();
+                    userManager.Users.FirstOrDefault().EmailConfirmed = true;
+                    userManager.UpdateAsync(user).Wait();
+                }
                 context.SaveChanges();
             }
 
@@ -524,6 +531,27 @@ namespace MVCCoreVue.Data
                     Airline = airlineList[5],
                     Country = countries[1]
                 });
+            }
+
+            if (!context.Roles.Any(r => r.Name == CustomRoles.AllUsers))
+            {
+                var allUsers = new IdentityRole(CustomRoles.AllUsers);
+                roleManager.CreateAsync(allUsers).Wait();
+                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataAll, nameof(Leader))).Wait();
+                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataView, nameof(City))).Wait();
+                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataEdit, nameof(City))).Wait();
+                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataView, nameof(Country))).Wait();
+                var countries = context.Countries.ToList();
+                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataView, $"{nameof(Country)}{{{countries[0].Id}}}")).Wait();
+                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataEdit, $"{nameof(Country)}{{{countries[0].Id}}}")).Wait();
+                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataView, $"{nameof(Country)}{{{countries[1].Id}}}")).Wait();
+                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataEdit, $"{nameof(Country)}{{{countries[1].Id}}}")).Wait();
+                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataView, $"{nameof(Country)}{{{countries[2].Id}}}")).Wait();
+                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataEdit, $"{nameof(Country)}{{{countries[2].Id}}}")).Wait();
+                var airlines = context.Airlines.ToList();
+                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataView, $"{nameof(Airline)}{{{airlines[0].Id}}}")).Wait();
+                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataView, $"{nameof(Airline)}{{{airlines[1].Id}}}")).Wait();
+                context.SaveChanges();
             }
         }
     }

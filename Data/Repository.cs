@@ -1,13 +1,16 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using MVCCoreVue.Controllers;
 using MVCCoreVue.Data.Attributes;
 using MVCCoreVue.Extensions;
 using MVCCoreVue.Models;
+using MVCCoreVue.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Reflection;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -559,7 +562,8 @@ namespace MVCCoreVue.Data
             {
                 fd.Type = "objectMultiSelect";
 
-                var name = ptInfo.GenericTypeArguments.FirstOrDefault(t => t != typeof(Guid) && !t.Name.EndsWith(pInfo.Name)).Name;
+                var name = ptInfo.GenericTypeArguments.FirstOrDefault().GetProperties().FirstOrDefault(p =>
+                    p.Name == pInfo.Name || pInfo.Name.GetSingularForms().Contains(p.Name)).Name;
                 fd.InputType = name.Substring(name.LastIndexOf('.') + 1);
             }
             // Unrecognized types are represented as plain labels.
@@ -693,10 +697,15 @@ namespace MVCCoreVue.Data
         /// An enumeration of primary keys of items which should be excluded from the results before
         /// caluclating the page contents.
         /// </param>
-        public IEnumerable<IDictionary<string, object>> GetPage(string search, string sortBy, bool descending, int page, int rowsPerPage, IEnumerable<Guid> except)
-        {
-            return GetPageItems(items.Where(i => !except.Contains(i.Id)), search, sortBy, descending, page, rowsPerPage);
-        }
+        public IEnumerable<IDictionary<string, object>> GetPage(
+            string search,
+            string sortBy,
+            bool descending,
+            int page,
+            int rowsPerPage,
+            IEnumerable<Guid> except,
+            IList<Claim> claims)
+            => GetPageItems(items.Where(i => !except.Contains(i.Id)), search, sortBy, descending, page, rowsPerPage, claims);
 
         /// <summary>
         /// Calculates and enumerates the given items with the given paging parameters, as ViewModels.
@@ -719,9 +728,17 @@ namespace MVCCoreVue.Data
         /// An enumeration of primary keys of items which should be excluded from the results before
         /// caluclating the page contents.
         /// </param>
-        public static IEnumerable<IDictionary<string, object>> GetPageItems(IQueryable<DataItem> items, string search, string sortBy, bool descending, int page, int rowsPerPage)
+        public static IEnumerable<IDictionary<string, object>> GetPageItems(
+            IQueryable<DataItem> items,
+            string search,
+            string sortBy,
+            bool descending,
+            int page,
+            int rowsPerPage,
+            IList<Claim> claims)
         {
-            IQueryable<DataItem> filteredItems = items;
+            var dataType = typeof(T).Name;
+            IQueryable<DataItem> filteredItems = items.Where(i => AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView, i.Id.ToString()));
 
             var tInfo = typeof(T).GetTypeInfo();
             foreach (var pInfo in tInfo.GetProperties())
@@ -988,7 +1005,8 @@ namespace MVCCoreVue.Data
         /// </summary>
         /// <param name="id">The primary key of the child entity whose relationship is being severed.</param>
         /// <param name="childProp">The navigation property of the relationship being severed.</param>
-        public async Task RemoveFromParentAsync(Guid id, PropertyInfo childProp)
+        /// <returns>True if the item is removed from the <see cref="ApplicationDbContext"/>, false if not.</returns>
+        public async Task<bool> RemoveFromParentAsync(Guid id, PropertyInfo childProp)
         {
             var childFKProp = typeof(T).GetProperty(childProp.Name + "Id");
 
@@ -996,7 +1014,7 @@ namespace MVCCoreVue.Data
             if (Nullable.GetUnderlyingType(childFKProp.PropertyType) != null)
             {
                 await RemoveAsync(id);
-                return;
+                return true;
             }
 
             // For non-required relationships, null the FK.
@@ -1023,8 +1041,10 @@ namespace MVCCoreVue.Data
                 if (orphan)
                 {
                     await RemoveItemAsync(item);
+                    return true;
                 }
             }
+            return false;
         }
 
         /// <summary>
@@ -1046,7 +1066,8 @@ namespace MVCCoreVue.Data
         /// An enumeration of primary keys of child entities whose relationships are being severed.
         /// </param>
         /// <param name="childProp">The navigation property of the relationship being severed.</param>
-        public async Task RemoveRangeFromParentAsync(IEnumerable<Guid> ids, PropertyInfo childProp)
+        /// <returns>A list of the Ids of any items removed from the <see cref="ApplicationDbContext"/>.</returns>
+        public async Task<IList<Guid>> RemoveRangeFromParentAsync(IEnumerable<Guid> ids, PropertyInfo childProp)
         {
             var childFKProp = typeof(T).GetProperty(childProp.Name + "Id");
 
@@ -1054,7 +1075,7 @@ namespace MVCCoreVue.Data
             if (Nullable.GetUnderlyingType(childFKProp.PropertyType) != null)
             {
                 await RemoveRangeAsync(ids);
-                return;
+                return ids.ToList();
             }
 
             // If the children are not MenuClass items, they should be removed if now orphans (have
@@ -1066,6 +1087,7 @@ namespace MVCCoreVue.Data
             }
 
             // For non-required relationships, null the prop.
+            IList<Guid> removedIds = new List<Guid>();
             foreach (var id in ids)
             {
                 var item = await FindItemAsync(id);
@@ -1089,9 +1111,11 @@ namespace MVCCoreVue.Data
                     if (orphan)
                     {
                         await RemoveItemAsync(item);
+                        removedIds.Add(id);
                     }
                 }
             }
+            return removedIds;
         }
 
         /// <summary>
@@ -1105,7 +1129,8 @@ namespace MVCCoreVue.Data
         /// The primary key of the new child entity entering into the relationship.
         /// </param>
         /// <param name="childProp">The navigation property of the relationship on the child entity.</param>
-        public async Task ReplaceChildAsync(Guid parentId, Guid newChildId, PropertyInfo childProp)
+        /// <returns>The Id of the removed child, if it is removed from the <see cref="ApplicationDbContext"/>; null if it is not.</returns>
+        public async Task<Guid?> ReplaceChildAsync(Guid parentId, Guid newChildId, PropertyInfo childProp)
         {
             var parentRepo = (IRepository)Activator.CreateInstance(typeof(Repository<>).MakeGenericType(childProp.PropertyType), _context);
             var parent = await parentRepo.FindItemAsync(parentId);
@@ -1116,7 +1141,8 @@ namespace MVCCoreVue.Data
             var newChild = await FindItemAsync(newChildId);
             typeof(T).GetProperty(childProp.Name + "Id").SetValue(newChild, parentId);
 
-            await RemoveFromParentAsync(oldChildId, childProp);
+            var removed = await RemoveFromParentAsync(oldChildId, childProp);
+            return removed ? oldChildId : (Guid?)null;
         }
 
         /// <summary>
@@ -1127,7 +1153,7 @@ namespace MVCCoreVue.Data
         /// </summary>
         /// <param name="parentId">The primary key of the parent entity in the relationship.</param>
         /// <param name="childProp">The navigation property of the relationship on the child entity.</param>
-        public async Task<IDictionary<string, object>> ReplaceChildWithNewAsync(Guid parentId, PropertyInfo childProp)
+        public async Task<(IDictionary<string, object>, Guid?)> ReplaceChildWithNewAsync(Guid parentId, PropertyInfo childProp)
         {
             var parentRepo = (IRepository)Activator.CreateInstance(typeof(Repository<>).MakeGenericType(childProp.PropertyType), _context);
             var parent = await parentRepo.FindItemAsync(parentId);
@@ -1137,9 +1163,9 @@ namespace MVCCoreVue.Data
 
             var newItem = await AddAsync(childProp, parentId);
 
-            await RemoveFromParentAsync(oldChildId, childProp);
+            var removed = await RemoveFromParentAsync(oldChildId, childProp);
 
-            return newItem;
+            return removed ? (newItem, oldChildId) : (newItem, (Guid?)null);
         }
 
         /// <summary>
