@@ -186,21 +186,39 @@ namespace MVCCoreVue.Controllers
                 return Json(new { error = $"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance." });
             }
 
-            var ownerClaims = await _userManager.GetClaimsAsync(user);
-            ownerClaims = ownerClaims.Where(c => c.Type == CustomClaimTypes.PermissionDataOwner).ToList();
+            var claims = await _userManager.GetClaimsAsync(user);
+            var managerClaims = claims.Where(c => c.Type == CustomClaimTypes.PermissionGroupManager).ToList();
+            var ownerClaims = claims.Where(c => c.Type == CustomClaimTypes.PermissionDataOwner).ToList();
 
             ApplicationUser xferUser = null;
             if (!string.IsNullOrEmpty(xferUsername))
             {
                 xferUser = await _userManager.FindByNameAsync(xferUsername);
-                if (xferUser == null)
+                if (xferUser == null || xferUser == user)
                 {
                     return Json(new { error = "There was a problem with the account you specified for data transfer. Your account was not deleted." });
                 }
+                await _userManager.AddClaimsAsync(xferUser, managerClaims);
                 await _userManager.AddClaimsAsync(xferUser, ownerClaims);
             }
             else
             {
+                foreach (var managerClaim in managerClaims)
+                {
+                    var members = await _userManager.GetUsersInRoleAsync(managerClaim.Value);
+                    // If the deleted account is the only one in the group, delete it.
+                    if (members.Count <= 1)
+                    {
+                        var role = await _roleManager.FindByNameAsync(managerClaim.Value);
+                        await _roleManager.DeleteAsync(role);
+                    }
+                    // Otherwise, assign the manager role to another member arbitrarily.
+                    else
+                    {
+                        var otherMember = members.FirstOrDefault(m => m != user);
+                        await _userManager.AddClaimAsync(otherMember, managerClaim);
+                    }
+                }
                 foreach (var ownerClaim in ownerClaims)
                 {
                     List<ApplicationUser> managerShares = new List<ApplicationUser>();
