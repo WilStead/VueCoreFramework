@@ -124,7 +124,7 @@ namespace VueCoreFramework.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
-            modelBuilder.Entity("MVCCoreVue.Models.Airline", b =>
+            modelBuilder.Entity("VueCoreFramework.Models.Airline", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
@@ -143,7 +143,7 @@ namespace VueCoreFramework.Migrations
                     b.ToTable("Airlines");
                 });
 
-            modelBuilder.Entity("MVCCoreVue.Models.AirlineCountry", b =>
+            modelBuilder.Entity("VueCoreFramework.Models.AirlineCountry", b =>
                 {
                     b.Property<Guid>("CountryId");
 
@@ -156,7 +156,7 @@ namespace VueCoreFramework.Migrations
                     b.ToTable("AirlineCountry");
                 });
 
-            modelBuilder.Entity("MVCCoreVue.Models.ApplicationUser", b =>
+            modelBuilder.Entity("VueCoreFramework.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
@@ -214,7 +214,7 @@ namespace VueCoreFramework.Migrations
                     b.ToTable("AspNetUsers");
                 });
 
-            modelBuilder.Entity("MVCCoreVue.Models.City", b =>
+            modelBuilder.Entity("VueCoreFramework.Models.City", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
@@ -246,7 +246,7 @@ namespace VueCoreFramework.Migrations
                     b.ToTable("Cities");
                 });
 
-            modelBuilder.Entity("MVCCoreVue.Models.Country", b =>
+            modelBuilder.Entity("VueCoreFramework.Models.Country", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
@@ -267,7 +267,7 @@ namespace VueCoreFramework.Migrations
                     b.ToTable("Countries");
                 });
 
-            modelBuilder.Entity("MVCCoreVue.Models.Leader", b =>
+            modelBuilder.Entity("VueCoreFramework.Models.Leader", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
@@ -297,7 +297,7 @@ namespace VueCoreFramework.Migrations
                     b.ToTable("Leaders");
                 });
 
-            modelBuilder.Entity("MVCCoreVue.Models.Log", b =>
+            modelBuilder.Entity("VueCoreFramework.Models.Log", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
@@ -334,7 +334,7 @@ namespace VueCoreFramework.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("MVCCoreVue.Models.ApplicationUser")
+                    b.HasOne("VueCoreFramework.Models.ApplicationUser")
                         .WithMany("Claims")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
@@ -342,7 +342,7 @@ namespace VueCoreFramework.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("MVCCoreVue.Models.ApplicationUser")
+                    b.HasOne("VueCoreFramework.Models.ApplicationUser")
                         .WithMany("Logins")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
@@ -355,42 +355,42 @@ namespace VueCoreFramework.Migrations
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("MVCCoreVue.Models.ApplicationUser")
+                    b.HasOne("VueCoreFramework.Models.ApplicationUser")
                         .WithMany("Roles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("MVCCoreVue.Models.AirlineCountry", b =>
+            modelBuilder.Entity("VueCoreFramework.Models.AirlineCountry", b =>
                 {
-                    b.HasOne("MVCCoreVue.Models.Airline", "Airline")
+                    b.HasOne("VueCoreFramework.Models.Airline", "Airline")
                         .WithMany("Countries")
                         .HasForeignKey("AirlineId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("MVCCoreVue.Models.Country", "Country")
+                    b.HasOne("VueCoreFramework.Models.Country", "Country")
                         .WithMany("Airlines")
                         .HasForeignKey("CountryId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("MVCCoreVue.Models.City", b =>
+            modelBuilder.Entity("VueCoreFramework.Models.City", b =>
                 {
-                    b.HasOne("MVCCoreVue.Models.Country", "CountryCapitol")
+                    b.HasOne("VueCoreFramework.Models.Country", "CountryCapitol")
                         .WithOne("Capitol")
-                        .HasForeignKey("MVCCoreVue.Models.City", "CountryCapitolId");
+                        .HasForeignKey("VueCoreFramework.Models.City", "CountryCapitolId");
 
-                    b.HasOne("MVCCoreVue.Models.Country", "Country")
+                    b.HasOne("VueCoreFramework.Models.Country", "Country")
                         .WithMany("Cities")
                         .HasForeignKey("CountryId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("MVCCoreVue.Models.Leader", b =>
+            modelBuilder.Entity("VueCoreFramework.Models.Leader", b =>
                 {
-                    b.HasOne("MVCCoreVue.Models.Country", "Country")
+                    b.HasOne("VueCoreFramework.Models.Country", "Country")
                         .WithOne("Leader")
-                        .HasForeignKey("MVCCoreVue.Models.Leader", "CountryId")
+                        .HasForeignKey("VueCoreFramework.Models.Leader", "CountryId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
         }
