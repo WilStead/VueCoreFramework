@@ -88,7 +88,7 @@ namespace VueCoreFramework.Extensions
                 singulars.Add(less1 + "us"); // Catches words like e.g. cacti
                 if (lower.EndsWith("ii")) // Catches words like e.g. radii
                 {
-                    singulars.Add(str.Substring(0, str.Length - 2) + "us");
+                    singulars.Add(str.Substring(0, str.Length - 1) + "us");
                 }
             }
             else if (lower.EndsWith("en"))

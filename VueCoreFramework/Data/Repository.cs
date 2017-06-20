@@ -159,13 +159,16 @@ namespace VueCoreFramework.Data
                 throw new ArgumentNullException(nameof(id));
             }
             var item = await items.FindAsync(id);
-            foreach (var reference in _context.Entry(item).References)
+            if (item != null)
             {
-                reference.Load();
-            }
-            foreach (var collection in _context.Entry(item).Collections)
-            {
-                collection.Load();
+                foreach (var reference in _context.Entry(item).References)
+                {
+                    reference.Load();
+                }
+                foreach (var collection in _context.Entry(item).Collections)
+                {
+                    collection.Load();
+                }
             }
             return GetViewModel(item);
         }
@@ -184,13 +187,16 @@ namespace VueCoreFramework.Data
                 throw new ArgumentNullException(nameof(id));
             }
             var item = await items.FindAsync(id);
-            foreach (var reference in _context.Entry(item).References)
+            if (item != null)
             {
-                reference.Load();
-            }
-            foreach (var collection in _context.Entry(item).Collections)
-            {
-                collection.Load();
+                foreach (var reference in _context.Entry(item).References)
+                {
+                    reference.Load();
+                }
+                foreach (var collection in _context.Entry(item).Collections)
+                {
+                    collection.Load();
+                }
             }
             return item;
         }
@@ -246,7 +252,7 @@ namespace VueCoreFramework.Data
         {
             var item = await FindItemAsync(id);
             await _context.Entry(item).Collection(childProp.Name).LoadAsync();
-            var children = childProp.GetValue(item) as ICollection<object>;
+            var children = childProp.GetValue(item) as IEnumerable<object>;
             return children.LongCount();
         }
 
@@ -665,7 +671,7 @@ namespace VueCoreFramework.Data
         }
 
         /// <summary>
-        /// Generates and enumerates <see cref="FieldDefinition"/> s representing the properties of
+        /// Generates and enumerates <see cref="FieldDefinition"/>s representing the properties of
         /// <see cref="T"/>.
         /// </summary>
         public IEnumerable<FieldDefinition> GetFieldDefinitions()
@@ -810,7 +816,8 @@ namespace VueCoreFramework.Data
                     && (ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem))
                     || ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().ImplementedInterfaces.Any(i => i == typeof(IDataItemMtM))))
                 {
-                    int count = (int)ptInfo.GetGenericTypeDefinition()
+                    int count = item == null ? 0
+                        : (int)ptInfo.GetGenericTypeDefinition()
                         .MakeGenericType(ptInfo.GenericTypeArguments.FirstOrDefault())
                         .GetProperty("Count")
                         .GetValue(pInfo.GetValue(item));
@@ -822,7 +829,7 @@ namespace VueCoreFramework.Data
                 // formatted value is used in data tables.
                 else if (ptInfo.IsEnum)
                 {
-                    object value = pInfo.GetValue(item);
+                    object value = item == null ? 0 : pInfo.GetValue(item);
                     var name = pInfo.Name.ToInitialLower();
                     vm[name] = (int)value;
 
@@ -835,7 +842,7 @@ namespace VueCoreFramework.Data
                 else if (dataType?.DataType == DataType.Date)
                 {
                     var name = pInfo.Name.ToInitialLower();
-                    var value = pInfo.GetValue(item);
+                    var value = item == null ? null : pInfo.GetValue(item);
                     vm[name] = value;
                     if (value == null)
                     {
@@ -853,7 +860,7 @@ namespace VueCoreFramework.Data
                 else if (dataType?.DataType == DataType.Time)
                 {
                     var name = pInfo.Name.ToInitialLower();
-                    var value = pInfo.GetValue(item);
+                    var value = item == null ? null : pInfo.GetValue(item);
                     vm[name] = value;
                     if (value == null)
                     {
@@ -871,7 +878,7 @@ namespace VueCoreFramework.Data
                 else if (dataType?.DataType == DataType.DateTime || pInfo.PropertyType == typeof(DateTime))
                 {
                     var name = pInfo.Name.ToInitialLower();
-                    var value = pInfo.GetValue(item);
+                    var value = item == null ? null : pInfo.GetValue(item);
                     vm[name] = value;
                     if (value == null)
                     {
@@ -891,7 +898,7 @@ namespace VueCoreFramework.Data
                     || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(TimeSpan))
                 {
                     var name = pInfo.Name.ToInitialLower();
-                    var value = pInfo.GetValue(item);
+                    var value = item == null ? null : pInfo.GetValue(item);
                         vm[name] = value;
                     if (value == null)
                     {
@@ -908,7 +915,7 @@ namespace VueCoreFramework.Data
                 else if (pInfo.PropertyType == typeof(Guid)
                     || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(Guid))
                 {
-                    object value = pInfo.GetValue(item);
+                    object value = item == null ? null : pInfo.GetValue(item);
                     if (value != null && Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(Guid))
                     {
                         value = ((Guid?)value).Value;
@@ -933,7 +940,7 @@ namespace VueCoreFramework.Data
                     || pInfo.PropertyType == typeof(DataItem)
                     || pInfo.PropertyType.GetTypeInfo().IsSubclassOf(typeof(DataItem)))
                 {
-                    object value = pInfo.GetValue(item);
+                    object value = item == null ? null : pInfo.GetValue(item);
                     if (value == null)
                     {
                         vm[pInfo.Name.ToInitialLower()] = "[None]";
@@ -948,7 +955,7 @@ namespace VueCoreFramework.Data
                 // distinguishing between null and non-null values.
                 else
                 {
-                    object value = pInfo.GetValue(item);
+                    object value = item == null ? null : pInfo.GetValue(item);
                     if (value == null)
                     {
                         vm[pInfo.Name.ToInitialLower()] = "[None]";
@@ -1024,7 +1031,7 @@ namespace VueCoreFramework.Data
 
             // If the child is not a MenuClass item, it should be removed if it's now an orphan (has
             // no remaining relationships).
-            if (childProp.PropertyType.GetTypeInfo().GetCustomAttribute<MenuClassAttribute>() == null)
+            if (typeof(T).GetTypeInfo().GetCustomAttribute<MenuClassAttribute>() == null)
             {
                 // Check all navigation properties in the child item to see if it's an orphan.
                 var orphan = true;
@@ -1081,7 +1088,7 @@ namespace VueCoreFramework.Data
             // If the children are not MenuClass items, they should be removed if now orphans (have
             // no remaining relationships).
             bool removeOrphans = false;
-            if (childProp.PropertyType.GetTypeInfo().GetCustomAttribute<MenuClassAttribute>() == null)
+            if (typeof(T).GetTypeInfo().GetCustomAttribute<MenuClassAttribute>() == null)
             {
                 removeOrphans = true;
             }

@@ -8,7 +8,7 @@ namespace VueCoreFramework.Extensions
     public static class TypeExtensions
     {
         /// <summary>
-        /// Gets an Attribute of the given type for an object.
+        /// Gets an Attribute of the given type for an enum.
         /// </summary>
         public static T GetAttribute<T>(this object value) where T : Attribute
         {
@@ -41,7 +41,7 @@ namespace VueCoreFramework.Extensions
         public static bool IsIntegralNumeric(this Type type)
             => integralTypes.Contains(type)
             || integralTypes.Contains(Nullable.GetUnderlyingType(type));
-        
+
         /// <summary>
         /// Determines if the Type is a numeric type.
         /// </summary>

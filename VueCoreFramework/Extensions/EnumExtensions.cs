@@ -14,6 +14,10 @@ namespace VueCoreFramework.Extensions
         public static string GetDescription(Type type, object item)
         {
             string description = null;
+            if (item == null)
+            {
+                return description;
+            }
             var attr = item.GetAttribute<DescriptionAttribute>();
             if (attr == null)
             {

@@ -1,5 +1,4 @@
 ﻿using VueCoreFramework.Data.Attributes;
-using VueCoreFramework.Services;
 using Newtonsoft.Json;
 using System;
 using System.ComponentModel.DataAnnotations;
