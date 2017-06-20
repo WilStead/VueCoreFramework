@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace MVCCoreVue.Services
+namespace VueCoreFramework.Services
 {
     /// <summary>
     /// This interface is used by the application to send email.

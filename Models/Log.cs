@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace MVCCoreVue.Models
+namespace VueCoreFramework.Models
 {
     /// <summary>
     /// A model for log entries.

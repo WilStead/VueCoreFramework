@@ -4,11 +4,11 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MVCCoreVue.Data;
-using MVCCoreVue.Data.Attributes;
-using MVCCoreVue.Extensions;
-using MVCCoreVue.Models;
-using MVCCoreVue.Services;
+using VueCoreFramework.Data;
+using VueCoreFramework.Data.Attributes;
+using VueCoreFramework.Extensions;
+using VueCoreFramework.Models;
+using VueCoreFramework.Services;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
@@ -18,7 +18,7 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace MVCCoreVue.Controllers
+namespace VueCoreFramework.Controllers
 {
     /// <summary>
     /// An MVC controller for handling data manipulation tasks.

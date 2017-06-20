@@ -1,7 +1,7 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using System;
 
-namespace MVCCoreVue.Services
+namespace VueCoreFramework.Services
 {
     /// <summary>
     /// Options configuration object containing information about JWT bearer tokens.

@@ -11,9 +11,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using MVCCoreVue.Data;
-using MVCCoreVue.Models;
-using MVCCoreVue.Services;
+using VueCoreFramework.Data;
+using VueCoreFramework.Models;
+using VueCoreFramework.Services;
 using NLog;
 using NLog.Extensions.Logging;
 using NLog.Web;
@@ -21,7 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace MVCCoreVue
+namespace VueCoreFramework
 {
     public class Startup
     {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using System;
 
-namespace MVCCoreVue.Models
+namespace VueCoreFramework.Models
 {
     /// <summary>
     /// Represents a user.

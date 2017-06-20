@@ -1,12 +1,12 @@
-﻿using MVCCoreVue.Data.Attributes;
-using MVCCoreVue.Services;
+﻿using VueCoreFramework.Data.Attributes;
+using VueCoreFramework.Services;
 using Newtonsoft.Json;
 using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MVCCoreVue.Models
+namespace VueCoreFramework.Models
 {
     /// <summary>
     /// Types of city transportation.

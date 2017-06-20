@@ -1,4 +1,4 @@
-﻿namespace MVCCoreVue.Services
+﻿namespace VueCoreFramework.Services
 {
     /// <summary>
     /// The colleciton of custom Roles used by the framework.

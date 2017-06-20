@@ -1,11 +1,11 @@
-﻿using MVCCoreVue.Data.Attributes;
+﻿using VueCoreFramework.Data.Attributes;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace MVCCoreVue.Models
+namespace VueCoreFramework.Models
 {
     /// <summary>
     /// A <see cref="DataItem"/> representing an airline.

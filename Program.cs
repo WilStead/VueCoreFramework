@@ -1,7 +1,7 @@
 using System.IO;
 using Microsoft.AspNetCore.Hosting;
 
-namespace MVCCoreVue
+namespace VueCoreFramework
 {
     public class Program
     {

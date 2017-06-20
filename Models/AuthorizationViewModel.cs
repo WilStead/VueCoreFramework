@@ -1,4 +1,4 @@
-﻿namespace MVCCoreVue.Models
+﻿namespace VueCoreFramework.Models
 {
     /// <summary>
     /// A ViewModel used to transfer information during user account authorization tasks.

@@ -1,4 +1,4 @@
-﻿namespace MVCCoreVue.Services
+﻿namespace VueCoreFramework.Services
 {
     /// <summary>
     /// Options configuration object containing information about the default admin email account.

@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MVCCoreVue.Models;
-using MVCCoreVue.Models.AccountViewModels;
-using MVCCoreVue.Services;
+using VueCoreFramework.Models;
+using VueCoreFramework.Models.AccountViewModels;
+using VueCoreFramework.Services;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -13,7 +13,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace MVCCoreVue.Controllers
+namespace VueCoreFramework.Controllers
 {
     /// <summary>
     /// An MVC controller for handling user account tasks.

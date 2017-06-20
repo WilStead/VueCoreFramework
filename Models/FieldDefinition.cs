@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MVCCoreVue.Models
+namespace VueCoreFramework.Models
 {
     /// <summary>
     /// A ViewModel for field definitions used by vue-form-generator.

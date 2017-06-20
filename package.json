@@ -1,7 +1,7 @@
 {
-  "name": "mvccorevue",
+  "name": "vuecoreframework",
   "version": "0.0.0",
-  "description": "ASP.NET Core MVC with Vue",
+  "description": "ASP.NET Core API with Vue SPA",
   "license": "UNLICENSED",
   "private": true,
   "devDependencies": {

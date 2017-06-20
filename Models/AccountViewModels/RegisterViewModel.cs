@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace MVCCoreVue.Models.AccountViewModels
+namespace VueCoreFramework.Models.AccountViewModels
 {
     /// <summary>
     /// A ViewModel used to transfer information during user account registration tasks.

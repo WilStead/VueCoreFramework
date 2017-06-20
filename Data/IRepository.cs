@@ -1,11 +1,11 @@
-﻿using MVCCoreVue.Models;
+﻿using VueCoreFramework.Models;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace MVCCoreVue.Data
+namespace VueCoreFramework.Data
 {
     /// <summary>
     /// Represents operations with an <see cref="ApplicationDbContext"/> for a particular class.

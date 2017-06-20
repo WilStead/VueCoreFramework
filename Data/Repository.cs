@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using MVCCoreVue.Controllers;
-using MVCCoreVue.Data.Attributes;
-using MVCCoreVue.Extensions;
-using MVCCoreVue.Models;
-using MVCCoreVue.Services;
+using VueCoreFramework.Controllers;
+using VueCoreFramework.Data.Attributes;
+using VueCoreFramework.Extensions;
+using VueCoreFramework.Models;
+using VueCoreFramework.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -14,7 +14,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MVCCoreVue.Data
+namespace VueCoreFramework.Data
 {
     /// <summary>
     /// Handles operations with an <see cref="ApplicationDbContext"/> for a particular class.

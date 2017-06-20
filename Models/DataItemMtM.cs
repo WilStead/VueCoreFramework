@@ -1,4 +1,4 @@
-﻿namespace MVCCoreVue.Models
+﻿namespace VueCoreFramework.Models
 {
     /// <summary>
     /// Represents a Many-to-Many join table entity class.

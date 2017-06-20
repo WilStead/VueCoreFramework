@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace MVCCoreVue.Models
+namespace VueCoreFramework.Models
 {
     /// <summary>
     /// A convenience subclass of <see cref="DataItem"/> which defines a Name property and overrides ToString to display that Name.

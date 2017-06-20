@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using MVCCoreVue.Services;
+using VueCoreFramework.Services;
 
-namespace MVCCoreVue.Controllers
+namespace VueCoreFramework.Controllers
 {
     /// <summary>
     /// The primary MVC controller for the site.

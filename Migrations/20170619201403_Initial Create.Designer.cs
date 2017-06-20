@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
-using MVCCoreVue.Data;
-using MVCCoreVue.Models;
+using VueCoreFramework.Data;
+using VueCoreFramework.Models;
 
-namespace MVCCoreVue.Migrations
+namespace VueCoreFramework.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20170619201403_Initial Create")]

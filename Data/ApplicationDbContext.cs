@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using MVCCoreVue.Models;
+using VueCoreFramework.Models;
 
-namespace MVCCoreVue.Data
+namespace VueCoreFramework.Data
 {
     /// <summary>
     /// The application's Entity Framework database context.

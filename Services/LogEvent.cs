@@ -1,4 +1,4 @@
-﻿namespace MVCCoreVue.Services
+﻿namespace VueCoreFramework.Services
 {
     /// <summary>
     /// A collection of log event codes.

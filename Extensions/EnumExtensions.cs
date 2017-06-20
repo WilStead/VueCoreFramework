@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 
-namespace MVCCoreVue.Extensions
+namespace VueCoreFramework.Extensions
 {
     public static class EnumExtensions
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MVCCoreVue.Data.Attributes
+namespace VueCoreFramework.Data.Attributes
 {
     /// <summary>
     /// Sets data type-specific information for use in the SPA framework.

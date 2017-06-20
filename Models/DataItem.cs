@@ -1,9 +1,9 @@
-﻿using MVCCoreVue.Data.Attributes;
+﻿using VueCoreFramework.Data.Attributes;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MVCCoreVue.Models
+namespace VueCoreFramework.Models
 {
     /// <summary>
     /// Represents a database object which can be displayed automatically by the SPA framework.

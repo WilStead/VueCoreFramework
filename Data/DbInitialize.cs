@@ -2,13 +2,13 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using MVCCoreVue.Models;
-using MVCCoreVue.Services;
+using VueCoreFramework.Models;
+using VueCoreFramework.Services;
 using System;
 using System.Linq;
 using System.Security.Claims;
 
-namespace MVCCoreVue.Data
+namespace VueCoreFramework.Data
 {
     /// <summary>
     /// Used to seed the application's database.

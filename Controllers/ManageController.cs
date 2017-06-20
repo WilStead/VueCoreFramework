@@ -4,17 +4,17 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using MVCCoreVue.Models;
-using MVCCoreVue.Models.ManageViewModels;
-using MVCCoreVue.Services;
+using VueCoreFramework.Models;
+using VueCoreFramework.Models.ManageViewModels;
+using VueCoreFramework.Services;
 using System.Security.Claims;
 using System;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using MVCCoreVue.Data;
+using VueCoreFramework.Data;
 using System.Collections.Generic;
 
-namespace MVCCoreVue.Controllers
+namespace VueCoreFramework.Controllers
 {
     /// <summary>
     /// An MVC controller for handling user management tasks.

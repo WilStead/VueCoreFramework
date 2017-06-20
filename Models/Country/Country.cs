@@ -1,5 +1,5 @@
-﻿using MVCCoreVue.Data.Attributes;
-using MVCCoreVue.Services;
+﻿using VueCoreFramework.Data.Attributes;
+using VueCoreFramework.Services;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MVCCoreVue.Models
+namespace VueCoreFramework.Models
 {
     /// <summary>
     /// A <see cref="DataItem"/> representing a country.

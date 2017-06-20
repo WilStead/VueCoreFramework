@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MVCCoreVue.Extensions
+namespace VueCoreFramework.Extensions
 {
     public static class StringExtensions
     {
