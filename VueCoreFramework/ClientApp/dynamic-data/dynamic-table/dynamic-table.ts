@@ -242,7 +242,7 @@ export default class DynamicTableComponent extends Vue {
 
     onAddSelect() {
         this.activity = true;
-        this.parentRepository.addChildrenToCollection(this.$route.fullPath, this.parentId, this.parentProp, this.selected.map(c => c.id))
+        this.parentRepository.addChildrenToCollection(this.$route.fullPath, this.parentId, this.parentProp, this.selected.map(c => c[c['primaryKeyProperty']]))
             .then(data => {
                 if (data.error) {
                     this.errorMessage = data.error;
@@ -270,13 +270,13 @@ export default class DynamicTableComponent extends Vue {
     onDelete() {
         this.activity = true;
         if (this.operation === 'collection') {
-            this.repository.removeRangeFromParent(this.$route.fullPath, this.childProp, this.selected.map(i => i.id))
+            this.repository.removeRangeFromParent(this.$route.fullPath, this.childProp, this.selected.map(i => i[i['primaryKeyProperty']]))
                 .then(data => {
                     if (data.error) {
                         this.errorMessage = data.error;
                     } else {
                         for (var i = 0; i < this.selected.length; i++) {
-                            this.items.splice(this.items.findIndex(d => d.id == this.selected[i].id), 1);
+                            this.items.splice(this.items.findIndex(d => d[d['primaryKeyProperty']] == this.selected[i][this.selected[i]['primaryKeyProperty']]), 1);
                         }
                         this.selected = [];
                     }
@@ -288,13 +288,13 @@ export default class DynamicTableComponent extends Vue {
                     ErrorMsg.logError("dynamic-table.onDelete", new Error(error));
                 });
         } else {
-            this.repository.removeRange(this.$route.fullPath, this.selected.map(i => i.id))
+            this.repository.removeRange(this.$route.fullPath, this.selected.map(i => i[i['primaryKeyProperty']]))
                 .then(data => {
                     if (data.error) {
                         this.errorMessage = data.error;
                     } else {
                         for (var i = 0; i < this.selected.length; i++) {
-                            this.items.splice(this.items.findIndex(d => d.id == this.selected[i].id), 1);
+                            this.items.splice(this.items.findIndex(d => d[d['primaryKeyProperty']] == this.selected[i][this.selected[i]['primaryKeyProperty']]), 1);
                         }
                         this.selected = [];
                     }
@@ -319,7 +319,7 @@ export default class DynamicTableComponent extends Vue {
                         this.errorMessage = data.error;
                     }
                     else {
-                        this.items.splice(this.items.findIndex(d => d.id == id), 1);
+                        this.items.splice(this.items.findIndex(d => d[d['primaryKeyProperty']] == id), 1);
                         let index = this.deletePendingChildItems.indexOf(id);
                         if (index !== -1) {
                             this.deletePendingChildItems.splice(index, 1);
@@ -339,7 +339,7 @@ export default class DynamicTableComponent extends Vue {
                         this.errorMessage = data.error;
                     }
                     else {
-                        this.items.splice(this.items.findIndex(d => d.id == id), 1);
+                        this.items.splice(this.items.findIndex(d => d[d['primaryKeyProperty']] == id), 1);
                         let index = this.deletePendingChildItems.indexOf(id);
                         if (index !== -1) {
                             this.deletePendingChildItems.splice(index, 1);
@@ -366,7 +366,7 @@ export default class DynamicTableComponent extends Vue {
                         this.errorMessage = data.error;
                     }
                     else {
-                        this.items.splice(this.items.findIndex(d => d.id == id), 1);
+                        this.items.splice(this.items.findIndex(d => d[d['primaryKeyProperty']] == id), 1);
                         let index = this.deletePendingItems.indexOf(id);
                         if (index !== -1) {
                             this.deletePendingItems.splice(index, 1);
@@ -386,7 +386,7 @@ export default class DynamicTableComponent extends Vue {
                         this.errorMessage = data.error;
                     }
                     else {
-                        this.items.splice(this.items.findIndex(d => d.id == id), 1);
+                        this.items.splice(this.items.findIndex(d => d[d['primaryKeyProperty']] == id), 1);
                         let index = this.deletePendingItems.indexOf(id);
                         if (index !== -1) {
                             this.deletePendingItems.splice(index, 1);
@@ -413,7 +413,7 @@ export default class DynamicTableComponent extends Vue {
                     this.errorMessage = data.error;
                 } else {
                     this.errorMessage = '';
-                    this.$router.push({ name: this.routeName, params: { operation: 'add', id: data.data.id } });
+                    this.$router.push({ name: this.routeName, params: { operation: 'add', id: data.data[data['primaryKeyProperty']] } });
                 }
             })
             .catch(error => {
@@ -425,7 +425,7 @@ export default class DynamicTableComponent extends Vue {
 
     onRemoveSelect() {
         this.activity = true;
-        this.parentRepository.removeChildrenFromCollection(this.$route.fullPath, this.parentId, this.parentProp, this.selectedChildren.map(c => c.id))
+        this.parentRepository.removeChildrenFromCollection(this.$route.fullPath, this.parentId, this.parentProp, this.selectedChildren.map(c => c[c['primaryKeyProperty']]))
             .then(data => {
                 if (data.error) {
                     this.errorMessage = data.error;
@@ -452,7 +452,7 @@ export default class DynamicTableComponent extends Vue {
             this.selectErrorDialogMessage = "You can only select a single item.";
             this.selectErrorDialogShown = true;
         } else if (this.childProp) {
-            this.repository.replaceChild(this.$route.fullPath, this.parentId, this.selected[0].id, this.childProp)
+            this.repository.replaceChild(this.$route.fullPath, this.parentId, this.selected[0][this.selected[0]['primaryKeyProperty']], this.childProp)
                 .then(data => {
                     if (data.error) {
                         this.errorMessage = data.error;

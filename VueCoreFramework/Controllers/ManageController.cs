@@ -83,19 +83,21 @@ namespace VueCoreFramework.Controllers
             }
 
             user.NewEmail = model.Email;
+            await _userManager.UpdateAsync(user);
 
             // Generate an email with a callback URL pointing to the 'RestoreEmail' action in the
             // 'Account' controller, so the current user can undo this change, if it was a mistake,
             // or from an unauthorized source.
-            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var restoreCallbackUrl = Url.Action(nameof(AccountController.RestoreEmail), "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
+            var confirmCode = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var restoreCallbackUrl = Url.Action(nameof(AccountController.RestoreEmail), "Account", new { userId = user.Id, code = confirmCode }, protocol: HttpContext.Request.Scheme);
             await _emailSender.SendEmailAsync(user.Email, "Confirm your email change",
                 $"A request was made to change the email address on your account from this email address to a new one. If this was a mistake, please click this link to reject the requested change: <a href='{restoreCallbackUrl}'>link</a>");
 
             // Generate an email with a callback URL pointing to the 'ChangeEmail' action in the
             // 'Account' controller, which will confirm the change by validating that the newly
             // requested email belongs to the user.
-            var changeCallbackUrl = Url.Action(nameof(AccountController.ChangeEmail), "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
+            var changeCode = await _userManager.GenerateChangeEmailTokenAsync(user, user.NewEmail);
+            var changeCallbackUrl = Url.Action(nameof(AccountController.ChangeEmail), "Account", new { userId = user.Id, code = changeCode }, protocol: HttpContext.Request.Scheme);
             await _emailSender.SendEmailAsync(user.NewEmail, "Confirm your email change",
                 $"Please confirm your email address change by clicking this link: <a href='{changeCallbackUrl}'>link</a>");
 
@@ -161,7 +163,7 @@ namespace VueCoreFramework.Controllers
             }
 
             var old = user.UserName;
-            user.UserName = model.Username;
+            await _userManager.SetUserNameAsync(user, model.Username);
 
             _logger.LogInformation(LogEvent.USERNAME_CHANGE, "Username changed for {USER}, from {OLDUSERNAME} to {NEWUSERNAME}.", user.Email, old, user.UserName);
 
@@ -169,21 +171,93 @@ namespace VueCoreFramework.Controllers
         }
 
         /// <summary>
-        /// Called to delete a user account.
+        /// Called to initiate an account deletion for a user.
         /// </summary>
-        /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
-        /// <returns>A <see cref="ManageUserViewModel"/> used to transfer task data.</returns>
-        [HttpPost("api/[controller]/[action]/{xferUsername?}")]
-        public async Task<IActionResult> DeleteAccount(string xferUsername)
+        /// <returns>
+        /// An error if there is a problem; or redirects to the SPA page for account deletion.
+        /// </returns>
+        [HttpPost("api/[controller]/[action]")]
+        public async Task<IActionResult> DeleteAccount()
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                return Json(new { error = "An error has occurred. Your account was not deleted." });
+                return Json(new { error = "An error has occurred." });
             }
             if (user.AdminLocked)
             {
                 return Json(new { error = $"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance." });
+            }
+            if (user.LastEmailChange > DateTime.Now.Subtract(TimeSpan.FromDays(1)))
+            {
+                // Deletion within a day of changing the email is prevented to allow time for a user
+                // to recover from an unauthorized email change.
+                return Json(new { error = "You may not delete your account less than one day after changing the email on the account." });
+            }
+
+            // Redirect to the 'delete account' page in the SPA with a code that will later be used
+            // to verify the user by email.
+            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            return RedirectToAction(nameof(HomeController.Index), "Home", new { forwardUrl = $"/user/delete/:{code}" });
+        }
+
+        /// <summary>
+        /// Called to confirm an account deletion for a user.
+        /// </summary>
+        /// <param name="code">A confirmation token.</param>
+        /// <param name="xferUsername">
+        /// Optional: the username of a user to whom all owned data and group manager roles will be transferred.
+        /// </param>
+        /// <returns>
+        /// An error if there is a problem; or an Ok result.
+        /// </returns>
+        [HttpPost("api/[controller]/[action]")]
+        public async Task<IActionResult> DeleteAccountConfirm(string code, string xferUsername)
+        {
+            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            if (user == null)
+            {
+                return Json(new { error = "An error has occurred." });
+            }
+            if (user.AdminLocked)
+            {
+                return Json(new { error = $"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance." });
+            }
+            var restoreCallbackUrl = Url.Action(
+                nameof(ManageController.DeleteAccountCallback),
+                "Manage",
+                new { userId = user.Id, code = code, xferUsername = xferUsername },
+                protocol: HttpContext.Request.Scheme);
+            var loginLink = Url.Action(nameof(HomeController.Index), "Home", new { forwardUrl = "/login" });
+            await _emailSender.SendEmailAsync(user.Email, "Confirm your account deletion",
+                $"A request was made to delete your account. If you wish to permanently delete your account, please click this link to confirm: <a href='{restoreCallbackUrl}'>link</a>. If you did not initiate this action, please do not click the link. Instead, you should <a href='{loginLink}'>log into your account</a> and change your password to prevent any further unauthorized use.");
+            return Ok();
+        }
+
+        /// <summary>
+        /// The endpoint reached when a user clicks the link in an email sent to confirm an account deletion.
+        /// </summary>
+        /// <returns>Redirects to the home page.</returns>
+        [HttpPost]
+        public async Task<IActionResult> DeleteAccountCallback(string userId, string code, string xferUsername)
+        {
+            if (userId == null || code == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+            }
+            if (user.AdminLocked)
+            {
+                return Json(new { error = $"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance." });
+            }
+            var result = await _userManager.ConfirmEmailAsync(user, code);
+            if (!result.Succeeded)
+            {
+                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
 
             var claims = await _userManager.GetClaimsAsync(user);
@@ -261,9 +335,9 @@ namespace VueCoreFramework.Controllers
                         {
                             var dataType = ownerClaim.Value.Substring(0, index);
                             var id = ownerClaim.Value.Substring(index + 1, ownerClaim.Value.Length - index - 2);
-                            if (Guid.TryParse(id, out Guid guid) && DataController.TryGetRepository(_context, dataType, out IRepository repository))
+                            if (DataController.TryGetRepository(_context, dataType, out IRepository repository))
                             {
-                                await repository.RemoveAsync(guid);
+                                await repository.RemoveAsync(id);
                             }
                         }
                     }
@@ -275,9 +349,11 @@ namespace VueCoreFramework.Controllers
                 }
             }
 
+            await _userManager.DeleteAsync(user);
+
             _logger.LogInformation(LogEvent.DELETE_ACCOUNT, "User {USER} has deleted their account.", user.Email);
 
-            return Ok();
+            return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
         /// <summary>
@@ -406,7 +482,7 @@ namespace VueCoreFramework.Controllers
                 return Json(new { error = "The account you specified is already locked." });
             }
             lockUser.AdminLocked = true;
-            await _context.SaveChangesAsync();
+            await _userManager.UpdateAsync(lockUser);
 
             _logger.LogInformation(LogEvent.LOCK_ACCOUNT, "The account belonging to User {USER} has been locked by Admin {ADMIN}.", lockUser.Email, user.Email);
 
@@ -515,7 +591,7 @@ namespace VueCoreFramework.Controllers
                 return Json(new { error = "The account you specified is not locked." });
             }
             lockUser.AdminLocked = false;
-            await _context.SaveChangesAsync();
+            await _userManager.UpdateAsync(lockUser);
 
             _logger.LogInformation(LogEvent.UNLOCK_ACCOUNT, "The account belonging to User {USER} has been unlocked by Admin {ADMIN}.", lockUser.Email, user.Email);
 

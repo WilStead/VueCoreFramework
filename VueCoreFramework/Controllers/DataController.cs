@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using VueCoreFramework.Data;
 using VueCoreFramework.Data.Attributes;
 using VueCoreFramework.Extensions;
@@ -17,6 +16,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace VueCoreFramework.Controllers
 {
@@ -88,9 +88,8 @@ namespace VueCoreFramework.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            var hasParent = Guid.TryParse(parentId, out Guid guid);
             PropertyInfo pInfo = null;
-            if (hasParent && !string.IsNullOrEmpty(childProp))
+            if (!string.IsNullOrEmpty(parentId) && !string.IsNullOrEmpty(childProp))
             {
                 pInfo = repository.GetType()
                     .GenericTypeArguments
@@ -100,8 +99,8 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                var newItem = await repository.AddAsync(pInfo, hasParent ? guid : (Guid?)null);
-                var claimValue = $"{dataType}{{{newItem["id"]}}}";
+                var newItem = await repository.AddAsync(pInfo, parentId);
+                var claimValue = $"{dataType}{{{newItem[newItem[repository.PrimaryKeyVMProperty] as string]}}}";
                 await _userManager.AddClaimsAsync(user, new Claim[] {
                     new Claim(CustomClaimTypes.PermissionDataOwner, claimValue),
                     new Claim(CustomClaimTypes.PermissionDataAll, claimValue)
@@ -137,10 +136,6 @@ namespace VueCoreFramework.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            if (!Guid.TryParse(id, out Guid guid))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
@@ -164,18 +159,6 @@ namespace VueCoreFramework.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            List<Guid> childGuids = new List<Guid>();
-            foreach (var childId in childIds)
-            {
-                if (!Guid.TryParse(childId, out Guid childGuid))
-                {
-                    return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-                }
-                else
-                {
-                    childGuids.Add(childGuid);
-                }
-            }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
                 .FirstOrDefault()
@@ -187,7 +170,7 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                await repository.AddChildrenToCollectionAsync(guid, pInfo, childGuids);
+                await repository.AddChildrenToCollectionAsync(id, pInfo, childIds);
                 return Ok();
             }
             catch
@@ -217,10 +200,6 @@ namespace VueCoreFramework.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            if (!Guid.TryParse(id, out Guid guid))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
@@ -243,7 +222,7 @@ namespace VueCoreFramework.Controllers
             object item = null;
             try
             {
-                item = await repository.FindAsync(guid);
+                item = await repository.FindAsync(id);
             }
             catch
             {
@@ -336,70 +315,23 @@ namespace VueCoreFramework.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            if (!Guid.TryParse(id, out Guid guid))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
             if (string.IsNullOrEmpty(childProp))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            object item = null;
-            try
-            {
-                item = await repository.FindItemAsync(guid);
-            }
-            catch
-            {
-                return Json(new { error = "Item could not be accessed." });
-            }
-            if (item == null)
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/404" });
-            }
-            var typeInfo = item.GetType().GetTypeInfo();
-            var pInfo = typeInfo.GetProperty(childProp.ToInitialCaps());
+            var pInfo = repository.GetType()
+                .GenericTypeArguments
+                .FirstOrDefault()
+                .GetTypeInfo()
+                .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            var ptInfo = pInfo.PropertyType.GetTypeInfo();
             try
             {
-                if (ptInfo.IsGenericType
-                    && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>)))
-                {
-                    var children = pInfo.GetValue(item) as IEnumerable;
-                    if (ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem)))
-                    {
-                        var idInfo = ptInfo.GenericTypeArguments.FirstOrDefault().GetProperty("Id");
-                        List<Guid> childIds = new List<Guid>();
-                        foreach (var child in children)
-                        {
-                            childIds.Add((Guid)idInfo.GetValue(child));
-                        }
-                        return Json(childIds);
-                    }
-                    else if (ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().ImplementedInterfaces.Any(i => i == typeof(IDataItemMtM)))
-                    {
-                        var idInfo = ptInfo.GenericTypeArguments.FirstOrDefault().GetProperties().FirstOrDefault(p =>
-                            p.Name == pInfo.Name + "Id" || pInfo.Name.GetSingularForms().Any(s => p.Name == s + "Id"));
-                        List<Guid> childIds = new List<Guid>();
-                        foreach (var child in children)
-                        {
-                            childIds.Add((Guid)idInfo.GetValue(child));
-                        }
-                        return Json(childIds);
-                    }
-                    else
-                    {
-                        return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-                    }
-                }
-                else
-                {
-                    return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-                }
+                var childIds = await repository.GetAllChildIdsAsync(id, pInfo);
+                return Json(childIds);
             }
             catch
             {
@@ -425,10 +357,6 @@ namespace VueCoreFramework.Controllers
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
             if (string.IsNullOrEmpty(id))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
-            if (!Guid.TryParse(id, out Guid guid))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
@@ -466,8 +394,8 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                var childGuid = await repository.GetChildIdAsync(guid, pInfo);
-                return Json(new { response = childGuid });
+                var childId = await repository.GetChildIdAsync(id, pInfo);
+                return Json(new { response = childId });
             }
             catch
             {
@@ -518,10 +446,6 @@ namespace VueCoreFramework.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            if (!Guid.TryParse(id, out Guid guid))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
@@ -545,72 +469,20 @@ namespace VueCoreFramework.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            object item = null;
-            try
-            {
-                item = await repository.FindItemAsync(guid);
-            }
-            catch
-            {
-                return Json(new { error = "Item could not be accessed." });
-            }
-            if (item == null)
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/404" });
-            }
-            var typeInfo = item.GetType().GetTypeInfo();
-            var pInfo = typeInfo.GetProperty(childProp.ToInitialCaps());
-            if (pInfo == null)
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
-            var ptInfo = pInfo.PropertyType.GetTypeInfo();
-            IEnumerable children = null;
-            Type childType = null;
-            if (ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem)))
-            {
-                children = pInfo.GetValue(item) as IEnumerable;
-                childType = ptInfo.GenericTypeArguments.FirstOrDefault();
-            }
-            else if (ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().ImplementedInterfaces.Any(i => i == typeof(IDataItemMtM)))
-            {
-                var mtmChildren = pInfo.GetValue(item) as IEnumerable;
-                var nav = ptInfo.GenericTypeArguments.FirstOrDefault().GetProperties().FirstOrDefault(p =>
-                    p.Name == pInfo.Name || pInfo.Name.GetSingularForms().Contains(p.Name));
-                List<DataItem> navChildren = new List<DataItem>();
-                foreach (object mtmChild in mtmChildren)
-                {
-                    foreach (var reference in _context.Entry(mtmChild).References)
-                    {
-                        reference.Load();
-                    }
-                    navChildren.Add(nav.GetValue(mtmChild) as DataItem);
-                }
-                children = navChildren;
-                childType = nav.PropertyType;
-            }
-            else
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
+            var pInfo = repository.GetType()
+                .GenericTypeArguments
+                .FirstOrDefault()
+                .GetTypeInfo()
+                .GetProperty(childProp.ToInitialCaps());
+            var childType = repository.EntityType.FindNavigation(pInfo).GetTargetType().ClrType;
             if (!AuthorizationController.IsAuthorized(claims, childType.Name, CustomClaimTypes.PermissionDataView))
             {
                 return Json(new { error = "You don't have permission to view items of this type." });
             }
             try
             {
-                var repoMethod = typeof(Repository<>)
-                    .MakeGenericType(childType)
-                    .GetMethod("GetPageItems");
-                return Json(repoMethod.Invoke(null, new object[] {
-                    children.Cast<DataItem>().AsQueryable(),
-                    search,
-                    sortBy,
-                    descending,
-                    page,
-                    rowsPerPage,
-                    claims
-                }));
+                var results = await repository.GetChildPageAsync(id, pInfo, search, sortBy, descending, page, rowsPerPage, claims);
+                return Json(results);
             }
             catch
             {
@@ -636,10 +508,6 @@ namespace VueCoreFramework.Controllers
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
             if (string.IsNullOrEmpty(id))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
-            if (!Guid.TryParse(id, out Guid guid))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
@@ -677,7 +545,7 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                var count = await repository.GetChildTotalAsync(guid, pInfo);
+                var count = await repository.GetChildTotalAsync(id, pInfo);
                 return Json(new { response = count });
             }
             catch
@@ -699,8 +567,16 @@ namespace VueCoreFramework.Controllers
             try
             {
                 var types = _context.Model.GetEntityTypes()
-                    .Select(t => t.ClrType)
-                    .Where(t => t.GetTypeInfo().IsSubclassOf(typeof(DataItem)));
+                    .Where(e =>
+                        e.Name != nameof(_context.Logs)
+                        && e.Name != nameof(_context.RoleClaims)
+                        && e.Name != nameof(_context.Roles)
+                        && e.Name != nameof(_context.UserClaims)
+                        && e.Name != nameof(_context.UserLogins)
+                        && e.Name != nameof(_context.UserRoles)
+                        && e.Name != nameof(_context.Users)
+                        && e.Name != nameof(_context.UserTokens))
+                    .Select(t => t.ClrType);
                 IDictionary<string, dynamic> classes = new Dictionary<string, dynamic>();
                 foreach (var type in types)
                 {
@@ -817,21 +693,9 @@ namespace VueCoreFramework.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            List<Guid> exceptGuids = new List<Guid>();
-            foreach (var id in except)
-            {
-                if (!Guid.TryParse(id, out Guid guid))
-                {
-                    return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-                }
-                else
-                {
-                    exceptGuids.Add(guid);
-                }
-            }
             try
             {
-                return Json(repository.GetPage(search, sortBy, descending, page, rowsPerPage, exceptGuids, claims));
+                return Json(repository.GetPage(search, sortBy, descending, page, rowsPerPage, except, claims));
             }
             catch
             {
@@ -890,8 +754,16 @@ namespace VueCoreFramework.Controllers
             try
             {
                 var types = _context.Model.GetEntityTypes()
-                    .Select(t => t.ClrType)
-                    .Where(t => t.GetTypeInfo().IsSubclassOf(typeof(DataItem)));
+                    .Where(e =>
+                        e.Name != nameof(_context.Logs)
+                        && e.Name != nameof(_context.RoleClaims)
+                        && e.Name != nameof(_context.Roles)
+                        && e.Name != nameof(_context.UserClaims)
+                        && e.Name != nameof(_context.UserLogins)
+                        && e.Name != nameof(_context.UserRoles)
+                        && e.Name != nameof(_context.Users)
+                        && e.Name != nameof(_context.UserTokens))
+                    .Select(t => t.ClrType);
                 IDictionary<string, dynamic> classes = new Dictionary<string, dynamic>();
                 foreach (var type in types)
                 {
@@ -937,10 +809,6 @@ namespace VueCoreFramework.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            if (!Guid.TryParse(id, out Guid guid))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
@@ -962,7 +830,7 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                await repository.RemoveAsync(guid);
+                await repository.RemoveAsync(id);
                 _context.UserClaims.RemoveRange(_context.UserClaims.Where(c => c.ClaimValue == $"{dataType}{{{id}}}"));
                 _context.RoleClaims.RemoveRange(_context.RoleClaims.Where(c => c.ClaimValue == $"{dataType}{{{id}}}"));
                 await _context.SaveChangesAsync();
@@ -997,10 +865,6 @@ namespace VueCoreFramework.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            if (!Guid.TryParse(id, out Guid guid))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
@@ -1024,18 +888,6 @@ namespace VueCoreFramework.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            List<Guid> childGuids = new List<Guid>();
-            foreach (var childId in childIds)
-            {
-                if (!Guid.TryParse(childId, out Guid childGuid))
-                {
-                    return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-                }
-                else
-                {
-                    childGuids.Add(childGuid);
-                }
-            }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
                 .FirstOrDefault()
@@ -1047,7 +899,7 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                await repository.RemoveChildrenFromCollectionAsync(guid, pInfo, childGuids);
+                await repository.RemoveChildrenFromCollectionAsync(id, pInfo, childIds);
                 return Ok();
             }
             catch
@@ -1079,10 +931,6 @@ namespace VueCoreFramework.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            if (!Guid.TryParse(id, out Guid guid))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
@@ -1117,7 +965,7 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                var removed = await repository.RemoveFromParentAsync(guid, pInfo);
+                var removed = await repository.RemoveFromParentAsync(id, pInfo);
                 if (removed)
                 {
                     _context.UserClaims.RemoveRange(_context.UserClaims.Where(c => c.ClaimValue == $"{dataType}{{{id}}}"));
@@ -1167,25 +1015,16 @@ namespace VueCoreFramework.Controllers
                 var roleClaims = await _roleManager.GetClaimsAsync(role);
                 claims = claims.Concat(roleClaims).ToList();
             }
-            List<Guid> guids = new List<Guid>();
             foreach (var id in ids)
             {
-                if (Guid.TryParse(id, out Guid guid))
+                if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataAll, id))
                 {
-                    if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataAll, id))
-                    {
-                        return Json(new { error = "You don't have permission to remove one or more of these items." });
-                    }
-                    guids.Add(guid);
-                }
-                else
-                {
-                    return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                    return Json(new { error = "You don't have permission to remove one or more of these items." });
                 }
             }
             try
             {
-                await repository.RemoveRangeAsync(guids);
+                await repository.RemoveRangeAsync(ids);
                 _context.UserClaims.RemoveRange(_context.UserClaims.Where(c => ids.Any(id => c.ClaimValue == $"{dataType}{{{id}}}")));
                 _context.RoleClaims.RemoveRange(_context.RoleClaims.Where(c => ids.Any(id => c.ClaimValue == $"{dataType}{{{id}}}")));
                 await _context.SaveChangesAsync();
@@ -1240,17 +1079,9 @@ namespace VueCoreFramework.Controllers
             List<Guid> guids = new List<Guid>();
             foreach (var id in ids)
             {
-                if (Guid.TryParse(id, out Guid guid))
+                if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, id))
                 {
-                    if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, id))
-                    {
-                        return Json(new { error = "You don't have permission to edit one or more of these items." });
-                    }
-                    guids.Add(guid);
-                }
-                else
-                {
-                    return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                    return Json(new { error = "You don't have permission to edit one or more of these items." });
                 }
             }
             if (string.IsNullOrEmpty(childProp))
@@ -1268,7 +1099,7 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                var removedIds = await repository.RemoveRangeFromParentAsync(guids, pInfo);
+                var removedIds = await repository.RemoveRangeFromParentAsync(ids, pInfo);
                 _context.UserClaims.RemoveRange(_context.UserClaims.Where(c => removedIds.Any(id => c.ClaimValue == $"{dataType}{{{id}}}")));
                 _context.RoleClaims.RemoveRange(_context.RoleClaims.Where(c => removedIds.Any(id => c.ClaimValue == $"{dataType}{{{id}}}")));
                 await _context.SaveChangesAsync();
@@ -1307,11 +1138,6 @@ namespace VueCoreFramework.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            if (!Guid.TryParse(parentId, out Guid parentGuid)
-                || !Guid.TryParse(newChildId, out Guid newChildGuid))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
             if (string.IsNullOrEmpty(childProp))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
@@ -1346,11 +1172,11 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                var replacedId = await repository.ReplaceChildAsync(parentGuid, newChildGuid, pInfo);
-                if (replacedId.HasValue)
+                var replacedId = await repository.ReplaceChildAsync(parentId, newChildId, pInfo);
+                if (!string.IsNullOrEmpty(replacedId))
                 {
-                    _context.UserClaims.RemoveRange(_context.UserClaims.Where(c => c.ClaimValue == $"{dataType}{{{replacedId.Value}}}"));
-                    _context.RoleClaims.RemoveRange(_context.RoleClaims.Where(c => c.ClaimValue == $"{dataType}{{{replacedId.Value}}}"));
+                    _context.UserClaims.RemoveRange(_context.UserClaims.Where(c => c.ClaimValue == $"{dataType}{{{replacedId}}}"));
+                    _context.RoleClaims.RemoveRange(_context.RoleClaims.Where(c => c.ClaimValue == $"{dataType}{{{replacedId}}}"));
                     await _context.SaveChangesAsync();
                 }
                 return Ok();
@@ -1391,10 +1217,6 @@ namespace VueCoreFramework.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            if (!Guid.TryParse(parentId, out Guid parentGuid))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
             if (string.IsNullOrEmpty(childProp))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
@@ -1423,16 +1245,16 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                var (newItem, replacedId) = await repository.ReplaceChildWithNewAsync(parentGuid, pInfo);
-                var claimValue = $"{dataType}{{{newItem["id"]}}}";
+                var (newItem, replacedId) = await repository.ReplaceChildWithNewAsync(parentId, pInfo);
+                var claimValue = $"{dataType}{{{newItem[newItem[repository.PrimaryKeyVMProperty] as string]}}}";
                 await _userManager.AddClaimsAsync(user, new Claim[] {
                     new Claim(CustomClaimTypes.PermissionDataOwner, claimValue),
                     new Claim(CustomClaimTypes.PermissionDataAll, claimValue)
                 });
-                if (replacedId.HasValue)
+                if (!string.IsNullOrEmpty(replacedId))
                 {
-                    _context.UserClaims.RemoveRange(_context.UserClaims.Where(c => c.ClaimValue == $"{dataType}{{{replacedId.Value}}}"));
-                    _context.RoleClaims.RemoveRange(_context.RoleClaims.Where(c => c.ClaimValue == $"{dataType}{{{replacedId.Value}}}"));
+                    _context.UserClaims.RemoveRange(_context.UserClaims.Where(c => c.ClaimValue == $"{dataType}{{{replacedId}}}"));
+                    _context.RoleClaims.RemoveRange(_context.RoleClaims.Where(c => c.ClaimValue == $"{dataType}{{{replacedId}}}"));
                     await _context.SaveChangesAsync();
                 }
                 return Json(new { data = newItem });
@@ -1467,7 +1289,7 @@ namespace VueCoreFramework.Controllers
         private static IRepository GetRepository(Type type, ApplicationDbContext context)
             => (IRepository)Activator.CreateInstance(typeof(Repository<>).MakeGenericType(type), context);
 
-        private bool TryResolveObject(string dataType, JObject item, out DataItem obj, out Type type)
+        private bool TryResolveObject(string dataType, JObject item, out object obj, out Type type)
         {
             obj = null;
             type = null;
@@ -1487,7 +1309,7 @@ namespace VueCoreFramework.Controllers
             type = entity.ClrType;
             try
             {
-                obj = item.ToObject(type) as DataItem;
+                obj = item.ToObject(type);
             }
             catch
             {
@@ -1508,7 +1330,7 @@ namespace VueCoreFramework.Controllers
         [HttpPost]
         public async Task<IActionResult> Update(string dataType, [FromBody]JObject item)
         {
-            if (!TryResolveObject(dataType, item, out DataItem obj, out Type type))
+            if (!TryResolveObject(dataType, item, out object obj, out Type type))
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
@@ -1527,11 +1349,12 @@ namespace VueCoreFramework.Controllers
                 var roleClaims = await _roleManager.GetClaimsAsync(role);
                 claims = claims.Concat(roleClaims).ToList();
             }
-            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, obj.Id.ToString()))
+            IRepository repository = GetRepository(type, _context);
+            var id = repository.PrimaryKey.PropertyInfo.GetValue(obj).ToString();
+            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, id))
             {
                 return Json(new { error = "You don't have permission to edit this item." });
             }
-            IRepository repository = GetRepository(type, _context);
             try
             {
                 var updatedItem = await repository.UpdateAsync(obj);

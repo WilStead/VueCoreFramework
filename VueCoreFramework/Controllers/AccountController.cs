@@ -66,13 +66,14 @@ namespace VueCoreFramework.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            var result = await _userManager.ConfirmEmailAsync(user, code);
+            var old = user.Email;
+            var result = await _userManager.ChangeEmailAsync(user, user.NewEmail, code);
             if (result.Succeeded)
             {
                 _logger.LogInformation(LogEvent.EMAIL_CHANGE_CONFIRM, "Email change confirmed from {OLDEMAIL} to {NEWEMAIL}.", user.Email, user.NewEmail);
-                user.OldEmail = user.Email;
-                user.Email = user.NewEmail;
+                user.OldEmail = old;
                 user.NewEmail = null;
+                await _userManager.UpdateAsync(user);
             }
             return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = result.Succeeded ? "/user/email/confirm" : "/error/400" });
         }
@@ -491,6 +492,7 @@ namespace VueCoreFramework.Controllers
                     _logger.LogInformation(LogEvent.EMAIL_CHANGE_CANCEL, "Email change canceled from {EMAIL} to {NEWEMAIL}.", user.Email, user.NewEmail);
                     user.NewEmail = null;
                 }
+                await _userManager.UpdateAsync(user);
             }
             return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = result.Succeeded ? "/user/email/restore" : "/error/400" });
         }

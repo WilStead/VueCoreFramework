@@ -11,8 +11,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace VueCoreFramework.Data
 {
@@ -20,14 +20,31 @@ namespace VueCoreFramework.Data
     /// Handles operations with an <see cref="ApplicationDbContext"/> for a particular class.
     /// </summary>
     /// <typeparam name="T">
-    /// The <see cref="DataItem"/> class whose operations with the <see cref="ApplicationDbContext"/>
-    /// are handled by this <see cref="Repository{T}"/>.
+    /// The class whose operations with the <see cref="ApplicationDbContext"/> are handled by this
+    /// <see cref="Repository{T}"/>.
     /// </typeparam>
-    public class Repository<T> : IRepository where T : DataItem
+    public class Repository<T> : IRepository where T : class
     {
+        private const string primaryKeyVMProperty = "primaryKeyProperty";
         private readonly ApplicationDbContext _context;
+        private readonly bool _isMenuClass;
 
         private DbSet<T> items;
+
+        /// <summary>
+        /// The <see cref="IEntityType"/> of this Repository.
+        /// </summary>
+        public IEntityType EntityType { get; }
+
+        /// <summary>
+        /// The primary key <see cref="IProperty"/> of this Repository's entity type.
+        /// </summary>
+        public IProperty PrimaryKey { get; }
+
+        /// <summary>
+        /// The name of the ViewModel property which indicates the primary key. Constant.
+        /// </summary>
+        public string PrimaryKeyVMProperty { get; }
 
         /// <summary>
         /// Initializes a new instance of <see cref="Repository{T}"/>.
@@ -36,6 +53,11 @@ namespace VueCoreFramework.Data
         public Repository(ApplicationDbContext context)
         {
             _context = context;
+            EntityType = GetEntityType(context, typeof(T));
+            _isMenuClass = typeof(T).GetTypeInfo().GetCustomAttribute<MenuClassAttribute>() != null;
+            PrimaryKey = EntityType.FindPrimaryKey().Properties.FirstOrDefault();
+            PrimaryKeyVMProperty = primaryKeyVMProperty;
+
             items = _context.Set<T>();
         }
 
@@ -47,75 +69,66 @@ namespace VueCoreFramework.Data
         /// An optional navigation property which will be set on the new object.
         /// </param>
         /// <param name="parentId">
-        /// The primary key of the entity which will be set on the <paramref name="childProp"/> property.
+        /// The primary key of the entity which will be set on the <paramref name="childProp"/> property, as a string.
         /// </param>
         /// <returns>A ViewModel instance representing the newly added entity.</returns>
-        public async Task<IDictionary<string, object>> AddAsync(PropertyInfo childProp, Guid? parentId)
+        public async Task<IDictionary<string, object>> AddAsync(PropertyInfo childProp, string parentId)
         {
             var item = typeof(T).GetConstructor(Type.EmptyTypes).Invoke(new object[] { });
 
-            if (childProp != null && parentId.HasValue)
+            if (childProp != null && !string.IsNullOrEmpty(parentId))
             {
-                typeof(T).GetProperty(childProp.Name + "Id").SetValue(item, parentId.Value);
-            }
-
-            // Add any required child objects.
-            foreach (var pInfo in typeof(T).GetProperties()
-                .Where(p =>
-                (p.PropertyType == typeof(DataItem) || p.PropertyType.GetTypeInfo().IsSubclassOf(typeof(DataItem)))
-                && p.GetCustomAttribute<RequiredAttribute>() != null))
-            {
-                var newChild = pInfo.PropertyType.GetConstructor(Type.EmptyTypes).Invoke(new object[] { });
-                pInfo.SetValue(item, newChild);
+                var parentKey = GetPrimaryKeyFromString(childProp.PropertyType, parentId);
+                EntityType.FindNavigation(childProp)
+                    .ForeignKey.Properties.FirstOrDefault()
+                    .PropertyInfo.SetValue(item, parentKey);
             }
 
             items.Add(item as T);
             await _context.SaveChangesAsync();
 
-            foreach (var reference in _context.Entry(item).References)
-            {
-                reference.Load();
-            }
-            foreach (var collection in _context.Entry(item).Collections)
-            {
-                collection.Load();
-            }
-            return GetViewModel(item as T);
+            return GetViewModel(_context, item as T);
         }
 
         /// <summary>
         /// Asynchronously adds an assortment of child entities to a parent entity under the given
         /// navigation property.
         /// </summary>
-        /// <param name="id">The primary key of the parent entity.</param>
+        /// <param name="id">The primary key of the parent entity, as a string.</param>
         /// <param name="childProp">The navigation property to which the children will be added.</param>
-        /// <param name="childIds">The primary keys of the child entities which will be added.</param>
-        public async Task AddChildrenToCollectionAsync(Guid id, PropertyInfo childProp, IEnumerable<Guid> childIds)
+        /// <param name="childIds">The primary keys of the child entities which will be added, as strings.</param>
+        public async Task AddChildrenToCollectionAsync(string id, PropertyInfo childProp, IEnumerable<string> childIds)
         {
+            var mtmEntityType = EntityType.FindNavigation(childProp).GetTargetType();
+            var mtmType = mtmEntityType.ClrType;
+
             var ptInfo = childProp.PropertyType.GetTypeInfo();
-            var mtmType = ptInfo.GenericTypeArguments.FirstOrDefault();
             var add = ptInfo.GetGenericTypeDefinition()
                         .MakeGenericType(mtmType)
                         .GetMethod("Add");
-            var mtmCon = mtmType.GetConstructor(Type.EmptyTypes);
-            var singulars = childProp.Name.GetSingularForms();
-            var mtmChildProp = mtmType.GetProperties().Where(p => singulars.Contains(p.Name)).FirstOrDefault();
-            var mtmChildIdProp = mtmType.GetProperty(mtmChildProp.Name + "Id");
-            var mtmParentIdProp = mtmType.GetProperties().FirstOrDefault(t => t.PropertyType == typeof(Guid) && t != mtmChildIdProp);
 
-            var parent = await FindItemAsync(id);
+            var mtmCon = mtmType.GetConstructor(Type.EmptyTypes);
+
+            var navs = mtmEntityType.GetNavigations();
+            var mtmParentNav = navs.FirstOrDefault(n => n.FindInverse() == childProp);
+            var mtmChildNav = navs.FirstOrDefault(n => n != mtmParentNav);
+
+            var parentPK = GetPrimaryKeyFromString(id);
+            var parent = await FindItemWithPKAsync(parentPK);
+
             foreach (var childId in childIds)
             {
                 var mtm = mtmCon.Invoke(new object[] { });
-                mtmChildIdProp.SetValue(mtm, childId);
-                mtmParentIdProp.SetValue(mtm, id);
+                var childPK = GetPrimaryKeyFromString(mtmChildNav.ClrType, childId);
+                mtmChildNav.ForeignKey.Properties.FirstOrDefault().PropertyInfo.SetValue(mtm, childPK);
+                mtmParentNav.ForeignKey.Properties.FirstOrDefault().PropertyInfo.SetValue(mtm, parentPK);
                 add.Invoke(childProp.GetValue(parent), new object[] { mtm });
             }
 
             await _context.SaveChangesAsync();
         }
 
-        private static bool AnyPropMatch(DataItem item, string search)
+        private static bool AnyPropMatch(T item, string search)
         {
             var type = typeof(T);
             foreach (var pInfo in type.GetProperties())
@@ -150,27 +163,26 @@ namespace VueCoreFramework.Data
         /// Finds an entity with the given primary key value and returns a ViewModel for that entity.
         /// If no entity is found, an empty ViewModel is returned (not null).
         /// </summary>
-        /// <param name="id">The primary key of the entity to be found.</param>
+        /// <param name="id">The primary key of the entity to be found, as a string.</param>
         /// <returns>A ViewModel representing the item found, or an empty ViewModel if none is found.</returns>
-        public async Task<IDictionary<string, object>> FindAsync(Guid id)
+        public async Task<IDictionary<string, object>> FindAsync(string id)
         {
-            if (id == null)
-            {
-                throw new ArgumentNullException(nameof(id));
-            }
-            var item = await items.FindAsync(id);
-            if (item != null)
-            {
-                foreach (var reference in _context.Entry(item).References)
-                {
-                    reference.Load();
-                }
-                foreach (var collection in _context.Entry(item).Collections)
-                {
-                    collection.Load();
-                }
-            }
-            return GetViewModel(item);
+            var key = GetPrimaryKeyFromString(id);
+            var item = await items.FindAsync(key);
+            return GetViewModel(_context, item);
+        }
+
+        /// <summary>
+        /// Finds an entity with the given primary key value. If no entity is found, then null is returned.
+        /// </summary>
+        /// <param name="id">The primary key of the entity to be found, as a string.</param>
+        /// <returns>
+        /// The item found, or null if none is found.
+        /// </returns>
+        public async Task<object> FindItemAsync(string id)
+        {
+            var key = GetPrimaryKeyFromString(id);
+            return await FindItemWithPKAsync(key);
         }
 
         /// <summary>
@@ -180,22 +192,14 @@ namespace VueCoreFramework.Data
         /// <returns>
         /// The item found, or null if none is found.
         /// </returns>
-        public async Task<DataItem> FindItemAsync(Guid id)
+        public async Task<object> FindItemWithPKAsync(object key)
         {
-            if (id == null)
-            {
-                throw new ArgumentNullException(nameof(id));
-            }
-            var item = await items.FindAsync(id);
+            var item = await items.FindAsync(key);
             if (item != null)
             {
-                foreach (var reference in _context.Entry(item).References)
+                foreach (var nav in _context.Entry(item).Navigations)
                 {
-                    reference.Load();
-                }
-                foreach (var collection in _context.Entry(item).Collections)
-                {
-                    collection.Load();
+                    nav.Load();
                 }
             }
             return item;
@@ -207,54 +211,113 @@ namespace VueCoreFramework.Data
         /// </summary>
         /// <returns>ViewModels representing the items in the set.</returns>
         public IEnumerable<IDictionary<string, object>> GetAll()
+            => items.Select(i => GetViewModel(_context, i));
+
+        /// <summary>
+        /// Finds the primary keys of all child entities in the given relationship, as strings.
+        /// </summary>
+        /// <param name="id">The primary key of the parent entity, as a string.</param>
+        /// <param name="childProp">The navigation property of the relationship.</param>
+        public async Task<IList<string>> GetAllChildIdsAsync(string id, PropertyInfo childProp)
         {
-            IQueryable<T> filteredItems = items.AsQueryable();
-
-            var tInfo = typeof(T).GetTypeInfo();
-            foreach (var pInfo in tInfo.GetProperties())
+            var item = await FindItemAsync(id);
+            var coll = _context.Entry(item).Collection(childProp.Name);
+            await coll.LoadAsync();
+            var childPKProp = coll.Metadata.GetTargetType().FindPrimaryKey().Properties.FirstOrDefault().PropertyInfo;
+            IList<string> childIds = new List<string>();
+            foreach (var child in coll.CurrentValue)
             {
-                var ptInfo = pInfo.PropertyType.GetTypeInfo();
-                if (pInfo.PropertyType == typeof(DataItem)
-                    || ptInfo.IsSubclassOf(typeof(DataItem))
-                    || (ptInfo.IsGenericType
-                    && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
-                    && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem))))
-                {
-                    filteredItems = filteredItems.Include(pInfo.Name);
-                }
+                childIds.Add(childPKProp.GetValue(child).ToString());
             }
-
-            return filteredItems.Select(i => GetViewModel(i)).AsEnumerable();
+            return childIds;
         }
 
         /// <summary>
-        /// Finds the primary key of a child entity in the given relationship.
+        /// Finds the primary key of a child entity in the given relationship, as a string.
         /// </summary>
-        /// <param name="id">The primary key of the parent entity.</param>
+        /// <param name="id">The primary key of the parent entity, as a string.</param>
         /// <param name="childProp">The navigation property of the relationship.</param>
-        /// <returns></returns>
-        public async Task<Guid> GetChildIdAsync(Guid id, PropertyInfo childProp)
+        public async Task<string> GetChildIdAsync(string id, PropertyInfo childProp)
         {
             var item = await FindItemAsync(id);
-            await _context.Entry(item).Reference(childProp.Name).LoadAsync();
-            return (childProp.GetValue(item) as DataItem).Id;
+            var nav = _context.Entry(item).Navigation(childProp.Name);
+            await nav.LoadAsync();
+            var child = childProp.GetValue(item);
+            return GetPrimaryKey(nav.Metadata.GetTargetType().ClrType)
+                .PropertyInfo.GetValue(child).ToString();
+        }
+
+        /// <summary>
+        /// Calculates and enumerates the set of child entities in a given relationship with the
+        /// given paging parameters, as ViewModels.
+        /// </summary>
+        /// <param name="dataType">The type of the parent entity.</param>
+        /// <param name="id">The primary key of the parent entity, as a string.</param>
+        /// <param name="childProp">The navigation property of the relationship on the parent entity.</param>
+        /// <param name="search">
+        /// An optional search term which will filter the results. Any string or numeric property
+        /// with matching text will be included.
+        /// </param>
+        /// <param name="sortBy">
+        /// An optional property name which will be used to sort the items before calculating the
+        /// page contents.
+        /// </param>
+        /// <param name="descending">
+        /// Indicates whether the sort is descending; if false, the sort is ascending.
+        /// </param>
+        /// <param name="page">The page number requested.</param>
+        /// <param name="rowsPerPage">The number of items per page.</param>
+        public async Task<IEnumerable<IDictionary<string, object>>> GetChildPageAsync(
+            string id,
+            PropertyInfo childProp,
+            string search,
+            string sortBy,
+            bool descending,
+            int page,
+            int rowsPerPage,
+            IList<Claim> claims)
+        {
+            var item = await FindItemAsync(id);
+            var coll = _context.Entry(item).Collection(childProp.Name);
+            await coll.LoadAsync();
+            var childType = EntityType.FindNavigation(childProp).GetTargetType();
+            var childRepo = (IRepository)Activator.CreateInstance(typeof(Repository<>).MakeGenericType(childType.ClrType), _context);
+            if (EntityType.FindNavigation(childProp.Name).FindInverse().IsCollection())
+            {
+                var navs = childType.GetNavigations();
+                var mtmParentNav = navs.FirstOrDefault(n => n.FindInverse() == childProp);
+                var mtmChildProp = navs.FirstOrDefault(n => n != mtmParentNav).PropertyInfo;
+
+                return childRepo.GetPageItems(
+                    coll.CurrentValue.Cast<object>().Select(c => mtmChildProp.GetValue(c)).AsQueryable(),
+                    search, sortBy, descending, page, rowsPerPage, claims);
+            }
+            else
+            {
+                return childRepo.GetPageItems(
+                    coll.CurrentValue.Cast<object>().AsQueryable(),
+                    search, sortBy, descending, page, rowsPerPage, claims);
+            }
         }
 
         /// <summary>
         /// Retrieves the total number of child entities in the given relationship.
         /// </summary>
-        /// <param name="id">The primary key of the parent entity.</param>
+        /// <param name="id">The primary key of the parent entity, as a string.</param>
         /// <param name="childProp">The navigation property of the relationship on the parent entity.</param>
         /// <returns>
         /// A <see cref="long"/> that represents the total number of children in the relationship.
         /// </returns>
-        public async Task<long> GetChildTotalAsync(Guid id, PropertyInfo childProp)
+        public async Task<long> GetChildTotalAsync(string id, PropertyInfo childProp)
         {
             var item = await FindItemAsync(id);
             await _context.Entry(item).Collection(childProp.Name).LoadAsync();
             var children = childProp.GetValue(item) as IEnumerable<object>;
             return children.LongCount();
         }
+
+        private static IEntityType GetEntityType(ApplicationDbContext context, Type type)
+            => context.Model.FindEntityType(type.FullName);
 
         private FieldDefinition GetFieldDefinition(PropertyInfo pInfo)
         {
@@ -264,9 +327,10 @@ namespace VueCoreFramework.Data
                 Model = pInfo.Name.ToInitialLower()
             };
 
-            // Guids are always hidden in the SPA framework.
-            if (pInfo.PropertyType == typeof(Guid)
-                || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(Guid))
+            var entityPInfo = EntityType.FindProperty(pInfo);
+
+            // Keys are always hidden in the SPA framework.
+            if (entityPInfo.IsPrimaryKey() || entityPInfo.IsForeignKey())
             {
                 fd.Type = "label";
                 fd.HideInTable = true;
@@ -287,295 +351,276 @@ namespace VueCoreFramework.Data
 
             fd.HideInTable = hidden?.HideInTable;
 
-            var dataType = pInfo.GetCustomAttribute<DataTypeAttribute>();
-            var step = pInfo.GetCustomAttribute<StepAttribute>();
-            var ptInfo = pInfo.PropertyType.GetTypeInfo();
-
-            // If a property is nullable, it will be marked as not required, unless a Required
-            // Attribute explicitly says otherwise.
-            var nullable = Nullable.GetUnderlyingType(pInfo.PropertyType) != null;
-
-            if (!string.IsNullOrEmpty(dataType?.CustomDataType))
+            // Navigation properties use special fields.
+            var nav = EntityType.FindNavigation(pInfo);
+            if (nav != null)
             {
-                if (dataType.CustomDataType == "Color")
+                // The input type for navigation properties is the type name.
+                fd.InputType = nav.GetTargetType().Name;
+
+                var inverse = nav.FindInverse();
+                fd.InverseType = inverse.Name;
+
+                if (nav.IsCollection())
                 {
-                    fd.Type = "vuetifyColor";
+                    // Children in a many-to-many relationship are manipulated in a table containing
+                    // all the items of the child type, where items can be added to or removed from
+                    // the parent's collection.
+                    if (inverse.IsCollection())
+                    {
+                        fd.Type = "objectMultiSelect";
+                    }
+                    // Children in a one-to-many relationship are manipulated in a table containing
+                    // only those items in the parent's collection. Adding or removing items to/from
+                    // the collection is accomplished by creating new items or deleting them (which
+                    // only deletes them fully when appropriate). This handles cases where the child
+                    // objects are nested child objects, child objects with multiple parent
+                    // relationships, and also items which are MenuClass types in their own right.
+                    else
+                    {
+                        fd.Type = "objectCollection";
+                    }
                 }
-                // Any custom data type not recognized as one of the special types handled above is
-                // treated as a simple text field.
+                // Reverse-navigation properties only allow view/edit. No adding/deleting, since the
+                // child object shouldn't add/delete a parent.
+                else if (nav.IsDependentToPrincipal())
+                {
+                    fd.Type = "objectReference";
+                }
+                // Children in a many-to-one relationship (i.e. which can have more than one
+                // parent) can be selected from a list, as well as added/edited/deleted.
+                else if (inverse.IsCollection())
+                {
+                    fd.Type = "objectSelect";
+                }
+                // Children in a one-to-one relationship are treated as purely nested objects, and
+                // can only be added, edited, and deleted, to prevent any child from being referenced
+                // by more than one parent inappropriately. In fact the child may have other
+                // relationships which result in it not being purely nested, or even be a MenuClass
+                // item in its own right, but for this relationship the controls make no assumptions.
                 else
+                {
+                    fd.Type = "object";
+                }
+            }
+            else
+            {
+                var dataType = pInfo.GetCustomAttribute<DataTypeAttribute>();
+                var step = pInfo.GetCustomAttribute<StepAttribute>();
+                var ptInfo = pInfo.PropertyType.GetTypeInfo();
+
+                if (!string.IsNullOrEmpty(dataType?.CustomDataType))
+                {
+                    if (dataType.CustomDataType == "Color")
+                    {
+                        fd.Type = "vuetifyColor";
+                    }
+                    // Any custom data type not recognized as one of the special types handled above is
+                    // treated as a simple text field.
+                    else
+                    {
+                        fd.Type = "vuetifyText";
+                        fd.InputType = "text";
+                        fd.Validator = "string";
+                    }
+                }
+                else if (dataType != null)
+                {
+                    switch (dataType.DataType)
+                    {
+                        case DataType.Currency:
+                            fd.Type = "vuetifyText";
+                            fd.InputType = "number";
+                            if (step != null)
+                            {
+                                fd.Step = Math.Abs(step.Step);
+                            }
+                            else
+                            {
+                                // If a step isn't specified, currency uses cents by default.
+                                fd.Step = 0.01;
+                            }
+                            fd.Validator = "number";
+                            break;
+                        case DataType.Date:
+                            fd.Type = "vuetifyDateTime";
+                            fd.InputType = "date";
+                            break;
+                        case DataType.DateTime:
+                            fd.Type = "vuetifyDateTime";
+                            fd.InputType = "dateTime";
+                            break;
+                        case DataType.Time:
+                            fd.Type = "vuetifyDateTime";
+                            fd.InputType = "time";
+                            break;
+                        case DataType.Duration:
+                            fd.Type = "vuetifyTimespan";
+                            var formatAttr = pInfo.GetCustomAttribute<DisplayFormatAttribute>();
+                            fd.InputType = formatAttr?.DataFormatString;
+                            fd.Validator = "timespan";
+                            if (step != null)
+                            {
+                                fd.Step = Math.Abs(step.Step);
+                            }
+                            else
+                            {
+                                // If a step isn't specified, duration uses milliseconds by default.
+                                fd.Step = 0.001;
+                            }
+                            break;
+                        case DataType.EmailAddress:
+                            fd.Type = "vuetifyText";
+                            fd.InputType = "email";
+                            fd.Validator = "email";
+                            break;
+                        case DataType.MultilineText:
+                            fd.Type = "vuetifyText";
+                            fd.InputType = "textArea";
+                            fd.Validator = "string";
+                            break;
+                        case DataType.Password:
+                            fd.Type = "vuetifyText";
+                            fd.InputType = "password";
+                            fd.Validator = "string";
+                            break;
+                        case DataType.PhoneNumber:
+                            fd.Type = "vuetifyText";
+                            fd.InputType = "telephone";
+                            // This regex is a permissive test for U.S. phone numbers, accepting letters
+                            // and most forms of "ext", but not invalid numbers (e.g. too short, too
+                            // long, or with invalid registers).
+                            fd.Pattern = @"1?(?:[.\s-]?[2-9]\d{2}[.\s-]?|\s?\([2-9]\d{2}\)\s?)(?:[1-9]\d{2}[.\s-]?\d{4}\s?(?:\s?([xX]|[eE][xX]|[eE][xX]\.|[eE][xX][tT]|[eE][xX][tT]\.)\s?\d{3,4})?|[a-zA-Z]{7})";
+                            fd.Validator = "string_regexp";
+                            break;
+                        case DataType.PostalCode:
+                            fd.Type = "vuetifyText";
+                            fd.InputType = "text";
+                            // This regex accepts both short and long U.S. postal codes.
+                            fd.Pattern = @"(^(?!0{5})(\d{5})(?!-?0{4})(|-\d{4})?$)";
+                            fd.Validator = "string_regexp";
+                            break;
+                        case DataType.ImageUrl:
+                        case DataType.Url:
+                            fd.Type = "vuetifyText";
+                            fd.InputType = "url";
+                            fd.Validator = "string";
+                            break;
+                        default:
+                            // If a data type was specified but not one of those recognized, it is
+                            // treated as a simple text field.
+                            fd.Type = "vuetifyText";
+                            fd.InputType = "text";
+                            fd.Validator = "string";
+                            break;
+                    }
+                }
+                // If a data type isn't specified explicitly, the type is determined by the Type of the property.
+                else if (pInfo.PropertyType == typeof(string))
                 {
                     fd.Type = "vuetifyText";
                     fd.InputType = "text";
                     fd.Validator = "string";
                 }
-            }
-            else if (dataType != null)
-            {
-                switch (dataType.DataType)
+                else if (pInfo.PropertyType == typeof(bool)
+                    || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(bool))
                 {
-                    case DataType.Currency:
-                        fd.Type = "vuetifyText";
-                        fd.InputType = "number";
-                        if (step != null)
+                    fd.Type = "vuetifyCheckbox";
+                }
+                else if (pInfo.PropertyType == typeof(DateTime))
+                {
+                    fd.Type = "vuetifyDateTime";
+                    fd.InputType = "dateTime";
+                }
+                else if (pInfo.PropertyType == typeof(TimeSpan)
+                    || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(TimeSpan))
+                {
+                    fd.Type = "vuetifyTimespan";
+                    var formatAttr = pInfo.GetCustomAttribute<DisplayFormatAttribute>();
+                    fd.InputType = formatAttr?.DataFormatString;
+                    fd.Validator = "timespan";
+                    if (step != null)
+                    {
+                        fd.Step = Math.Abs(step.Step);
+                    }
+                    else
+                    {
+                        // If a step isn't specified, duration uses milliseconds by default.
+                        fd.Step = 0.001;
+                    }
+                }
+                else if (ptInfo.IsEnum)
+                {
+                    fd.Type = "vuetifySelect";
+                    if (ptInfo.GetCustomAttribute<FlagsAttribute>() == null)
+                    {
+                        // Non-Flags enums are handled with single-selects.
+                        fd.InputType = "single";
+                    }
+                    else
+                    {
+                        // Flags enums are handled with multiselects.
+                        fd.InputType = "multiple";
+                    }
+                    if (fd.Values == null)
+                    {
+                        fd.Values = new List<ChoiceOption>();
+                    }
+                    foreach (var value in Enum.GetValues(pInfo.PropertyType))
+                    {
+                        fd.Values.Add(new ChoiceOption
                         {
-                            fd.Step = Math.Abs(step.Step);
+                            // The display text for each option is set to the enum value's description
+                            // (name if one isn't explicitly specified).
+                            Text = EnumExtensions.GetDescription(pInfo.PropertyType, value),
+                            Value = (int)value
+                        });
+                    }
+                }
+                else if (pInfo.PropertyType.IsNumeric())
+                {
+                    fd.Type = "vuetifyText";
+                    fd.InputType = "number";
+                    if (step != null)
+                    {
+                        if (pInfo.PropertyType.IsIntegralNumeric())
+                        {
+                            // If a step is specified for an integer-type numeric type, ensure it is not
+                            // less than 1, and is an integer.
+                            fd.Step = Math.Max(1, Math.Abs(Math.Round(step.Step)));
                         }
                         else
                         {
-                            // If a step isn't specified, currency uses cents by default.
-                            fd.Step = 0.01;
+                            // If a step is specified for a real-type numeric type, ensure it is not
+                            // equal to or less than 0.
+                            fd.Step = Math.Max(double.Epsilon, Math.Abs(step.Step));
                         }
-                        fd.Validator = "number";
-                        fd.Required = !nullable;
-                        break;
-                    case DataType.Date:
-                        fd.Type = "vuetifyDateTime";
-                        fd.InputType = "date";
-                        break;
-                    case DataType.DateTime:
-                        fd.Type = "vuetifyDateTime";
-                        fd.InputType = "dateTime";
-                        break;
-                    case DataType.Time:
-                        fd.Type = "vuetifyDateTime";
-                        fd.InputType = "time";
-                        break;
-                    case DataType.Duration:
-                        fd.Type = "vuetifyTimespan";
-                        var formatAttr = pInfo.GetCustomAttribute<DisplayFormatAttribute>();
-                        fd.InputType = formatAttr?.DataFormatString;
-                        fd.Validator = "timespan";
-                        if (step != null)
+                    }
+                    else
+                    {
+                        if (pInfo.PropertyType.IsRealNumeric())
                         {
-                            fd.Step = Math.Abs(step.Step);
+                            fd.Step = 0.1;
                         }
                         else
                         {
-                            // If a step isn't specified, duration uses milliseconds by default.
-                            fd.Step = 0.001;
+                            fd.Step = 1;
                         }
-                        fd.Required = !nullable;
-                        break;
-                    case DataType.EmailAddress:
-                        fd.Type = "vuetifyText";
-                        fd.InputType = "email";
-                        fd.Validator = "email";
-                        break;
-                    case DataType.MultilineText:
-                        fd.Type = "vuetifyText";
-                        fd.InputType = "textArea";
-                        fd.Validator = "string";
-                        break;
-                    case DataType.Password:
-                        fd.Type = "vuetifyText";
-                        fd.InputType = "password";
-                        fd.Validator = "string";
-                        break;
-                    case DataType.PhoneNumber:
-                        fd.Type = "vuetifyText";
-                        fd.InputType = "telephone";
-                        // This regex is a permissive test for U.S. phone numbers, accepting letters
-                        // and most forms of "ext", but not invalid numbers (e.g. too short, too
-                        // long, or with invalid registers).
-                        fd.Pattern = @"1?(?:[.\s-]?[2-9]\d{2}[.\s-]?|\s?\([2-9]\d{2}\)\s?)(?:[1-9]\d{2}[.\s-]?\d{4}\s?(?:\s?([xX]|[eE][xX]|[eE][xX]\.|[eE][xX][tT]|[eE][xX][tT]\.)\s?\d{3,4})?|[a-zA-Z]{7})";
-                        fd.Validator = "string_regexp";
-                        break;
-                    case DataType.PostalCode:
-                        fd.Type = "vuetifyText";
-                        fd.InputType = "text";
-                        // This regex accepts both short and long U.S. postal codes.
-                        fd.Pattern = @"(^(?!0{5})(\d{5})(?!-?0{4})(|-\d{4})?$)";
-                        fd.Validator = "string_regexp";
-                        break;
-                    case DataType.ImageUrl:
-                    case DataType.Url:
-                        fd.Type = "vuetifyText";
-                        fd.InputType = "url";
-                        fd.Validator = "string";
-                        break;
-                    default:
-                        // If a data type was specified but not one of those recognized, it is
-                        // treated as a simple text field.
-                        fd.Type = "vuetifyText";
-                        fd.InputType = "text";
-                        fd.Validator = "string";
-                        break;
+                    }
+                    fd.Validator = "number";
                 }
-            }
-            // If a data type isn't specified explicitly, the type is determined by the Type of the property.
-            else if (pInfo.PropertyType == typeof(string))
-            {
-                fd.Type = "vuetifyText";
-                fd.InputType = "text";
-                fd.Validator = "string";
-            }
-            else if (pInfo.PropertyType == typeof(bool)
-                || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(bool))
-            {
-                fd.Type = "vuetifyCheckbox";
-                fd.Required = !nullable;
-            }
-            else if (pInfo.PropertyType == typeof(DateTime))
-            {
-                fd.Type = "vuetifyDateTime";
-                fd.InputType = "dateTime";
-            }
-            else if (pInfo.PropertyType == typeof(TimeSpan)
-                || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(TimeSpan))
-            {
-                fd.Type = "vuetifyTimespan";
-                var formatAttr = pInfo.GetCustomAttribute<DisplayFormatAttribute>();
-                fd.InputType = formatAttr?.DataFormatString;
-                fd.Validator = "timespan";
-                if (step != null)
+                // Guids (when not used as keys or hidden) are shown as labels, since editing is not
+                // presumed to be valid.
+                else if (pInfo.PropertyType == typeof(Guid)
+                    || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(Guid))
                 {
-                    fd.Step = Math.Abs(step.Step);
+                    fd.Type = "label";
                 }
+                // Unrecognized types are represented as plain labels.
                 else
                 {
-                    // If a step isn't specified, duration uses milliseconds by default.
-                    fd.Step = 0.001;
+                    fd.Type = "label";
                 }
-                fd.Required = !nullable;
-            }
-            else if (ptInfo.IsEnum)
-            {
-                fd.Type = "vuetifySelect";
-                if (ptInfo.GetCustomAttribute<FlagsAttribute>() == null)
-                {
-                    // Non-Flags enums are handled with single-selects.
-                    fd.InputType = "single";
-                }
-                else
-                {
-                    // Flags enums are handled with multiselects.
-                    fd.InputType = "multiple";
-                }
-                if (fd.Values == null)
-                {
-                    fd.Values = new List<ChoiceOption>();
-                }
-                foreach (var value in Enum.GetValues(pInfo.PropertyType))
-                {
-                    fd.Values.Add(new ChoiceOption
-                    {
-                        // The display text for each option is set to the enum value's description
-                        // (name if one isn't explicitly specified).
-                        Text = EnumExtensions.GetDescription(pInfo.PropertyType, value),
-                        Value = (int)value
-                    });
-                }
-            }
-            else if (pInfo.PropertyType.IsNumeric())
-            {
-                fd.Type = "vuetifyText";
-                fd.InputType = "number";
-                if (step != null)
-                {
-                    if (pInfo.PropertyType.IsIntegralNumeric())
-                    {
-                        // If a step is specified for an integer-type numeric type, ensure it is not
-                        // less than 1, and is an integer.
-                        fd.Step = Math.Max(1, Math.Abs(Math.Round(step.Step)));
-                    }
-                    else
-                    {
-                        // If a step is specified for a real-type numeric type, ensure it is not
-                        // equal to or less than 0.
-                        fd.Step = Math.Max(double.Epsilon, Math.Abs(step.Step));
-                    }
-                }
-                else
-                {
-                    if (pInfo.PropertyType.IsRealNumeric())
-                    {
-                        fd.Step = 0.1;
-                    }
-                    else
-                    {
-                        fd.Step = 1;
-                    }
-                }
-                fd.Validator = "number";
-                fd.Required = !nullable;
-            }
-            else if (pInfo.PropertyType == typeof(DataItem) || ptInfo.IsSubclassOf(typeof(DataItem)))
-            {
-                // The input type for navigation properties is the type name (without the namespace).
-                fd.InputType = pInfo.PropertyType.Name.Substring(pInfo.PropertyType.Name.LastIndexOf('.') + 1);
-
-                var inverseAttr = pInfo.GetCustomAttribute<InversePropertyAttribute>();
-                PropertyInfo inverseProp = null;
-                if (inverseAttr != null)
-                {
-                    inverseProp = pInfo.PropertyType.GetProperty(inverseAttr.Property);
-                    // The pattern for navigation properties is the name of the inverse property.
-                    fd.InverseType = inverseProp?.Name;
-                }
-
-                // Reverse-navigation properties only allow view/edit. No adding/deleting, since the
-                // child object shouldn't add/delete a parent.
-                if (pInfo.GetGetMethod().IsVirtual)
-                {
-                    fd.Type = "objectReference";
-                }
-                else
-                {
-                    // Children in a many-to-one relationship (i.e. which can have more than one
-                    // parent) can be selected from a list, as well as added/edited/deleted.
-                    var inversePTInfo = inverseProp?.PropertyType.GetTypeInfo();
-                    if (inversePTInfo?.IsGenericType == true
-                        && inversePTInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>)))
-                    {
-                        fd.Type = "objectSelect";
-                    }
-                    // Children in a one-to-one relationship are treated as purely nested objects,
-                    // and can only be added, edited, and deleted, to prevent any child from being
-                    // referenced by more than one parent inappropriately. In fact the child may have
-                    // other relationships which result in it not being purely nested, or even be a
-                    // MenuClass item in its own right, but for this relationship the controls make
-                    // no assumptions.
-                    else
-                    {
-                        fd.Type = "object";
-                    }
-                }
-            }
-            // Children in a one-to-many relationship are manipulated in a table containing only
-            // those items in the parent's collection. Adding or removing items to/from the
-            // collection is accomplished by creating new items or deleting them (which only deletes
-            // them fully when appropriate). This handles cases where the child objects are nested
-            // child objects, child objects with multiple parent relationships, and also MenuClass
-            // items in their own right.
-            else if (ptInfo.IsGenericType
-                && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
-                && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem)))
-            {
-                fd.Type = "objectCollection";
-
-                var name = ptInfo.GenericTypeArguments.FirstOrDefault().Name;
-                fd.InputType = name.Substring(name.LastIndexOf('.') + 1);
-
-                var inverseAttr = pInfo.GetCustomAttribute<InversePropertyAttribute>();
-                fd.InverseType = inverseAttr?.Property;
-            }
-            // Children in a many-to-many relationship are manipulated in a table containing all the
-            // items of the child type, where items can be added to or removed from the parent's collection.
-            else if (ptInfo.IsGenericType
-                && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
-                && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().ImplementedInterfaces.Any(i => i == typeof(IDataItemMtM)))
-            {
-                fd.Type = "objectMultiSelect";
-
-                var name = ptInfo.GenericTypeArguments.FirstOrDefault().GetProperties().FirstOrDefault(p =>
-                    p.Name == pInfo.Name || pInfo.Name.GetSingularForms().Contains(p.Name)).Name;
-                fd.InputType = name.Substring(name.LastIndexOf('.') + 1);
-            }
-            // Unrecognized types are represented as plain labels.
-            else
-            {
-                fd.Type = "label";
             }
 
             var display = pInfo.GetCustomAttribute<DisplayAttribute>();
@@ -602,13 +647,9 @@ namespace VueCoreFramework.Data
 
             fd.Help = pInfo.GetCustomAttribute<HelpAttribute>()?.HelpText;
 
-            // If the Required Attribute is present the field is marked as such, but it is not marked
-            // as non-required if the attribute is missing, since the property may have already been
-            // assigned a required/non-rquired state based on being a nullable type.
-            if (pInfo.GetCustomAttribute<RequiredAttribute>() != null)
-            {
-                fd.Required = true;
-            }
+            fd.Required = nav != null
+                ? nav.IsDependentToPrincipal() && nav.ForeignKey.IsRequired
+                : !entityPInfo.IsNullable;
 
             if (pInfo.GetCustomAttribute<EditableAttribute>()?.AllowEdit == false)
             {
@@ -676,8 +717,7 @@ namespace VueCoreFramework.Data
         /// </summary>
         public IEnumerable<FieldDefinition> GetFieldDefinitions()
         {
-            var type = typeof(T);
-            foreach (var pInfo in type.GetProperties())
+            foreach (var pInfo in typeof(T).GetProperties())
             {
                 yield return GetFieldDefinition(pInfo);
             }
@@ -701,7 +741,7 @@ namespace VueCoreFramework.Data
         /// <param name="rowsPerPage">The number of items per page.</param>
         /// <param name="except">
         /// An enumeration of primary keys of items which should be excluded from the results before
-        /// caluclating the page contents.
+        /// caluclating the page contents, as strings.
         /// </param>
         public IEnumerable<IDictionary<string, object>> GetPage(
             string search,
@@ -709,9 +749,10 @@ namespace VueCoreFramework.Data
             bool descending,
             int page,
             int rowsPerPage,
-            IEnumerable<Guid> except,
+            IEnumerable<string> except,
             IList<Claim> claims)
-            => GetPageItems(items.Where(i => !except.Contains(i.Id)), search, sortBy, descending, page, rowsPerPage, claims);
+            => GetPageItems(items.Where(i => !except.Contains(PrimaryKey.PropertyInfo.GetValue(i).ToString())),
+                search, sortBy, descending, page, rowsPerPage, claims);
 
         /// <summary>
         /// Calculates and enumerates the given items with the given paging parameters, as ViewModels.
@@ -734,8 +775,8 @@ namespace VueCoreFramework.Data
         /// An enumeration of primary keys of items which should be excluded from the results before
         /// caluclating the page contents.
         /// </param>
-        public static IEnumerable<IDictionary<string, object>> GetPageItems(
-            IQueryable<DataItem> items,
+        public IEnumerable<IDictionary<string, object>> GetPageItems(
+            IQueryable<object> items,
             string search,
             string sortBy,
             bool descending,
@@ -744,25 +785,14 @@ namespace VueCoreFramework.Data
             IList<Claim> claims)
         {
             var dataType = typeof(T).Name;
-            IQueryable<DataItem> filteredItems = items.Where(i => AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView, i.Id.ToString()));
 
-            var tInfo = typeof(T).GetTypeInfo();
-            foreach (var pInfo in tInfo.GetProperties())
-            {
-                var ptInfo = pInfo.PropertyType.GetTypeInfo();
-                if (pInfo.PropertyType == typeof(DataItem)
-                    || ptInfo.IsSubclassOf(typeof(DataItem))
-                    || (ptInfo.IsGenericType
-                    && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
-                    && ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem))))
-                {
-                    filteredItems = filteredItems.Include(pInfo.Name);
-                }
-            }
+            IQueryable<T> filteredItems = items.Cast<T>().Where(i =>
+               AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView,
+               PrimaryKey.PropertyInfo.GetValue(i).ToString()));
 
             if (!string.IsNullOrEmpty(search))
             {
-                filteredItems = items.Where(i => AnyPropMatch(i, search));
+                filteredItems = filteredItems.Where(i => AnyPropMatch(i, search));
             }
 
             if (!string.IsNullOrEmpty(sortBy))
@@ -791,7 +821,78 @@ namespace VueCoreFramework.Data
                 filteredItems = filteredItems.Skip((page - 1) * rowsPerPage).Take(rowsPerPage);
             }
 
-            return filteredItems.ToList().Select(i => GetViewModel(i));
+            return filteredItems.ToList().Select(i => GetViewModel(_context, i));
+        }
+
+        private static IProperty GetPrimaryKey(IEntityType entityType)
+            => entityType.FindPrimaryKey().Properties.FirstOrDefault();
+
+        private IProperty GetPrimaryKey(Type type) => GetPrimaryKey(GetEntityType(_context, type));
+
+        private static object GetPrimaryKeyFromString(IEntityType entityType, string pk_string)
+        {
+            if (string.IsNullOrEmpty(pk_string))
+            {
+                throw new ArgumentNullException(nameof(pk_string));
+            }
+            var keyType = GetPrimaryKey(entityType).ClrType;
+            return GetPrimaryKeyFromStringBase(keyType, pk_string);
+        }
+
+        private object GetPrimaryKeyFromString(Type type, string pk_string)
+            => GetPrimaryKeyFromString(GetEntityType(_context, type), pk_string);
+
+        /// <summary>
+        /// Converts the given string into its equivalent primary key for this type.
+        /// </summary>
+        /// <param name="pk_string">The primary key to convert, as a string.</param>
+        /// <returns>The primary key, as whatever type is defined by the entity.</returns>
+        public object GetPrimaryKeyFromString(string pk_string)
+        {
+            if (string.IsNullOrEmpty(pk_string))
+            {
+                throw new ArgumentNullException(nameof(pk_string));
+            }
+            var keyType = PrimaryKey.ClrType;
+            return GetPrimaryKeyFromStringBase(keyType, pk_string);
+        }
+
+        private static object GetPrimaryKeyFromStringBase(Type keyType, string pk_string)
+        {
+            if (keyType == typeof(Guid))
+            {
+                if (Guid.TryParse(pk_string, out Guid guid))
+                {
+                    return guid;
+                }
+                else
+                {
+                    throw new ArgumentException($"The primary key of {typeof(T).Name} is Guid, and {nameof(pk_string)} is not a valid Guid.", nameof(pk_string));
+                }
+            }
+            else if (keyType == typeof(int))
+            {
+                if (int.TryParse(pk_string, out int intKey))
+                {
+                    return intKey;
+                }
+                else
+                {
+                    throw new ArgumentException($"The primary key of {typeof(T).Name} is int, and {nameof(pk_string)} is not a valid Guid.", nameof(pk_string));
+                }
+            }
+            else if (keyType == typeof(long))
+            {
+                if (long.TryParse(pk_string, out long longKey))
+                {
+                    return longKey;
+                }
+                else
+                {
+                    throw new ArgumentException($"The primary key of {typeof(T).Name} is long, and {nameof(pk_string)} is not a valid Guid.", nameof(pk_string));
+                }
+            }
+            else return pk_string;
         }
 
         /// <summary>
@@ -800,28 +901,68 @@ namespace VueCoreFramework.Data
         /// </summary>
         public async Task<long> GetTotalAsync() => await items.LongCountAsync();
 
-        private static IDictionary<string, object> GetViewModel(DataItem item)
+        private static IDictionary<string, object> GetViewModel(ApplicationDbContext context, T item)
         {
             IDictionary<string, object> vm = new Dictionary<string, object>();
+
+            var entityType = GetEntityType(context, typeof(T));
+            var entry = item == null ? null : context.Entry(item);
+
+            // Add a property to the VM which identifies the primary key.
+            vm[primaryKeyVMProperty] =
+                entityType.FindPrimaryKey().Properties.FirstOrDefault().Name;
+
             var tInfo = typeof(T).GetTypeInfo();
             foreach (var pInfo in tInfo.GetProperties())
             {
                 var ptInfo = pInfo.PropertyType.GetTypeInfo();
                 var dataType = pInfo.GetCustomAttribute<DataTypeAttribute>();
 
-                // Collection navigation properties are represented as placeholder text, varying
-                // depending on whether the collection is empty or not.
-                if (ptInfo.IsGenericType
-                    && ptInfo.GetGenericTypeDefinition().IsAssignableFrom(typeof(ICollection<>))
-                    && (ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().IsSubclassOf(typeof(DataItem))
-                    || ptInfo.GenericTypeArguments.FirstOrDefault().GetTypeInfo().ImplementedInterfaces.Any(i => i == typeof(IDataItemMtM))))
+                var nav = entityType.FindNavigation(pInfo.Name);
+                var entityProp = entityType.FindProperty(pInfo.Name);
+
+                if (nav != null)
                 {
-                    int count = item == null ? 0
-                        : (int)ptInfo.GetGenericTypeDefinition()
-                        .MakeGenericType(ptInfo.GenericTypeArguments.FirstOrDefault())
-                        .GetProperty("Count")
-                        .GetValue(pInfo.GetValue(item));
-                    vm[pInfo.Name.ToInitialLower()] = count > 0 ? "[...]" : "[None]";
+                    if (entry != null)
+                    {
+                        entry.Navigation(pInfo.Name).Load();
+                    }
+
+                    // Collection navigation properties are represented as placeholder text, varying
+                    // depending on whether the collection is empty or not.
+                    if (nav.IsCollection())
+                    {
+                        vm[pInfo.Name.ToInitialLower()] =
+                            (entry != null && entry.Collection(pInfo.Name).CurrentValue.GetEnumerator().MoveNext()
+                            ? "[...]"
+                            : "[None]");
+                    }
+                    else
+                    {
+                        var value = pInfo.GetValue(item);
+                        vm[pInfo.Name.ToInitialLower()] =
+                            (item == null || value == null ? "[None]" : value.ToString());
+                    }
+                }
+                // Keys are always hidden in the SPA framework, but are still included in the
+                // ViewModel since the framework must reference the keys in order to manage
+                // relationships.
+                else if (entityProp.IsKey() || entityProp.IsForeignKey())
+                {
+                    object value = item == null ? null : pInfo.GetValue(item);
+                    var nullableType = Nullable.GetUnderlyingType(pInfo.PropertyType);
+                    if (value != null && nullableType != null)
+                    {
+                        value = nullableType.GetProperty("Value").GetValue(value);
+                    }
+                    if (value == null)
+                    {
+                        vm[pInfo.Name.ToInitialLower()] = null;
+                    }
+                    else
+                    {
+                        vm[pInfo.Name.ToInitialLower()] = value.ToString();
+                    }
                 }
                 // Enum properties are given their actual (integer) value, but are also given a
                 // 'Formatted' property in the ViewModel which contains either the description, or
@@ -899,7 +1040,7 @@ namespace VueCoreFramework.Data
                 {
                     var name = pInfo.Name.ToInitialLower();
                     var value = item == null ? null : pInfo.GetValue(item);
-                        vm[name] = value;
+                    vm[name] = value;
                     if (value == null)
                     {
                         vm[name + "Formatted"] = "[None]";
@@ -910,56 +1051,34 @@ namespace VueCoreFramework.Data
                         vm[name + "Formatted"] = ts.ToString("c");
                     }
                 }
-                // Guid properties are always hidden in the SPA framework, but are still included in
-                // the ViewModel since the framework must reference the keys in order to manage relationships.
-                else if (pInfo.PropertyType == typeof(Guid)
-                    || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(Guid))
-                {
-                    object value = item == null ? null : pInfo.GetValue(item);
-                    if (value != null && Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(Guid))
-                    {
-                        value = ((Guid?)value).Value;
-                    }
-                    if (value == null || (Guid)value == Guid.Empty)
-                    {
-                        vm[pInfo.Name.ToInitialLower()] = null;
-                    }
-                    else
-                    {
-                        vm[pInfo.Name.ToInitialLower()] = value.ToString();
-                    }
-                }
-                // Other recognized types are represented with their ToString equivalent, or
-                // placeholder text for a null value. The SPA framework automatically omits values
-                // with this placeholder text when sending data back for update, avoiding overwriting
-                // previously null values with the placeholder text inappropriately.
-                else if (pInfo.PropertyType == typeof(string)
-                    || pInfo.PropertyType.IsNumeric()
-                    || pInfo.PropertyType == typeof(bool)
-                    || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(bool)
-                    || pInfo.PropertyType == typeof(DataItem)
-                    || pInfo.PropertyType.GetTypeInfo().IsSubclassOf(typeof(DataItem)))
-                {
-                    object value = item == null ? null : pInfo.GetValue(item);
-                    if (value == null)
-                    {
-                        vm[pInfo.Name.ToInitialLower()] = "[None]";
-                    }
-                    else
-                    {
-                        vm[pInfo.Name.ToInitialLower()] = value.ToString();
-                    }
-                }
-                // Unsupported types are not displayed with toString, to avoid cases where this only
-                // shows the type name. Instead placeholder text is used for any value, only
-                // distinguishing between null and non-null values.
                 else
                 {
                     object value = item == null ? null : pInfo.GetValue(item);
+                    var nullableType = Nullable.GetUnderlyingType(pInfo.PropertyType);
+                    if (value != null && nullableType != null)
+                    {
+                        value = nullableType.GetProperty("Value").GetValue(value);
+                    }
+                    // Null values are represented with placeholder text. The SPA framework
+                    // automatically omits values with this placeholder text when sending data back
+                    // for update, avoiding overwriting previously null values with the placeholder
+                    // text inappropriately.
                     if (value == null)
                     {
                         vm[pInfo.Name.ToInitialLower()] = "[None]";
                     }
+                    // Other recognized types are represented with their ToString equivalent.
+                    else if (pInfo.PropertyType == typeof(string)
+                        || pInfo.PropertyType.IsNumeric()
+                        || pInfo.PropertyType == typeof(bool)
+                        || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(bool)
+                        || pInfo.PropertyType == typeof(Guid)
+                        || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(Guid))
+                    {
+                        vm[pInfo.Name.ToInitialLower()] = value.ToString();
+                    }
+                    // Unsupported types are not displayed with toString, to avoid cases where this
+                    // only shows the type name. Instead placeholder text is used for any value.
                     else
                     {
                         vm[pInfo.Name.ToInitialLower()] = "[...]";
@@ -972,16 +1091,16 @@ namespace VueCoreFramework.Data
         /// <summary>
         /// Asynchronously removes an entity from the <see cref="ApplicationDbContext"/>.
         /// </summary>
-        /// <param name="id">The primary key of the entity to remove.</param>
-        public async Task RemoveAsync(Guid id)
+        /// <param name="id">The primary key of the entity to remove, as a string.</param>
+        public async Task RemoveAsync(string id)
         {
             var item = await FindItemAsync(id);
-            await RemoveItemAsync(item);
+            await RemoveItemAsync(item as T);
         }
 
-        private async Task RemoveItemAsync(DataItem item)
+        private async Task RemoveItemAsync(T item)
         {
-            items.Remove(item as T);
+            items.Remove(item);
             await _context.SaveChangesAsync();
         }
 
@@ -989,16 +1108,22 @@ namespace VueCoreFramework.Data
         /// Asynchronously removes an assortment of child entities from a parent entity under the
         /// given navigation property.
         /// </summary>
-        /// <param name="id">The primary key of the parent entity.</param>
+        /// <param name="id">The primary key of the parent entity, as a string.</param>
         /// <param name="childProp">The navigation property from which the children will be removed.</param>
-        /// <param name="childIds">The primary keys of the child entities which will be removed.</param>
-        public async Task RemoveChildrenFromCollectionAsync(Guid id, PropertyInfo childProp, IEnumerable<Guid> childIds)
+        /// <param name="childIds">The primary keys of the child entities which will be removed, as strings.</param>
+        public async Task RemoveChildrenFromCollectionAsync(string id, PropertyInfo childProp, IEnumerable<string> childIds)
         {
-            var mtmType = childProp.PropertyType.GetTypeInfo().GenericTypeArguments.FirstOrDefault();
+            var mtmEntityType = EntityType.FindNavigation(childProp).GetTargetType();
+            var parentPK = GetPrimaryKeyFromString(id);
+
+            var navs = mtmEntityType.GetNavigations();
+            var mtmParentNav = navs.FirstOrDefault(n => n.FindInverse() == childProp);
+            var mtmChildNav = navs.FirstOrDefault(n => n != mtmParentNav);
 
             foreach (var childId in childIds)
             {
-                var mtm = _context.Find(mtmType, id, childId);
+                var childPK = GetPrimaryKeyFromString(mtmChildNav.ClrType, childId);
+                var mtm = _context.Find(mtmEntityType.ClrType, parentPK, childPK);
                 _context.Remove(mtm);
             }
 
@@ -1010,15 +1135,16 @@ namespace VueCoreFramework.Data
         /// made an orphan by the removal and is not a MenuClass object, it is then removed from the
         /// <see cref="ApplicationDbContext"/> entirely.
         /// </summary>
-        /// <param name="id">The primary key of the child entity whose relationship is being severed.</param>
+        /// <param name="id">The primary key of the child entity whose relationship is being severed, as a string.</param>
         /// <param name="childProp">The navigation property of the relationship being severed.</param>
         /// <returns>True if the item is removed from the <see cref="ApplicationDbContext"/>, false if not.</returns>
-        public async Task<bool> RemoveFromParentAsync(Guid id, PropertyInfo childProp)
+        public async Task<bool> RemoveFromParentAsync(string id, PropertyInfo childProp)
         {
-            var childFKProp = typeof(T).GetProperty(childProp.Name + "Id");
+            var childFK = EntityType.FindNavigation(childProp.Name).ForeignKey;
+            var childFKProp = childFK.Properties.FirstOrDefault().PropertyInfo;
 
             // If this is a required relationship, removing from the parent is the same as deletion.
-            if (Nullable.GetUnderlyingType(childFKProp.PropertyType) != null)
+            if (childFK.IsRequired)
             {
                 await RemoveAsync(id);
                 return true;
@@ -1027,14 +1153,14 @@ namespace VueCoreFramework.Data
             // For non-required relationships, null the FK.
             var item = await FindItemAsync(id);
             childProp.SetValue(item, null);
-            await _context.SaveChangesAsync();
 
             // If the child is not a MenuClass item, it should be removed if it's now an orphan (has
             // no remaining relationships).
-            if (typeof(T).GetTypeInfo().GetCustomAttribute<MenuClassAttribute>() == null)
+            var orphan = false;
+            if (!_isMenuClass)
             {
                 // Check all navigation properties in the child item to see if it's an orphan.
-                var orphan = true;
+                orphan = true;
                 foreach (var nav in _context.Entry(item).Navigations)
                 {
                     await nav.LoadAsync();
@@ -1047,20 +1173,20 @@ namespace VueCoreFramework.Data
                 // If the item is now an orphan, delete it.
                 if (orphan)
                 {
-                    await RemoveItemAsync(item);
-                    return true;
+                    items.Remove(item as T);
                 }
             }
-            return false;
+            await _context.SaveChangesAsync();
+            return orphan;
         }
 
         /// <summary>
         /// Asynchronously removes a collection of entities from the <see cref="ApplicationDbContext"/>.
         /// </summary>
-        /// <param name="ids">An enumeration of the primary keys of the entities to remove.</param>
-        public async Task RemoveRangeAsync(IEnumerable<Guid> ids)
+        /// <param name="ids">An enumeration of the primary keys of the entities to remove, as strings.</param>
+        public async Task RemoveRangeAsync(IEnumerable<string> ids)
         {
-            items.RemoveRange(ids.Select(i => items.Find(i)));
+            items.RemoveRange(ids.Select(i => items.Find(GetPrimaryKeyFromString(i))));
             await _context.SaveChangesAsync();
         }
 
@@ -1070,38 +1196,32 @@ namespace VueCoreFramework.Data
         /// <see cref="ApplicationDbContext"/> entirely.
         /// </summary>
         /// <param name="ids">
-        /// An enumeration of primary keys of child entities whose relationships are being severed.
+        /// An enumeration of primary keys of child entities whose relationships are being severed, as strings.
         /// </param>
         /// <param name="childProp">The navigation property of the relationship being severed.</param>
-        /// <returns>A list of the Ids of any items removed from the <see cref="ApplicationDbContext"/>.</returns>
-        public async Task<IList<Guid>> RemoveRangeFromParentAsync(IEnumerable<Guid> ids, PropertyInfo childProp)
+        /// <returns>A list of the Ids of any items removed from the <see cref="ApplicationDbContext"/>, as strings.</returns>
+        public async Task<IList<string>> RemoveRangeFromParentAsync(IEnumerable<string> ids, PropertyInfo childProp)
         {
-            var childFKProp = typeof(T).GetProperty(childProp.Name + "Id");
+            var childFK = EntityType.FindNavigation(childProp.Name).ForeignKey;
+            var childFKProp = childFK.Properties.FirstOrDefault().PropertyInfo;
 
             // If this is a required relationship, removing from the parent is the same as deletion.
-            if (Nullable.GetUnderlyingType(childFKProp.PropertyType) != null)
+            if (childFK.IsRequired)
             {
                 await RemoveRangeAsync(ids);
                 return ids.ToList();
             }
 
-            // If the children are not MenuClass items, they should be removed if now orphans (have
-            // no remaining relationships).
-            bool removeOrphans = false;
-            if (typeof(T).GetTypeInfo().GetCustomAttribute<MenuClassAttribute>() == null)
-            {
-                removeOrphans = true;
-            }
-
             // For non-required relationships, null the prop.
-            IList<Guid> removedIds = new List<Guid>();
+            IList<string> removedIds = new List<string>();
             foreach (var id in ids)
             {
                 var item = await FindItemAsync(id);
                 childProp.SetValue(item, null);
-                await _context.SaveChangesAsync();
 
-                if (removeOrphans)
+                // If the child is not a MenuClass item, it should be removed if it is now an orphan
+                // (has no remaining relationships).
+                if (!_isMenuClass)
                 {
                     // Check all navigation properties in the child item to see if it's now an orphan.
                     var orphan = true;
@@ -1117,11 +1237,12 @@ namespace VueCoreFramework.Data
                     // If the item is now an orphan, delete it.
                     if (orphan)
                     {
-                        await RemoveItemAsync(item);
+                        items.Remove(item as T);
                         removedIds.Add(id);
                     }
                 }
             }
+            await _context.SaveChangesAsync();
             return removedIds;
         }
 
@@ -1131,25 +1252,31 @@ namespace VueCoreFramework.Data
         /// made an orphan by the removal and is not a MenuClass object, it is then removed from the
         /// <see cref="ApplicationDbContext"/> entirely.
         /// </summary>
-        /// <param name="parentId">The primary key of the parent entity in the relationship.</param>
+        /// <param name="parentId">
+        /// The primary key of the parent entity in the relationship, as a string.
+        /// </param>
         /// <param name="newChildId">
-        /// The primary key of the new child entity entering into the relationship.
+        /// The primary key of the new child entity entering into the relationship, as a string.
         /// </param>
         /// <param name="childProp">The navigation property of the relationship on the child entity.</param>
-        /// <returns>The Id of the removed child, if it is removed from the <see cref="ApplicationDbContext"/>; null if it is not.</returns>
-        public async Task<Guid?> ReplaceChildAsync(Guid parentId, Guid newChildId, PropertyInfo childProp)
+        /// <returns>
+        /// The Id of the removed child, if it is removed from the <see
+        /// cref="ApplicationDbContext"/>, as a string; null if it is not.
+        /// </returns>
+        public async Task<string> ReplaceChildAsync(string parentId, string newChildId, PropertyInfo childProp)
         {
             var parentRepo = (IRepository)Activator.CreateInstance(typeof(Repository<>).MakeGenericType(childProp.PropertyType), _context);
             var parent = await parentRepo.FindItemAsync(parentId);
-            var oldChildId = (childProp.PropertyType
-                .GetProperty(childProp.GetCustomAttribute<InversePropertyAttribute>()?.Property)
-                .GetValue(parent) as DataItem).Id;
+            var parentPK = parentRepo.GetPrimaryKeyFromString(parentId);
+
+            var nav = EntityType.FindNavigation(childProp.Name);
+            var oldChildId = PrimaryKey.PropertyInfo.GetValue(nav.FindInverse().PropertyInfo.GetValue(parent)).ToString();
 
             var newChild = await FindItemAsync(newChildId);
-            typeof(T).GetProperty(childProp.Name + "Id").SetValue(newChild, parentId);
+            nav.ForeignKey.Properties.FirstOrDefault().PropertyInfo.SetValue(newChild, parentPK);
 
             var removed = await RemoveFromParentAsync(oldChildId, childProp);
-            return removed ? oldChildId : (Guid?)null;
+            return removed ? oldChildId : null;
         }
 
         /// <summary>
@@ -1158,21 +1285,21 @@ namespace VueCoreFramework.Data
         /// made an orphan by the removal and is not a MenuClass object, it is then removed from the
         /// <see cref="ApplicationDbContext"/> entirely.
         /// </summary>
-        /// <param name="parentId">The primary key of the parent entity in the relationship.</param>
+        /// <param name="parentId">The primary key of the parent entity in the relationship, as a string.</param>
         /// <param name="childProp">The navigation property of the relationship on the child entity.</param>
-        public async Task<(IDictionary<string, object>, Guid?)> ReplaceChildWithNewAsync(Guid parentId, PropertyInfo childProp)
+        public async Task<(IDictionary<string, object>, string)> ReplaceChildWithNewAsync(string parentId, PropertyInfo childProp)
         {
             var parentRepo = (IRepository)Activator.CreateInstance(typeof(Repository<>).MakeGenericType(childProp.PropertyType), _context);
             var parent = await parentRepo.FindItemAsync(parentId);
-            var oldChildId = (childProp.PropertyType
-                .GetProperty(childProp.GetCustomAttribute<InversePropertyAttribute>()?.Property)
-                .GetValue(parent) as DataItem).Id;
+
+            var nav = EntityType.FindNavigation(childProp.Name);
+            var oldChildId = PrimaryKey.PropertyInfo.GetValue(nav.FindInverse().PropertyInfo.GetValue(parent)).ToString();
 
             var newItem = await AddAsync(childProp, parentId);
 
             var removed = await RemoveFromParentAsync(oldChildId, childProp);
 
-            return removed ? (newItem, oldChildId) : (newItem, (Guid?)null);
+            return removed ? (newItem, oldChildId) : (newItem, (string)null);
         }
 
         /// <summary>
@@ -1181,7 +1308,7 @@ namespace VueCoreFramework.Data
         /// </summary>
         /// <param name="item">The item to update.</param>
         /// <returns>A ViewModel representing the updated item.</returns>
-        public async Task<IDictionary<string, object>> UpdateAsync(DataItem item)
+        public async Task<IDictionary<string, object>> UpdateAsync(object item)
         {
             if (item == null)
             {
@@ -1189,15 +1316,7 @@ namespace VueCoreFramework.Data
             }
             items.Update(item as T);
             await _context.SaveChangesAsync();
-            foreach (var reference in _context.Entry(item).References)
-            {
-                reference.Load();
-            }
-            foreach (var collection in _context.Entry(item).Collections)
-            {
-                collection.Load();
-            }
-            return GetViewModel(item as T);
+            return GetViewModel(_context, item as T);
         }
     }
 }

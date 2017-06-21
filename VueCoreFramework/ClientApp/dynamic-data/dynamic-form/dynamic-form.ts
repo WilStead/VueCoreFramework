@@ -85,7 +85,7 @@ export default class DynamicFormComponent extends Vue {
                                     childProp: newField.inverseType,
                                     operation: 'select',
                                     parentType: model.dataType,
-                                    parentId: model.id,
+                                    parentId: model[model['primaryKeyProperty']],
                                     parentProp: newField.model
                                 }
                             });
@@ -103,7 +103,7 @@ export default class DynamicFormComponent extends Vue {
                             params: {
                                 operation: 'multiselect',
                                 parentType: model.dataType,
-                                parentId: model.id,
+                                parentId: model[model['primaryKeyProperty']],
                                 parentProp: newField.model
                             }
                         });
@@ -120,7 +120,7 @@ export default class DynamicFormComponent extends Vue {
                                 childProp: newField.inverseType,
                                 operation: 'collection',
                                 parentType: model.dataType,
-                                parentId: model.id,
+                                parentId: model[model['primaryKeyProperty']],
                                 parentProp: newField.model
                             }
                         });
@@ -186,14 +186,14 @@ export default class DynamicFormComponent extends Vue {
 
     onAddNew(model, field: FieldDefinition) {
         this.activity = true;
-        this.repository.add(this.$route.fullPath, field.inverseType, model.id)
+        this.repository.add(this.$route.fullPath, field.inverseType, model[model['primaryKeyProperty']])
             .then(data => {
                 this.activity = false;
                 if (data.error) {
                     this.errorMessage = data.error;
                 } else {
                     this.errorMessage = '';
-                    this.$router.push({ name: field.inputType, params: { operation: 'add', id: data.data.id } });
+                    this.$router.push({ name: field.inputType, params: { operation: 'add', id: data.data[data['primaryKeyProperty']] } });
                 }
             })
             .catch(error => {
@@ -265,14 +265,12 @@ export default class DynamicFormComponent extends Vue {
     onSave() {
         this.activity = true;
         this.errorMessage = '';
-        let d = Object.assign({
-            id: this.id,
-            updateTimestamp: Date.now()
-        },
-            this.model);
+        let d = Object.assign({}, this.model);
+        d[this.model['primaryKeyProperty']] = this.id;
         // Remove unsupported or null properties from the ViewModel before sending for update,
         // to avoid errors when overwriting values with the placeholders.
         delete d.dataType;
+        delete d['primaryKeyProperty'];
         for (var prop in d) {
             if (d[prop] === "[None]" || d[prop] === "[...]") {
                 delete d[prop];
@@ -302,7 +300,7 @@ export default class DynamicFormComponent extends Vue {
                     this.errorMessage = data.error;
                 } else {
                     this.errorMessage = '';
-                    this.$router.push({ name: this.model.replaceType, params: { operation: 'add', id: data.data.id } });
+                    this.$router.push({ name: this.model.replaceType, params: { operation: 'add', id: data.data[data['primaryKeyProperty']] } });
                 }
                 this.onCancelReplace();
                 this.activity = false;

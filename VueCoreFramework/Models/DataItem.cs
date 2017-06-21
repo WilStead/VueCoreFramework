@@ -1,18 +1,15 @@
-﻿using VueCoreFramework.Data.Attributes;
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace VueCoreFramework.Models
 {
     /// <summary>
-    /// Represents a database object which can be displayed automatically by the SPA framework.
+    /// A base class for database objects. Provides a GUID primary key.
     /// </summary>
     /// <remarks>
-    /// All datatypes used by the framework *must* be a subclass of DataItem in order to function.
-    /// Any which are not will be represented merely by text labels. Bear in mind when subclassing
-    /// that the framework creates new items by invoking the default parameterless constructor, and
-    /// also invoking the constructor for any required child objects.
+    /// The SPA framework doesn't require using a base class like this, it's just used for
+    /// convenience in the examples.
     /// </remarks>
     public class DataItem
     {
@@ -22,23 +19,5 @@ namespace VueCoreFramework.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }
-
-        /// <summary>
-        /// The date/time when the item was created.
-        /// </summary>
-        /// <remarks>
-        /// This is set when the item is created by a user on their client, not at time of database insert.
-        /// </remarks>
-        [Hidden]
-        public DateTime CreationTimestamp { get; set; }
-
-        /// <summary>
-        /// The date/time when the item was last updated.
-        /// </summary>
-        /// <remarks>
-        /// This is set when the item is sent for update by a user on their client, not at time of database update.
-        /// </remarks>
-        [Hidden]
-        public DateTime UpdateTimestamp { get; set; }
     }
 }

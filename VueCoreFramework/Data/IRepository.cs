@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using System.Linq;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace VueCoreFramework.Data
 {
@@ -13,6 +15,21 @@ namespace VueCoreFramework.Data
     interface IRepository
     {
         /// <summary>
+        /// The <see cref="IEntityType"/> of this Repository.
+        /// </summary>
+        IEntityType EntityType { get; }
+
+        /// <summary>
+        /// The primary key <see cref="IProperty"/> of this Repository's entity type.
+        /// </summary>
+        IProperty PrimaryKey { get; }
+
+        /// <summary>
+        /// The name of the ViewModel property which indicates the primary key. Constant.
+        /// </summary>
+        string PrimaryKeyVMProperty { get; }
+
+        /// <summary>
         /// Asynchronously creates a new instance of <see cref="T"/> and adds it to the <see
         /// cref="ApplicationDbContext"/> instance.
         /// </summary>
@@ -20,27 +37,36 @@ namespace VueCoreFramework.Data
         /// An optional navigation property which will be set on the new object.
         /// </param>
         /// <param name="parentId">
-        /// The primary key of the entity which will be set on the <paramref name="childProp"/> property.
+        /// The primary key of the entity which will be set on the <paramref name="childProp"/> property, as a string.
         /// </param>
         /// <returns>A ViewModel instance representing the newly added entity.</returns>
-        Task<IDictionary<string, object>> AddAsync(PropertyInfo childProp, Guid? parentId);
+        Task<IDictionary<string, object>> AddAsync(PropertyInfo childProp, string parentId);
 
         /// <summary>
         /// Asynchronously adds an assortment of child entities to a parent entity under the given
         /// navigation property.
         /// </summary>
-        /// <param name="id">The primary key of the parent entity.</param>
+        /// <param name="id">The primary key of the parent entity, as a string.</param>
         /// <param name="childProp">The navigation property to which the children will be added.</param>
-        /// <param name="childIds">The primary keys of the child entities which will be added.</param>
-        Task AddChildrenToCollectionAsync(Guid id, PropertyInfo childProp, IEnumerable<Guid> children);
+        /// <param name="childIds">The primary keys of the child entities which will be added, as strings.</param>
+        Task AddChildrenToCollectionAsync(string id, PropertyInfo childProp, IEnumerable<string> children);
 
         /// <summary>
         /// Finds an entity with the given primary key value and returns a ViewModel for that entity.
         /// If no entity is found, an empty ViewModel is returned (not null).
         /// </summary>
-        /// <param name="id">The primary key of the entity to be found.</param>
+        /// <param name="id">The primary key of the entity to be found, as a string.</param>
         /// <returns>A ViewModel representing the item found, or an empty ViewModel if none is found.</returns>
-        Task<IDictionary<string, object>> FindAsync(Guid id);
+        Task<IDictionary<string, object>> FindAsync(string id);
+
+        /// <summary>
+        /// Finds an entity with the given primary key value. If no entity is found, then null is returned.
+        /// </summary>
+        /// <param name="id">The primary key of the entity to be found, as a string.</param>
+        /// <returns>
+        /// The item found, or null if none is found.
+        /// </returns>
+        Task<object> FindItemAsync(string id);
 
         /// <summary>
         /// Finds an entity with the given primary key value. If no entity is found, then null is returned.
@@ -49,7 +75,7 @@ namespace VueCoreFramework.Data
         /// <returns>
         /// The item found, or null if none is found.
         /// </returns>
-        Task<DataItem> FindItemAsync(Guid id);
+        Task<object> FindItemWithPKAsync(object key);
 
         /// <summary>
         /// Enumerates all the entities in the <see cref="ApplicationDbContext"/>'s set, returning a
@@ -59,22 +85,58 @@ namespace VueCoreFramework.Data
         IEnumerable<IDictionary<string, object>> GetAll();
 
         /// <summary>
-        /// Finds the primary key of a child entity in the given relationship.
+        /// Finds the primary keys of all child entities in the given relationship, as strings.
         /// </summary>
-        /// <param name="id">The primary key of the parent entity.</param>
+        /// <param name="id">The primary key of the parent entity, as a string.</param>
         /// <param name="childProp">The navigation property of the relationship.</param>
-        /// <returns></returns>
-        Task<Guid> GetChildIdAsync(Guid id, PropertyInfo childProp);
+        Task<IList<string>> GetAllChildIdsAsync(string id, PropertyInfo childProp);
+
+        /// <summary>
+        /// Finds the primary key of a child entity in the given relationship, as a string.
+        /// </summary>
+        /// <param name="id">The primary key of the parent entity, as a string.</param>
+        /// <param name="childProp">The navigation property of the relationship.</param>
+        Task<string> GetChildIdAsync(string id, PropertyInfo childProp);
+
+        /// <summary>
+        /// Calculates and enumerates the set of child entities in a given relationship with the
+        /// given paging parameters, as ViewModels.
+        /// </summary>
+        /// <param name="dataType">The type of the parent entity.</param>
+        /// <param name="id">The primary key of the parent entity, as a string.</param>
+        /// <param name="childProp">The navigation property of the relationship on the parent entity.</param>
+        /// <param name="search">
+        /// An optional search term which will filter the results. Any string or numeric property
+        /// with matching text will be included.
+        /// </param>
+        /// <param name="sortBy">
+        /// An optional property name which will be used to sort the items before calculating the
+        /// page contents.
+        /// </param>
+        /// <param name="descending">
+        /// Indicates whether the sort is descending; if false, the sort is ascending.
+        /// </param>
+        /// <param name="page">The page number requested.</param>
+        /// <param name="rowsPerPage">The number of items per page.</param>
+        Task<IEnumerable<IDictionary<string, object>>> GetChildPageAsync(
+            string id,
+            PropertyInfo childProp,
+            string search,
+            string sortBy,
+            bool descending,
+            int page,
+            int rowsPerPage,
+            IList<Claim> claims);
 
         /// <summary>
         /// Retrieves the total number of child entities in the given relationship.
         /// </summary>
-        /// <param name="id">The primary key of the parent entity.</param>
+        /// <param name="id">The primary key of the parent entity, as a string.</param>
         /// <param name="childProp">The navigation property of the relationship on the parent entity.</param>
         /// <returns>
         /// A <see cref="long"/> that represents the total number of children in the relationship.
         /// </returns>
-        Task<long> GetChildTotalAsync(Guid id, PropertyInfo childProp);
+        Task<long> GetChildTotalAsync(string id, PropertyInfo childProp);
 
         /// <summary>
         /// Generates and enumerates <see cref="FieldDefinition"/> s representing the properties of
@@ -100,7 +162,7 @@ namespace VueCoreFramework.Data
         /// <param name="rowsPerPage">The number of items per page.</param>
         /// <param name="except">
         /// An enumeration of primary keys of items which should be excluded from the results before
-        /// caluclating the page contents.
+        /// caluclating the page contents, as strings.
         /// </param>
         IEnumerable<IDictionary<string, object>> GetPage(
             string search,
@@ -108,8 +170,45 @@ namespace VueCoreFramework.Data
             bool descending,
             int page,
             int rowsPerPage,
-            IEnumerable<Guid> except,
+            IEnumerable<string> except,
             IList<Claim> claims);
+
+        /// <summary>
+        /// Calculates and enumerates the given items with the given paging parameters, as ViewModels.
+        /// </summary>
+        /// <param name="items">The items to filter, sort, and page.</param>
+        /// <param name="search">
+        /// An optional search term which will filter the results. Any string or numeric property
+        /// with matching text will be included.
+        /// </param>
+        /// <param name="sortBy">
+        /// An optional property name which will be used to sort the items before calculating the
+        /// page contents.
+        /// </param>
+        /// <param name="descending">
+        /// Indicates whether the sort is descending; if false, the sort is ascending.
+        /// </param>
+        /// <param name="page">The page number requested.</param>
+        /// <param name="rowsPerPage">The number of items per page.</param>
+        /// <param name="except">
+        /// An enumeration of primary keys of items which should be excluded from the results before
+        /// caluclating the page contents.
+        /// </param>
+        IEnumerable<IDictionary<string, object>> GetPageItems(
+            IQueryable<object> items,
+            string search,
+            string sortBy,
+            bool descending,
+            int page,
+            int rowsPerPage,
+            IList<Claim> claims);
+
+        /// <summary>
+        /// Converts the given string into its equivalent primary key for this type.
+        /// </summary>
+        /// <param name="pk_string">The primary key to convert, as a string.</param>
+        /// <returns>The primary key, as whatever type is defined by the entity.</returns>
+        object GetPrimaryKeyFromString(string pk_string);
 
         /// <summary>
         /// Asynchronously returns a <see cref="long"/> that represents the total number of entities
@@ -120,32 +219,32 @@ namespace VueCoreFramework.Data
         /// <summary>
         /// Asynchronously removes an entity from the <see cref="ApplicationDbContext"/>.
         /// </summary>
-        /// <param name="id">The primary key of the entity to remove.</param>
-        Task RemoveAsync(Guid id);
+        /// <param name="id">The primary key of the entity to remove, as a string.</param>
+        Task RemoveAsync(string id);
 
         /// <summary>
         /// Asynchronously removes an assortment of child entities from a parent entity under the
         /// given navigation property.
         /// </summary>
-        /// <param name="id">The primary key of the parent entity.</param>
+        /// <param name="id">The primary key of the parent entity, as a string.</param>
         /// <param name="childProp">The navigation property from which the children will be removed.</param>
-        /// <param name="childIds">The primary keys of the child entities which will be removed.</param>
-        Task RemoveChildrenFromCollectionAsync(Guid id, PropertyInfo childProp, IEnumerable<Guid> childIds);
+        /// <param name="childIds">The primary keys of the child entities which will be removed, as strings.</param>
+        Task RemoveChildrenFromCollectionAsync(string id, PropertyInfo childProp, IEnumerable<string> childIds);
 
         /// <summary>
         /// Asynchronously terminates a relationship bewteen two entities. If the child entity is
         /// made an orphan by the removal and is not a MenuClass object, it is then removed from the
         /// <see cref="ApplicationDbContext"/> entirely.
         /// </summary>
-        /// <param name="id">The primary key of the child entity whose relationship is being severed.</param>
+        /// <param name="id">The primary key of the child entity whose relationship is being severed, as a string.</param>
         /// <param name="childProp">The navigation property of the relationship being severed.</param>
-        Task<bool> RemoveFromParentAsync(Guid id, PropertyInfo childProp);
+        Task<bool> RemoveFromParentAsync(string id, PropertyInfo childProp);
 
         /// <summary>
         /// Asynchronously removes a collection of entities from the <see cref="ApplicationDbContext"/>.
         /// </summary>
-        /// <param name="ids">An enumeration of the primary keys of the entities to remove.</param>
-        Task RemoveRangeAsync(IEnumerable<Guid> ids);
+        /// <param name="ids">An enumeration of the primary keys of the entities to remove, as strings.</param>
+        Task RemoveRangeAsync(IEnumerable<string> ids);
 
         /// <summary>
         /// Asynchronously terminates a relationship for multiple entities. If any child entity is
@@ -153,10 +252,11 @@ namespace VueCoreFramework.Data
         /// <see cref="ApplicationDbContext"/> entirely.
         /// </summary>
         /// <param name="ids">
-        /// An enumeration of primary keys of child entities whose relationships are being severed.
+        /// An enumeration of primary keys of child entities whose relationships are being severed, as strings.
         /// </param>
         /// <param name="childProp">The navigation property of the relationship being severed.</param>
-        Task<IList<Guid>> RemoveRangeFromParentAsync(IEnumerable<Guid> ids, PropertyInfo childProp);
+        /// <returns>A list of the Ids of any items removed from the <see cref="ApplicationDbContext"/>, as strings.</returns>
+        Task<IList<string>> RemoveRangeFromParentAsync(IEnumerable<string> ids, PropertyInfo childProp);
 
         /// <summary>
         /// Asynchronously creates a relationship between two entities, replacing another entity
@@ -164,12 +264,18 @@ namespace VueCoreFramework.Data
         /// made an orphan by the removal and is not a MenuClass object, it is then removed from the
         /// <see cref="ApplicationDbContext"/> entirely.
         /// </summary>
-        /// <param name="parentId">The primary key of the parent entity in the relationship.</param>
+        /// <param name="parentId">
+        /// The primary key of the parent entity in the relationship, as a string.
+        /// </param>
         /// <param name="newChildId">
-        /// The primary key of the new child entity entering into the relationship.
+        /// The primary key of the new child entity entering into the relationship, as a string.
         /// </param>
         /// <param name="childProp">The navigation property of the relationship on the child entity.</param>
-        Task<Guid?> ReplaceChildAsync(Guid parentId, Guid newChildId, PropertyInfo childProp);
+        /// <returns>
+        /// The Id of the removed child, if it is removed from the <see
+        /// cref="ApplicationDbContext"/>, as a string; null if it is not.
+        /// </returns>
+        Task<string> ReplaceChildAsync(string parentId, string newChildId, PropertyInfo childProp);
 
         /// <summary>
         /// Asynchronously creates a relationship between two entities, replacing another entity
@@ -177,9 +283,9 @@ namespace VueCoreFramework.Data
         /// made an orphan by the removal and is not a MenuClass object, it is then removed from the
         /// <see cref="ApplicationDbContext"/> entirely.
         /// </summary>
-        /// <param name="parentId">The primary key of the parent entity in the relationship.</param>
+        /// <param name="parentId">The primary key of the parent entity in the relationship, as a string.</param>
         /// <param name="childProp">The navigation property of the relationship on the child entity.</param>
-        Task<(IDictionary<string, object>, Guid?)> ReplaceChildWithNewAsync(Guid parentId, PropertyInfo childProp);
+        Task<(IDictionary<string, object>, string)> ReplaceChildWithNewAsync(string parentId, PropertyInfo childProp);
 
         /// <summary>
         /// Asynchronously updates an entity in the <see cref="ApplicationDbContext"/>. Returns a
@@ -187,6 +293,6 @@ namespace VueCoreFramework.Data
         /// </summary>
         /// <param name="item">The item to update.</param>
         /// <returns>A ViewModel representing the updated item.</returns>
-        Task<IDictionary<string, object>> UpdateAsync(DataItem item);
+        Task<IDictionary<string, object>> UpdateAsync(object item);
     }
 }

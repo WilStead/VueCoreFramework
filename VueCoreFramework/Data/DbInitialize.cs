@@ -73,15 +73,11 @@ namespace VueCoreFramework.Data
                 {
                     new Country
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Switzerland",
                         EpiIndex = 87.67,
                         FlagPrimaryColor = "#ff0000",
                         Leader = new Leader
                         {
-                            CreationTimestamp = DateTime.Now,
-                            UpdateTimestamp = DateTime.Now,
                             Name = "Doris Leuthard",
                             Birthdate = new DateTime(1963, 4, 10),
                             TimeInOfficeTicks = 138240000000000,
@@ -90,15 +86,11 @@ namespace VueCoreFramework.Data
                     },
                     new Country
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Luxembourg",
                         EpiIndex = 83.29,
                         FlagPrimaryColor = "#ff0000",
                         Leader = new Leader
                         {
-                            CreationTimestamp = DateTime.Now,
-                            UpdateTimestamp = DateTime.Now,
                             Name = "Xavier Bettel",
                             Birthdate = new DateTime(1973, 3, 3),
                             TimeInOfficeTicks = 1416960000000000,
@@ -107,15 +99,11 @@ namespace VueCoreFramework.Data
                     },
                     new Country
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Australia",
                         EpiIndex = 82.4,
                         FlagPrimaryColor = "#0000ff",
                         Leader = new Leader
                         {
-                            CreationTimestamp = DateTime.Now,
-                            UpdateTimestamp = DateTime.Now,
                             Name = "Malcolm Turnbull",
                             Birthdate = new DateTime(1954, 10, 24),
                             TimeInOfficeTicks = 716256000000000,
@@ -124,15 +112,11 @@ namespace VueCoreFramework.Data
                     },
                     new Country
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Singapore",
                         EpiIndex = 81.78,
                         FlagPrimaryColor = "#ff0000",
                         Leader = new Leader
                         {
-                            CreationTimestamp = DateTime.Now,
-                            UpdateTimestamp = DateTime.Now,
                             Name = "Lee Hsien Loong",
                             Birthdate = new DateTime(1952, 2, 10),
                             TimeInOfficeTicks = 4158432000000000,
@@ -141,15 +125,11 @@ namespace VueCoreFramework.Data
                     },
                     new Country
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Czech Republic",
                         EpiIndex = 81.47,
                         FlagPrimaryColor = "#0000ff",
                         Leader = new Leader
                         {
-                            CreationTimestamp = DateTime.Now,
-                            UpdateTimestamp = DateTime.Now,
                             Name = "Bohuslav Sobotka",
                             Birthdate = new DateTime(1971, 10, 23),
                             TimeInOfficeTicks = 755136000000000,
@@ -158,15 +138,11 @@ namespace VueCoreFramework.Data
                     },
                     new Country
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Germany",
                         EpiIndex = 80.47,
                         FlagPrimaryColor = "#000000",
                         Leader = new Leader
                         {
-                            CreationTimestamp = DateTime.Now,
-                            UpdateTimestamp = DateTime.Now,
                             Name = "Angela Merkel",
                             Birthdate = new DateTime(1954, 7, 17),
                             TimeInOfficeTicks = 3930336000000000,
@@ -175,15 +151,11 @@ namespace VueCoreFramework.Data
                     },
                     new Country
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Spain",
                         EpiIndex = 79.09,
                         FlagPrimaryColor = "#ff0000",
                         Leader = new Leader
                         {
-                            CreationTimestamp = DateTime.Now,
-                            UpdateTimestamp = DateTime.Now,
                             Name = "Mariano Rajoy",
                             Birthdate = new DateTime(1955, 3, 27),
                             TimeInOfficeTicks = 2062368000000000,
@@ -192,15 +164,11 @@ namespace VueCoreFramework.Data
                     },
                     new Country
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Austria",
                         EpiIndex = 78.32,
                         FlagPrimaryColor = "#ff0000",
                         Leader = new Leader
                         {
-                            CreationTimestamp = DateTime.Now,
-                            UpdateTimestamp = DateTime.Now,
                             Name = "Christian Kern",
                             Birthdate = new DateTime(1966, 1, 4),
                             TimeInOfficeTicks = 349920000000000,
@@ -209,15 +177,11 @@ namespace VueCoreFramework.Data
                     },
                     new Country
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Sweden",
                         EpiIndex = 78.09,
                         FlagPrimaryColor = "#0000ff",
                         Leader = new Leader
                         {
-                            CreationTimestamp = DateTime.Now,
-                            UpdateTimestamp = DateTime.Now,
                             Name = "Stefan Löfven",
                             Birthdate = new DateTime(1957, 7, 21),
                             TimeInOfficeTicks = 1047168000000000,
@@ -226,15 +190,11 @@ namespace VueCoreFramework.Data
                     },
                     new Country
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Norway",
                         EpiIndex = 78.04,
                         FlagPrimaryColor = "#ff0000",
                         Leader = new Leader
                         {
-                            CreationTimestamp = DateTime.Now,
-                            UpdateTimestamp = DateTime.Now,
                             Name = "Erna Solberg",
                             Birthdate = new DateTime(1961, 2, 24),
                             TimeInOfficeTicks = 1374624000000000,
@@ -254,8 +214,6 @@ namespace VueCoreFramework.Data
                 {
                     new City
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Bern",
                         Population = 131554,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
@@ -264,8 +222,6 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Zürich",
                         Population = 396027,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
@@ -274,8 +230,6 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Luxembourg City",
                         Population = 115227,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
@@ -284,8 +238,6 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Canberra",
                         Population = 422510,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 10, 0, 0),
@@ -294,8 +246,6 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Sydney",
                         Population = 4840628,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 10, 0, 0),
@@ -304,8 +254,6 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Singapore",
                         Population = 5607300,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 8, 0, 0),
@@ -314,8 +262,6 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Prague",
                         Population = 1259079,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
@@ -324,8 +270,6 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Brno",
                         Population = 377440,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
@@ -334,8 +278,6 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Berlin",
                         Population = 3421829,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
@@ -344,8 +286,6 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Hamburg",
                         Population = 1746342,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
@@ -354,8 +294,6 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Madrid",
                         Population = 3165235,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
@@ -364,8 +302,6 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Barcelona",
                         Population = 1602386,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
@@ -374,8 +310,6 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Vienna",
                         Population = 1812605,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
@@ -384,8 +318,6 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Graz",
                         Population = 269997,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
@@ -394,8 +326,6 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Stockholm",
                         Population = 1515017,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
@@ -404,8 +334,6 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Gothenburg",
                         Population = 572799,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
@@ -414,8 +342,6 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Oslo",
                         Population = 975744,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
@@ -424,8 +350,6 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        CreationTimestamp = DateTime.Now,
-                        UpdateTimestamp = DateTime.Now,
                         Name = "Bergen",
                         Population = 252772,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),

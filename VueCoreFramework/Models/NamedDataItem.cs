@@ -3,7 +3,8 @@
 namespace VueCoreFramework.Models
 {
     /// <summary>
-    /// A convenience subclass of <see cref="DataItem"/> which defines a Name property and overrides ToString to display that Name.
+    /// A convenience subclass of <see cref="DataItem"/> which defines a Name property and overrides
+    /// ToString to display that Name.
     /// </summary>
     public class NamedDataItem : DataItem
     {
