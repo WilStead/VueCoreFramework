@@ -52,6 +52,11 @@ interface ManageUserViewModel {
  */
 interface AuthProviders {
     /**
+     * An error message.
+     */
+    error?: string;
+
+    /**
      * A list of all external authentication providers supported by the SPA framework.
      */
     providers: Array<string>;
@@ -168,7 +173,10 @@ export default class ManageUserComponent extends Vue {
             .then(response => checkResponse(response, this.$route.fullPath))
             .then(response => response.json() as Promise<ApiResponseViewModel>)
             .then(data => {
-                if (data.response === "yes") {
+                if (data.error) {
+                    ErrorMsg.showErrorMsgAndLog('manage.created', data.error, new Error(`Error in manage.created: ${data.error}`));
+                }
+                else if (data.response === "yes") {
                     this.hasPassword = true;
                 }
             })
@@ -184,15 +192,20 @@ export default class ManageUserComponent extends Vue {
             })
             .then(response => response.json() as Promise<AuthProviders>)
             .then(data => {
-                if (data.providers) {
-                    this.authProviderFacebook = data.providers.indexOf('Facebook') !== -1;
-                    this.authProviderGoogle = data.providers.indexOf('Google') !== -1;
-                    this.authProviderMicrosoft = data.providers.indexOf('Microsoft') !== -1;
+                if (data.error) {
+                    ErrorMsg.showErrorMsgAndLog('manage.mounted', data.error, new Error(`Error in manage.mounted: ${data.error}`));
                 }
-                if (data.userProviders) {
-                    this.authProviderFacebookUser = data.providers.indexOf('Facebook') !== -1;
-                    this.authProviderGoogleUser = data.providers.indexOf('Google') !== -1;
-                    this.authProviderMicrosoftUser = data.providers.indexOf('Microsoft') !== -1;
+                else {
+                    if (data.providers) {
+                        this.authProviderFacebook = data.providers.indexOf('Facebook') !== -1;
+                        this.authProviderGoogle = data.providers.indexOf('Google') !== -1;
+                        this.authProviderMicrosoft = data.providers.indexOf('Microsoft') !== -1;
+                    }
+                    if (data.userProviders) {
+                        this.authProviderFacebookUser = data.providers.indexOf('Facebook') !== -1;
+                        this.authProviderGoogleUser = data.providers.indexOf('Google') !== -1;
+                        this.authProviderMicrosoftUser = data.providers.indexOf('Microsoft') !== -1;
+                    }
                 }
             })
             .catch(error => {

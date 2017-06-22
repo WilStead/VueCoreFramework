@@ -163,41 +163,45 @@ export function getChildItems(router: VueRouter): Promise<void> {
         })
         .then(response => response.json() as Promise<Array<any>>)
         .then(data => {
-            for (var dataClass in data) {
-                router.addRoutes([{
-                    path: `/data/${dataClass.toLowerCase()}`,
-                    meta: { requiresAuth: true },
-                    component: require('../../components/data/dashboard.vue'),
-                    props: {
-                        title: dataClass,
-                        iconClass: data[dataClass].iconClass || 'view_list',
-                        fontAwesome: data[dataClass].fontAwesome
-                    },
-                    children: [
-                        {
-                            name: dataClass + "DataTable",
-                            path: 'table/:operation?/:parentType?/:parentId?/:parentProp?/:childProp?',
-                            components: {
-                                content: data[dataClass].dashboardTableContent
-                                    ? require(`../../components/data/${data[dataClass].dashboardTableContent}.vue`)
-                                    : require('../../components/data/empty.vue'),
-                                data: require('../../dynamic-data/dynamic-table/dynamic-table.vue')
-                            },
-                            props: { content: false, data: true }
+            if (data['error']) {
+                ErrorMsg.showErrorMsgAndLog('uiStore.getChildItems', "An error occurred during loading. Please refresh the page.", new Error("Error in uiStore.getChildItems."));
+            } else {
+                for (var dataClass in data) {
+                    router.addRoutes([{
+                        path: `/data/${dataClass.toLowerCase()}`,
+                        meta: { requiresAuth: true },
+                        component: require('../../components/data/dashboard.vue'),
+                        props: {
+                            title: dataClass,
+                            iconClass: data[dataClass].iconClass || 'view_list',
+                            fontAwesome: data[dataClass].fontAwesome
                         },
-                        {
-                            name: dataClass,
-                            path: ':operation/:id',
-                            components: {
-                                content: data[dataClass].dashboardFormContent
-                                    ? require(`../../components/data/${data[dataClass].dashboardFormContent}.vue`)
-                                    : require('../../components/data/empty.vue'),
-                                data: require('../../dynamic-data/dynamic-form/dynamic-form.vue')
+                        children: [
+                            {
+                                name: dataClass + "DataTable",
+                                path: 'table/:operation?/:parentType?/:parentId?/:parentProp?/:childProp?',
+                                components: {
+                                    content: data[dataClass].dashboardTableContent
+                                        ? require(`../../components/data/${data[dataClass].dashboardTableContent}.vue`)
+                                        : require('../../components/data/empty.vue'),
+                                    data: require('../../dynamic-data/dynamic-table/dynamic-table.vue')
+                                },
+                                props: { content: false, data: true }
                             },
-                            props: { content: true, data: true }
-                        }
-                    ]
-                }]);
+                            {
+                                name: dataClass,
+                                path: ':operation/:id',
+                                components: {
+                                    content: data[dataClass].dashboardFormContent
+                                        ? require(`../../components/data/${data[dataClass].dashboardFormContent}.vue`)
+                                        : require('../../components/data/empty.vue'),
+                                    data: require('../../dynamic-data/dynamic-form/dynamic-form.vue')
+                                },
+                                props: { content: true, data: true }
+                            }
+                        ]
+                    }]);
+                }
             }
         })
         .catch(error => {
@@ -220,8 +224,12 @@ export function getMenuItems(router: VueRouter, menu: MenuItem): Promise<void> {
         })
         .then(response => response.json() as Promise<any>)
         .then(data => {
-            for (var dataClass in data) {
-                addMenuItem(menu, router, data, dataClass, data[dataClass].category, data[dataClass].iconClass);
+            if (data['error']) {
+                ErrorMsg.showErrorMsgAndLog('uiStore.getMenuItems', "An error occurred during loading. Please refresh the page.", new Error("Error in uiStore.getMenuItems."));
+            } else {
+                for (var dataClass in data) {
+                    addMenuItem(menu, router, data, dataClass, data[dataClass].category, data[dataClass].iconClass);
+                }
             }
         })
         .catch(error => {

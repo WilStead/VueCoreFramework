@@ -197,7 +197,7 @@ export class Repository {
             .then(response => response.json() as Promise<Array<string> | ApiResponseViewModel>)
             .then(data => {
                 if (data['error']) {
-                    throw new Error(`There was a problem with your request. ${data['error']}`);
+                    throw new Error(data['error']);
                 }
                 return data;
             })
@@ -297,13 +297,17 @@ export class Repository {
                     .then(response => checkResponse(response, returnPath))
                     .then(response => response.json() as Promise<Array<DataItem>>)
                     .then(data => {
-                        return {
-                            pageItems: data,
-                            totalItems: response.response
-                        };
+                        if (data['error']) {
+                            throw new Error(data['error']);
+                        } else {
+                            return {
+                                pageItems: data,
+                                totalItems: response.response
+                            };
+                        }
                     })
                     .catch(error => {
-                        throw new Error(`There was a problem with your request. ${error}`);
+                        throw new Error(error);
                     });
             })
             .catch(error => {
@@ -330,7 +334,7 @@ export class Repository {
                 .then(response => response.json() as Promise<Array<FieldDefinition>>)
                 .then(data => {
                     if (data['error']) {
-                        throw new Error(`There was a problem with your request. ${data['error']}`);
+                        throw new Error(data['error']);
                     } else {
                         let defs = data;
                         // Translate validator keys to default validator names or actual functions.
@@ -421,13 +425,17 @@ export class Repository {
                     .then(response => checkResponse(response, returnPath))
                     .then(response => response.json() as Promise<Array<DataItem>>)
                     .then(data => {
-                        return {
-                            pageItems: data,
-                            totalItems: response.response - (except ? except.length : 0)
-                        };
+                        if (data['error']) {
+                            throw new Error(data['error']);
+                        } else {
+                            return {
+                                pageItems: data,
+                                totalItems: response.response - (except ? except.length : 0)
+                            };
+                        }
                     })
                     .catch(error => {
-                        throw new Error(`There was a problem with your request. ${error}`);
+                        throw new Error(error);
                     });
             })
             .catch(error => {

@@ -111,7 +111,7 @@ namespace VueCoreFramework.Controllers
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = $"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance." });
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
             if (username == user.UserName)
             {
@@ -164,7 +164,7 @@ namespace VueCoreFramework.Controllers
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = $"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance." });
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
             var roles = await _userManager.GetRolesAsync(user);
             // Only Admins can hide data from all.
@@ -221,7 +221,7 @@ namespace VueCoreFramework.Controllers
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = $"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance." });
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
             var roles = await _userManager.GetRolesAsync(user);
             // Only admins can hide a data type, rather than a particular item
@@ -274,7 +274,7 @@ namespace VueCoreFramework.Controllers
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = $"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance." });
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
             var roles = await _userManager.GetRolesAsync(user);
             var claims = await _userManager.GetClaimsAsync(user);
@@ -367,7 +367,7 @@ namespace VueCoreFramework.Controllers
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = $"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance." });
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
             var roles = await _userManager.GetRolesAsync(user);
             if (group == CustomRoles.SiteAdmin)
@@ -423,7 +423,7 @@ namespace VueCoreFramework.Controllers
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = $"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance." });
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
             var roles = await _userManager.GetRolesAsync(user);
             // Only Admins can share data with all.
@@ -491,7 +491,7 @@ namespace VueCoreFramework.Controllers
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = $"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance." });
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
@@ -564,7 +564,7 @@ namespace VueCoreFramework.Controllers
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = $"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance." });
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -625,7 +625,7 @@ namespace VueCoreFramework.Controllers
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = $"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance." });
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
             if (group.ToLower().Contains("administrator"))
             {
@@ -654,7 +654,7 @@ namespace VueCoreFramework.Controllers
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = $"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance." });
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
             var roles = await _userManager.GetRolesAsync(user);
             if (group == CustomRoles.SiteAdmin || group == CustomRoles.Admin)
@@ -720,7 +720,7 @@ namespace VueCoreFramework.Controllers
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = $"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance." });
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
             var roles = await _userManager.GetRolesAsync(user);
             if (!roles.Contains(CustomRoles.SiteAdmin))

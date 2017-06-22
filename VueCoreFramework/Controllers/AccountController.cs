@@ -119,7 +119,7 @@ namespace VueCoreFramework.Controllers
             var provider = _signInManager.GetExternalAuthenticationSchemes().SingleOrDefault(a => a.DisplayName == model.AuthProvider);
             if (provider == null)
             {
-                model.Errors.Add("There was a problem authorizing with that provider.");
+                model.Errors.Add(ErrorMessages.AuthProviderError);
                 _logger.LogWarning(LogEvent.EXTERNAL_PROVIDER_NOTFOUND, "Could not find provider {PROVIDER}.", model.AuthProvider);
                 return new JsonResult(model);
             }
@@ -144,13 +144,13 @@ namespace VueCoreFramework.Controllers
             };
             if (remoteError != null)
             {
-                model.Errors.Add("There was a problem authorizing with that provider: {remoteError}");
+                model.Errors.Add($"{ErrorMessages.AuthProviderError} {remoteError}");
                 return model;
             }
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
             {
-                model.Errors.Add("There was a problem authorizing with that provider.");
+                model.Errors.Add(ErrorMessages.AuthProviderError);
                 return model;
             }
 
@@ -158,7 +158,7 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user.AdminLocked)
             {
-                model.Errors.Add($"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance.");
+                model.Errors.Add(ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress));
                 return model;
             }
 
@@ -211,7 +211,7 @@ namespace VueCoreFramework.Controllers
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = $"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance." });
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
 
             // For more information on how to enable account confirmation and password reset please visit https://go.microsoft.com/fwlink/?LinkID=532713
@@ -269,7 +269,7 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
             }
             var userLogins = await _userManager.GetLoginsAsync(user);
             return Json(new
@@ -294,7 +294,7 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
             }
             if (await _userManager.HasPasswordAsync(user)) return Json(new { response = "yes" });
             else return Json(new { response = "no" });
@@ -316,20 +316,20 @@ namespace VueCoreFramework.Controllers
             }
             if (user == null)
             {
-                model.Errors.Add("Invalid login attempt.");
+                model.Errors.Add(ErrorMessages.InvalidLogin);
                 return model;
             }
             else
             {
                 if (user.AdminLocked)
                 {
-                    model.Errors.Add($"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance.");
+                    model.Errors.Add(ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress));
                     return model;
                 }
                 // Require the user to have a confirmed email before they can log in.
                 if (!await _userManager.IsEmailConfirmedAsync(user))
                 {
-                    model.Errors.Add("You must have a confirmed email to log in. Please check your email for your confirmation link. If you've lost the email, please register again.");
+                    model.Errors.Add(ErrorMessages.ConfirmEmailLoginError);
                     return model;
                 }
             }
@@ -339,7 +339,7 @@ namespace VueCoreFramework.Controllers
             var result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, model.RememberUser, lockoutOnFailure: false);
             if (!result.Succeeded)
             {
-                model.Errors.Add("Invalid login attempt.");
+                model.Errors.Add(ErrorMessages.InvalidLogin);
                 return model;
             }
 
@@ -377,23 +377,23 @@ namespace VueCoreFramework.Controllers
             {
                 if (user.AdminLocked)
                 {
-                    model.Errors.Add($"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance.");
+                    model.Errors.Add(ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress));
                 }
                 else if (!user.EmailConfirmed)
                 {
                     await SendConfirmationEmail(model, user);
-                    model.Errors.Add("An account with this email has already been registered, but your email address has not been confirmed. A new link has just been sent, in case the last one got lost. Please check your spam if you don't see it after a few minutes.");
+                    model.Errors.Add(ErrorMessages.ConfirmEmailRegisterError);
                 }
                 else
                 {
-                    model.Errors.Add("An account with this email already exists. If you've forgotten your password, please use the link on the login page.");
+                    model.Errors.Add(ErrorMessages.DuplicateEmailError);
                 }
                 return model;
             }
             var existingUser = await _userManager.FindByNameAsync(model.Username);
             if (existingUser != null)
             {
-                model.Errors.Add("This username is already in use.");
+                model.Errors.Add(ErrorMessages.DuplicateUsernameError);
                 return model;
             }
             user = new ApplicationUser { UserName = model.Username, Email = model.Email };
@@ -439,7 +439,7 @@ namespace VueCoreFramework.Controllers
             {
                 if (user.AdminLocked)
                 {
-                    model.Errors.Add($"Your account has been locked. Please contact an administrator at {_adminOptions.AdminEmailAddress} for assistance.");
+                    model.Errors.Add(ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress));
                     return model;
                 }
                 var result = await _userManager.ResetPasswordAsync(user, model.Code, model.NewPassword);

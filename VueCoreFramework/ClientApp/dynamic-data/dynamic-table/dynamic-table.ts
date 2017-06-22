@@ -128,7 +128,7 @@ export default class DynamicTableComponent extends Vue {
 
     @Watch('$route')
     onRouteChange(val: VueRouter.Route, oldVal: VueRouter.Route) {
-        this.routeName = this.$route.name.substr(0, this.$route.name.length - 9); // remove 'DataTable'
+        this.routeName = val.name.substr(0, val.name.length - 9); // remove 'DataTable'
         this.repository = this.$store.getters.getRepository(this.routeName);
         if (this.updateTimeout === 0) {
             this.updateTimeout = setTimeout(this.updateTable, 125);

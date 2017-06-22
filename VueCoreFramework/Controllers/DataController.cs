@@ -69,7 +69,7 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -82,11 +82,11 @@ namespace VueCoreFramework.Controllers
             }
             if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataAdd))
             {
-                return Json(new { error = "You don't have permission to add new items of this type." });
+                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_AddNew) });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
             PropertyInfo pInfo = null;
             if (!string.IsNullOrEmpty(parentId) && !string.IsNullOrEmpty(childProp))
@@ -109,7 +109,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = "Item could not be saved." });
+                return Json(new { error = ErrorMessages.SaveItemError });
             }
         }
 
@@ -128,19 +128,23 @@ namespace VueCoreFramework.Controllers
         [HttpPost("{id}/{childProp}")]
         public async Task<IActionResult> AddChildrenToCollection(string dataType, string id, string childProp, [FromBody]string[] childIds)
         {
-            if (!TryGetRepository(_context, dataType, out IRepository repository))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
             if (string.IsNullOrEmpty(id))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingIdError });
+            }
+            if (string.IsNullOrEmpty(childProp))
+            {
+                return Json(new { error = ErrorMessages.MissingPropError });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
+            {
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -153,11 +157,7 @@ namespace VueCoreFramework.Controllers
             }
             if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, id))
             {
-                return Json(new { error = "You don't have permission to edit this item." });
-            }
-            if (string.IsNullOrEmpty(childProp))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_EditItem) });
             }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
@@ -166,7 +166,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingPropError });
             }
             try
             {
@@ -175,7 +175,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = "Item could not be accessed." });
+                return Json(new { error = ErrorMessages.DataError });
             }
         }
 
@@ -192,19 +192,19 @@ namespace VueCoreFramework.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Find(string dataType, string id)
         {
-            if (!TryGetRepository(_context, dataType, out IRepository repository))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
             if (string.IsNullOrEmpty(id))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingIdError });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
+            {
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -217,7 +217,7 @@ namespace VueCoreFramework.Controllers
             }
             if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView, id))
             {
-                return Json(new { error = "You don't have permission to view this item." });
+                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItem) });
             }
             object item = null;
             try
@@ -226,11 +226,11 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = "Item could not be accessed." });
+                return Json(new { error = ErrorMessages.DataError });
             }
             if (item == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/404" });
+                return Json(new { error = ErrorMessages.DataError });
             }
             return Json(new { data = item });
         }
@@ -250,7 +250,7 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -263,11 +263,11 @@ namespace VueCoreFramework.Controllers
             }
             if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView))
             {
-                return Json(new { error = "You don't have permission to view items of this type." });
+                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItems) });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
             return Json(await repository.GetAllAsync());
         }
@@ -288,11 +288,19 @@ namespace VueCoreFramework.Controllers
             string id,
             string childProp)
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                return Json(new { error = ErrorMessages.MissingIdError });
+            }
+            if (string.IsNullOrEmpty(childProp))
+            {
+                return Json(new { error = ErrorMessages.MissingPropError });
+            }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -305,19 +313,11 @@ namespace VueCoreFramework.Controllers
             }
             if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView))
             {
-                return Json(new { error = "You don't have permission to view items of this type." });
+                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItems) });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
-            if (string.IsNullOrEmpty(id))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
-            if (string.IsNullOrEmpty(childProp))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
@@ -326,7 +326,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingPropError });
             }
             try
             {
@@ -335,7 +335,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = "Item could not be accessed." });
+                return Json(new { error = ErrorMessages.DataError });
             }
         }
 
@@ -352,19 +352,23 @@ namespace VueCoreFramework.Controllers
         [HttpGet("{id}/{childProp}")]
         public async Task<IActionResult> GetChildId(string dataType, string id, string childProp)
         {
-            if (!TryGetRepository(_context, dataType, out IRepository repository))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
             if (string.IsNullOrEmpty(id))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingIdError });
+            }
+            if (string.IsNullOrEmpty(childProp))
+            {
+                return Json(new { error = ErrorMessages.MissingPropError });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
+            {
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -377,11 +381,7 @@ namespace VueCoreFramework.Controllers
             }
             if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView, id))
             {
-                return Json(new { error = "You don't have permission to view this item." });
-            }
-            if (string.IsNullOrEmpty(childProp))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItem) });
             }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
@@ -390,7 +390,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingPropError });
             }
             try
             {
@@ -399,7 +399,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = "Item could not be accessed." });
+                return Json(new { error = ErrorMessages.DataError });
             }
         }
 
@@ -438,19 +438,23 @@ namespace VueCoreFramework.Controllers
             int page,
             int rowsPerPage)
         {
-            if (!TryGetRepository(_context, dataType, out IRepository repository))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
             if (string.IsNullOrEmpty(id))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingIdError });
+            }
+            if (string.IsNullOrEmpty(childProp))
+            {
+                return Json(new { error = ErrorMessages.MissingPropError });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
+            {
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -463,21 +467,21 @@ namespace VueCoreFramework.Controllers
             }
             if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView, id))
             {
-                return Json(new { error = "You don't have permission to view this item." });
-            }
-            if (string.IsNullOrEmpty(childProp))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItem) });
             }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
                 .FirstOrDefault()
                 .GetTypeInfo()
                 .GetProperty(childProp.ToInitialCaps());
+            if (pInfo == null)
+            {
+                return Json(new { error = ErrorMessages.MissingPropError });
+            }
             var childType = repository.EntityType.FindNavigation(pInfo).GetTargetType().ClrType;
             if (!AuthorizationController.IsAuthorized(claims, childType.Name, CustomClaimTypes.PermissionDataView))
             {
-                return Json(new { error = "You don't have permission to view items of this type." });
+                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItems) });
             }
             try
             {
@@ -486,7 +490,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = "Item could not be accessed." });
+                return Json(new { error = ErrorMessages.DataError });
             }
         }
 
@@ -503,19 +507,23 @@ namespace VueCoreFramework.Controllers
         [HttpGet("{id}/{childProp}")]
         public async Task<IActionResult> GetChildTotal(string dataType, string id, string childProp)
         {
-            if (!TryGetRepository(_context, dataType, out IRepository repository))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
             if (string.IsNullOrEmpty(id))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingIdError });
+            }
+            if (string.IsNullOrEmpty(childProp))
+            {
+                return Json(new { error = ErrorMessages.MissingPropError });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
+            {
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -528,11 +536,7 @@ namespace VueCoreFramework.Controllers
             }
             if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView, id))
             {
-                return Json(new { error = "You don't have permission to view this item." });
-            }
-            if (string.IsNullOrEmpty(childProp))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItem) });
             }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
@@ -541,7 +545,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingPropError });
             }
             try
             {
@@ -550,7 +554,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = "Item could not be accessed." });
+                return Json(new { error = ErrorMessages.DataError });
             }
         }
 
@@ -607,7 +611,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.DataError });
             }
         }
 
@@ -623,7 +627,7 @@ namespace VueCoreFramework.Controllers
         {
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
             try
             {
@@ -631,7 +635,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = "Data could not be retrieved." });
+                return Json(new { error = ErrorMessages.DataError });
             }
         }
 
@@ -674,7 +678,7 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -687,11 +691,11 @@ namespace VueCoreFramework.Controllers
             }
             if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView))
             {
-                return Json(new { error = "You don't have permission to view items of this type." });
+                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItems) });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
             try
             {
@@ -699,7 +703,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.DataError });
             }
         }
 
@@ -718,7 +722,7 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -731,11 +735,11 @@ namespace VueCoreFramework.Controllers
             }
             if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView))
             {
-                return Json(new { error = "You don't have permission to view items of this type." });
+                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItems) });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
             var total = await repository.GetTotalAsync();
             return Json(new { response = total });
@@ -785,7 +789,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.DataError });
             }
         }
 
@@ -801,19 +805,19 @@ namespace VueCoreFramework.Controllers
         [HttpPost("{id}")]
         public async Task<IActionResult> Remove(string dataType, string id)
         {
-            if (!TryGetRepository(_context, dataType, out IRepository repository))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
             if (string.IsNullOrEmpty(id))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingIdError });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
+            {
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -826,7 +830,7 @@ namespace VueCoreFramework.Controllers
             }
             if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataAll, id))
             {
-                return Json(new { error = "You don't have permission to remove this item." });
+                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_RemoveItem) });
             }
             try
             {
@@ -837,7 +841,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = "Item could not be removed." });
+                return Json(new { error = ErrorMessages.RemoveItemError });
             }
             return Ok();
         }
@@ -857,19 +861,23 @@ namespace VueCoreFramework.Controllers
         [HttpPost("{id}/{childProp}")]
         public async Task<IActionResult> RemoveChildrenFromCollection(string dataType, string id, string childProp, [FromBody]string[] childIds)
         {
-            if (!TryGetRepository(_context, dataType, out IRepository repository))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
             if (string.IsNullOrEmpty(id))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingIdError });
+            }
+            if (string.IsNullOrEmpty(childProp))
+            {
+                return Json(new { error = ErrorMessages.MissingPropError });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
+            {
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -882,11 +890,7 @@ namespace VueCoreFramework.Controllers
             }
             if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, id))
             {
-                return Json(new { error = "You don't have permission to edit this item." });
-            }
-            if (string.IsNullOrEmpty(childProp))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_EditItem) });
             }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
@@ -895,7 +899,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingPropError });
             }
             try
             {
@@ -904,7 +908,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = "Item could not be accessed." });
+                return Json(new { error = ErrorMessages.DataError });
             }
         }
 
@@ -923,19 +927,23 @@ namespace VueCoreFramework.Controllers
         [HttpPost("{id}/{childProp}")]
         public async Task<IActionResult> RemoveFromParent(string dataType, string id, string childProp)
         {
-            if (!TryGetRepository(_context, dataType, out IRepository repository))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
             if (string.IsNullOrEmpty(id))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingIdError });
+            }
+            if (string.IsNullOrEmpty(childProp))
+            {
+                return Json(new { error = ErrorMessages.MissingPropError });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
+            {
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -948,11 +956,7 @@ namespace VueCoreFramework.Controllers
             }
             if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, id))
             {
-                return Json(new { error = "You don't have permission to edit this item." });
-            }
-            if (string.IsNullOrEmpty(childProp))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_EditItem) });
             }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
@@ -961,7 +965,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingPropError });
             }
             try
             {
@@ -976,7 +980,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = "Item could not be removed." });
+                return Json(new { error = ErrorMessages.RemoveItemError });
             }
         }
 
@@ -994,17 +998,17 @@ namespace VueCoreFramework.Controllers
         {
             if (ids == null || ids.Count == 0)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
-            if (!TryGetRepository(_context, dataType, out IRepository repository))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingIdError });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
+            {
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -1019,7 +1023,7 @@ namespace VueCoreFramework.Controllers
             {
                 if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataAll, id))
                 {
-                    return Json(new { error = "You don't have permission to remove one or more of these items." });
+                    return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_RemoveItems) });
                 }
             }
             try
@@ -1031,7 +1035,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = "One or more items could not be removed." });
+                return Json(new { error = ErrorMessages.RemoveItemsError });
             }
             return Ok();
         }
@@ -1055,17 +1059,21 @@ namespace VueCoreFramework.Controllers
         {
             if (ids == null || ids.Count == 0)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingIdError });
             }
-            if (!TryGetRepository(_context, dataType, out IRepository repository))
+            if (string.IsNullOrEmpty(childProp))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingPropError });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
+            {
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -1081,12 +1089,8 @@ namespace VueCoreFramework.Controllers
             {
                 if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, id))
                 {
-                    return Json(new { error = "You don't have permission to edit one or more of these items." });
+                    return Json(new { error = ErrorMessages.NoPermission("edit one or more of these items") });
                 }
-            }
-            if (string.IsNullOrEmpty(childProp))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
@@ -1095,7 +1099,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingPropError });
             }
             try
             {
@@ -1107,7 +1111,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = "One or more items could not be removed." });
+                return Json(new { error = ErrorMessages.RemoveItemsError });
             }
         }
 
@@ -1130,17 +1134,23 @@ namespace VueCoreFramework.Controllers
         [HttpPost("{parentId}/{newChildId}/{childProp}")]
         public async Task<IActionResult> ReplaceChild(string dataType, string parentId, string newChildId, string childProp)
         {
-            if (!TryGetRepository(_context, dataType, out IRepository repository))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
             if (string.IsNullOrEmpty(parentId) || string.IsNullOrEmpty(newChildId))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingIdError });
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingPropError });
+            }
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
+            {
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
@@ -1149,13 +1159,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user == null)
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingPropError });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -1168,7 +1172,7 @@ namespace VueCoreFramework.Controllers
             }
             if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, parentId))
             {
-                return Json(new { error = "You don't have permission to edit this item." });
+                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_EditItem) });
             }
             try
             {
@@ -1183,7 +1187,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = "Item could not be added." });
+                return Json(new { error = ErrorMessages.AddItemError });
             }
         }
 
@@ -1203,23 +1207,23 @@ namespace VueCoreFramework.Controllers
         [HttpPost("{parentId}/{childProp}")]
         public async Task<IActionResult> ReplaceChildWithNew(string dataType, string parentId, string childProp)
         {
+            if (string.IsNullOrEmpty(parentId))
+            {
+                return Json(new { error = ErrorMessages.MissingIdError });
+            }
+            if (string.IsNullOrEmpty(childProp))
+            {
+                return Json(new { error = ErrorMessages.MissingPropError });
+            }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
-            if (string.IsNullOrEmpty(parentId))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
-            if (string.IsNullOrEmpty(childProp))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
@@ -1228,7 +1232,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.MissingPropError });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -1241,7 +1245,7 @@ namespace VueCoreFramework.Controllers
             }
             if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, parentId))
             {
-                return Json(new { error = "You don't have permission to edit this item." });
+                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_EditItem) });
             }
             try
             {
@@ -1261,7 +1265,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = "Item could not be added." });
+                return Json(new { error = ErrorMessages.AddItemError });
             }
         }
 
@@ -1327,15 +1331,15 @@ namespace VueCoreFramework.Controllers
         [HttpPost]
         public async Task<IActionResult> Update(string dataType, [FromBody]JObject item)
         {
-            if (!TryResolveObject(dataType, item, out object obj, out Type type))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (!TryResolveObject(dataType, item, out object obj, out Type type))
+            {
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -1350,7 +1354,7 @@ namespace VueCoreFramework.Controllers
             var id = repository.PrimaryKey.PropertyInfo.GetValue(obj).ToString();
             if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, id))
             {
-                return Json(new { error = "You don't have permission to edit this item." });
+                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_EditItem) });
             }
             try
             {
@@ -1359,7 +1363,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = "Item could not be updated." });
+                return Json(new { error = ErrorMessages.SaveItemError });
             }
         }
     }

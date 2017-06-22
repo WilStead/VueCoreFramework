@@ -119,7 +119,8 @@ namespace VueCoreFramework.Data
         /// <param name="childIds">The primary keys of the child entities which will be added, as strings.</param>
         public async Task AddChildrenToCollectionAsync(string id, PropertyInfo childProp, IEnumerable<string> childIds)
         {
-            var mtmEntityType = EntityType.FindNavigation(childProp).GetTargetType();
+            var nav = EntityType.FindNavigation(childProp);
+            var mtmEntityType = nav.GetTargetType();
             var mtmType = mtmEntityType.ClrType;
 
             var ptInfo = childProp.PropertyType.GetTypeInfo();
@@ -130,7 +131,7 @@ namespace VueCoreFramework.Data
             var mtmCon = mtmType.GetConstructor(Type.EmptyTypes);
 
             var navs = mtmEntityType.GetNavigations();
-            var mtmParentNav = navs.FirstOrDefault(n => n.FindInverse().Name == childProp.Name);
+            var mtmParentNav = nav.FindInverse();
             var mtmChildNav = navs.FirstOrDefault(n => n != mtmParentNav);
 
             var parentPK = GetPrimaryKeyFromString(id);
@@ -307,23 +308,26 @@ namespace VueCoreFramework.Data
             var item = await FindItemAsync(id);
             var coll = _context.Entry(item).Collection(childProp.Name);
             await coll.LoadAsync();
-            var childType = EntityType.FindNavigation(childProp).GetTargetType();
-            var childRepo = _context.GetRepositoryForType(childType.ClrType);
-            if (EntityType.FindNavigation(childProp.Name).FindInverse().IsCollection())
+            var nav = EntityType.FindNavigation(childProp);
+            var childType = nav.GetTargetType();
+            if (IsManyToManyNavigation(nav))
             {
-                var navs = childType.GetNavigations();
-                var mtmParentNav = navs.FirstOrDefault(n => n.FindInverse() == childProp);
-                var mtmChildProp = navs.FirstOrDefault(n => n != mtmParentNav).PropertyInfo;
+                var mtmParentNav = nav.FindInverse();
+                var mtmChildNav = childType.GetNavigations().FirstOrDefault(n => n != mtmParentNav);
 
-                return await childRepo.GetPageItemsAsync(
-                    coll.CurrentValue.Cast<object>().Select(c => mtmChildProp.GetValue(c)).AsQueryable(),
-                    search, sortBy, descending, page, rowsPerPage, claims);
+                var childRepo = _context.GetRepositoryForType(mtmChildNav.ClrType);
+                foreach (var child in coll.CurrentValue)
+                {
+                    await _context.Entry(child).Navigation(mtmChildNav.Name).LoadAsync();
+                }
+                var childItems = coll.CurrentValue.Cast<object>().Select(c => mtmChildNav.PropertyInfo.GetValue(c)).AsQueryable();
+                return await childRepo.GetPageItemsAsync(childItems, search, sortBy, descending, page, rowsPerPage, claims);
             }
             else
             {
-                return await childRepo.GetPageItemsAsync(
-                    coll.CurrentValue.Cast<object>().AsQueryable(),
-                    search, sortBy, descending, page, rowsPerPage, claims);
+                var childRepo = _context.GetRepositoryForType(childType.ClrType);
+                var childItems = coll.CurrentValue.Cast<object>().AsQueryable();
+                return await childRepo.GetPageItemsAsync(childItems, search, sortBy, descending, page, rowsPerPage, claims);
             }
         }
 
@@ -384,7 +388,7 @@ namespace VueCoreFramework.Data
             if (nav != null)
             {
                 // The input type for navigation properties is the type name.
-                fd.InputType = nav.GetTargetType().Name;
+                fd.InputType = nav.GetTargetType().ClrType.Name;
 
                 var inverse = nav.FindInverse();
                 fd.InverseType = inverse.Name;
@@ -394,9 +398,15 @@ namespace VueCoreFramework.Data
                     // Children in a many-to-many relationship are manipulated in a table containing
                     // all the items of the child type, where items can be added to or removed from
                     // the parent's collection.
-                    if (inverse.IsCollection())
+                    if (IsManyToManyNavigation(nav))
                     {
                         fd.Type = "objectMultiSelect";
+                        // Inverse type is different for many-to-many relationships: it must pass
+                        // through the join and find the type of the actual joined entity.
+                        var parentNav = nav.FindInverse();
+                        fd.InputType = nav.GetTargetType()
+                            .GetNavigations().FirstOrDefault(n => n != parentNav)
+                            .GetTargetType().ClrType.Name;
                     }
                     // Children in a one-to-many relationship are manipulated in a table containing
                     // only those items in the parent's collection. Adding or removing items to/from
@@ -576,6 +586,9 @@ namespace VueCoreFramework.Data
                         // If a step isn't specified, duration uses milliseconds by default.
                         fd.Step = 0.001;
                     }
+                    // EntityFramework TimeSpan mapping has a built-in maximum of 7 days. (N.B. The
+                    // SPA framework can also handle a Duration-typed long, which has no such limit.)
+                    fd.Max = TimeSpan.FromDays(7).ToString();
                 }
                 else if (ptInfo.IsEnum)
                 {
@@ -677,7 +690,7 @@ namespace VueCoreFramework.Data
 
             fd.Required = nav != null
                 ? nav.IsDependentToPrincipal() && nav.ForeignKey.IsRequired
-                : !entityPInfo.IsNullable;
+                : entityPInfo != null && !entityPInfo.IsNullable;
 
             if (pInfo.GetCustomAttribute<EditableAttribute>()?.AllowEdit == false)
             {
@@ -937,7 +950,7 @@ namespace VueCoreFramework.Data
             var entry = item == null ? null : _context.Entry(item);
 
             // Add a property to the VM which identifies the primary key.
-            vm[primaryKeyVMProperty] = PrimaryKey.Name;
+            vm[primaryKeyVMProperty] = PrimaryKey.Name.ToInitialLower();
 
             foreach (var pInfo in typeof(T).GetTypeInfo().GetProperties())
             {
@@ -946,11 +959,20 @@ namespace VueCoreFramework.Data
                 var nav = EntityType.FindNavigation(pInfo.Name);
                 var entityProp = EntityType.FindProperty(pInfo.Name);
 
+                var nullableType = Nullable.GetUnderlyingType(pInfo.PropertyType);
+                var value = item == null ? null : pInfo.GetValue(item);
+                if (value != null && nullableType != null)
+                {
+                    value = pInfo.PropertyType.GetProperty("Value").GetValue(value);
+                }
+
                 if (nav != null)
                 {
                     if (entry != null)
                     {
                         await entry.Navigation(pInfo.Name).LoadAsync();
+                        // Repeat now that nav has been loaded.
+                        value = item == null ? null : pInfo.GetValue(item);
                     }
 
                     // Collection navigation properties are represented as placeholder text, varying
@@ -964,7 +986,6 @@ namespace VueCoreFramework.Data
                     }
                     else
                     {
-                        var value = item == null ? null : pInfo.GetValue(item);
                         vm[pInfo.Name.ToInitialLower()] =
                             (item == null || value == null ? "[None]" : value.ToString());
                     }
@@ -972,14 +993,8 @@ namespace VueCoreFramework.Data
                 // Keys are always hidden in the SPA framework, but are still included in the
                 // ViewModel since the framework must reference the keys in order to manage
                 // relationships.
-                else if (entityProp.IsKey() || entityProp.IsForeignKey())
+                else if (entityProp != null && (entityProp.IsKey() || entityProp.IsForeignKey()))
                 {
-                    object value = item == null ? null : pInfo.GetValue(item);
-                    var nullableType = Nullable.GetUnderlyingType(pInfo.PropertyType);
-                    if (value != null && nullableType != null)
-                    {
-                        value = pInfo.PropertyType.GetProperty("Value").GetValue(value);
-                    }
                     if (value == null)
                     {
                         vm[pInfo.Name.ToInitialLower()] = null;
@@ -995,20 +1010,23 @@ namespace VueCoreFramework.Data
                 // formatted value is used in data tables.
                 else if (pInfo.PropertyType.GetTypeInfo().IsEnum)
                 {
-                    object value = item == null ? 0 : pInfo.GetValue(item);
+                    if (value == null)
+                    {
+                        value = 0;
+                    }
                     var name = pInfo.Name.ToInitialLower();
                     vm[name] = (int)value;
 
                     var desc = EnumExtensions.GetDescription(pInfo.PropertyType, value);
                     vm[name + "Formatted"] = string.IsNullOrEmpty(desc) ? "[...]" : desc;
                 }
-                // Date properties are given their actual value, but are also given a 'Formatted'
+                // DateTime properties are given their actual value, but are also given a 'Formatted'
                 // property in the ViewModel which contains their short date formatted string. This
                 // formatted value is used in data tables.
-                else if (dataType?.DataType == DataType.Date)
+                else if (pInfo.PropertyType == typeof(DateTime)
+                    || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(DateTime))
                 {
                     var name = pInfo.Name.ToInitialLower();
-                    var value = item == null ? null : pInfo.GetValue(item);
                     vm[name] = value;
                     if (value == null)
                     {
@@ -1017,43 +1035,18 @@ namespace VueCoreFramework.Data
                     else
                     {
                         DateTime dt = (DateTime)value;
-                        vm[name + "Formatted"] = dt.ToString("d");
-                    }
-                }
-                // Time properties are given their actual value, but are also given a 'Formatted'
-                // property in the ViewModel which contains their short time formatted string. This
-                // formatted value is used in data tables.
-                else if (dataType?.DataType == DataType.Time)
-                {
-                    var name = pInfo.Name.ToInitialLower();
-                    var value = item == null ? null : pInfo.GetValue(item);
-                    vm[name] = value;
-                    if (value == null)
-                    {
-                        vm[name + "Formatted"] = "[None]";
-                    }
-                    else
-                    {
-                        DateTime dt = (DateTime)value;
-                        vm[name + "Formatted"] = dt.ToString("t");
-                    }
-                }
-                // DateTime properties which are not marked as either Date or Time are given their
-                // actual value, but are also given a 'Formatted' property in the ViewModel which
-                // contains their general formatted string. This formatted value is used in data tables.
-                else if (dataType?.DataType == DataType.DateTime || pInfo.PropertyType == typeof(DateTime))
-                {
-                    var name = pInfo.Name.ToInitialLower();
-                    var value = item == null ? null : pInfo.GetValue(item);
-                    vm[name] = value;
-                    if (value == null)
-                    {
-                        vm[name + "Formatted"] = "[None]";
-                    }
-                    else
-                    {
-                        DateTime dt = (DateTime)value;
-                        vm[name + "Formatted"] = dt.ToString("g");
+                        if (dataType?.DataType == DataType.Date)
+                        {
+                            vm[name + "Formatted"] = dt.ToString("d");
+                        }
+                        else if (dataType?.DataType == DataType.Time)
+                        {
+                            vm[name + "Formatted"] = dt.ToString("t");
+                        }
+                        else
+                        {
+                            vm[name + "Formatted"] = dt.ToString("g");
+                        }
                     }
                 }
                 // Duration properties are given their actual value, but are also given a 'Formatted'
@@ -1064,7 +1057,6 @@ namespace VueCoreFramework.Data
                     || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(TimeSpan))
                 {
                     var name = pInfo.Name.ToInitialLower();
-                    var value = item == null ? null : pInfo.GetValue(item);
                     vm[name] = value;
                     if (value == null)
                     {
@@ -1072,45 +1064,73 @@ namespace VueCoreFramework.Data
                     }
                     else
                     {
-                        var ts = (TimeSpan)value;
+                        TimeSpan ts;
+                        if (pInfo.PropertyType == typeof(long)
+                            || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(long))
+                        {
+                            ts = TimeSpan.FromTicks((long)value);
+                        }
+                        else
+                        {
+                            ts = (TimeSpan)value;
+                        }
                         vm[name + "Formatted"] = ts.ToString("c");
                     }
                 }
+                // Null values are represented with placeholder text. The SPA framework
+                // automatically omits values with this placeholder text when sending data back
+                // for update, avoiding overwriting previously null values with the placeholder
+                // text inappropriately.
+                else if (value == null)
+                {
+                    vm[pInfo.Name.ToInitialLower()] = "[None]";
+                }
+                // Other recognized types are represented with their ToString equivalent.
+                else if (pInfo.PropertyType == typeof(string)
+                    || pInfo.PropertyType.IsNumeric()
+                    || pInfo.PropertyType == typeof(bool)
+                    || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(bool)
+                    || pInfo.PropertyType == typeof(Guid)
+                    || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(Guid))
+                {
+                    vm[pInfo.Name.ToInitialLower()] = value.ToString();
+                }
+                // Unsupported types are not displayed with toString, to avoid cases where this
+                // only shows the type name. Instead placeholder text is used for any value.
                 else
                 {
-                    object value = item == null ? null : pInfo.GetValue(item);
-                    var nullableType = Nullable.GetUnderlyingType(pInfo.PropertyType);
-                    if (value != null && nullableType != null)
-                    {
-                        value = nullableType.GetProperty("Value").GetValue(value);
-                    }
-                    // Null values are represented with placeholder text. The SPA framework
-                    // automatically omits values with this placeholder text when sending data back
-                    // for update, avoiding overwriting previously null values with the placeholder
-                    // text inappropriately.
-                    if (value == null)
-                    {
-                        vm[pInfo.Name.ToInitialLower()] = "[None]";
-                    }
-                    // Other recognized types are represented with their ToString equivalent.
-                    else if (pInfo.PropertyType == typeof(string)
-                        || pInfo.PropertyType.IsNumeric()
-                        || pInfo.PropertyType == typeof(bool)
-                        || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(bool)
-                        || pInfo.PropertyType == typeof(Guid)
-                        || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(Guid))
-                    {
-                        vm[pInfo.Name.ToInitialLower()] = value.ToString();
-                    }
-                    // Unsupported types are not displayed with toString, to avoid cases where this
-                    // only shows the type name. Instead placeholder text is used for any value.
-                    else
-                    {
-                        vm[pInfo.Name.ToInitialLower()] = "[...]";
-                    }
+                    vm[pInfo.Name.ToInitialLower()] = "[...]";
                 }
             }
             return vm;
+        }
+
+        private bool IsManyToManyNavigation(INavigation nav)
+        {
+            var type = nav.GetTargetType();
+            // If the type has any properties of its own which are not foreign keys, it is presumed
+            // not to be a many-to-many join.
+            if (type.GetProperties().Any(p => !p.IsForeignKey()))
+            {
+                return false;
+            }
+            var inverses = type.GetNavigations();
+            // If the type has more than 2 navigations, it is presumed not to be a many-to-many join.
+            if (inverses.Count() != 2)
+            {
+                return false;
+            }
+            foreach (var inv in inverses)
+            {
+                // If either of the navigations do not have collections as inverses, it is presumed
+                // not to be a many-to-many join.
+                if (!inv.FindInverse().IsCollection())
+                {
+                    return false;
+                }
+            }
+            // If all of the above criteria are met, it is presumed to be a many-to-many join.
+            return true;
         }
 
         /// <summary>
@@ -1138,11 +1158,12 @@ namespace VueCoreFramework.Data
         /// <param name="childIds">The primary keys of the child entities which will be removed, as strings.</param>
         public async Task RemoveChildrenFromCollectionAsync(string id, PropertyInfo childProp, IEnumerable<string> childIds)
         {
-            var mtmEntityType = EntityType.FindNavigation(childProp).GetTargetType();
+            var nav = EntityType.FindNavigation(childProp);
+            var mtmEntityType = nav.GetTargetType();
             var parentPK = GetPrimaryKeyFromString(id);
 
             var navs = mtmEntityType.GetNavigations();
-            var mtmParentNav = navs.FirstOrDefault(n => n.FindInverse().Name == childProp.Name);
+            var mtmParentNav = nav.FindInverse();
             var mtmChildNav = navs.FirstOrDefault(n => n != mtmParentNav);
 
             foreach (var childId in childIds)

@@ -40,7 +40,7 @@ export default class DynamicFormComponent extends Vue {
         validateAfterChanged: true
     };
     isValid = false;
-    model: any = { dataType: this.$route.name };
+    model: any = {};
     parentRepository: Repository = null;
     repository: Repository = null;
     schema: Schema = {};
@@ -49,7 +49,7 @@ export default class DynamicFormComponent extends Vue {
 
     @Watch('$route')
     onRouteChange(val: VueRouter.Route, oldVal: VueRouter.Route) {
-        this.repository = this.$store.getters.getRepository(this.$route.name);
+        this.repository = this.$store.getters.getRepository(val.name);
         if (this.updateTimeout === 0) {
             this.updateTimeout = setTimeout(this.updateForm, 125);
         }

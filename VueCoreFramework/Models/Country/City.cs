@@ -33,7 +33,7 @@ namespace VueCoreFramework.Models
     }
 
     /// <summary>
-    /// A <see cref="DataItem"/> representing a city.
+    /// A <see cref="NamedDataItem"/> representing a city.
     /// </summary>
     /// <remarks>
     /// Because this class doesn't have the <see cref="MenuClassAttribute"/>, it will not appear in
@@ -48,7 +48,8 @@ namespace VueCoreFramework.Models
         /// </summary>
         /// <remarks>
         /// The DataType can control the type of field displayed in forms. Time will present a time
-        /// picker.
+        /// picker alone. Without this specification, a DateTime property would be represented by
+        /// both date and timne pickers.
         /// </remarks>
         [Display(Prompt = "Local time at GMT midnight")]
         [DataType(DataType.Time)]
@@ -70,7 +71,9 @@ namespace VueCoreFramework.Models
         /// values) will be displayed as '[...]', to avoid the expensive operations required to
         /// validate and break down the flag value. For this reason, it may be best to hide Flags
         /// enums in tables when it is expected that multiple selections will be common, as is done
-        /// here, to avoid a column full of unhelpful placeholder text.
+        /// here, to avoid a column full of unhelpful placeholder text. When single selections are
+        /// expected to be more common, the field can be left visible so that the named selections
+        /// can be shown in tables.
         /// </remarks>
         [Hidden(false, HideInTable = true)]
         public CityTransit Transit { get; set; }
@@ -79,18 +82,17 @@ namespace VueCoreFramework.Models
         /// The country to which this city belongs.
         /// </summary>
         /// <remarks>
-        /// Inverse navigation properties must be marked virtual for the framework to operate
-        /// correctly. It is not necessary to hide inverse references on child objects (a field with
-        /// a view/edit option will be generated). However, it will make your views cleaner when the
-        /// child object has just one parent, since the parent object can always be accessed from the
-        /// child by going back or cancelling the current operation, making a reverse navigation
-        /// field redundant. In cases where a child may be in relationships to different parents,
-        /// visible reverse navigation fields can be helpful.
+        /// It is not necessary to hide inverse references on child objects (a field with a view/edit
+        /// option will be generated). However, it can make views cleaner when the child object has
+        /// just one parent, since the parent object can always be accessed from the child by going
+        /// back or cancelling the current operation, making a reverse navigation field redundant. In
+        /// cases where a child may be in relationships to different parents, visible reverse
+        /// navigation fields can be helpful to browse among the related entities.
         /// </remarks>
         [JsonIgnore]
         [InverseProperty(nameof(Models.Country.Cities))]
         [Hidden]
-        public virtual Country Country { get; set; }
+        public Country Country { get; set; }
 
         /// <summary>
         /// The foreign key for <see cref="Country"/>.
@@ -109,7 +111,7 @@ namespace VueCoreFramework.Models
         [JsonIgnore]
         [InverseProperty(nameof(Models.Country.Capitol))]
         [Hidden]
-        public virtual Country CountryCapitol { get; set; }
+        public Country CountryCapitol { get; set; }
 
         /// <summary>
         /// The foreign key for <see cref="CountryCapitol"/>.

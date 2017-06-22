@@ -42,10 +42,8 @@ namespace VueCoreFramework.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
-                    CreationTimestamp = table.Column<DateTime>(nullable: false),
                     International = table.Column<bool>(nullable: true),
-                    Name = table.Column<string>(nullable: false),
-                    UpdateTimestamp = table.Column<DateTime>(nullable: false)
+                    Name = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -86,11 +84,9 @@ namespace VueCoreFramework.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
-                    CreationTimestamp = table.Column<DateTime>(nullable: false),
                     EpiIndex = table.Column<double>(nullable: true),
                     FlagPrimaryColor = table.Column<string>(nullable: true),
-                    Name = table.Column<string>(nullable: false),
-                    UpdateTimestamp = table.Column<DateTime>(nullable: false)
+                    Name = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -233,12 +229,10 @@ namespace VueCoreFramework.Migrations
                     Id = table.Column<Guid>(nullable: false),
                     CountryCapitolId = table.Column<Guid>(nullable: true),
                     CountryId = table.Column<Guid>(nullable: false),
-                    CreationTimestamp = table.Column<DateTime>(nullable: false),
                     LocalTimeAtGMTMidnight = table.Column<DateTime>(nullable: false),
                     Name = table.Column<string>(nullable: false),
                     Population = table.Column<int>(nullable: false),
-                    Transit = table.Column<int>(nullable: false),
-                    UpdateTimestamp = table.Column<DateTime>(nullable: false)
+                    Transit = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -265,11 +259,9 @@ namespace VueCoreFramework.Migrations
                     Age = table.Column<int>(nullable: false),
                     Birthdate = table.Column<DateTime>(nullable: true),
                     CountryId = table.Column<Guid>(nullable: false),
-                    CreationTimestamp = table.Column<DateTime>(nullable: false),
                     MaritalStatus = table.Column<int>(nullable: false),
                     Name = table.Column<string>(nullable: false),
-                    TimeInOfficeTicks = table.Column<long>(nullable: true),
-                    UpdateTimestamp = table.Column<DateTime>(nullable: false)
+                    TimeInOfficeTicks = table.Column<long>(nullable: true)
                 },
                 constraints: table =>
                 {

@@ -89,7 +89,19 @@ export default {
 
         let nullCheck = this.value !== undefined && this.value !== null && this.value !== '[None]';
 
-        let duration = nullCheck ? moment.duration(this.value) : moment.duration();
+        let duration: moment.Duration;
+        let ticks = false;
+        if (nullCheck) {
+            if (!isNaN(this.value)) {
+                // Convert Ticks to milliseconds.
+                duration = moment.duration(this.value / 10000);
+                ticks = true;
+            } else {
+                duration = moment.duration(this.value);
+            }
+        } else {
+            duration = moment.duration();
+        }
         let yearValue = duration.years();
         let monthValue = showYear ? duration.months() : this.floorMonthAbs(duration);
         let dayValue = showYear || showMonth
@@ -103,7 +115,7 @@ export default {
             : duration.asSeconds();
 
         return {
-            duration,
+            duration, ticks,
             showYear, showMonth, showDay, showHour, showMinute, showSecond,
             yearMax, yearMin,
             monthMax, monthMin,
@@ -180,31 +192,35 @@ export default {
             this.updateValue();
         },
         updateValue() {
-            this.yearValue = this.duration.years();
-            this.monthValue = this.showYear ? this.duration.months() : this.floorMonthAbs(this.duration);
-            this.dayValue = this.showYear || this.showMonth
-                ? this.duration.days() : this.floorDayAbs(this.duration);
-            this.hourValue = this.showYear || this.showMonth || this.showDay
-                ? this.duration.hours() : this.floorHourAbs(this.duration);
-            this.minuteValue = this.showYear || this.showMonth || this.showDay || this.showHour
-                ? this.duration.minutes() : this.floorMinuteAbs(this.duration);
-            this.secondValue = this.showYear || this.showMonth || this.showDay || this.showHour || this.showMinute
-                ? this.duration.seconds() + this.duration.milliseconds() / 1000
-                : this.duration.asSeconds();
-            let s = "";
-            let ms = this.duration.asMilliseconds();
-            if (ms < 0) {
-                s += "-";
-                ms *= -1;
+            if (this.ticks) {
+                this.value = this.duration.asMilliseconds() * 10000;
+            } else {
+                this.yearValue = this.duration.years();
+                this.monthValue = this.showYear ? this.duration.months() : this.floorMonthAbs(this.duration);
+                this.dayValue = this.showYear || this.showMonth
+                    ? this.duration.days() : this.floorDayAbs(this.duration);
+                this.hourValue = this.showYear || this.showMonth || this.showDay
+                    ? this.duration.hours() : this.floorHourAbs(this.duration);
+                this.minuteValue = this.showYear || this.showMonth || this.showDay || this.showHour
+                    ? this.duration.minutes() : this.floorMinuteAbs(this.duration);
+                this.secondValue = this.showYear || this.showMonth || this.showDay || this.showHour || this.showMinute
+                    ? this.duration.seconds() + this.duration.milliseconds() / 1000
+                    : this.duration.asSeconds();
+                let s = "";
+                let ms = this.duration.asMilliseconds();
+                if (ms < 0) {
+                    s += "-";
+                    ms *= -1;
+                }
+                let d = this.duration.asDays();
+                d = (d >= 0 ? 1 : -1) * Math.floor(Math.abs(d));
+                if (d !== 0) {
+                    s += d;
+                    s += ".";
+                }
+                s += moment.utc(ms).format("HH:mm:ss.SSS");
+                this.value = s;
             }
-            let d = this.duration.asDays();
-            d = (d >= 0 ? 1 : -1) * Math.floor(Math.abs(d));
-            if (d !== 0) {
-                s += d;
-                s += ".";
-            }
-            s += moment.utc(ms).format("HH:mm:ss.SSS");
-            this.value = s;
         }
     }
 };

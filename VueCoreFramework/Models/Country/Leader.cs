@@ -2,7 +2,6 @@
 using Newtonsoft.Json;
 using System;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace VueCoreFramework.Models
 {
@@ -11,11 +10,14 @@ namespace VueCoreFramework.Models
     /// </summary>
     /// <remarks>
     /// A non-Flags enum is represented by the framework as a select input, allowing a single
-    /// selection. A 'None' value, if present, will be treated the same as any other selection. The
+    /// selection. A 'None' entry, if present, will be treated the same as any other selection. The
     /// selection control will not supply a 'None' or other unset value if the enum does not contain
-    /// one. Nullable Enum properties are treated exactly the same as required ones by the framework,
-    /// since the selection controls have no way to indicate an unset value. Use a 'None' value in
-    /// your enum if you wish an unset value to be represented in your data.
+    /// one. The framework also will not add an unset selection placeholder for Nullable Enum
+    /// properties, in order to avoid duplicating any existing 'None' entry. For this reason Nullable
+    /// Enum properties are not feasible with the SPA framework (they will not cause any errors, but
+    /// it will not be possible to preserve nulls; updates from the SPA will always contain a value
+    /// for the property). Use a 'None' value in your enum if you wish an unset value to be
+    /// represented in your data, instead of making the property nullable.
     /// </remarks>
     public enum MaritalStatus
     {
@@ -24,7 +26,7 @@ namespace VueCoreFramework.Models
     }
 
     /// <summary>
-    /// A <see cref="DataItem"/> representing a country's head of government.
+    /// A <see cref="NamedDataItem"/> representing a country's head of government.
     /// </summary>
     /// <remarks>
     /// The DashboardFormContent property indicates that a custom component exists which will be
@@ -48,6 +50,8 @@ namespace VueCoreFramework.Models
         /// </summary>
         /// <remarks>
         /// A DataType of Date is represented in forms by a date picker. The time portion is ignored.
+        /// Because this is a nullable property, the field will also have the option to set a null
+        /// value rather than a date.
         /// </remarks>
         [DataType(DataType.Date)]
         [Range(typeof(DateTime), "1/1/1917 12:00:00 AM", "1/1/2000 12:00:00 AM")]
@@ -57,9 +61,8 @@ namespace VueCoreFramework.Models
         /// The country represented by this leader.
         /// </summary>
         [JsonIgnore]
-        [InverseProperty(nameof(Models.Country.Leader))]
         [Hidden]
-        public virtual Country Country { get; set; }
+        public Country Country { get; set; }
 
         /// <summary>
         /// Foreign key for <see cref="Country"/>
@@ -73,40 +76,25 @@ namespace VueCoreFramework.Models
         public MaritalStatus MaritalStatus { get; set; }
 
         /// <summary>
-        /// Time in office.
+        /// Time in office (as a Ticks value).
         /// </summary>
         /// <remarks>
-        /// Durations can be represented on forms with TimeSpan properties, but SQL databases cannot
-        /// store TimeSpans greater than 7 days. Instead, a computed TimeSpan property based on the
-        /// long Ticks property below as the actual database-mapped property. Display Description is
-        /// used to set hint text for the field. The DisplayFormat DataFormatString can be used to
-        /// indicate which values of the TimeSpan will be displayed (and available for editing); it
-        /// must take the form 'y:M:d:h:m:s' representing years, months, days, hours, minutes,
-        /// seconds (including fractional seconds). Any number of indicators may be omitted from the
-        /// beginning or end (e.g. the format below shows only years, months, and days; not hours,
-        /// minutes, or seconds), but omitting any in the middle is disregarded (since overflow from
-        /// a low unit must be shown and editable with in-between units).
+        /// Although the SPA framework can handle TimeSpan properties, SQL databases cannot store
+        /// TimeSpans greater than 7 days, so the SPA framework can also interpret long values as
+        /// TimeSpan Ticks by indicating the Duration DataType. Display Description is used to set
+        /// hint text for the field. The DisplayFormat DataFormatString can be used to indicate which
+        /// values of the TimeSpan will be displayed (and available for editing); it must take the
+        /// form 'y:M:d:h:m:s' representing years, months, days, hours, minutes, seconds (including
+        /// fractional seconds). Any number of indicators may be omitted from the beginning or end
+        /// (e.g. the format below shows only years, months, and days; not hours, minutes, or
+        /// seconds), but omitting any in the middle is disregarded (since overflow from a low unit
+        /// must be shown and editable with in-between units). Note that Range for a Duration uses
+        /// TimeSpan units, even when the property is a long.
         /// </remarks>
-        [NotMapped]
-        [Display(Name = "Time in Office", Description = "As of 6/8/2017")]
         [DataType(DataType.Duration)]
+        [Display(Name = "Time in Office", Description = "As of 6/8/2017")]
         [DisplayFormat(DataFormatString = "y:M:d")]
         [Range(typeof(TimeSpan), "00:00:00", "36500.00:00:00")]
-        public TimeSpan? TimeInOffice
-        {
-            get => TimeInOfficeTicks.HasValue ? TimeSpan.FromTicks(TimeInOfficeTicks.Value) : (TimeSpan?)null;
-            set => TimeInOfficeTicks = value.HasValue ? value.Value.Ticks : (long?)null;
-        }
-
-        /// <summary>
-        /// Time in office as a ticks value.
-        /// </summary>
-        /// <remarks>
-        /// This 'pseudo-backing-store' must be ignored by the JSON mapping, otherwise changes to the
-        /// TimeSpan property will be disregarded.
-        /// </remarks>
-        [Hidden]
-        [JsonIgnore]
         public long? TimeInOfficeTicks { get; set; }
     }
 }

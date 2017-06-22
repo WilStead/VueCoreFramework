@@ -49,18 +49,20 @@ namespace VueCoreFramework.Models
     /// <summary>
     /// The many-to-many join table entity class which joins Airlines to Countries.
     /// </summary>
-    public class AirlineCountry : IDataItemMtM
+    /// <remarks>
+    /// The SPA framework is able to recognize and interpret many-to-many join tables, but only when
+    /// their only properties are a pair of navigation properties and foreign keys. A many-to-many
+    /// join table with additional properties of its own will not be recognized by the SPA framework
+    /// as a join table, but as an entity class unto itself, and will model each navigation as a
+    /// one-to-many relationship from that class. This is likely to be the desired behavior in most
+    /// cases anyhow, since additional properties will usually mean that such classes should be
+    /// visible and editable on tables and forms of their own, not handled 'invisibly' as join tables.
+    /// </remarks>
+    public class AirlineCountry
     {
         /// <summary>
         /// The <see cref="Models.Airline"/> referred to by this relationship.
         /// </summary>
-        /// <remarks>
-        /// The navigation properties of an <see cref="IDataItemMtM"/> object *must* be named exactly
-        /// the same as the navigation properties of the entities they join. This allows the
-        /// framework to find the correct properties in the relationship. Singularized forms are
-        /// allowed, which is why the property is called 'Airline' rather than 'Airlines' despite the
-        /// navigation property on Country being plural.
-        /// </remarks>
         public Airline Airline { get; set; }
 
         /// <summary>

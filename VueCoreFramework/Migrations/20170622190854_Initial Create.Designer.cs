@@ -9,7 +9,7 @@ using VueCoreFramework.Models;
 namespace VueCoreFramework.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20170619201403_Initial Create")]
+    [Migration("20170622190854_Initial Create")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -130,14 +130,10 @@ namespace VueCoreFramework.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<DateTime>("CreationTimestamp");
-
                     b.Property<bool?>("International");
 
                     b.Property<string>("Name")
                         .IsRequired();
-
-                    b.Property<DateTime>("UpdateTimestamp");
 
                     b.HasKey("Id");
 
@@ -224,8 +220,6 @@ namespace VueCoreFramework.Migrations
 
                     b.Property<Guid>("CountryId");
 
-                    b.Property<DateTime>("CreationTimestamp");
-
                     b.Property<DateTime>("LocalTimeAtGMTMidnight");
 
                     b.Property<string>("Name")
@@ -234,8 +228,6 @@ namespace VueCoreFramework.Migrations
                     b.Property<int>("Population");
 
                     b.Property<int>("Transit");
-
-                    b.Property<DateTime>("UpdateTimestamp");
 
                     b.HasKey("Id");
 
@@ -252,16 +244,12 @@ namespace VueCoreFramework.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<DateTime>("CreationTimestamp");
-
                     b.Property<double?>("EpiIndex");
 
                     b.Property<string>("FlagPrimaryColor");
 
                     b.Property<string>("Name")
                         .IsRequired();
-
-                    b.Property<DateTime>("UpdateTimestamp");
 
                     b.HasKey("Id");
 
@@ -279,16 +267,12 @@ namespace VueCoreFramework.Migrations
 
                     b.Property<Guid>("CountryId");
 
-                    b.Property<DateTime>("CreationTimestamp");
-
                     b.Property<int>("MaritalStatus");
 
                     b.Property<string>("Name")
                         .IsRequired();
 
                     b.Property<long?>("TimeInOfficeTicks");
-
-                    b.Property<DateTime>("UpdateTimestamp");
 
                     b.HasKey("Id");
 
