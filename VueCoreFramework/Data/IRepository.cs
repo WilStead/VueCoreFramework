@@ -57,6 +57,19 @@ namespace VueCoreFramework.Data
         Task AddChildrenToCollectionAsync(string id, PropertyInfo childProp, IEnumerable<string> children);
 
         /// <summary>
+        /// Asynchronously duplicates an entity in the <see cref="ApplicationDbContext"/>. Returns a
+        /// ViewModel representing the new copy.
+        /// </summary>
+        /// <param name="id">The primary key of the entity to be copied, as a string.</param>
+        /// <returns>A ViewModel representing the new item.</returns>
+        /// <remarks>
+        /// All non-navigation properties are copied. Navigation properties for one-to-many or
+        /// many-to-many relationships are duplicated. Navigation properties for other
+        /// relationships are left null (since the relationship forbids having more than one).
+        /// </remarks>
+        Task<IDictionary<string, object>> DuplicateAsync(string id);
+
+        /// <summary>
         /// Finds an entity with the given primary key value and returns a ViewModel for that entity.
         /// If no entity is found, an empty ViewModel is returned (not null).
         /// </summary>

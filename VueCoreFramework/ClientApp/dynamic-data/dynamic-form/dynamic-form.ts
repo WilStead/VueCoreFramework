@@ -66,7 +66,7 @@ export default class DynamicFormComponent extends Vue {
         this.isValid = isValid;
     }
 
-    addFieldToSchema(field: FieldDefinition, beginning: boolean) {
+    addFieldToSchema(field: FieldDefinition) {
         let newField: FieldDefinition = Object.assign({}, field);
         if (newField.type.startsWith("object")) {
             if (newField.type === "object"
@@ -131,12 +131,12 @@ export default class DynamicFormComponent extends Vue {
         }
         if (field.groupName) {
             let group = this.schema.groups.find(g => g.legend == field.groupName);
-            if (beginning) {
+            if (field.isName) {
                 group.fields.unshift(newField);
             } else {
                 group.fields.push(newField);
             }
-        } else if (beginning) {
+        } else if (field.isName) {
             this.schema.fields.unshift(newField);
         } else {
             this.schema.fields.push(newField);
@@ -193,7 +193,7 @@ export default class DynamicFormComponent extends Vue {
                     this.errorMessage = data.error;
                 } else {
                     this.errorMessage = '';
-                    this.$router.push({ name: field.inputType, params: { operation: 'add', id: data.data[data['primaryKeyProperty']] } });
+                    this.$router.push({ name: field.inputType, params: { operation: 'add', id: data.data[data.data['primaryKeyProperty']] } });
                 }
             })
             .catch(error => {
@@ -300,7 +300,7 @@ export default class DynamicFormComponent extends Vue {
                     this.errorMessage = data.error;
                 } else {
                     this.errorMessage = '';
-                    this.$router.push({ name: this.model.replaceType, params: { operation: 'add', id: data.data[data['primaryKeyProperty']] } });
+                    this.$router.push({ name: this.model.replaceType, params: { operation: 'add', id: data.data[data.data['primaryKeyProperty']] } });
                 }
                 this.onCancelReplace();
                 this.activity = false;
@@ -363,7 +363,7 @@ export default class DynamicFormComponent extends Vue {
                                 this.model[prop] = data.data[prop];
                             }
                             this.vmDefinition.forEach(field => {
-                                this.addFieldToSchema(field, field.label === "Name" || field.placeholder === "Name");
+                                this.addFieldToSchema(field);
                             });
                             if (this.operation === 'view') {
                                 this.schema.fields.forEach(f => f.disabled = true);

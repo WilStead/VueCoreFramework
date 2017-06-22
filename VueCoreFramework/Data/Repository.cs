@@ -181,6 +181,102 @@ namespace VueCoreFramework.Data
         }
 
         /// <summary>
+        /// Asynchronously duplicates an entity in the <see cref="ApplicationDbContext"/>. Returns a
+        /// ViewModel representing the new copy.
+        /// </summary>
+        /// <param name="id">The primary key of the entity to be copied, as a string.</param>
+        /// <returns>A ViewModel representing the new item.</returns>
+        /// <remarks>
+        /// All non-navigation properties are copied. Navigation properties for one-to-many or
+        /// many-to-many relationships are duplicated. Navigation properties for other
+        /// relationships are left null (since the relationship forbids having more than one).
+        /// </remarks>
+        public async Task<IDictionary<string, object>> DuplicateAsync(string id)
+        {
+            var key = GetPrimaryKeyFromString(id);
+            var oldItem = await items.FindAsync(key);
+            foreach (var nav in _context.Entry(oldItem).Navigations)
+            {
+                await nav.LoadAsync();
+            }
+
+            var newItem = typeof(T).GetConstructor(Type.EmptyTypes).Invoke(new object[] { });
+            IList<INavigation> mtmNavs = new List<INavigation>();
+            foreach (var prop in typeof(T).GetProperties())
+            {
+                // Do not copy the primary key.
+                if (PrimaryKey.PropertyInfo == prop) continue;
+
+                // Many-to-many or one-to-many relationships can be duplicated.
+                var nav = EntityType.FindNavigation(prop);
+                if (nav != null)
+                {
+                    // For many-to-many relationships, a duplicate must be created after the item is
+                    // added (and a primary key generated).
+                    if (IsManyToManyNavigation(nav))
+                    {
+                        mtmNavs.Add(nav);
+                    }
+                    // For one-to-many relationships, duplicate the foreign key.
+                    else if (nav.FindInverse().IsCollection())
+                    {
+                        var fkProp = nav.ForeignKey.Properties.FirstOrDefault().PropertyInfo;
+                        fkProp.SetValue(newItem, fkProp.GetValue(oldItem));
+                    }
+                }
+                // Simple properties are copied.
+                else
+                {
+                    // Any 'Name' type property gets '(Copy)' appended to its former value.
+                    var dataType = prop.GetCustomAttribute<DataTypeAttribute>();
+                    if (dataType != null && dataType.CustomDataType == "Name")
+                    {
+                        prop.SetValue(newItem, $"{prop.GetValue(oldItem)} (Copy)");
+                    }
+                    else
+                    {
+                        prop.SetValue(newItem, prop.GetValue(oldItem));
+                    }
+                }
+            }
+            items.Add(newItem as T);
+            await _context.SaveChangesAsync();
+
+            var parentPK = PrimaryKey.PropertyInfo.GetValue(newItem);
+            foreach (var nav in mtmNavs)
+            {
+                var mtmEntityType = nav.GetTargetType();
+                var mtmType = mtmEntityType.ClrType;
+
+                var ptInfo = nav.PropertyInfo.PropertyType.GetTypeInfo();
+                var add = ptInfo.GetGenericTypeDefinition()
+                            .MakeGenericType(mtmType)
+                            .GetMethod("Add");
+
+                var mtmCon = mtmType.GetConstructor(Type.EmptyTypes);
+
+                var navs = mtmEntityType.GetNavigations();
+                var mtmParentNav = nav.FindInverse();
+                var mtmChildFK = navs.FirstOrDefault(n => n != mtmParentNav)
+                    .ForeignKey.Properties.FirstOrDefault().PropertyInfo;
+
+                foreach (var child in nav.PropertyInfo.GetValue(oldItem) as IEnumerable<object>)
+                {
+                    var mtm = mtmCon.Invoke(new object[] { });
+                    mtmChildFK.SetValue(mtm, mtmChildFK.GetValue(child));
+                    mtmParentNav.ForeignKey.Properties.FirstOrDefault().PropertyInfo.SetValue(mtm, parentPK);
+                    add.Invoke(nav.PropertyInfo.GetValue(newItem), new object[] { mtm });
+                }
+            }
+            if (mtmNavs.Count > 0)
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            return await GetViewModelAsync(newItem as T);
+        }
+
+        /// <summary>
         /// Finds an entity with the given primary key value and returns a ViewModel for that entity.
         /// If no entity is found, an empty ViewModel is returned (not null).
         /// </summary>
@@ -447,110 +543,120 @@ namespace VueCoreFramework.Data
                 var step = pInfo.GetCustomAttribute<StepAttribute>();
                 var ptInfo = pInfo.PropertyType.GetTypeInfo();
 
-                if (!string.IsNullOrEmpty(dataType?.CustomDataType))
+                if (dataType != null)
                 {
-                    if (dataType.CustomDataType == "Color")
+                    if (!string.IsNullOrEmpty(dataType.CustomDataType))
                     {
-                        fd.Type = "vuetifyColor";
+                        if (dataType.CustomDataType == "Color")
+                        {
+                            fd.Type = "vuetifyColor";
+                        }
+                        else if (dataType.CustomDataType == "Name")
+                        {
+                            fd.Type = "vuetifyText";
+                            fd.InputType = "text";
+                            fd.Validator = "string";
+                            fd.IsName = true;
+                        }
+                        // Any custom data type not recognized as one of the special types handled above is
+                        // treated as a simple text field.
+                        else
+                        {
+                            fd.Type = "vuetifyText";
+                            fd.InputType = "text";
+                            fd.Validator = "string";
+                        }
                     }
-                    // Any custom data type not recognized as one of the special types handled above is
-                    // treated as a simple text field.
                     else
                     {
-                        fd.Type = "vuetifyText";
-                        fd.InputType = "text";
-                        fd.Validator = "string";
-                    }
-                }
-                else if (dataType != null)
-                {
-                    switch (dataType.DataType)
-                    {
-                        case DataType.Currency:
-                            fd.Type = "vuetifyText";
-                            fd.InputType = "number";
-                            if (step != null)
-                            {
-                                fd.Step = Math.Abs(step.Step);
-                            }
-                            else
-                            {
-                                // If a step isn't specified, currency uses cents by default.
-                                fd.Step = 0.01;
-                            }
-                            fd.Validator = "number";
-                            break;
-                        case DataType.Date:
-                            fd.Type = "vuetifyDateTime";
-                            fd.InputType = "date";
-                            break;
-                        case DataType.DateTime:
-                            fd.Type = "vuetifyDateTime";
-                            fd.InputType = "dateTime";
-                            break;
-                        case DataType.Time:
-                            fd.Type = "vuetifyDateTime";
-                            fd.InputType = "time";
-                            break;
-                        case DataType.Duration:
-                            fd.Type = "vuetifyTimespan";
-                            var formatAttr = pInfo.GetCustomAttribute<DisplayFormatAttribute>();
-                            fd.InputType = formatAttr?.DataFormatString;
-                            fd.Validator = "timespan";
-                            if (step != null)
-                            {
-                                fd.Step = Math.Abs(step.Step);
-                            }
-                            else
-                            {
-                                // If a step isn't specified, duration uses milliseconds by default.
-                                fd.Step = 0.001;
-                            }
-                            break;
-                        case DataType.EmailAddress:
-                            fd.Type = "vuetifyText";
-                            fd.InputType = "email";
-                            fd.Validator = "email";
-                            break;
-                        case DataType.MultilineText:
-                            fd.Type = "vuetifyText";
-                            fd.InputType = "textArea";
-                            fd.Validator = "string";
-                            break;
-                        case DataType.Password:
-                            fd.Type = "vuetifyText";
-                            fd.InputType = "password";
-                            fd.Validator = "string";
-                            break;
-                        case DataType.PhoneNumber:
-                            fd.Type = "vuetifyText";
-                            fd.InputType = "telephone";
-                            // This regex is a permissive test for U.S. phone numbers, accepting letters
-                            // and most forms of "ext", but not invalid numbers (e.g. too short, too
-                            // long, or with invalid registers).
-                            fd.Pattern = @"1?(?:[.\s-]?[2-9]\d{2}[.\s-]?|\s?\([2-9]\d{2}\)\s?)(?:[1-9]\d{2}[.\s-]?\d{4}\s?(?:\s?([xX]|[eE][xX]|[eE][xX]\.|[eE][xX][tT]|[eE][xX][tT]\.)\s?\d{3,4})?|[a-zA-Z]{7})";
-                            fd.Validator = "string_regexp";
-                            break;
-                        case DataType.PostalCode:
-                            fd.Type = "vuetifyText";
-                            fd.InputType = "text";
-                            // This regex accepts both short and long U.S. postal codes.
-                            fd.Pattern = @"(^(?!0{5})(\d{5})(?!-?0{4})(|-\d{4})?$)";
-                            fd.Validator = "string_regexp";
-                            break;
-                        case DataType.ImageUrl:
-                        case DataType.Url:
-                            fd.Type = "vuetifyText";
-                            fd.InputType = "url";
-                            fd.Validator = "string";
-                            break;
-                        default:
-                            // If a data type was specified but not one of those recognized, it is
-                            // treated as a simple text field.
-                            fd.Type = "vuetifyText";
-                            fd.InputType = "text";
-                            fd.Validator = "string";
-                            break;
+                        switch (dataType.DataType)
+                        {
+                            case DataType.Currency:
+                                fd.Type = "vuetifyText";
+                                fd.InputType = "number";
+                                if (step != null)
+                                {
+                                    fd.Step = Math.Abs(step.Step);
+                                }
+                                else
+                                {
+                                    // If a step isn't specified, currency uses cents by default.
+                                    fd.Step = 0.01;
+                                }
+                                fd.Validator = "number";
+                                break;
+                            case DataType.Date:
+                                fd.Type = "vuetifyDateTime";
+                                fd.InputType = "date";
+                                break;
+                            case DataType.DateTime:
+                                fd.Type = "vuetifyDateTime";
+                                fd.InputType = "dateTime";
+                                break;
+                            case DataType.Time:
+                                fd.Type = "vuetifyDateTime";
+                                fd.InputType = "time";
+                                break;
+                            case DataType.Duration:
+                                fd.Type = "vuetifyTimespan";
+                                var formatAttr = pInfo.GetCustomAttribute<DisplayFormatAttribute>();
+                                fd.InputType = formatAttr?.DataFormatString;
+                                fd.Validator = "timespan";
+                                if (step != null)
+                                {
+                                    fd.Step = Math.Abs(step.Step);
+                                }
+                                else
+                                {
+                                    // If a step isn't specified, duration uses milliseconds by default.
+                                    fd.Step = 0.001;
+                                }
+                                break;
+                            case DataType.EmailAddress:
+                                fd.Type = "vuetifyText";
+                                fd.InputType = "email";
+                                fd.Validator = "email";
+                                break;
+                            case DataType.MultilineText:
+                                fd.Type = "vuetifyText";
+                                fd.InputType = "textArea";
+                                fd.Validator = "string";
+                                break;
+                            case DataType.Password:
+                                fd.Type = "vuetifyText";
+                                fd.InputType = "password";
+                                fd.Validator = "string";
+                                break;
+                            case DataType.PhoneNumber:
+                                fd.Type = "vuetifyText";
+                                fd.InputType = "telephone";
+                                // This regex is a permissive test for U.S. phone numbers, accepting letters
+                                // and most forms of "ext", but not invalid numbers (e.g. too short, too
+                                // long, or with invalid registers).
+                                fd.Pattern = @"1?(?:[.\s-]?[2-9]\d{2}[.\s-]?|\s?\([2-9]\d{2}\)\s?)(?:[1-9]\d{2}[.\s-]?\d{4}\s?(?:\s?([xX]|[eE][xX]|[eE][xX]\.|[eE][xX][tT]|[eE][xX][tT]\.)\s?\d{3,4})?|[a-zA-Z]{7})";
+                                fd.Validator = "string_regexp";
+                                break;
+                            case DataType.PostalCode:
+                                fd.Type = "vuetifyText";
+                                fd.InputType = "text";
+                                // This regex accepts both short and long U.S. postal codes.
+                                fd.Pattern = @"(^(?!0{5})(\d{5})(?!-?0{4})(|-\d{4})?$)";
+                                fd.Validator = "string_regexp";
+                                break;
+                            case DataType.ImageUrl:
+                            case DataType.Url:
+                                fd.Type = "vuetifyText";
+                                fd.InputType = "url";
+                                fd.Validator = "string";
+                                break;
+                            default:
+                                // If a data type was specified but not one of those recognized, it is
+                                // treated as a simple text field.
+                                fd.Type = "vuetifyText";
+                                fd.InputType = "text";
+                                fd.Validator = "string";
+                                break;
+                        }
                     }
                 }
                 // If a data type isn't specified explicitly, the type is determined by the Type of the property.

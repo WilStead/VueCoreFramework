@@ -79,6 +79,11 @@ export interface FieldDefinition {
     inverseType?: string;
 
     /**
+     * Indicates that the field is a Name property.
+     */
+    isName?: boolean;
+
+    /**
      * Optional label text displayed with the field.
      */
     label?: string;

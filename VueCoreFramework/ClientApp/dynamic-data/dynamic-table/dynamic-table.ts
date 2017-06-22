@@ -402,6 +402,25 @@ export default class DynamicTableComponent extends Vue {
         }
     }
 
+    onDuplicate(id: string) {
+        this.activity = true;
+        this.repository.duplicate(this.$route.fullPath, id)
+            .then(data => {
+                if (data.error) {
+                    this.errorMessage = data.error;
+                }
+                else {
+                    this.$router.push({ name: this.routeName, params: { operation: 'add', id: data.data[data.data['primaryKeyProperty']] } });
+                }
+                this.activity = false;
+            })
+            .catch(error => {
+                this.errorMessage = "A problem occurred. The item could not be copied.";
+                this.activity = false;
+                ErrorMsg.logError("dynamic-table.onDuplicate", new Error(error));
+            });
+    }
+
     onNew() {
         this.repository.add(
             this.$route.fullPath,
@@ -413,7 +432,7 @@ export default class DynamicTableComponent extends Vue {
                     this.errorMessage = data.error;
                 } else {
                     this.errorMessage = '';
-                    this.$router.push({ name: this.routeName, params: { operation: 'add', id: data.data[data['primaryKeyProperty']] } });
+                    this.$router.push({ name: this.routeName, params: { operation: 'add', id: data.data[data.data['primaryKeyProperty']] } });
                 }
             })
             .catch(error => {
@@ -537,7 +556,7 @@ export default class DynamicTableComponent extends Vue {
                             || field.type === 'vuetifyTimespan') {
                             h.value = field.model + "Formatted";
                         }
-                        if (h.text === 'Name') {
+                        if (field.isName) {
                             h.left = true;
                             this.headers.unshift(h);
                         } else {

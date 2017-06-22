@@ -131,6 +131,31 @@ export class Repository {
     }
 
     /**
+     * Called to duplicate an entity in the database. Returns a ViewModel representing the new copy.
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @param {string} id The primary key of the entity to be copied.
+     * @returns {OperationReply<DataItem>} A response object containing any error which occurred, or the new copy.
+     */
+    duplicate(returnPath: string, id: string): Promise<OperationReply<DataItem>> {
+        if (id === undefined || id === null || id === '') {
+            return Promise.reject("The item id was missing from your request.");
+        }
+        return fetch(`/api/Data/${this.dataType}/Duplicate/${id}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${store.state.token}`
+                }
+            })
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<OperationReply<DataItem>>)
+            .catch(error => {
+                throw new Error(`There was a problem with your request. ${error}`);
+            });
+    }
+
+    /**
      * Called to find an entity with the given primary key value, or an empty ViewModel (not null).
      * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
      * @param {string} id The primary key of the entity to be found.

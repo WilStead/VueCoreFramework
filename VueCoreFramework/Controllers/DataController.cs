@@ -171,12 +171,68 @@ namespace VueCoreFramework.Controllers
             try
             {
                 await repository.AddChildrenToCollectionAsync(id, pInfo, childIds);
-                return Ok();
+                return Json(new { response = ResponseMessages.Success });
             }
             catch
             {
                 return Json(new { error = ErrorMessages.DataError });
             }
+        }
+
+        /// <summary>
+        /// Called to duplicate an entity in the <see cref="ApplicationDbContext"/>. Returns a
+        /// ViewModel representing the new copy.
+        /// </summary>
+        /// <param name="dataType">The type of entity to find.</param>
+        /// <param name="id">The primary key of the entity to be found.</param>
+        /// <returns>
+        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
+        /// or a ViewModel representing the new item (as JSON).
+        /// </returns>
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Duplicate(string dataType, string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return Json(new { error = ErrorMessages.MissingIdError });
+            }
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (!TryGetRepository(_context, dataType, out IRepository repository))
+            {
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataAdd, id))
+            {
+                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_AddNew) });
+            }
+            object newItem = null;
+            try
+            {
+                newItem = await repository.DuplicateAsync(id);
+            }
+            catch
+            {
+                return Json(new { error = ErrorMessages.DataError });
+            }
+            if (newItem == null)
+            {
+                return Json(new { error = ErrorMessages.DataError });
+            }
+            return Json(new { data = newItem });
         }
 
         /// <summary>
@@ -843,7 +899,7 @@ namespace VueCoreFramework.Controllers
             {
                 return Json(new { error = ErrorMessages.RemoveItemError });
             }
-            return Ok();
+            return Json(new { reponse = ResponseMessages.Success });
         }
 
         /// <summary>
@@ -904,7 +960,7 @@ namespace VueCoreFramework.Controllers
             try
             {
                 await repository.RemoveChildrenFromCollectionAsync(id, pInfo, childIds);
-                return Ok();
+                return Json(new { response = ResponseMessages.Success });
             }
             catch
             {
@@ -976,7 +1032,7 @@ namespace VueCoreFramework.Controllers
                     _context.RoleClaims.RemoveRange(_context.RoleClaims.Where(c => c.ClaimValue == $"{dataType}{{{id}}}"));
                     await _context.SaveChangesAsync();
                 }
-                return Ok();
+                return Json(new { response = ResponseMessages.Success });
             }
             catch
             {
@@ -1037,7 +1093,7 @@ namespace VueCoreFramework.Controllers
             {
                 return Json(new { error = ErrorMessages.RemoveItemsError });
             }
-            return Ok();
+            return Json(new { response = ResponseMessages.Success });
         }
 
         /// <summary>
@@ -1107,7 +1163,7 @@ namespace VueCoreFramework.Controllers
                 _context.UserClaims.RemoveRange(_context.UserClaims.Where(c => removedIds.Any(id => c.ClaimValue == $"{dataType}{{{id}}}")));
                 _context.RoleClaims.RemoveRange(_context.RoleClaims.Where(c => removedIds.Any(id => c.ClaimValue == $"{dataType}{{{id}}}")));
                 await _context.SaveChangesAsync();
-                return Ok();
+                return Json(new { response = ResponseMessages.Success });
             }
             catch
             {
@@ -1183,7 +1239,7 @@ namespace VueCoreFramework.Controllers
                     _context.RoleClaims.RemoveRange(_context.RoleClaims.Where(c => c.ClaimValue == $"{dataType}{{{replacedId}}}"));
                     await _context.SaveChangesAsync();
                 }
-                return Ok();
+                return Json(new { response = ResponseMessages.Success });
             }
             catch
             {

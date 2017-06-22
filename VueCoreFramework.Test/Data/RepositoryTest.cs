@@ -76,6 +76,17 @@ namespace VueCoreFramework.Test.Data
         }
 
         [TestMethod]
+        public async Task DuplicateAsyncTest()
+        {
+            var repo = context.GetRepositoryForType(typeof(Country));
+
+            await repo.AddAsync(null, null);
+            var item = context.Countries.FirstOrDefault();
+
+            await repo.DuplicateAsync(item.Id.ToString());
+        }
+
+        [TestMethod]
         public async Task FindAsync_ItemPresent()
         {
             var repo = context.GetRepositoryForType(typeof(Country));

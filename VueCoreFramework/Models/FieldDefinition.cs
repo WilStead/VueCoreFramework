@@ -53,6 +53,11 @@ namespace VueCoreFramework.Models
         public string InverseType { get; set; }
 
         /// <summary>
+        /// Indicates that the field is a Name property.
+        /// </summary>
+        public bool? IsName { get; set; }
+
+        /// <summary>
         /// Optional label text displayed with the field.
         /// </summary>
         public string Label { get; set; }
