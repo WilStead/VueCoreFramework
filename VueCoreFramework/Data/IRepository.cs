@@ -82,7 +82,7 @@ namespace VueCoreFramework.Data
         /// ViewModel representing each.
         /// </summary>
         /// <returns>ViewModels representing the items in the set.</returns>
-        IEnumerable<IDictionary<string, object>> GetAll();
+        Task<IList<IDictionary<string, object>>> GetAllAsync();
 
         /// <summary>
         /// Finds the primary keys of all child entities in the given relationship, as strings.
@@ -118,7 +118,7 @@ namespace VueCoreFramework.Data
         /// </param>
         /// <param name="page">The page number requested.</param>
         /// <param name="rowsPerPage">The number of items per page.</param>
-        Task<IEnumerable<IDictionary<string, object>>> GetChildPageAsync(
+        Task<IList<IDictionary<string, object>>> GetChildPageAsync(
             string id,
             PropertyInfo childProp,
             string search,
@@ -164,7 +164,7 @@ namespace VueCoreFramework.Data
         /// An enumeration of primary keys of items which should be excluded from the results before
         /// caluclating the page contents, as strings.
         /// </param>
-        IEnumerable<IDictionary<string, object>> GetPage(
+        Task<IList<IDictionary<string, object>>> GetPageAsync(
             string search,
             string sortBy,
             bool descending,
@@ -194,7 +194,7 @@ namespace VueCoreFramework.Data
         /// An enumeration of primary keys of items which should be excluded from the results before
         /// caluclating the page contents.
         /// </param>
-        IEnumerable<IDictionary<string, object>> GetPageItems(
+        Task<IList<IDictionary<string, object>>> GetPageItemsAsync(
             IQueryable<object> items,
             string search,
             string sortBy,

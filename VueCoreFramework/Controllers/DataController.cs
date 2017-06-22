@@ -269,7 +269,7 @@ namespace VueCoreFramework.Controllers
             {
                 return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
             }
-            return Json(repository.GetAll());
+            return Json(await repository.GetAllAsync());
         }
 
         /// <summary>
@@ -695,7 +695,7 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                return Json(repository.GetPage(search, sortBy, descending, page, rowsPerPage, except, claims));
+                return Json(await repository.GetPageAsync(search, sortBy, descending, page, rowsPerPage, except, claims));
             }
             catch
             {

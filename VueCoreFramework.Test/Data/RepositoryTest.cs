@@ -146,7 +146,7 @@ namespace VueCoreFramework.Test.Data
             await repo.AddAsync(null, null);
 
             var count = context.Countries.Count();
-            var vms = repo.GetAll();
+            var vms = await repo.GetAllAsync();
             Assert.AreEqual(count, vms.Count());
         }
 
@@ -159,7 +159,7 @@ namespace VueCoreFramework.Test.Data
             var repo = new Repository<Country>(context);
 
             await repo.RemoveRangeAsync(context.Countries.Select(c => c.Id.ToString()));
-            var vms = repo.GetAll();
+            var vms = await repo.GetAllAsync();
             Assert.AreEqual(0, vms.Count());
         }
 
@@ -235,7 +235,7 @@ namespace VueCoreFramework.Test.Data
             await repo.AddAsync(null, null);
             var count = context.Countries.Count();
 
-            var vms = repo.GetPage(null, null, false, 1, 5, new string[] { },
+            var vms = await repo.GetPageAsync(null, null, false, 1, 5, new string[] { },
                 new List<Claim> { new Claim(CustomClaimTypes.PermissionDataAll, CustomClaimTypes.PermissionAll) });
             Assert.AreEqual(count, vms.Count());
         }
@@ -251,7 +251,7 @@ namespace VueCoreFramework.Test.Data
             await repo.AddAsync(null, null);
             await repo.AddAsync(null, null);
 
-            var vms = repo.GetPage(null, null, false, 1, 5, new string[] { },
+            var vms = await repo.GetPageAsync(null, null, false, 1, 5, new string[] { },
                 new List<Claim> { });
             Assert.AreEqual(0, vms.Count());
         }
@@ -270,7 +270,7 @@ namespace VueCoreFramework.Test.Data
 
             await repo.AddAsync(null, null);
 
-            var vms = repo.GetPage(null, null, false, 1, 5, new string[] { },
+            var vms = await repo.GetPageAsync(null, null, false, 1, 5, new string[] { },
                 new List<Claim> { new Claim(CustomClaimTypes.PermissionDataAll, $"{nameof(Country)}{{{item.Id}}}") });
             Assert.AreEqual(1, vms.Count());
         }
@@ -393,7 +393,8 @@ namespace VueCoreFramework.Test.Data
 
             var count = context.Cities.Count();
 
-            var removedIds = await repo.RemoveRangeFromParentAsync(context.Cities.Select(c => c.Id.ToString()), childProp);
+            var ids = context.Cities.Select(c => c.Id.ToString()).ToList();
+            var removedIds = await repo.RemoveRangeFromParentAsync(ids, childProp);
             var newCount = context.Cities.Count();
             Assert.AreEqual(count - removedIds.Count, newCount);
         }

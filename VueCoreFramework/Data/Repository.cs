@@ -87,7 +87,7 @@ namespace VueCoreFramework.Data
             items.Add(item as T);
             await _context.SaveChangesAsync();
 
-            return GetViewModel(_context, item as T);
+            return await GetViewModelAsync(_context, item as T);
         }
 
         /// <summary>
@@ -110,7 +110,7 @@ namespace VueCoreFramework.Data
             var mtmCon = mtmType.GetConstructor(Type.EmptyTypes);
 
             var navs = mtmEntityType.GetNavigations();
-            var mtmParentNav = navs.FirstOrDefault(n => n.FindInverse() == childProp);
+            var mtmParentNav = navs.FirstOrDefault(n => n.FindInverse().Name == childProp.Name);
             var mtmChildNav = navs.FirstOrDefault(n => n != mtmParentNav);
 
             var parentPK = GetPrimaryKeyFromString(id);
@@ -169,7 +169,7 @@ namespace VueCoreFramework.Data
         {
             var key = GetPrimaryKeyFromString(id);
             var item = await items.FindAsync(key);
-            return GetViewModel(_context, item);
+            return await GetViewModelAsync(_context, item);
         }
 
         /// <summary>
@@ -210,8 +210,15 @@ namespace VueCoreFramework.Data
         /// ViewModel representing each.
         /// </summary>
         /// <returns>ViewModels representing the items in the set.</returns>
-        public IEnumerable<IDictionary<string, object>> GetAll()
-            => items.Select(i => GetViewModel(_context, i));
+        public async Task<IList<IDictionary<string, object>>> GetAllAsync()
+        {
+            IList<IDictionary<string, object>> all = new List<IDictionary<string, object>>();
+            foreach (var item in items)
+            {
+                all.Add(await GetViewModelAsync(_context, item));
+            }
+            return all;
+        }
 
         /// <summary>
         /// Finds the primary keys of all child entities in the given relationship, as strings.
@@ -267,7 +274,7 @@ namespace VueCoreFramework.Data
         /// </param>
         /// <param name="page">The page number requested.</param>
         /// <param name="rowsPerPage">The number of items per page.</param>
-        public async Task<IEnumerable<IDictionary<string, object>>> GetChildPageAsync(
+        public async Task<IList<IDictionary<string, object>>> GetChildPageAsync(
             string id,
             PropertyInfo childProp,
             string search,
@@ -288,13 +295,13 @@ namespace VueCoreFramework.Data
                 var mtmParentNav = navs.FirstOrDefault(n => n.FindInverse() == childProp);
                 var mtmChildProp = navs.FirstOrDefault(n => n != mtmParentNav).PropertyInfo;
 
-                return childRepo.GetPageItems(
+                return await childRepo.GetPageItemsAsync(
                     coll.CurrentValue.Cast<object>().Select(c => mtmChildProp.GetValue(c)).AsQueryable(),
                     search, sortBy, descending, page, rowsPerPage, claims);
             }
             else
             {
-                return childRepo.GetPageItems(
+                return await childRepo.GetPageItemsAsync(
                     coll.CurrentValue.Cast<object>().AsQueryable(),
                     search, sortBy, descending, page, rowsPerPage, claims);
             }
@@ -330,7 +337,8 @@ namespace VueCoreFramework.Data
             var entityPInfo = EntityType.FindProperty(pInfo);
 
             // Keys are always hidden in the SPA framework.
-            if (entityPInfo.IsPrimaryKey() || entityPInfo.IsForeignKey())
+            if (entityPInfo != null
+                && (entityPInfo.IsPrimaryKey() || entityPInfo.IsForeignKey()))
             {
                 fd.Type = "label";
                 fd.HideInTable = true;
@@ -743,7 +751,7 @@ namespace VueCoreFramework.Data
         /// An enumeration of primary keys of items which should be excluded from the results before
         /// caluclating the page contents, as strings.
         /// </param>
-        public IEnumerable<IDictionary<string, object>> GetPage(
+        public async Task<IList<IDictionary<string, object>>> GetPageAsync(
             string search,
             string sortBy,
             bool descending,
@@ -751,7 +759,7 @@ namespace VueCoreFramework.Data
             int rowsPerPage,
             IEnumerable<string> except,
             IList<Claim> claims)
-            => GetPageItems(items.Where(i => !except.Contains(PrimaryKey.PropertyInfo.GetValue(i).ToString())),
+            => await GetPageItemsAsync(items.Where(i => !except.Contains(PrimaryKey.PropertyInfo.GetValue(i).ToString())),
                 search, sortBy, descending, page, rowsPerPage, claims);
 
         /// <summary>
@@ -775,7 +783,7 @@ namespace VueCoreFramework.Data
         /// An enumeration of primary keys of items which should be excluded from the results before
         /// caluclating the page contents.
         /// </param>
-        public IEnumerable<IDictionary<string, object>> GetPageItems(
+        public async Task<IList<IDictionary<string, object>>> GetPageItemsAsync(
             IQueryable<object> items,
             string search,
             string sortBy,
@@ -821,7 +829,12 @@ namespace VueCoreFramework.Data
                 filteredItems = filteredItems.Skip((page - 1) * rowsPerPage).Take(rowsPerPage);
             }
 
-            return filteredItems.ToList().Select(i => GetViewModel(_context, i));
+            IList<IDictionary<string, object>> vms = new List<IDictionary<string, object>>();
+            foreach (var item in filteredItems)
+            {
+                vms.Add(await GetViewModelAsync(_context, item));
+            }
+            return vms;
         }
 
         private static IProperty GetPrimaryKey(IEntityType entityType)
@@ -901,7 +914,7 @@ namespace VueCoreFramework.Data
         /// </summary>
         public async Task<long> GetTotalAsync() => await items.LongCountAsync();
 
-        private static IDictionary<string, object> GetViewModel(ApplicationDbContext context, T item)
+        private static async Task<IDictionary<string, object>> GetViewModelAsync(ApplicationDbContext context, T item)
         {
             IDictionary<string, object> vm = new Dictionary<string, object>();
 
@@ -925,7 +938,7 @@ namespace VueCoreFramework.Data
                 {
                     if (entry != null)
                     {
-                        entry.Navigation(pInfo.Name).Load();
+                        await entry.Navigation(pInfo.Name).LoadAsync();
                     }
 
                     // Collection navigation properties are represented as placeholder text, varying
@@ -939,7 +952,7 @@ namespace VueCoreFramework.Data
                     }
                     else
                     {
-                        var value = pInfo.GetValue(item);
+                        var value = item == null ? null : pInfo.GetValue(item);
                         vm[pInfo.Name.ToInitialLower()] =
                             (item == null || value == null ? "[None]" : value.ToString());
                     }
@@ -953,7 +966,7 @@ namespace VueCoreFramework.Data
                     var nullableType = Nullable.GetUnderlyingType(pInfo.PropertyType);
                     if (value != null && nullableType != null)
                     {
-                        value = nullableType.GetProperty("Value").GetValue(value);
+                        value = pInfo.PropertyType.GetProperty("Value").GetValue(value);
                     }
                     if (value == null)
                     {
@@ -1117,7 +1130,7 @@ namespace VueCoreFramework.Data
             var parentPK = GetPrimaryKeyFromString(id);
 
             var navs = mtmEntityType.GetNavigations();
-            var mtmParentNav = navs.FirstOrDefault(n => n.FindInverse() == childProp);
+            var mtmParentNav = navs.FirstOrDefault(n => n.FindInverse().Name == childProp.Name);
             var mtmChildNav = navs.FirstOrDefault(n => n != mtmParentNav);
 
             foreach (var childId in childIds)
@@ -1316,7 +1329,7 @@ namespace VueCoreFramework.Data
             }
             items.Update(item as T);
             await _context.SaveChangesAsync();
-            return GetViewModel(_context, item as T);
+            return await GetViewModelAsync(_context, item as T);
         }
     }
 }
