@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
 using VueCoreFramework.Models;
 
 namespace VueCoreFramework.Data
@@ -32,12 +34,33 @@ namespace VueCoreFramework.Data
         public DbSet<Leader> Leaders { get; set; }
 
         /// <summary>
+        /// Caches instances of <see cref="IRepository"/> for the entity types tracked by this
+        /// <see cref="ApplicationDbContext"/>.
+        /// </summary>
+        public IDictionary<string, IRepository> RepositoryCache { get; set; } = new Dictionary<string, IRepository>();
+
+        /// <summary>
         /// Initializes a new instance of <see cref="ApplicationDbContext"/>.
         /// </summary>
         /// <param name="options">The options to be used by a <see cref="DbContext"/>.</param>
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
+        }
+
+        /// <summary>
+        /// Gets a <see cref="Repository{T}"/> for the given type, using a cached reference, if one
+        /// already exists.
+        /// </summary>
+        /// <param name="type">The entity type of the repository.</param>
+        public IRepository GetRepositoryForType(Type type)
+        {
+            if (!RepositoryCache.ContainsKey(type.FullName))
+            {
+                RepositoryCache.Add(type.FullName,
+                    (IRepository)Activator.CreateInstance(typeof(Repository<>).MakeGenericType(type), this));
+            }
+            return RepositoryCache[type.FullName];
         }
 
         /// <summary>

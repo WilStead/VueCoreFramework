@@ -12,20 +12,25 @@ namespace VueCoreFramework.Data
     /// <summary>
     /// Represents operations with an <see cref="ApplicationDbContext"/> for a particular class.
     /// </summary>
-    interface IRepository
+    public interface IRepository
     {
         /// <summary>
-        /// The <see cref="IEntityType"/> of this Repository.
+        /// The <see cref="IEntityType"/> of this Repository. Read-only.
         /// </summary>
         IEntityType EntityType { get; }
 
         /// <summary>
-        /// The primary key <see cref="IProperty"/> of this Repository's entity type.
+        /// The FieldDefinitions for this repository's entity type. Read-only.
+        /// </summary>
+        List<FieldDefinition> FieldDefinitions { get; }
+
+        /// <summary>
+        /// The primary key <see cref="IProperty"/> of this Repository's entity type. Read-only.
         /// </summary>
         IProperty PrimaryKey { get; }
 
         /// <summary>
-        /// The name of the ViewModel property which indicates the primary key. Constant.
+        /// The name of the ViewModel property which indicates the primary key. Read-only.
         /// </summary>
         string PrimaryKeyVMProperty { get; }
 
@@ -137,12 +142,6 @@ namespace VueCoreFramework.Data
         /// A <see cref="long"/> that represents the total number of children in the relationship.
         /// </returns>
         Task<long> GetChildTotalAsync(string id, PropertyInfo childProp);
-
-        /// <summary>
-        /// Generates and enumerates <see cref="FieldDefinition"/> s representing the properties of
-        /// <see cref="T"/>.
-        /// </summary>
-        IEnumerable<FieldDefinition> GetFieldDefinitions();
 
         /// <summary>
         /// Calculates and enumerates the set of entities with the given paging parameters, as ViewModels.

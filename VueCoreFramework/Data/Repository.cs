@@ -25,25 +25,45 @@ namespace VueCoreFramework.Data
     /// </typeparam>
     public class Repository<T> : IRepository where T : class
     {
-        private const string primaryKeyVMProperty = "primaryKeyProperty";
         private readonly ApplicationDbContext _context;
         private readonly bool _isMenuClass;
-
         private DbSet<T> items;
+        private const string primaryKeyVMProperty = "primaryKeyProperty";
 
         /// <summary>
-        /// The <see cref="IEntityType"/> of this Repository.
+        /// The <see cref="IEntityType"/> of this Repository. Read-only.
         /// </summary>
         public IEntityType EntityType { get; }
 
+        private List<FieldDefinition> _fieldDefinitions;
         /// <summary>
-        /// The primary key <see cref="IProperty"/> of this Repository's entity type.
+        /// The <see cref="FieldDefinition"/> s representing the properties of <see cref="T"/>. Read-only.
+        /// </summary>
+        /// <remarks>Calculates on demand and caches for future reference.</remarks>
+        public List<FieldDefinition> FieldDefinitions
+        {
+            get
+            {
+                if (_fieldDefinitions == null)
+                {
+                    _fieldDefinitions = GetFieldDefinitions().ToList();
+                }
+                return _fieldDefinitions;
+            }
+        }
+
+        /// <summary>
+        /// The primary key <see cref="IProperty"/> of this Repository's entity type. Read-only.
         /// </summary>
         public IProperty PrimaryKey { get; }
 
         /// <summary>
-        /// The name of the ViewModel property which indicates the primary key. Constant.
+        /// The name of the ViewModel property which indicates the primary key. Read-only.
         /// </summary>
+        /// <remarks>
+        /// References a class constant, but made available as an instance property so that it can be
+        /// defined on the interface.
+        /// </remarks>
         public string PrimaryKeyVMProperty { get; }
 
         /// <summary>
@@ -87,7 +107,7 @@ namespace VueCoreFramework.Data
             items.Add(item as T);
             await _context.SaveChangesAsync();
 
-            return await GetViewModelAsync(_context, item as T);
+            return await GetViewModelAsync(item as T);
         }
 
         /// <summary>
@@ -169,7 +189,7 @@ namespace VueCoreFramework.Data
         {
             var key = GetPrimaryKeyFromString(id);
             var item = await items.FindAsync(key);
-            return await GetViewModelAsync(_context, item);
+            return await GetViewModelAsync(item);
         }
 
         /// <summary>
@@ -215,7 +235,7 @@ namespace VueCoreFramework.Data
             IList<IDictionary<string, object>> all = new List<IDictionary<string, object>>();
             foreach (var item in items)
             {
-                all.Add(await GetViewModelAsync(_context, item));
+                all.Add(await GetViewModelAsync(item));
             }
             return all;
         }
@@ -288,7 +308,7 @@ namespace VueCoreFramework.Data
             var coll = _context.Entry(item).Collection(childProp.Name);
             await coll.LoadAsync();
             var childType = EntityType.FindNavigation(childProp).GetTargetType();
-            var childRepo = (IRepository)Activator.CreateInstance(typeof(Repository<>).MakeGenericType(childType.ClrType), _context);
+            var childRepo = _context.GetRepositoryForType(childType.ClrType);
             if (EntityType.FindNavigation(childProp.Name).FindInverse().IsCollection())
             {
                 var navs = childType.GetNavigations();
@@ -719,11 +739,7 @@ namespace VueCoreFramework.Data
             return fd;
         }
 
-        /// <summary>
-        /// Generates and enumerates <see cref="FieldDefinition"/>s representing the properties of
-        /// <see cref="T"/>.
-        /// </summary>
-        public IEnumerable<FieldDefinition> GetFieldDefinitions()
+        private IEnumerable<FieldDefinition> GetFieldDefinitions()
         {
             foreach (var pInfo in typeof(T).GetProperties())
             {
@@ -832,7 +848,7 @@ namespace VueCoreFramework.Data
             IList<IDictionary<string, object>> vms = new List<IDictionary<string, object>>();
             foreach (var item in filteredItems)
             {
-                vms.Add(await GetViewModelAsync(_context, item));
+                vms.Add(await GetViewModelAsync(item));
             }
             return vms;
         }
@@ -914,25 +930,21 @@ namespace VueCoreFramework.Data
         /// </summary>
         public async Task<long> GetTotalAsync() => await items.LongCountAsync();
 
-        private static async Task<IDictionary<string, object>> GetViewModelAsync(ApplicationDbContext context, T item)
+        private async Task<IDictionary<string, object>> GetViewModelAsync(T item)
         {
             IDictionary<string, object> vm = new Dictionary<string, object>();
 
-            var entityType = GetEntityType(context, typeof(T));
-            var entry = item == null ? null : context.Entry(item);
+            var entry = item == null ? null : _context.Entry(item);
 
             // Add a property to the VM which identifies the primary key.
-            vm[primaryKeyVMProperty] =
-                entityType.FindPrimaryKey().Properties.FirstOrDefault().Name;
+            vm[primaryKeyVMProperty] = PrimaryKey.Name;
 
-            var tInfo = typeof(T).GetTypeInfo();
-            foreach (var pInfo in tInfo.GetProperties())
+            foreach (var pInfo in typeof(T).GetTypeInfo().GetProperties())
             {
-                var ptInfo = pInfo.PropertyType.GetTypeInfo();
                 var dataType = pInfo.GetCustomAttribute<DataTypeAttribute>();
 
-                var nav = entityType.FindNavigation(pInfo.Name);
-                var entityProp = entityType.FindProperty(pInfo.Name);
+                var nav = EntityType.FindNavigation(pInfo.Name);
+                var entityProp = EntityType.FindProperty(pInfo.Name);
 
                 if (nav != null)
                 {
@@ -981,7 +993,7 @@ namespace VueCoreFramework.Data
                 // 'Formatted' property in the ViewModel which contains either the description, or
                 // placeholder text for unrecognized values (e.g. combined Flags values). This
                 // formatted value is used in data tables.
-                else if (ptInfo.IsEnum)
+                else if (pInfo.PropertyType.GetTypeInfo().IsEnum)
                 {
                     object value = item == null ? 0 : pInfo.GetValue(item);
                     var name = pInfo.Name.ToInitialLower();
@@ -1278,7 +1290,7 @@ namespace VueCoreFramework.Data
         /// </returns>
         public async Task<string> ReplaceChildAsync(string parentId, string newChildId, PropertyInfo childProp)
         {
-            var parentRepo = (IRepository)Activator.CreateInstance(typeof(Repository<>).MakeGenericType(childProp.PropertyType), _context);
+            var parentRepo = _context.GetRepositoryForType(childProp.PropertyType);
             var parent = await parentRepo.FindItemAsync(parentId);
             var parentPK = parentRepo.GetPrimaryKeyFromString(parentId);
 
@@ -1302,7 +1314,7 @@ namespace VueCoreFramework.Data
         /// <param name="childProp">The navigation property of the relationship on the child entity.</param>
         public async Task<(IDictionary<string, object>, string)> ReplaceChildWithNewAsync(string parentId, PropertyInfo childProp)
         {
-            var parentRepo = (IRepository)Activator.CreateInstance(typeof(Repository<>).MakeGenericType(childProp.PropertyType), _context);
+            var parentRepo = _context.GetRepositoryForType(childProp.PropertyType);
             var parent = await parentRepo.FindItemAsync(parentId);
 
             var nav = EntityType.FindNavigation(childProp.Name);
@@ -1329,7 +1341,7 @@ namespace VueCoreFramework.Data
             }
             items.Update(item as T);
             await _context.SaveChangesAsync();
-            return await GetViewModelAsync(_context, item as T);
+            return await GetViewModelAsync(item as T);
         }
     }
 }

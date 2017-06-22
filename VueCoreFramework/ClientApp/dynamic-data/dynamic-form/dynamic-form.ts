@@ -49,14 +49,14 @@ export default class DynamicFormComponent extends Vue {
 
     @Watch('$route')
     onRouteChange(val: VueRouter.Route, oldVal: VueRouter.Route) {
-        this.repository = new Repository(this.$route.name);
+        this.repository = this.$store.getters.getRepository(this.$route.name);
         if (this.updateTimeout === 0) {
             this.updateTimeout = setTimeout(this.updateForm, 125);
         }
     }
 
     mounted() {
-        this.repository = new Repository(this.$route.name);
+        this.repository = this.$store.getters.getRepository(this.$route.name);
         if (this.updateTimeout === 0) {
             this.updateTimeout = setTimeout(this.updateForm, 125);
         }

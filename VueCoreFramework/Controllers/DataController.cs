@@ -627,7 +627,7 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                return Json(repository.GetFieldDefinitions());
+                return Json(repository.FieldDefinitions);
             }
             catch
             {
@@ -1282,12 +1282,9 @@ namespace VueCoreFramework.Controllers
             {
                 return false;
             }
-            repository = GetRepository(type, context);
+            repository = context.GetRepositoryForType(type);
             return true;
         }
-
-        private static IRepository GetRepository(Type type, ApplicationDbContext context)
-            => (IRepository)Activator.CreateInstance(typeof(Repository<>).MakeGenericType(type), context);
 
         private bool TryResolveObject(string dataType, JObject item, out object obj, out Type type)
         {
@@ -1349,7 +1346,7 @@ namespace VueCoreFramework.Controllers
                 var roleClaims = await _roleManager.GetClaimsAsync(role);
                 claims = claims.Concat(roleClaims).ToList();
             }
-            IRepository repository = GetRepository(type, _context);
+            IRepository repository = _context.GetRepositoryForType(type);
             var id = repository.PrimaryKey.PropertyInfo.GetValue(obj).ToString();
             if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, id))
             {

@@ -16,13 +16,20 @@ namespace VueCoreFramework.Test.Data
     [TestClass]
     public class RepositoryTest
     {
-        [TestMethod]
-        public async Task AddAsync_NoNavProp()
+        private static ApplicationDbContext context;
+
+        [ClassInitialize]
+        public static void Setup(TestContext testContext)
         {
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
             optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var repo = new Repository<Country>(context);
+            context = new ApplicationDbContext(optionsBuilder.Options);
+        }
+
+        [TestMethod]
+        public async Task AddAsync_NoNavProp()
+        {
+            var repo = context.GetRepositoryForType(typeof(Country));
 
             await repo.AddAsync(null, null);
             var item = context.Countries.FirstOrDefault();
@@ -33,10 +40,7 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task AddAsync_WithNavProp()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var repo = new Repository<City>(context);
+            var repo = context.GetRepositoryForType(typeof(City));
 
             var childProp = typeof(City).GetProperty(nameof(City.Country));
             var navProp = typeof(City).GetProperty(nameof(City.CountryId));
@@ -51,11 +55,8 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task AddChildrenToCollectionAsyncTest()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var parentRepo = new Repository<Country>(context);
-            var childRepo = new Repository<Airline>(context);
+            var parentRepo = context.GetRepositoryForType(typeof(Country));
+            var childRepo = context.GetRepositoryForType(typeof(Airline));
 
             var childProp = typeof(Country).GetProperty(nameof(Country.Airlines));
 
@@ -77,10 +78,7 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task FindAsync_ItemPresent()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var repo = new Repository<Country>(context);
+            var repo = context.GetRepositoryForType(typeof(Country));
 
             await repo.AddAsync(null, null);
             var item = context.Countries.FirstOrDefault();
@@ -95,10 +93,7 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task FindAsync_ItemNotPresent()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var repo = new Repository<Country>(context);
+            var repo = context.GetRepositoryForType(typeof(Country));
 
             var vm = await repo.FindAsync(Guid.Empty.ToString());
             Assert.IsTrue(vm.Keys.Contains(nameof(DataItem.Id).ToInitialLower()));
@@ -108,10 +103,7 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task FindItemAsync_ItemPresent()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var repo = new Repository<Country>(context);
+            var repo = context.GetRepositoryForType(typeof(Country));
 
             await repo.AddAsync(null, null);
             var item = context.Countries.FirstOrDefault();
@@ -125,10 +117,7 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task FindItemAsync_ItemNotPresent()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var repo = new Repository<Country>(context);
+            var repo = context.GetRepositoryForType(typeof(Country));
 
             var item = await repo.FindItemAsync(Guid.Empty.ToString());
             Assert.IsNull(item);
@@ -137,10 +126,7 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task GetAll_ItemsPresent()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var repo = new Repository<Country>(context);
+            var repo = context.GetRepositoryForType(typeof(Country));
 
             await repo.AddAsync(null, null);
             await repo.AddAsync(null, null);
@@ -153,10 +139,7 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task GetAll_NoItemsPresent()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var repo = new Repository<Country>(context);
+            var repo = context.GetRepositoryForType(typeof(Country));
 
             await repo.RemoveRangeAsync(context.Countries.Select(c => c.Id.ToString()));
             var vms = await repo.GetAllAsync();
@@ -166,11 +149,8 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task GetChildIdAsyncTest()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var parentRepo = new Repository<Country>(context);
-            var childRepo = new Repository<City>(context);
+            var parentRepo = context.GetRepositoryForType(typeof(Country));
+            var childRepo = context.GetRepositoryForType(typeof(City));
 
             await parentRepo.AddAsync(null, null);
             var parent = context.Countries.FirstOrDefault();
@@ -190,11 +170,8 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task GetChildTotalAsyncTest()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var parentRepo = new Repository<Country>(context);
-            var childRepo = new Repository<City>(context);
+            var parentRepo = context.GetRepositoryForType(typeof(Country));
+            var childRepo = context.GetRepositoryForType(typeof(City));
 
             await parentRepo.AddAsync(null, null);
             var parent = context.Countries.FirstOrDefault();
@@ -213,12 +190,9 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public void GetFieldDefinitionsTest()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var repo = new Repository<Country>(context);
+            var repo = context.GetRepositoryForType(typeof(Country));
 
-            var defs = repo.GetFieldDefinitions();
+            var defs = repo.FieldDefinitions;
 
             Assert.IsTrue(defs.Any(d => d.Model == nameof(DataItem.Id).ToInitialLower()));
         }
@@ -226,10 +200,7 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task GetPage_ItemsPresent()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var repo = new Repository<Country>(context);
+            var repo = context.GetRepositoryForType(typeof(Country));
 
             await repo.AddAsync(null, null);
             await repo.AddAsync(null, null);
@@ -243,10 +214,7 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task GetPage_ItemsPresent_Unauthorized()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var repo = new Repository<Country>(context);
+            var repo = context.GetRepositoryForType(typeof(Country));
 
             await repo.AddAsync(null, null);
             await repo.AddAsync(null, null);
@@ -259,10 +227,7 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task GetPage_ItemsPresent_PartialAuthorization()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var repo = new Repository<Country>(context);
+            var repo = context.GetRepositoryForType(typeof(Country));
 
             await repo.AddAsync(null, null);
             var item = context.Countries.FirstOrDefault();
@@ -278,10 +243,7 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task GetTotalAsyncTest()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var repo = new Repository<Country>(context);
+            var repo = context.GetRepositoryForType(typeof(Country));
 
             await repo.AddAsync(null, null);
             await repo.AddAsync(null, null);
@@ -295,10 +257,7 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task RemoveAsyncTest()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var repo = new Repository<Country>(context);
+            var repo = context.GetRepositoryForType(typeof(Country));
 
             await repo.AddAsync(null, null);
             var item = context.Countries.FirstOrDefault();
@@ -315,11 +274,8 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task RemoveChildrenFromCollectionAsyncTest()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var parentRepo = new Repository<Country>(context);
-            var childRepo = new Repository<Airline>(context);
+            var parentRepo = context.GetRepositoryForType(typeof(Country));
+            var childRepo = context.GetRepositoryForType(typeof(Airline));
 
             var childProp = typeof(Country).GetProperty(nameof(Country.Airlines));
 
@@ -343,10 +299,7 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task RemoveFromParentAsyncTest()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var repo = new Repository<City>(context);
+            var repo = context.GetRepositoryForType(typeof(City));
 
             var childProp = typeof(City).GetProperty(nameof(City.Country));
 
@@ -365,10 +318,7 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task RemoveRangeAsyncTest()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var repo = new Repository<Country>(context);
+            var repo = context.GetRepositoryForType(typeof(Country));
 
             await repo.AddAsync(null, null);
             await repo.AddAsync(null, null);
@@ -381,10 +331,7 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task RemoveRangeFromParentAsyncTest()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var repo = new Repository<City>(context);
+            var repo = context.GetRepositoryForType(typeof(City));
 
             var childProp = typeof(City).GetProperty(nameof(City.Country));
 
@@ -402,11 +349,8 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task ReplaceChildAsyncTest()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var childRepo = new Repository<City>(context);
-            var parentRepo = new Repository<Country>(context);
+            var parentRepo = context.GetRepositoryForType(typeof(Country));
+            var childRepo = context.GetRepositoryForType(typeof(City));
 
             var childProp = typeof(City).GetProperty(nameof(City.CountryCapitol));
 
@@ -429,11 +373,8 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task ReplaceChildWithNewAsyncTest()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var childRepo = new Repository<City>(context);
-            var parentRepo = new Repository<Country>(context);
+            var parentRepo = context.GetRepositoryForType(typeof(Country));
+            var childRepo = context.GetRepositoryForType(typeof(City));
 
             var childProp = typeof(City).GetProperty(nameof(City.CountryCapitol));
 
@@ -454,10 +395,7 @@ namespace VueCoreFramework.Test.Data
         [TestMethod]
         public async Task UpdateAsyncTest()
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseInMemoryDatabase();
-            var context = new ApplicationDbContext(optionsBuilder.Options);
-            var repo = new Repository<Country>(context);
+            var repo = context.GetRepositoryForType(typeof(Country));
 
             await repo.AddAsync(null, null);
             var item = context.Countries.FirstOrDefault();

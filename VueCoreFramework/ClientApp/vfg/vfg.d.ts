@@ -151,7 +151,7 @@ export interface FieldDefinition {
     /**
      * An optional name of a validator used to validate the field, or a validator function.
      */
-    validator?: Function | Array<Function>;
+    validator?: string | string[] | Function | Array<Function>;
 
     /**
      * The Array of options for a select or multiselect field, or a function which returns such an Array.

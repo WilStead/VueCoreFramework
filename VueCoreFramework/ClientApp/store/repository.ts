@@ -67,6 +67,8 @@ export interface PageData<T> {
 export class Repository {
     dataType = '';
 
+    fieldDefinitions: FieldDefinition[] = null;
+
     /**
      * Initializes a new instance of Repository.
      * @param {string} dataType The name of the data type managed by this Repository.
@@ -315,33 +317,38 @@ export class Repository {
      * @returns {Array<FieldDefinition>} The FieldDefinitions for the properties of the repository's data type.
      */
     getFieldDefinitions(returnPath: string): Promise<Array<FieldDefinition>> {
-        return fetch(`/api/Data/${this.dataType}/GetFieldDefinitions`,
-            {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'Authorization': `bearer ${store.state.token}`
-                }
-            })
-            .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<Array<FieldDefinition> | ApiResponseViewModel>)
-            .then(data => {
-                if (data['error']) {
-                    throw new Error(`There was a problem with your request. ${data['error']}`);
-                } else {
-                    let defs = data;
-                    // Translate validator keys to default validator names or actual functions.
-                    for (var i = 0; i < defs['length']; i++) {
-                        if (defs[i].validator && validators[defs[i].validator]) {
-                            defs[i].validator = validators[defs[i].validator];
-                        }
+        if (this.fieldDefinitions === null) {
+            return fetch(`/api/Data/${this.dataType}/GetFieldDefinitions`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `bearer ${store.state.token}`
                     }
-                    return defs;
-                }
-            })
-            .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
-            });
+                })
+                .then(response => checkResponse(response, returnPath))
+                .then(response => response.json() as Promise<Array<FieldDefinition>>)
+                .then(data => {
+                    if (data['error']) {
+                        throw new Error(`There was a problem with your request. ${data['error']}`);
+                    } else {
+                        let defs = data;
+                        // Translate validator keys to default validator names or actual functions.
+                        for (var i = 0; i < defs['length']; i++) {
+                            if (defs[i].validator && validators[defs[i].validator as string]) {
+                                defs[i].validator = validators[defs[i].validator as string];
+                            }
+                        }
+                        this.fieldDefinitions = defs;
+                        return this.fieldDefinitions;
+                    }
+                })
+                .catch(error => {
+                    throw new Error(`There was a problem with your request. ${error}`);
+                });
+        } else {
+            return new Promise<Array<FieldDefinition>>((resolve, reject) => { resolve(this.fieldDefinitions); });
+        }
     }
 
     /**

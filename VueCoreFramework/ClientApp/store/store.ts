@@ -2,6 +2,7 @@
 import Vuex from 'vuex';
 Vue.use(Vuex);
 import { uiState, getMenuItems, getChildItems } from './ui/uiStore';
+import { Repository } from './repository';
 import * as ErrorLog from '../error-msg';
 
 /**
@@ -50,6 +51,20 @@ export const store = new Vuex.Store({
         error: {
             dialogShown: false,
             message: ''
+        },
+
+        /**
+         * A collection of cached Repository objects, mapped by dataType. Should be retrieved with
+         * the getter, not directly, since they are instantiated on demand.
+         */
+        repositories: {}
+    },
+    getters: {
+        getRepository: (state, getters) => (dataType: string): Repository => {
+            if (!state.repositories[dataType]) {
+                state.repositories[dataType] = new Repository(dataType);
+            }
+            return state.repositories[dataType];
         }
     },
     mutations: {

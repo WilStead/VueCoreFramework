@@ -110,7 +110,7 @@ export default class DynamicTableComponent extends Vue {
 
     @Watch('parentType')
     onParentTypeChanged(val: string, oldVal: string) {
-        this.parentRepository = new Repository(val);
+        this.parentRepository = this.$store.getters.getRepository(val);
         if (this.updateTimeout === 0) {
             this.updateTimeout = setTimeout(this.updateTable, 125);
         }
@@ -129,7 +129,7 @@ export default class DynamicTableComponent extends Vue {
     @Watch('$route')
     onRouteChange(val: VueRouter.Route, oldVal: VueRouter.Route) {
         this.routeName = this.$route.name.substr(0, this.$route.name.length - 9); // remove 'DataTable'
-        this.repository = new Repository(this.routeName);
+        this.repository = this.$store.getters.getRepository(this.routeName);
         if (this.updateTimeout === 0) {
             this.updateTimeout = setTimeout(this.updateTable, 125);
         }
@@ -137,9 +137,9 @@ export default class DynamicTableComponent extends Vue {
 
     mounted() {
         this.routeName = this.$route.name.substr(0, this.$route.name.length - 9); // remove 'DataTable'
-        this.repository = new Repository(this.routeName);
+        this.repository = this.$store.getters.getRepository(this.routeName);
         if (this.parentType) {
-            this.parentRepository = new Repository(this.parentType);
+            this.parentRepository = this.$store.getters.getRepository(this.parentType);
         }
         if (this.updateTimeout === 0) {
             this.updateTimeout = setTimeout(this.updateTable, 125);
