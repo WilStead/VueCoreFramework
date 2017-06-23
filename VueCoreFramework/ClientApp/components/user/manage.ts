@@ -1,5 +1,6 @@
 ﻿import Vue from 'vue';
 import { Component, Prop, Watch } from 'vue-property-decorator';
+import * as Store from '../../store/store';
 import { checkResponse, ApiResponseViewModel } from '../../router';
 import { OperationReply } from '../../store/repository';
 import VueFormGenerator from 'vue-form-generator';
@@ -167,7 +168,7 @@ export default class ManageUserComponent extends Vue {
         fetch('/api/Account/HasPassword',
             {
                 headers: {
-                    'Authorization': `bearer ${this.$store.state.token}`
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })
             .then(response => checkResponse(response, this.$route.fullPath))
@@ -187,7 +188,7 @@ export default class ManageUserComponent extends Vue {
         fetch('/api/Account/GetUserAuthProviders',
             {
                 headers: {
-                    'Authorization': `bearer ${this.$store.state.token}`
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })
             .then(response => response.json() as Promise<AuthProviders>)
@@ -244,7 +245,7 @@ export default class ManageUserComponent extends Vue {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': `bearer ${this.$store.state.token}`
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })
             .then(response => checkResponse(response, this.$route.fullPath))
@@ -273,7 +274,7 @@ export default class ManageUserComponent extends Vue {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': `bearer ${this.$store.state.token}`
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })
             .then(response => checkResponse(response, this.$route.fullPath))
@@ -284,9 +285,9 @@ export default class ManageUserComponent extends Vue {
                     this.model.errors = [data.error];
                 } else {
                     // On success, the user is no longer a signed-in user (since they no longer have an account).
-                    this.$store.state.username = 'user';
-                    this.$store.state.email = 'user@example.com';
-                    this.$store.state.token = '';
+                    this.$store.commit(Store.setUsername, 'user');
+                    this.$store.commit(Store.setEmail, 'user@example.com');
+                    this.$store.commit(Store.setToken, '');
                     localStorage.removeItem('token');
                     this.successMessage = "Your account has been successfully deleted. You will be returned to the homepage shortly.";
                     this.success = true;
@@ -309,7 +310,7 @@ export default class ManageUserComponent extends Vue {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': `bearer ${this.$store.state.token}`
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
                 },
                 body: JSON.stringify(this.model)
             })
@@ -341,7 +342,7 @@ export default class ManageUserComponent extends Vue {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': `bearer ${this.$store.state.token}`
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
                 },
                 body: JSON.stringify(this.model)
             })
@@ -380,7 +381,7 @@ export default class ManageUserComponent extends Vue {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': `bearer ${this.$store.state.token}`
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
                 },
                 body: JSON.stringify(this.model)
             })

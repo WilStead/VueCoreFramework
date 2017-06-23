@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import { Component } from 'vue-property-decorator';
+import * as Store from '../../store/store';
 
 @Component({
     components: {
@@ -16,6 +17,6 @@ export default class AppComponent extends Vue {
             this.$router.push(forwardUrl);
         }
 
-        this.$store.commit('addTypeRoutes', this.$router);
+        this.$store.commit(Store.addTypeRoutes, this.$router);
     }
 }

@@ -1,6 +1,6 @@
 ﻿import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import { MenuItem } from '../../store/ui/uiStore';
+import { MenuItem } from '../../store/uiStore';
 
 @Component
 export default class MenuItemComponent extends Vue {

@@ -4,14 +4,12 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using VueCoreFramework.Data;
-using VueCoreFramework.Data.Attributes;
 using VueCoreFramework.Extensions;
 using VueCoreFramework.Models;
 using VueCoreFramework.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -67,14 +65,14 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null || user.AdminLocked)
             {
-                return Json(new AuthorizationViewModel { Authorization = AuthorizationViewModel.Unauthorized });
+                return Json(new AuthorizationViewModel { Authorization = AuthorizationViewModel.Login });
             }
             var token = AccountController.GetLoginToken(user, _userManager, _tokenOptions);
             var vm = new AuthorizationViewModel
             {
-                Username = user.UserName,
                 Email = user.Email,
-                Token = token
+                Token = token,
+                Username = user.UserName
             };
 
             // If no specific data is being requested, just being a recognized user is sufficient authorization.
@@ -97,6 +95,13 @@ namespace VueCoreFramework.Controllers
             vm.Authorization = IsAuthorized(claims, dataType, claimType, id)
                 ? AuthorizationViewModel.Authorized
                 : AuthorizationViewModel.Unauthorized;
+            // Admins can share/hide any data, and managers can share/hide any data they have
+            // authorization for with their own group. Other users can only share/hide data they own.
+            vm.CanShare = vm.Authorization == AuthorizationViewModel.Authorized
+                && (roles.Any(r => r == CustomRoles.Admin)
+                || (!string.IsNullOrEmpty(id)
+                && (claims.Any(c => c.Type == CustomClaimTypes.PermissionGroupManager
+                || (c.Type == CustomClaimTypes.PermissionDataOwner && c.Value == $"{dataType}{{{id}}}")))));
             return Json(vm);
         }
 

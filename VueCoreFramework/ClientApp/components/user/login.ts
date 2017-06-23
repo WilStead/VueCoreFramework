@@ -1,5 +1,6 @@
 ﻿import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
+import * as Store from '../../store/store';
 import { checkResponse, ApiResponseViewModel } from '../../router';
 import * as ErrorMsg from '../../error-msg';
 import VueFormGenerator from 'vue-form-generator';
@@ -154,7 +155,7 @@ export default class LoginComponent extends Vue {
             {
                 method: 'POST',
                 headers: {
-                    'Authorization': `bearer ${this.$store.state.token}`
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })
             .then(response => response.json() as Promise<ApiResponseViewModel>)
@@ -190,7 +191,7 @@ export default class LoginComponent extends Vue {
             .then(response => response.json() as Promise<LoginViewModel>)
             .then(data => {
                 if (data.token) {
-                    this.$store.commit('setToken', data.token);
+                    this.$store.commit(Store.setToken, data.token);
                     if (this.model.rememberUser) {
                         localStorage.setItem('token', data.token);
                     }
@@ -225,7 +226,7 @@ export default class LoginComponent extends Vue {
             .then(response => response.json() as Promise<LoginViewModel>)
             .then(data => {
                 if (data.token) {
-                    this.$store.commit('setToken', data.token);
+                    this.$store.commit(Store.setToken, data.token);
                     if (this.model.rememberUser) {
                         localStorage.setItem('token', data.token);
                     }

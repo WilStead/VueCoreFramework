@@ -1,7 +1,8 @@
 ﻿import Vue from 'vue';
 import Vuex from 'vuex';
 Vue.use(Vuex);
-import { uiState, getMenuItems, getChildItems } from './ui/uiStore';
+import { uiState, getMenuItems, getChildItems } from './uiStore';
+import { userState, SharePermissionData } from './userStore';
 import { Repository } from './repository';
 import * as ErrorLog from '../error-msg';
 
@@ -10,41 +11,6 @@ import * as ErrorLog from '../error-msg';
  */
 export const store = new Vuex.Store({
     state: {
-        /**
-         * The site author(s).
-         */
-        author: 'Wil Stead',
-
-        /**
-         * The copyright year(s) for the site.
-         */
-        year: '2017',
-
-        /**
-         * The contact email address for the site.
-         */
-        contact: 'wil.stead@williamstead.com',
-
-        /**
-         * A JWT bearer token.
-         */
-        token: localStorage.getItem('token') || '',
-
-        /**
-         * The username of the current user (if any).
-         */
-        username: 'user',
-
-        /**
-         * The email address of the current user (if any).
-         */
-        email: 'user@example.com',
-
-        /**
-         * An object containing information about the state of the UI.
-         */
-        uiState,
-
         /**
          * Info used to display a model error dialog.
          */
@@ -57,7 +23,17 @@ export const store = new Vuex.Store({
          * A collection of cached Repository objects, mapped by dataType. Should be retrieved with
          * the getter, not directly, since they are instantiated on demand.
          */
-        repositories: {}
+        repositories: {},
+
+        /**
+         * An object containing information about the state of the UI.
+         */
+        uiState,
+
+        /**
+         * An object containing information about the state of the current user.
+         */
+        userState
     },
     getters: {
         getRepository: (state, getters) => (dataType: string): Repository => {
@@ -68,13 +44,6 @@ export const store = new Vuex.Store({
         }
     },
     mutations: {
-        /**
-         * Sets the current JWT bearer token.
-         */
-        setToken(state, token) {
-            state.token = token;
-        },
-
         /**
          * Initializes the VueRouter with data type info from the API.
          */
@@ -93,6 +62,54 @@ export const store = new Vuex.Store({
 
             // must be added after dynamic routes to avoid matching before them.
             router.addRoutes([{ path: '*', redirect: '/error/notfound' }]);
+        },
+
+        /**
+         * Sets the current user email.
+         */
+        setEmail(state, email: string) {
+            state.userState.email = email;
+        },
+
+        /**
+         * Sets the current JWT bearer token.
+         */
+        setToken(state, token: string) {
+            state.userState.token = token;
+        },
+
+        /**
+         * Sets the current username.
+         */
+        setUsername(state, username: string) {
+            state.userState.username = username;
+        },
+
+        /**
+         * Adds share/hide information to the store.
+         */
+        updateSharePermission(state, permission: SharePermissionData) {
+            if (permission.dataType) {
+                if (state.userState.sharePermissions[permission.dataType] === undefined) {
+                    state.userState.sharePermissions[permission.dataType] = {};
+                }
+                if (permission.canShare) {
+                    state.userState.sharePermissions[permission.dataType].canShare = true;
+                } else if (permission.id) {
+                    if (state.userState.sharePermissions[permission.dataType].ids === undefined) {
+                        state.userState.sharePermissions[permission.dataType].ids = [];
+                    }
+                    if (state.userState.sharePermissions[permission.dataType].ids.indexOf(permission.id) == -1) {
+                        state.userState.sharePermissions[permission.dataType].ids.push(permission.id);
+                    }
+                }
+            }
         }
     }
 });
+
+export const addTypeRoutes = 'addTypeRoutes';
+export const setEmail = 'setEmail';
+export const setToken = 'setToken';
+export const setUsername = 'setUsername';
+export const updateSharePermission = 'updateSharePermission';

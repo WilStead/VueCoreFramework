@@ -43,7 +43,7 @@
         </main>
         <v-footer fixed>
             <v-spacer></v-spacer>
-            <a :href="'mailto:' + $store.state.contact" class="copy-text">&copy; {{ $store.state.author }}, {{ $store.state.year }}</a>
+            <a :href="'mailto:' + $store.state.uiState.contact" class="copy-text">&copy; {{ $store.state.uiState.author }}, {{ $store.state.uiState.year }}</a>
         </v-footer>
     </v-app>
 </template>

@@ -1,7 +1,7 @@
 ﻿import VueRouter from 'vue-router';
-import * as ErrorMsg from '../../error-msg';
-import { Repository } from '../repository';
-import { router } from '../../router';
+import * as ErrorMsg from '../error-msg';
+import { Repository } from './repository';
+import { router } from '../router';
 
 /**
  * Describes an item in the SPA framework's main menu.
@@ -241,6 +241,21 @@ export function getMenuItems(router: VueRouter, menu: MenuItem): Promise<void> {
  * An object containing information about the state of the UI.
  */
 export const uiState = {
+    /**
+     * The site author(s).
+     */
+    author: 'Wil Stead',
+
+    /**
+     * The contact email address for the site.
+     */
+    contact: 'wil.stead@williamstead.com',
+
+    /**
+     * The copyright year(s) for the site.
+     */
+    year: '2017',
+
     /**
      * The MenuItems displayed in the SPA framework's main menu.
      */

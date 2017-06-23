@@ -93,7 +93,7 @@ export class Repository {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': `bearer ${store.state.token}`
+                    'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
             .then(response => checkResponse(response, returnPath))
@@ -119,7 +119,7 @@ export class Repository {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': `bearer ${store.state.token}`
+                    'Authorization': `bearer ${store.state.userState.token}`
                 },
                 body: JSON.stringify(ids)
             })
@@ -145,7 +145,7 @@ export class Repository {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
-                    'Authorization': `bearer ${store.state.token}`
+                    'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
             .then(response => checkResponse(response, returnPath))
@@ -170,7 +170,7 @@ export class Repository {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
-                    'Authorization': `bearer ${store.state.token}`
+                    'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
             .then(response => checkResponse(response, returnPath))
@@ -192,7 +192,7 @@ export class Repository {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
-                    'Authorization': `bearer ${store.state.token}`
+                    'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
             .then(response => checkResponse(response, returnPath))
@@ -215,7 +215,7 @@ export class Repository {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
-                    'Authorization': `bearer ${store.state.token}`
+                    'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
             .then(response => checkResponse(response, returnPath))
@@ -244,7 +244,7 @@ export class Repository {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
-                    'Authorization': `bearer ${store.state.token}`
+                    'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
             .then(response => checkResponse(response, returnPath))
@@ -305,7 +305,7 @@ export class Repository {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
-                    'Authorization': `bearer ${store.state.token}`
+                    'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
             .then(response => checkResponse(response, returnPath))
@@ -316,7 +316,7 @@ export class Repository {
                         method: 'GET',
                         headers: {
                             'Accept': 'application/json',
-                            'Authorization': `bearer ${store.state.token}`
+                            'Authorization': `bearer ${store.state.userState.token}`
                         }
                     })
                     .then(response => checkResponse(response, returnPath))
@@ -352,7 +352,7 @@ export class Repository {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json',
-                        'Authorization': `bearer ${store.state.token}`
+                        'Authorization': `bearer ${store.state.userState.token}`
                     }
                 })
                 .then(response => checkResponse(response, returnPath))
@@ -431,7 +431,7 @@ export class Repository {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
-                    'Authorization': `bearer ${store.state.token}`
+                    'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
             .then(response => checkResponse(response, returnPath))
@@ -443,7 +443,7 @@ export class Repository {
                         headers: {
                             'Accept': 'application/json',
                             'Content-Type': 'application/json',
-                            'Authorization': `bearer ${store.state.token}`
+                            'Authorization': `bearer ${store.state.userState.token}`
                         },
                         body: JSON.stringify(except)
                     })
@@ -483,7 +483,7 @@ export class Repository {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
-                    'Authorization': `bearer ${store.state.token}`
+                    'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
             .then(response => checkResponse(response, returnPath))
@@ -509,7 +509,7 @@ export class Repository {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': `bearer ${store.state.token}`
+                    'Authorization': `bearer ${store.state.userState.token}`
                 },
                 body: JSON.stringify(childIds)
             })
@@ -536,7 +536,7 @@ export class Repository {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': `bearer ${store.state.token}`
+                    'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
             .then(response => checkResponse(response, returnPath))
@@ -562,7 +562,7 @@ export class Repository {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': `bearer ${store.state.token}`
+                    'Authorization': `bearer ${store.state.userState.token}`
                 },
                 body: JSON.stringify(ids)
             })
@@ -589,7 +589,7 @@ export class Repository {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': `bearer ${store.state.token}`
+                    'Authorization': `bearer ${store.state.userState.token}`
                 },
                 body: JSON.stringify(ids)
             })
@@ -617,7 +617,7 @@ export class Repository {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': `bearer ${store.state.token}`
+                    'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
             .then(response => checkResponse(response, returnPath))
@@ -643,7 +643,7 @@ export class Repository {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': `bearer ${store.state.token}`
+                    'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
             .then(response => checkResponse(response, returnPath))
@@ -666,7 +666,7 @@ export class Repository {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'Authorization': `bearer ${store.state.token}`
+                    'Authorization': `bearer ${store.state.userState.token}`
                 },
                 body: JSON.stringify(vm)
             })

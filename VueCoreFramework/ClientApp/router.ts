@@ -1,5 +1,6 @@
 ﻿import VueRouter from 'vue-router';
-import { store } from './store/store';
+import * as Store from './store/store';
+import { SharePermissionData } from './store/userStore';
 import * as ErrorMsg from './error-msg';
 
 const routes: Array<VueRouter.RouteConfig> = [
@@ -86,9 +87,14 @@ export interface ApiResponseViewModel {
  */
 interface AuthorizationViewModel {
     /**
-     * The username of the user account.
+     * A value indicating whether the user is authorized for the requested action or not.
      */
-    username: string;
+    authorization: string;
+
+    /**
+     * Indicates that the user is authorized to share/hide the requested data.
+     */
+    canShare: boolean;
 
     /**
      * The email of the user account.
@@ -101,9 +107,9 @@ interface AuthorizationViewModel {
     token: string;
 
     /**
-     * A value indicating whether the user is authorized for the requested action or not.
+     * The username of the user account.
      */
-    authorization: string;
+    username: string;
 }
 
 /**
@@ -113,24 +119,25 @@ interface AuthorizationViewModel {
  */
 export function checkAuthorization(to: VueRouter.Route): Promise<string> {
     let url = '/api/Authorization/Authorize';
+    let dataType: string;
+    let op: string;
+    let id: string;
     if (to && to.name && to.name.length) {
-        let n: string = to.name;
-        let op: string;
-        let id: string;
-        if (n.endsWith("DataTable")) {
-            n = n.substring(0, n.length - 9);
+        dataType = to.name;
+        if (dataType.endsWith("DataTable")) {
+            dataType = dataType.substring(0, dataType.length - 9);
         } else {
             op = to.params.operation;
             id = to.params.id;
         }
-        url += `?dataType=${n}`;
+        url += `?dataType=${dataType}`;
         if (op) url += `&operation=${op}`;
         if (id) url += `&id=${id}`;
     }
     return fetch(url,
         {
             headers: {
-                'Authorization': `bearer ${store.state.token}`
+                'Authorization': `bearer ${Store.store.state.userState.token}`
             }
         })
         .then(response => {
@@ -145,17 +152,28 @@ export function checkAuthorization(to: VueRouter.Route): Promise<string> {
         .then(response => response.json() as Promise<AuthorizationViewModel>)
         .then(data => {
             if (data.token) {
-                store.state.token = data.token;
+                Store.store.commit(Store.setToken, data.token);
             }
             if (data.username) {
-                store.state.username = data.username;
+                Store.store.commit(Store.setUsername, data.username);
             }
             if (data.email) {
-                store.state.email = data.email;
+                Store.store.commit(Store.setEmail, data.email);
+            }
+            if (data.canShare) {
+                if (dataType) {
+                    let permission: SharePermissionData = { dataType };
+                    if (id) { // Permission to share/hide an item.
+                        permission.id = id;
+                    } else { // Permission to share/hide a type.
+                        permission.canShare = true;
+                    }
+                    Store.store.commit(Store.updateSharePermission, permission);
+                }
             }
             if (data.authorization === "authorized") {
                 return "authorized";
-            } else if (data.email) {
+            } else if (data.authorization === "unauthorized") {
                 return "unauthorized";
             } else {
                 return "login";
