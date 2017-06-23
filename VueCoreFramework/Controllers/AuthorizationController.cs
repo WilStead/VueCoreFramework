@@ -46,20 +46,63 @@ namespace VueCoreFramework.Controllers
         }
 
         /// <summary>
-        /// Called to authorize the current user for a particular operation, or simply to
-        /// authenticate the user if no oepration is specified.
+        /// Called to authenticate the user.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="AuthorizationViewModel"/> indicating whether the current user is authenticated.
+        /// </returns>
+        [HttpGet]
+        public async Task<IActionResult> Authenticate(string full = null)
+        {
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null || user.AdminLocked)
+            {
+                return Json(new AuthorizationViewModel { Authorization = AuthorizationViewModel.Login });
+            }
+
+            var vm = new AuthorizationViewModel
+            {
+                Authorization = AuthorizationViewModel.Authorized,
+                Token = AccountController.GetLoginToken(user, _userManager, _tokenOptions)
+            };
+            if (full != "true")
+            {
+                return Json(vm);
+            }
+
+            vm.Email = user.Email;
+            vm.Username = user.UserName;
+
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+            vm.IsAdmin = roles.Any(r => r == CustomRoles.Admin);
+            vm.IsSiteAdmin = vm.IsAdmin && roles.Any(r => r == CustomRoles.SiteAdmin);
+            vm.ManagedGroups = claims.Where(c => c.Type == CustomClaimTypes.PermissionGroupManager).Select(c => c.Value).ToList();
+
+            return Json(vm);
+        }
+
+        /// <summary>
+        /// Called to authorize the current user for a particular operation.
         /// </summary>
         /// <param name="dataType">
-        /// An optional name indicating the type of data involved in the current operation.
+        /// The type of data involved in the current operation.
         /// </param>
         /// <param name="operation">An optional operation being performed.</param>
         /// <param name="id">An optional primary key for the item involved in the current operation.</param>
         /// <returns>
-        /// An <see cref="AuthorizationViewModel"/> indicating whether the current user is authorized
-        /// (or authenticated).
+        /// An <see cref="AuthorizationViewModel"/> indicating whether the current user is authorized.
         /// </returns>
-        [HttpGet]
-        public async Task<IActionResult> Authorize(string dataType = null, string operation = "view", string id = null)
+        [HttpGet("{dataType}")]
+        public async Task<IActionResult> Authorize(string dataType, string operation = CustomClaimTypes.PermissionDataView, string id = null)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
@@ -75,11 +118,155 @@ namespace VueCoreFramework.Controllers
                 Username = user.UserName
             };
 
-            // If no specific data is being requested, just being a recognized user is sufficient authorization.
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+            vm.IsAdmin = roles.Any(r => r == CustomRoles.Admin);
+            vm.IsSiteAdmin = vm.IsAdmin && roles.Any(r => r == CustomRoles.SiteAdmin);
+            vm.ManagedGroups = claims.Where(c => c.Type == CustomClaimTypes.PermissionGroupManager).Select(c => c.Value).ToList();
+
+            vm.Authorization = GetAuthorization(claims, dataType, operation, id);
+
+            // Admins can share/hide any data, and managers can share/hide any data they have
+            // authorization for with their own group. Other users can only share/hide data they own.
+            if (vm.Authorization != AuthorizationViewModel.Unauthorized)
+            {
+                if (vm.IsAdmin
+                    || (!string.IsNullOrEmpty(id)
+                    && claims.Any(c => c.Type == CustomClaimTypes.PermissionDataOwner && c.Value == $"{dataType}{{{id}}}")))
+                {
+                    vm.CanShare = AuthorizationViewModel.ShareAny;
+                }
+                else if (!string.IsNullOrEmpty(id) && vm.ManagedGroups.Count > 0)
+                {
+                    vm.CanShare = AuthorizationViewModel.ShareGroup;
+                }
+            }
+
+            return Json(vm);
+        }
+
+        [HttpPost("{username}/{group}")]
+        public async Task<IActionResult> AddUserToGroup(string username, string group)
+        {
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (user.AdminLocked)
+            {
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+            }
+            if (username == user.UserName)
+            {
+                return Json(new { error = ErrorMessages.SelfGroupAddError });
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            if (group == CustomRoles.SiteAdmin)
+            {
+                if (roles.Contains(CustomRoles.SiteAdmin))
+                {
+                    return Json(new { error = ErrorMessages.SiteAdminSingularError });
+                }
+                else
+                {
+                    return Json(new { error = ErrorMessages.SiteAdminOnlyError });
+                }
+            }
+            else if (group == CustomRoles.Admin)
+            {
+                if (!roles.Contains(CustomRoles.SiteAdmin))
+                {
+                    return Json(new { error = ErrorMessages.SiteAdminOnlyError });
+                }
+            }
+            // Admins can add users to any non-admin group, regardless of their own membership.
+            else if (!roles.Contains(CustomRoles.Admin))
+            {
+                var claims = await _userManager.GetClaimsAsync(user);
+                if (!claims.Contains(new Claim(CustomClaimTypes.PermissionGroupManager, group)))
+                {
+                    return Json(new { error = ErrorMessages.ManagerOnlyError });
+                }
+            }
+
+            var groupRole = await _roleManager.FindByNameAsync(group);
+            if (groupRole == null)
+            {
+                return Json(new { error = ErrorMessages.InvalidTargetGroupError });
+            }
+            var targetUser = await _userManager.FindByNameAsync(username);
+            if (targetUser == null)
+            {
+                return Json(new { error = ErrorMessages.InvalidTargetUserError });
+            }
+            await _userManager.AddToRoleAsync(targetUser, groupRole.Name);
+            return Json(new { Response = ResponseMessages.Success });
+        }
+
+        internal static string GetAuthorization(IList<Claim> claims, string dataType, string claimType = CustomClaimTypes.PermissionDataView, string id = null)
+        {
+            // First authorization for all data is checked.
+            if (claims.Any(c => c.Type == CustomClaimTypes.PermissionDataAll && c.Value == CustomClaimTypes.PermissionAll))
+            {
+                return CustomClaimTypes.PermissionDataAll;
+            }
+
+            // If not authorized for all data, authorization for the specific operation on all data is checked.
+            // In the absence of a specific operation, the default action is View.
+            var claim = GetHighestClaimForValue(claims, CustomClaimTypes.PermissionAll);
+            if (claim != null && PermissionIncludesTarget(claim.Type, claimType))
+            {
+                return claim.Type;
+            }
+
+            // If not authorized for the operation on all data, authorization for the specific data type is checked.
+            claim = GetHighestClaimForValue(claims, dataType);
+            if (claim != null && PermissionIncludesTarget(claim.Type, claimType))
+            {
+                return claim.Type;
+            }
+
+            // If not authorized for the operation on the data type and an id is provided, the specific item is checked.
+            if (!string.IsNullOrEmpty(id))
+            {
+                // Authorization for either all operations or the specific operation is checked.
+                claim = GetHighestClaimForValue(claims, $"{dataType}{{{id}}}");
+                if (claim != null && PermissionIncludesTarget(claim.Type, claimType))
+                {
+                    return claim.Type;
+                }
+            }
+            // If no id is provided, only View is allowed (to permit data table display, even if no items can be listed).
+            else if (claimType == CustomClaimTypes.PermissionDataView)
+            {
+                return CustomClaimTypes.PermissionDataView;
+            }
+
+            // No authorizations found.
+            return AuthorizationViewModel.Unauthorized;
+        }
+
+        [HttpGet("{dataType}")]
+        public async Task<IActionResult> GetCurrentShares(string dataType, string id = null)
+        {
             if (string.IsNullOrEmpty(dataType))
             {
-                vm.Authorization = AuthorizationViewModel.Authorized;
-                return Json(vm);
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+            }
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null || user.AdminLocked)
+            {
+                return Json(new { error = ErrorMessages.InvalidUserError });
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -91,81 +278,308 @@ namespace VueCoreFramework.Controllers
                 var roleClaims = await _roleManager.GetClaimsAsync(role);
                 claims = claims.Concat(roleClaims).ToList();
             }
-            var claimType = $"permission/data/{operation}";
-            vm.Authorization = IsAuthorized(claims, dataType, claimType, id)
-                ? AuthorizationViewModel.Authorized
-                : AuthorizationViewModel.Unauthorized;
-            // Admins can share/hide any data, and managers can share/hide any data they have
-            // authorization for with their own group. Other users can only share/hide data they own.
-            vm.CanShare = vm.Authorization == AuthorizationViewModel.Authorized
-                && (roles.Any(r => r == CustomRoles.Admin)
+
+            var shares = new List<ShareViewModel>();
+            // Admins can control all sharing, and all users can control sharing on their owned items.
+            if (roles.Any(r => r == CustomRoles.Admin)
                 || (!string.IsNullOrEmpty(id)
-                && (claims.Any(c => c.Type == CustomClaimTypes.PermissionGroupManager
-                || (c.Type == CustomClaimTypes.PermissionDataOwner && c.Value == $"{dataType}{{{id}}}")))));
-            return Json(vm);
+                && claims.Any(c => c.Type == CustomClaimTypes.PermissionDataOwner
+                && c.Value == $"{dataType}{{{id}}}")))
+            {
+                foreach (var claim in _context.UserClaims
+                    .Where(c => c.ClaimValue == (string.IsNullOrEmpty(id) ? $"{dataType}" : $"{dataType}{{{id}}}")))
+                {
+                    var shareUser = await _userManager.FindByIdAsync(claim.UserId);
+                    shares.Add(new ShareViewModel
+                    {
+                        Type = "user",
+                        Name = shareUser.UserName,
+                        Level = claim.ClaimType
+                    });
+                }
+                foreach (var claim in _context.RoleClaims
+                    .Where(c => c.ClaimValue == (string.IsNullOrEmpty(id) ? $"{dataType}" : $"{dataType}{{{id}}}")))
+                {
+                    var shareRole = await _roleManager.FindByIdAsync(claim.RoleId);
+                    shares.Add(new ShareViewModel
+                    {
+                        Type = "group",
+                        Name = shareRole.Name,
+                        Level = claim.ClaimType
+                    });
+                }
+            }
+            else
+            {
+                // Managers can control all sharing for their group, even if they don't own it.
+                foreach (var group in claims.Where(c =>
+                    c.Type == CustomClaimTypes.PermissionGroupManager).Select(c => c.Value))
+                {
+                    var role = await _roleManager.FindByNameAsync(group);
+                    var roleClaims = await _roleManager.GetClaimsAsync(role);
+                    foreach (var claim in roleClaims.Where(c =>
+                        c.Value == (string.IsNullOrEmpty(id) ? $"{dataType}" : $"{dataType}{{{id}}}")))
+                    {
+                        shares.Add(new ShareViewModel
+                        {
+                            Type = "group",
+                            Name = role.Name,
+                            Level = claim.Type
+                        });
+                    }
+                }
+            }
+            return Json(shares);
         }
 
-        [HttpPost("{username}/{group}")]
-        public async Task<IActionResult> AddUserToGroup(string username, string group)
+        private static Claim GetHighestClaimForValue(IList<Claim> claims, string claimValue)
+        {
+            Claim max = null;
+            foreach (var claim in claims.Where(c => c.Value == claimValue))
+            {
+                if (max == null || PermissionIncludesTarget(claim.Type, max.Type))
+                {
+                    max = claim;
+                }
+            }
+            return max;
+        }
+
+        private static IList<Claim> GetImpliedClaimsForRemove(Claim claim)
+        {
+            if (claim.Type == CustomClaimTypes.PermissionDataView)
+            {
+                return new List<Claim> {
+                    claim,
+                    new Claim(CustomClaimTypes.PermissionDataEdit, claim.Value),
+                    new Claim(CustomClaimTypes.PermissionDataAdd, claim.Value),
+                    new Claim(CustomClaimTypes.PermissionDataAll, claim.Value)
+                };
+            }
+            else if (claim.Type == CustomClaimTypes.PermissionDataEdit)
+            {
+                return new List<Claim> {
+                    claim,
+                    new Claim(CustomClaimTypes.PermissionDataAdd, claim.Value),
+                    new Claim(CustomClaimTypes.PermissionDataAll, claim.Value)
+                };
+            }
+            else if (claim.Type == CustomClaimTypes.PermissionDataAdd)
+            {
+                return new List<Claim> {
+                    claim,
+                    new Claim(CustomClaimTypes.PermissionDataAll, claim.Value)
+                };
+            }
+            else return new List<Claim> { claim };
+        }
+
+        [HttpGet("{input}")]
+        public async Task<IActionResult> GetShareableGroupCompletion(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return Json(new { response = "" });
+            }
+
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null || user.AdminLocked)
+            {
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+
+            // First try groups the user manages.
+            var potentialClaim = claims.FirstOrDefault(c =>
+                c.Type == CustomClaimTypes.PermissionGroupManager && c.Value.StartsWith(input));
+            if (potentialClaim != null)
+            {
+                return Json(new { response = potentialClaim.Value });
+            }
+
+            // Next try groups to which the user belongs.
+            var potentialValue = roles.FirstOrDefault(r =>
+                r.StartsWith(input)
+                && r != CustomRoles.Admin && r != CustomRoles.SiteAdmin && r != CustomRoles.AllUsers);
+
+            if (!string.IsNullOrEmpty(potentialValue))
+            {
+                return Json(new { response = potentialValue });
+            }
+
+            // Admins can share with any group, so finally try everything.
+            if (roles.Any(r => r == CustomRoles.Admin))
+            {
+                var potentialRole = _context.Roles.FirstOrDefault(r => r.Name.StartsWith(input));
+                if (potentialRole != null)
+                {
+                    return Json(new { response = potentialRole.Name });
+                }
+            }
+
+            return Json(new { response = "" });
+        }
+
+        [HttpGet("{input}")]
+        public async Task<IActionResult> GetShareableUsernameCompletion(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return Json(new { response = "" });
+            }
+
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null || user.AdminLocked)
+            {
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+
+            // First try members of groups the user manages.
+            foreach (var group in claims.Where(c => c.Type == CustomClaimTypes.PermissionGroupManager).Select(c => c.Value))
+            {
+                var members = await _userManager.GetUsersInRoleAsync(group);
+                var potentialMember = members.FirstOrDefault(u => u != user && u.UserName.StartsWith(input));
+                if (potentialMember != null)
+                {
+                    return Json(new { response = potentialMember.UserName });
+                }
+            }
+
+            // Next try members of groups to which the user belongs.
+            foreach (var group in roles.Where(r => r != CustomRoles.SiteAdmin && r != CustomRoles.AllUsers))
+            {
+                var members = await _userManager.GetUsersInRoleAsync(group);
+                var potentialMember = members.FirstOrDefault(u => u != user && u.UserName.StartsWith(input));
+                if (potentialMember != null)
+                {
+                    return Json(new { response = potentialMember.UserName });
+                }
+            }
+
+            // Admins can share with anyone, so finally try everything.
+            if (roles.Any(r => r == CustomRoles.Admin))
+            {
+                var potentialUser = _context.Users.FirstOrDefault(u => u.UserName.StartsWith(input));
+                if (potentialUser != null)
+                {
+                    return Json(new { response = potentialUser.UserName });
+                }
+            }
+
+            return Json(new { response = "" });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetShareableGroupMembers()
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
-            if (user == null)
+            if (user == null || user.AdminLocked)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
-            if (user.AdminLocked)
-            {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
-            }
-            if (username == user.UserName)
-            {
-                return Json(new { error = "You cannot add yourself to a group." });
-            }
-            var roles = await _userManager.GetRolesAsync(user);
-            if (group == CustomRoles.SiteAdmin)
-            {
-                return Json(new { error = "You cannot add anyone to the Site Administrator group." });
-            }
-            else if (group == CustomRoles.Admin)
-            {
-                if (!roles.Contains(CustomRoles.SiteAdmin))
-                {
-                    return Json(new { error = "Only the Site Administrator may add users to the Administrator group." });
-                }
-            }
-            // Admins can add users to any non-admin group, regardless of their own membership.
-            else if (!roles.Contains(CustomRoles.Admin))
-            {
-                var claims = await _userManager.GetClaimsAsync(user);
-                if (!claims.Contains(new Claim(CustomClaimTypes.PermissionGroupManager, group)))
-                {
-                    return Json(new { error = "Only the group's manager may add users to a group." });
-                }
+                return Json(new { error = ErrorMessages.InvalidUserError });
             }
 
-            var groupRole = await _roleManager.FindByNameAsync(group);
-            if (groupRole == null)
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
             }
-            var targetUser = await _userManager.FindByNameAsync(username);
-            if (targetUser == null)
+
+            var members = new List<string>();
+            // Add members of any groups the user manages, or of which the user is a member.
+            var managedGroups = claims.Where(c =>
+                c.Type == CustomClaimTypes.PermissionGroupManager).Select(c => c.Value);
+            foreach (var group in managedGroups.Concat(roles.Where(r => !managedGroups.Contains(r))))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                var groupMembers = await _userManager.GetUsersInRoleAsync(group);
+                members.AddRange(groupMembers.Where(m => m != user).Select(m => m.UserName));
             }
-            await _userManager.AddToRoleAsync(targetUser, groupRole.Name);
-            return Ok();
+
+            return Json(members);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetShareableGroupSubset()
+        {
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null || user.AdminLocked)
+            {
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            roles.Add(CustomRoles.AllUsers);
+            var claims = await _userManager.GetClaimsAsync(user);
+            foreach (var roleName in roles)
+            {
+                var role = await _roleManager.FindByNameAsync(roleName);
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+                claims = claims.Concat(roleClaims).ToList();
+            }
+
+            // First add any groups the user manages.
+            var managedGroups = claims.Where(c => c.Type == CustomClaimTypes.PermissionGroupManager).Take(5).Select(c => c.Value).ToList();
+
+            // If the target number has not yet been reached, also add any groups to which the user belongs.
+            if (managedGroups.Count < 5)
+            {
+                managedGroups = managedGroups.Concat(roles.Where(r =>
+                    !managedGroups.Contains(r) && r != CustomRoles.Admin
+                    && r != CustomRoles.SiteAdmin && r != CustomRoles.AllUsers)
+                    .Take(5 - managedGroups.Count)).ToList();
+            }
+
+            // Admins can share with any group, so if the target still hasn't been reached it can be
+            // filled with arbitrarily selected ones.
+            if (managedGroups.Count < 5 && roles.Any(r => r == CustomRoles.Admin))
+            {
+                managedGroups = managedGroups.Concat(_context.Roles.Where(r =>
+                    !managedGroups.Contains(r.Name) && r.Name != CustomRoles.Admin
+                    && r.Name != CustomRoles.SiteAdmin && r.Name != CustomRoles.AllUsers)
+                    .Take(5 - managedGroups.Count).Select(r => r.Name)).ToList();
+            }
+
+            return Json(managedGroups);
         }
 
         [HttpPost("{dataType}")]
         public async Task<IActionResult> HideDataFromAll(string dataType, string operation, string id)
         {
+            if (string.IsNullOrEmpty(dataType))
+            {
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+            }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
             }
             if (user.AdminLocked)
             {
@@ -175,21 +589,16 @@ namespace VueCoreFramework.Controllers
             // Only Admins can hide data from all.
             if (!roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = "Only Administrators can hide data which has been shared with all users." });
+                return Json(new { error = ErrorMessages.AdminOnlyError });
             }
 
-            if (string.IsNullOrEmpty(dataType))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
             dataType = dataType.ToInitialCaps();
             // Entity isn't used, but is parsed to enure it's valid.
             var entity = _context.Model.GetEntityTypes().FirstOrDefault(e => e.Name.Substring(e.Name.LastIndexOf('.') + 1) == dataType);
             if (entity == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
-            operation = $"permission/data/{operation.ToLower()}";
             var allRole = await _roleManager.FindByNameAsync(CustomRoles.AllUsers);
             Claim claim = null;
             // Hide a data type, rather than a particular item.
@@ -201,18 +610,11 @@ namespace VueCoreFramework.Controllers
             {
                 claim = new Claim(operation, $"{dataType}{{{id}}}");
             }
-            await _roleManager.RemoveClaimAsync(allRole, claim);
-            // Remove implies claims.
-            if (claim.Type == CustomClaimTypes.PermissionDataView)
+            foreach (var impliedClaim in GetImpliedClaimsForRemove(claim))
             {
-                await _roleManager.RemoveClaimAsync(allRole, new Claim(CustomClaimTypes.PermissionDataEdit, claim.Value));
-                await _roleManager.RemoveClaimAsync(allRole, new Claim(CustomClaimTypes.PermissionDataAdd, claim.Value));
+                await _roleManager.RemoveClaimAsync(allRole, impliedClaim);
             }
-            else if (claim.Type == CustomClaimTypes.PermissionDataEdit)
-            {
-                await _roleManager.RemoveClaimAsync(allRole, new Claim(CustomClaimTypes.PermissionDataAdd, claim.Value));
-            }
-            return Ok();
+            return Json(new { Response = ResponseMessages.Success });
         }
 
         [HttpPost("{group}/{dataType}")]
@@ -222,7 +624,7 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
             }
             if (user.AdminLocked)
             {
@@ -232,7 +634,7 @@ namespace VueCoreFramework.Controllers
             // Only admins can hide a data type, rather than a particular item
             if (string.IsNullOrEmpty(id) && !roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = "Only Administrators can hide data types." });
+                return Json(new { error = ErrorMessages.AdminOnlyError });
             }
             // Admins can hide data from any group, regardless of their own membership.
             if (!roles.Contains(CustomRoles.Admin))
@@ -241,31 +643,24 @@ namespace VueCoreFramework.Controllers
                 if (!claims.Contains(new Claim(CustomClaimTypes.PermissionGroupManager, group))
                     && !claims.Contains(new Claim(CustomClaimTypes.PermissionDataOwner, $"{dataType}{{{id}}}")))
                 {
-                    return Json(new { error = "Only the group's manager or the original owner of the data may hide data which has been shared with a group." });
+                    return Json(new { error = ErrorMessages.ManagerOrOwnerOnlyError });
                 }
             }
 
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidTargetGroupError });
             }
             if (!TryGetClaim(dataType, operation, id, out Claim claim))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.DataError });
             }
-            await _roleManager.RemoveClaimAsync(groupRole, claim);
-            // Remove implied permissions.
-            if (claim.Type == CustomClaimTypes.PermissionDataView)
+            foreach (var impliedClaim in GetImpliedClaimsForRemove(claim))
             {
-                await _roleManager.RemoveClaimAsync(groupRole, new Claim(CustomClaimTypes.PermissionDataEdit, claim.Value));
-                await _roleManager.RemoveClaimAsync(groupRole, new Claim(CustomClaimTypes.PermissionDataAdd, claim.Value));
+                await _roleManager.RemoveClaimAsync(groupRole, impliedClaim);
             }
-            if (claim.Type == CustomClaimTypes.PermissionDataEdit)
-            {
-                await _roleManager.RemoveClaimAsync(groupRole, new Claim(CustomClaimTypes.PermissionDataAdd, claim.Value));
-            }
-            return Ok();
+            return Json(new { Response = ResponseMessages.Success });
         }
 
         [HttpPost("{username}/{dataType}")]
@@ -275,7 +670,7 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
             }
             if (user.AdminLocked)
             {
@@ -286,79 +681,46 @@ namespace VueCoreFramework.Controllers
             // Only admins can hide a data type, rather than a particular item
             if (string.IsNullOrEmpty(id) && !roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = "Only Administrators can hide data types." });
+                return Json(new { error = ErrorMessages.AdminOnlyError });
             }
             if (!roles.Contains(CustomRoles.Admin)
                 && !claims.Contains(new Claim(CustomClaimTypes.PermissionDataOwner, $"{dataType}{{{id}}}")))
             {
-                return Json(new { error = "Only the original owner of the data may hide data which has been shared with another user." });
+                return Json(new { error = ErrorMessages.OwnerOnlyError });
             }
 
             var targetUser = await _userManager.FindByNameAsync(username);
             if (targetUser == null)
             {
-                return Json(new { error = "That user could not be found." });
+                return Json(new { error = ErrorMessages.InvalidTargetUserError });
             }
             if (!TryGetClaim(dataType, operation, id, out Claim claim))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.DataError });
             }
-            List<Claim> removedClaims = new List<Claim> { claim };
-            // Remove implied permissions.
-            if (claim.Type == CustomClaimTypes.PermissionDataView)
-            {
-                removedClaims.Add(new Claim(CustomClaimTypes.PermissionDataEdit, claim.Value));
-                removedClaims.Add(new Claim(CustomClaimTypes.PermissionDataAdd, claim.Value));
-            }
-            else if (claim.Type == CustomClaimTypes.PermissionDataEdit)
-            {
-                removedClaims.Add(new Claim(CustomClaimTypes.PermissionDataAdd, claim.Value));
-            }
-            await _userManager.RemoveClaimsAsync(targetUser, removedClaims);
-            return Ok();
+            await _userManager.RemoveClaimsAsync(targetUser, GetImpliedClaimsForRemove(claim));
+            return Json(new { Response = ResponseMessages.Success });
         }
 
-        internal static bool IsAuthorized(IList<Claim> claims, string dataType, string claimType = CustomClaimTypes.PermissionDataView, string id = null)
+        private static bool PermissionIncludesTarget(string permission, string targetPermission)
         {
-            // First authorization for all data is checked.
-            if (claims.Any(c => c.Type == CustomClaimTypes.PermissionDataAll && c.Value == CustomClaimTypes.PermissionAll))
+            if (permission == CustomClaimTypes.PermissionDataAll)
             {
                 return true;
             }
-
-            // If not authorized for all data, authorization for the specific operation on all data is checked.
-            // In the absence of a specific operation, the default action is View.
-            // View permission is implied by Edit permission.
-            if (claims.Any(c => c.Value == CustomClaimTypes.PermissionAll && c.Type == claimType))
+            else if (permission == CustomClaimTypes.PermissionDataAdd)
             {
-                return true;
+                return targetPermission != CustomClaimTypes.PermissionDataAll;
             }
-
-            // If not authorized for the operation on all data, authorization for the specific data type is checked.
-            if (claims.Any(c => c.Value == dataType
-                && (c.Type == CustomClaimTypes.PermissionDataAll || c.Type == claimType)))
+            else if (permission == CustomClaimTypes.PermissionDataEdit)
             {
-                return true;
+                return targetPermission == CustomClaimTypes.PermissionDataEdit
+                    || targetPermission == CustomClaimTypes.PermissionDataView;
             }
-
-            // If not authorized for the operation on the data type and an id is provided, the specific item is checked.
-            if (!string.IsNullOrEmpty(id))
+            else
             {
-                // Authorization for either all operations or the specific operation is checked.
-                if (claims.Any(c => c.Value == $"{dataType}{{{id}}}"
-                    && (c.Type == CustomClaimTypes.PermissionDataAll || c.Type == claimType)))
-                {
-                    return true;
-                }
+                return targetPermission == CustomClaimTypes.PermissionDataView;
             }
-            // If no id is provided, only View is allowed (to permit data table display, even if no items can be listed).
-            else if (claimType == CustomClaimTypes.PermissionDataView)
-            {
-                return true;
-            }
-
-            // No authorizations found.
-            return false;
         }
 
         [HttpPost("{username}/{group}")]
@@ -368,7 +730,7 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
             }
             if (user.AdminLocked)
             {
@@ -379,18 +741,18 @@ namespace VueCoreFramework.Controllers
             {
                 if (roles.Contains(CustomRoles.SiteAdmin))
                 {
-                    return Json(new { error = "You cannot remove yourself from the Site Administrator role in this way. Transfer the role to another Administrator instead." });
+                    return Json(new { error = ErrorMessages.SiteAdminSingularError });
                 }
                 else
                 {
-                    return Json(new { error = "You cannot remove the Site Administrator." });
+                    return Json(new { error = ErrorMessages.SiteAdminOnlyError });
                 }
             }
             else if (group == CustomRoles.Admin)
             {
                 if (!roles.Contains(CustomRoles.SiteAdmin))
                 {
-                    return Json(new { error = "Only the Site Administrator may remove users from the Administrator group." });
+                    return Json(new { error = ErrorMessages.SiteAdminOnlyError });
                 }
             }
             // Admins can remove users from any non-admin group, regardless of their own membership.
@@ -399,32 +761,36 @@ namespace VueCoreFramework.Controllers
                 var claims = await _userManager.GetClaimsAsync(user);
                 if (!claims.Contains(new Claim(CustomClaimTypes.PermissionGroupManager, group)))
                 {
-                    return Json(new { error = "Only the group's manager may remove users from a group." });
+                    return Json(new { error = ErrorMessages.ManagerOnlyError });
                 }
             }
 
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidTargetGroupError });
             }
             var targetUser = await _userManager.FindByNameAsync(username);
             if (targetUser == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidTargetUserError });
             }
             await _userManager.RemoveFromRoleAsync(targetUser, groupRole.Name);
-            return Ok();
+            return Json(new { Response = ResponseMessages.Success });
         }
 
         [HttpPost("{dataType}")]
         public async Task<IActionResult> ShareDataWithAll(string dataType, string operation, string id)
         {
+            if (string.IsNullOrEmpty(dataType))
+            {
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+            }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
             }
             if (user.AdminLocked)
             {
@@ -434,26 +800,21 @@ namespace VueCoreFramework.Controllers
             // Only Admins can share data with all.
             if (!roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = "Only Administrators can share data with all users." });
+                return Json(new { error = ErrorMessages.AdminOnlyError });
             }
-            operation = operation.ToLower();
-            if (operation != "view" && operation != "edit")
+            if (operation != CustomClaimTypes.PermissionDataView
+                && operation != CustomClaimTypes.PermissionDataEdit)
             {
-                return Json(new { error = "Only view or edit permission can be shared." });
+                return Json(new { error = ErrorMessages.ViewEditOnlyError });
             }
 
-            if (string.IsNullOrEmpty(dataType))
-            {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-            }
             dataType = dataType.ToInitialCaps();
             // Entity isn't used, but is parsed to enure it's valid.
             var entity = _context.Model.GetEntityTypes().FirstOrDefault(e => e.Name.Substring(e.Name.LastIndexOf('.') + 1) == dataType);
             if (entity == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
-            operation = $"permission/data/{operation}";
             var allRole = await _roleManager.FindByNameAsync(CustomRoles.AllUsers);
             var roleClaims = await _roleManager.GetClaimsAsync(allRole);
             Claim claim = null;
@@ -464,25 +825,10 @@ namespace VueCoreFramework.Controllers
             }
             else
             {
-                // The Guid isn't needed, but is parsed to ensure it's valid.
-                if (!Guid.TryParse(id, out Guid guid))
-                {
-                    return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
-                }
                 claim = new Claim(operation, $"{dataType}{{{id}}}");
             }
             await _roleManager.AddClaimAsync(allRole, claim);
-            // Add implies claims.
-            if (claim.Type == CustomClaimTypes.PermissionDataAdd)
-            {
-                await _roleManager.AddClaimAsync(allRole, new Claim(CustomClaimTypes.PermissionDataEdit, claim.Value));
-                await _roleManager.AddClaimAsync(allRole, new Claim(CustomClaimTypes.PermissionDataView, claim.Value));
-            }
-            else if (claim.Type == CustomClaimTypes.PermissionDataEdit)
-            {
-                await _roleManager.AddClaimAsync(allRole, new Claim(CustomClaimTypes.PermissionDataView, claim.Value));
-            }
-            return Ok();
+            return Json(new { Response = ResponseMessages.Success });
         }
 
         [HttpPost("{group}/{dataType}")]
@@ -492,7 +838,7 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
             }
             if (user.AdminLocked)
             {
@@ -501,29 +847,30 @@ namespace VueCoreFramework.Controllers
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidTargetGroupError });
             }
             if (!TryGetClaim(dataType, operation, id, out Claim claim))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.DataError });
             }
 
             var roles = await _userManager.GetRolesAsync(user);
             var claims = await _userManager.GetClaimsAsync(user);
-            var operationLower = operation.ToLower();
             // Only admins can share a data type, rather than a particular item
             if (string.IsNullOrEmpty(id) && !roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = "Only Administrators can share data types." });
+                return Json(new { error = ErrorMessages.AdminOnlyError });
             }
             // Admins can share data with any group as if they owned that data, regardless of their own membership.
             if (roles.Contains(CustomRoles.Admin)
                 || claims.Contains(new Claim(CustomClaimTypes.PermissionDataOwner, $"{dataType}{{{id}}}")))
             {
                 // Permissions other than view/edit can only be shared for an entire type.
-                if (!string.IsNullOrEmpty(id) && operationLower != "view" && operationLower != "edit")
+                if (!string.IsNullOrEmpty(id)
+                    && operation != CustomClaimTypes.PermissionDataView
+                    && operation != CustomClaimTypes.PermissionDataEdit)
                 {
-                    return Json(new { error = "Only view or edit permission can be shared." });
+                    return Json(new { error = ErrorMessages.ViewEditOnlyError });
                 }
             }
             else
@@ -533,29 +880,20 @@ namespace VueCoreFramework.Controllers
                 {
                     // If the manager has edit permission, the manager can also share view permission.
                     if (!claims.Contains(claim) &&
-                        (operationLower != "view" || !claims.Contains(new Claim(CustomClaimTypes.PermissionDataEdit, $"{dataType}{{{id}}}"))))
+                        (operation != CustomClaimTypes.PermissionDataView
+                        || !claims.Contains(new Claim(CustomClaimTypes.PermissionDataEdit, $"{dataType}{{{id}}}"))))
                     {
-                        return Json(new { error = "You may only share data permissions with your group that have previously been shared with you." });
+                        return Json(new { error = ErrorMessages.ManagerOnlySharedError });
                     }
                 }
                 else
                 {
-                    return Json(new { error = "Only the group's manager or the original owner of the data may share data with a group." });
+                    return Json(new { error = ErrorMessages.ManagerOrOwnerOnlyError });
                 }
             }
 
             await _roleManager.AddClaimAsync(groupRole, claim);
-            // Add implied permissions.
-            if (claim.Type == CustomClaimTypes.PermissionDataAdd)
-            {
-                await _roleManager.AddClaimAsync(groupRole, new Claim(CustomClaimTypes.PermissionDataEdit, claim.Value));
-                await _roleManager.AddClaimAsync(groupRole, new Claim(CustomClaimTypes.PermissionDataView, claim.Value));
-            }
-            else if (claim.Type == CustomClaimTypes.PermissionDataEdit)
-            {
-                await _roleManager.AddClaimAsync(groupRole, new Claim(CustomClaimTypes.PermissionDataView, claim.Value));
-            }
-            return Ok();
+            return Json(new { Response = ResponseMessages.Success });
         }
 
         [HttpPost("{username}/{dataType}")]
@@ -565,7 +903,7 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
             }
             if (user.AdminLocked)
             {
@@ -574,49 +912,39 @@ namespace VueCoreFramework.Controllers
 
             var roles = await _userManager.GetRolesAsync(user);
             var claims = await _userManager.GetClaimsAsync(user);
-            var operationLower = operation.ToLower();
             // Only admins can share a data type, rather than a particular item
             if (string.IsNullOrEmpty(id) && !roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = "Only Administrators can share data types." });
+                return Json(new { error = ErrorMessages.AdminOnlyError });
             }
             // Admins can share data with any user as if they owned that data.
             if (roles.Contains(CustomRoles.Admin)
                 || claims.Contains(new Claim(CustomClaimTypes.PermissionDataOwner, $"{dataType}{{{id}}}")))
             {
                 // Permissions other than view/edit can only be shared for an entire type.
-                if (!string.IsNullOrEmpty(id) && operationLower != "view" && operationLower != "edit")
+                if (!string.IsNullOrEmpty(id)
+                    && operation != CustomClaimTypes.PermissionDataView
+                    && operation != CustomClaimTypes.PermissionDataEdit)
                 {
-                    return Json(new { error = "Only view or edit permission can be shared." });
+                    return Json(new { error = ErrorMessages.ViewEditOnlyError });
                 }
             }
             else
             {
-                return Json(new { error = "Only the original owner of a data item may share it." });
+                return Json(new { error = ErrorMessages.OwnerOnlyError });
             }
 
             var targetUser = await _userManager.FindByNameAsync(username);
             if (targetUser == null)
             {
-                return Json(new { error = "That user could not be found." });
+                return Json(new { error = ErrorMessages.InvalidTargetUserError });
             }
             if (!TryGetClaim(dataType, operation, id, out Claim claim))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.DataError });
             }
-            List<Claim> newClaims = new List<Claim> { claim };
-            // Add implied permissions.
-            if (claim.Type == CustomClaimTypes.PermissionDataAdd)
-            {
-                newClaims.Add(new Claim(CustomClaimTypes.PermissionDataEdit, claim.Value));
-                newClaims.Add(new Claim(CustomClaimTypes.PermissionDataView, claim.Value));
-            }
-            else if (claim.Type == CustomClaimTypes.PermissionDataEdit)
-            {
-                newClaims.Add(new Claim(CustomClaimTypes.PermissionDataView, claim.Value));
-            }
-            await _userManager.AddClaimsAsync(targetUser, newClaims);
-            return Ok();
+            await _userManager.AddClaimAsync(targetUser, claim);
+            return Json(new { Response = ResponseMessages.Success });
         }
 
         [HttpPost("{group}")]
@@ -626,7 +954,7 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
             }
             if (user.AdminLocked)
             {
@@ -634,18 +962,18 @@ namespace VueCoreFramework.Controllers
             }
             if (group.ToLower().Contains("administrator"))
             {
-                return Json(new { error = "To avoid confusion with the official Administrator group, group names may not contain 'administrator.'" });
+                return Json(new { error = ErrorMessages.OnlyAdminCanBeAdminError });
             }
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole != null)
             {
-                return Json(new { error = "A group with that name already exists." });
+                return Json(new { error = ErrorMessages.DuplicateGroupNameError });
             }
             var role = new IdentityRole(group);
             await _roleManager.CreateAsync(role);
             await _userManager.AddToRoleAsync(user, group);
             await _userManager.AddClaimAsync(user, new Claim(CustomClaimTypes.PermissionGroupManager, group));
-            return Ok();
+            return Json(new { Response = ResponseMessages.Success });
         }
 
         [HttpPost("{username}/{group}")]
@@ -655,7 +983,7 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
             }
             if (user.AdminLocked)
             {
@@ -664,14 +992,7 @@ namespace VueCoreFramework.Controllers
             var roles = await _userManager.GetRolesAsync(user);
             if (group == CustomRoles.SiteAdmin || group == CustomRoles.Admin)
             {
-                if (roles.Contains(CustomRoles.SiteAdmin))
-                {
-                    return Json(new { error = "You cannot transfer the Site Administrator role in this way. There is a special action for doing so." });
-                }
-                else
-                {
-                    return Json(new { error = "The Administrator group does not have a manager." });
-                }
+                return Json(new { error = ErrorMessages.AdminNoManagerError });
             }
             // Admins can transfer the manager role of any non-admin group, regardless of membership.
             else if (!roles.Contains(CustomRoles.Admin))
@@ -679,19 +1000,19 @@ namespace VueCoreFramework.Controllers
                 var claims = await _userManager.GetClaimsAsync(user);
                 if (!claims.Contains(new Claim(CustomClaimTypes.PermissionGroupManager, group)))
                 {
-                    return Json(new { error = "Only the group's manager may transfer the membership role." });
+                    return Json(new { error = ErrorMessages.ManagerOnlyError });
                 }
             }
 
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidTargetGroupError });
             }
             var targetUser = await _userManager.FindByNameAsync(username);
             if (targetUser == null)
             {
-                return Json(new { error = "That user could not be found." });
+                return Json(new { error = ErrorMessages.InvalidTargetUserError });
             }
             var member = await _userManager.IsInRoleAsync(targetUser, group);
             if (!member)
@@ -706,12 +1027,12 @@ namespace VueCoreFramework.Controllers
                 // The manager may only transfer the membership role to an existing member of the group.
                 else
                 {
-                    return Json(new { error = "You may only transfer the membership role to a member of the group." });
+                    return Json(new { error = ErrorMessages.GroupMemberOnlyError });
                 }
             }
             await _userManager.AddClaimAsync(targetUser, new Claim(CustomClaimTypes.PermissionGroupManager, group));
             await _userManager.RemoveClaimAsync(user, new Claim(CustomClaimTypes.PermissionGroupManager, group));
-            return Ok();
+            return Json(new { Response = ResponseMessages.Success });
         }
 
         [HttpPost("{username}")]
@@ -721,7 +1042,7 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return Json(new { error = ErrorMessages.InvalidUserError });
             }
             if (user.AdminLocked)
             {
@@ -730,17 +1051,17 @@ namespace VueCoreFramework.Controllers
             var roles = await _userManager.GetRolesAsync(user);
             if (!roles.Contains(CustomRoles.SiteAdmin))
             {
-                return Json(new { error = "Only the current Site Administrator may transfer the Site Administrator role." });
+                return Json(new { error = ErrorMessages.SiteAdminOnlyError });
             }
 
             var targetUser = await _userManager.FindByNameAsync(username);
             if (targetUser == null)
             {
-                return Json(new { error = "That user could not be found." });
+                return Json(new { error = ErrorMessages.InvalidTargetUserError });
             }
             await _userManager.AddToRoleAsync(targetUser, CustomRoles.SiteAdmin);
             await _userManager.RemoveFromRoleAsync(user, CustomRoles.SiteAdmin);
-            return Ok();
+            return Json(new { Response = ResponseMessages.Success });
         }
 
         private bool TryGetClaim(string dataType, string operation, string id, out Claim claim)
@@ -770,7 +1091,7 @@ namespace VueCoreFramework.Controllers
                 // Permission for a specific operation on the data type.
                 else
                 {
-                    claim = new Claim($"permission/data/{operation.ToLower()}", dataType);
+                    claim = new Claim(operation, dataType);
                     return true;
                 }
             }

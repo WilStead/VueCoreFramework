@@ -16,19 +16,9 @@ interface ApiNumericResponseViewModel {
  */
 export interface DataItem {
     /**
-     * The unique ID (primary key) of the item.
+     * The name of the property which contains this item's primary key.
      */
-    id: string;
-
-    /**
-     * The date/time when the item was created.
-     */
-    creationTimestamp: number;
-
-    /**
-     * The date/time when the item was last updated.
-     */
-    updateTimestamp: number;
+    primaryKeyProperty: string;
 }
 
 /**

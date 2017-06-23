@@ -35,6 +35,6 @@
         /// group. No individual users are expected to have this role added, and doing so will have
         /// no effect. Rather, claims for this role are automatically included for every user.
         /// </remarks>
-        public const string AllUsers = "User";
+        public const string AllUsers = "All Users";
     }
 }

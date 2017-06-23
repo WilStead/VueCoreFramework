@@ -5,7 +5,8 @@ import * as ErrorMsg from '../../error-msg';
 import { FieldDefinition, Schema, VFGOptions } from '../../vfg/vfg';
 import VueFormGenerator from 'vue-form-generator';
 import { DataItem, Repository, OperationReply } from '../../store/repository';
-import { router } from '../../router';
+import { permissionIncludesTarget, permissions, ShareData } from '../../store/userStore';
+import { ApiResponseViewModel, router, checkResponse } from '../../router';
 
 @Component
 export default class DynamicFormComponent extends Vue {
@@ -34,16 +35,37 @@ export default class DynamicFormComponent extends Vue {
     };
 
     activity = false;
+    canEdit = false;
+    canShare = false;
+    canShareAll = false;
+    canShareGroup = false;
     errorMessage = '';
     formOptions: VFGOptions = {
         validateAfterLoad: true,
         validateAfterChanged: true
     };
+    groupMembers: string[] = [];
     isValid = false;
     model: any = {};
     parentRepository: Repository = null;
+    permissionOptions = [];
     repository: Repository = null;
     schema: Schema = {};
+    selectedPermission = null;
+    selectedShareGroup = null;
+    selectedShareUsername = null;
+    shareActivity = false;
+    shareDialog = false;
+    shareErrorMessage = '';
+    shareGroups: string[] = [];
+    shareGroup = '';
+    shareGroupSuggestion = '';
+    shareGroupTimeout = 0;
+    shareUsernameSuggestion = '';
+    shareUsernameTimeout = 0;
+    shares: ShareData[] = [];
+    shareUsername = '';
+    shareWithAll = false;
     updateTimeout = 0;
     vmDefinition: Array<FieldDefinition>;
 
@@ -52,6 +74,37 @@ export default class DynamicFormComponent extends Vue {
         this.repository = this.$store.getters.getRepository(val.name);
         if (this.updateTimeout === 0) {
             this.updateTimeout = setTimeout(this.updateForm, 125);
+        }
+    }
+
+    @Watch('selectedShareGroup')
+    onSelectedShareGroupChange(val: string, oldVal: string) {
+        this.shareGroup = val;
+    }
+
+    @Watch('selectedShareUsername')
+    onSelectedShareUsernameChange(val: string, oldVal: string) {
+        this.shareUsername = val;
+    }
+
+    @Watch('shareDialog')
+    onShareDialogChange(val: boolean, oldVal: boolean) {
+        if (val) {
+            this.updateShares();
+        }
+    }
+
+    @Watch('shareGroup')
+    onShareGroupChange(val: string, oldVal: string) {
+        if (this.shareGroupTimeout === 0) {
+            this.shareGroupTimeout = setTimeout(this.suggestShareGroup, 500);
+        }
+    }
+
+    @Watch('shareUsername')
+    onShareUsernameChange(val: string, oldVal: string) {
+        if (this.shareUsernameTimeout === 0) {
+            this.shareUsernameTimeout = setTimeout(this.suggestShareUsername, 500);
         }
     }
 
@@ -85,7 +138,7 @@ export default class DynamicFormComponent extends Vue {
                                     childProp: newField.inverseType,
                                     operation: 'select',
                                     parentType: model.dataType,
-                                    parentId: model[model['primaryKeyProperty']],
+                                    parentId: model[model.primaryKeyProperty],
                                     parentProp: newField.model
                                 }
                             });
@@ -103,7 +156,7 @@ export default class DynamicFormComponent extends Vue {
                             params: {
                                 operation: 'multiselect',
                                 parentType: model.dataType,
-                                parentId: model[model['primaryKeyProperty']],
+                                parentId: model[model.primaryKeyProperty],
                                 parentProp: newField.model
                             }
                         });
@@ -120,7 +173,7 @@ export default class DynamicFormComponent extends Vue {
                                 childProp: newField.inverseType,
                                 operation: 'collection',
                                 parentType: model.dataType,
-                                parentId: model[model['primaryKeyProperty']],
+                                parentId: model[model.primaryKeyProperty],
                                 parentProp: newField.model
                             }
                         });
@@ -186,14 +239,14 @@ export default class DynamicFormComponent extends Vue {
 
     onAddNew(model, field: FieldDefinition) {
         this.activity = true;
-        this.repository.add(this.$route.fullPath, field.inverseType, model[model['primaryKeyProperty']])
+        this.repository.add(this.$route.fullPath, field.inverseType, model[model.primaryKeyProperty])
             .then(data => {
                 this.activity = false;
                 if (data.error) {
                     this.errorMessage = data.error;
                 } else {
                     this.errorMessage = '';
-                    this.$router.push({ name: field.inputType, params: { operation: 'add', id: data.data[data.data['primaryKeyProperty']] } });
+                    this.$router.push({ name: field.inputType, params: { operation: 'add', id: data.data[data.data.primaryKeyProperty] } });
                 }
             })
             .catch(error => {
@@ -262,15 +315,51 @@ export default class DynamicFormComponent extends Vue {
         this.$router.push({ name: this.$route.name, params: { operation: 'edit', id: this.id } });
     }
 
+    onHide(share: ShareData) {
+        this.shareActivity = true;
+        this.shareErrorMessage = '';
+        let action: string;
+        if (share.name === 'All Users') {
+            action = 'HideDataFromAll';
+        }
+        if (share.type === 'user') {
+            action = `HideDataFromUser/${share.name}`;
+        } else {
+            action = `HideDataFromGroup/${share.name}`;
+        }
+        fetch(`/api/Authorization/${action}/${this.$route.name}?operation=${share.level}&id=${this.id}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
+                }
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(data => {
+                if (data.error) {
+                    this.shareErrorMessage = data.error;
+                } else {
+                    this.updateShares();
+                }
+                this.shareActivity = false;
+            })
+            .catch(error => {
+                this.shareErrorMessage = 'A problem occurred.';
+                ErrorMsg.logError('dynamic-form.onHide', error);
+            });
+    }
+
     onSave() {
         this.activity = true;
         this.errorMessage = '';
         let d = Object.assign({}, this.model);
-        d[this.model['primaryKeyProperty']] = this.id;
+        d[this.model.primaryKeyProperty] = this.id;
         // Remove unsupported or null properties from the ViewModel before sending for update,
         // to avoid errors when overwriting values with the placeholders.
         delete d.dataType;
-        delete d['primaryKeyProperty'];
+        delete d.primaryKeyProperty;
         for (var prop in d) {
             if (d[prop] === "[None]" || d[prop] === "[...]") {
                 delete d[prop];
@@ -293,6 +382,20 @@ export default class DynamicFormComponent extends Vue {
             });
     }
 
+    onShare() {
+        if (this.selectedPermission) {
+            if (this.shareWithAll) {
+                this.share('ShareDataWithAll');
+            }
+            if (this.shareGroup) {
+                this.share('ShareDataWithGroup', this.shareGroup);
+            }
+            if (this.shareUsername) {
+                this.share('ShareDataWithUser', this.shareUsername);
+            }
+        }
+    }
+
     onReplace() {
         this.repository.replaceChildWithNew(this.$route.fullPath, this.id, this.model.replaceProp)
             .then(data => {
@@ -300,7 +403,7 @@ export default class DynamicFormComponent extends Vue {
                     this.errorMessage = data.error;
                 } else {
                     this.errorMessage = '';
-                    this.$router.push({ name: this.model.replaceType, params: { operation: 'add', id: data.data[data.data['primaryKeyProperty']] } });
+                    this.$router.push({ name: this.model.replaceType, params: { operation: 'add', id: data.data[data.data.primaryKeyProperty] } });
                 }
                 this.onCancelReplace();
                 this.activity = false;
@@ -331,10 +434,112 @@ export default class DynamicFormComponent extends Vue {
             });
     }
 
+    share(action: string, target?: string) {
+        this.shareActivity = true;
+        this.shareErrorMessage = '';
+        let url = `/api/Authorization/${action}`;
+        if (target) {
+            url += `/${target}`;
+        }
+        url += `/${this.$route.name}?operation=${this.selectedPermission.value}&id=${this.id}`;
+        fetch(url,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
+                }
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(data => {
+                if (data.error) {
+                    this.shareErrorMessage = data.error;
+                } else {
+                    this.updateShares();
+                }
+                this.shareActivity = false;
+            })
+            .catch(error => {
+                this.shareErrorMessage = 'A problem occurred.';
+                ErrorMsg.logError('dynamic-form.share', error);
+            });
+    }
+
+    suggestShareGroup() {
+        this.shareGroupTimeout = 0;
+        if (this.shareGroup) {
+            fetch(`/api/Authorization/GetShareableGroupCompletion/${this.shareGroup}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `bearer ${this.$store.state.userState.token}`
+                    }
+                })
+                .then(response => checkResponse(response, this.$route.fullPath))
+                .then(response => response.json() as Promise<ApiResponseViewModel>)
+                .then(data => {
+                    if (data['error']) {
+                        throw new Error(`There was a problem retrieving a share group suggestion: ${data['error']}`);
+                    } else {
+                        this.shareGroupSuggestion = data.response;
+                    }
+                })
+                .catch(error => {
+                    ErrorMsg.logError('dynamic-form.suggestShareGroup', error);
+                });
+        }
+    }
+
+    suggestShareUsername() {
+        this.shareUsernameTimeout = 0;
+        if (this.shareGroup) {
+            fetch(`/api/Authorization/GetShareableUsernameCompletion/${this.shareUsername}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `bearer ${this.$store.state.userState.token}`
+                    }
+                })
+                .then(response => checkResponse(response, this.$route.fullPath))
+                .then(response => response.json() as Promise<ApiResponseViewModel>)
+                .then(data => {
+                    if (data['error']) {
+                        throw new Error(`There was a problem retrieving a share group suggestion: ${data['error']}`);
+                    } else {
+                        this.shareUsernameSuggestion = data.response;
+                    }
+                })
+                .catch(error => {
+                    ErrorMsg.logError('dynamic-form.suggestShareUsername', error);
+                });
+        }
+    }
+
     updateForm() {
         this.activity = true;
         this.updateTimeout = 0;
         this.errorMessage = '';
+
+        this.canShare = this.$store.getters.getSharePermission(this.$route.name, this.id);
+        this.canShareAll = this.$store.state.userState.isAdmin;
+        this.canShareGroup = this.$store.state.userState.isAdmin || this.$store.state.userState.managedGroups.length > 0;
+
+        let permission = this.$store.getters.getPermission(this.$route.name, this.id);
+        this.canEdit = permissionIncludesTarget(permission, permissions.permissionDataEdit);
+        this.permissionOptions = [{ text: 'View', value: permissions.permissionDataView }];
+        switch (permission) {
+            case permissions.permissionDataAll:
+            case permissions.permissionDataAdd:
+            case permissions.permissionDataEdit:
+                this.permissionOptions.push({ text: 'Edit', value: permissions.permissionDataEdit });
+                break;
+            default:
+                break;
+        }
+
         this.repository.find(this.$route.fullPath, this.id)
             .then(data => {
                 this.model = { dataType: this.$route.name };
@@ -382,6 +587,74 @@ export default class DynamicFormComponent extends Vue {
                 this.errorMessage = "A problem occurred while updating the data.";
                 this.activity = false;
                 ErrorMsg.logError("dynamic-form.updateForm", new Error(error));
+            });
+    }
+
+    updateShares() {
+        fetch(`/api/Authorization/GetCurrentShares/${this.$route.name}?id=${this.id}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
+                }
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<Array<ShareData>>)
+            .then(data => {
+                if (data['error']) {
+                    throw new Error(`There was a problem retrieving current shares: ${data['error']}`);
+                } else {
+                    this.shares = [];
+                    for (var i = 0; i < data.length; i++) {
+                        this.shares[i] = data[i];
+                        this.shares[i].id = i;
+                    }
+                }
+            })
+            .catch(error => {
+                ErrorMsg.logError('dynamic-form.updateShares', error);
+            });
+        fetch(`/api/Authorization/GetShareableGroupMembers`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
+                }
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<Array<string>>)
+            .then(data => {
+                if (data['error']) {
+                    throw new Error(`There was a problem retrieving sharable group members: ${data['error']}`);
+                } else {
+                    this.groupMembers = data;
+                }
+            })
+            .catch(error => {
+                ErrorMsg.logError('dynamic-form.updateShares', error);
+            });
+        fetch(`/api/Authorization/GetShareableGroupSubset`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
+                }
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<Array<string>>)
+            .then(data => {
+                if (data['error']) {
+                    this.shareGroups = [];
+                    throw new Error(`There was a problem retrieving sharable groups: ${data['error']}`);
+                } else {
+                    this.shareGroups = data;
+                }
+            })
+            .catch(error => {
+                ErrorMsg.logError('dynamic-form.updateShares', error);
             });
     }
 }

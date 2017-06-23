@@ -285,10 +285,7 @@ export default class ManageUserComponent extends Vue {
                     this.model.errors = [data.error];
                 } else {
                     // On success, the user is no longer a signed-in user (since they no longer have an account).
-                    this.$store.commit(Store.setUsername, 'user');
-                    this.$store.commit(Store.setEmail, 'user@example.com');
-                    this.$store.commit(Store.setToken, '');
-                    localStorage.removeItem('token');
+                    this.$store.commit(Store.logout);
                     this.successMessage = "Your account has been successfully deleted. You will be returned to the homepage shortly.";
                     this.success = true;
                     setTimeout(() => this.$router.push('/'), 5000);

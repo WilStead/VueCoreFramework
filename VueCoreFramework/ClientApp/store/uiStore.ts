@@ -89,7 +89,7 @@ function addMenuItem(menu: MenuItem, router: VueRouter, data: any, dataClass: st
         router.addRoutes([{
             path: baseRoute,
             meta: { requiresAuth: true },
-            component: require('../../components/data/dashboard.vue'),
+            component: require('../components/data/dashboard.vue'),
             props: {
                 title: dataClass,
                 iconClass,
@@ -101,9 +101,9 @@ function addMenuItem(menu: MenuItem, router: VueRouter, data: any, dataClass: st
                     path: 'table/:operation?/:parentType?/:parentId?/:parentProp?/:childProp?',
                     components: {
                         content: data[dataClass].dashboardTableContent
-                            ? require(`../../components/data/${data[dataClass].dashboardTableContent}.vue`)
-                            : require('../../components/data/empty.vue'),
-                        data: require('../../dynamic-data/dynamic-table/dynamic-table.vue')
+                            ? require(`../components/data/${data[dataClass].dashboardTableContent}.vue`)
+                            : require('../components/data/empty.vue'),
+                        data: require('../dynamic-data/dynamic-table/dynamic-table.vue')
                     },
                     props: { content: false, data: true }
                 },
@@ -112,9 +112,9 @@ function addMenuItem(menu: MenuItem, router: VueRouter, data: any, dataClass: st
                     path: ':operation/:id',
                     components: {
                         content: data[dataClass].dashboardFormContent
-                            ? require(`../../components/data/${data[dataClass].dashboardFormContent}.vue`)
-                            : require('../../components/data/empty.vue'),
-                        data: require('../../dynamic-data/dynamic-form/dynamic-form.vue')
+                            ? require(`../components/data/${data[dataClass].dashboardFormContent}.vue`)
+                            : require('../components/data/empty.vue'),
+                        data: require('../dynamic-data/dynamic-form/dynamic-form.vue')
                     },
                     props: { content: true, data: true }
                 }
@@ -170,7 +170,7 @@ export function getChildItems(router: VueRouter): Promise<void> {
                     router.addRoutes([{
                         path: `/data/${dataClass.toLowerCase()}`,
                         meta: { requiresAuth: true },
-                        component: require('../../components/data/dashboard.vue'),
+                        component: require('../components/data/dashboard.vue'),
                         props: {
                             title: dataClass,
                             iconClass: data[dataClass].iconClass || 'view_list',
@@ -182,9 +182,9 @@ export function getChildItems(router: VueRouter): Promise<void> {
                                 path: 'table/:operation?/:parentType?/:parentId?/:parentProp?/:childProp?',
                                 components: {
                                     content: data[dataClass].dashboardTableContent
-                                        ? require(`../../components/data/${data[dataClass].dashboardTableContent}.vue`)
-                                        : require('../../components/data/empty.vue'),
-                                    data: require('../../dynamic-data/dynamic-table/dynamic-table.vue')
+                                        ? require(`../components/data/${data[dataClass].dashboardTableContent}.vue`)
+                                        : require('../components/data/empty.vue'),
+                                    data: require('../dynamic-data/dynamic-table/dynamic-table.vue')
                                 },
                                 props: { content: false, data: true }
                             },
@@ -193,9 +193,9 @@ export function getChildItems(router: VueRouter): Promise<void> {
                                 path: ':operation/:id',
                                 components: {
                                     content: data[dataClass].dashboardFormContent
-                                        ? require(`../../components/data/${data[dataClass].dashboardFormContent}.vue`)
-                                        : require('../../components/data/empty.vue'),
-                                    data: require('../../dynamic-data/dynamic-form/dynamic-form.vue')
+                                        ? require(`../components/data/${data[dataClass].dashboardFormContent}.vue`)
+                                        : require('../components/data/empty.vue'),
+                                    data: require('../dynamic-data/dynamic-form/dynamic-form.vue')
                                 },
                                 props: { content: true, data: true }
                             }

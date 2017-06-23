@@ -1,6 +1,6 @@
 ﻿import VueRouter from 'vue-router';
 import * as Store from './store/store';
-import { SharePermissionData } from './store/userStore';
+import { PermissionData } from './store/userStore';
 import * as ErrorMsg from './error-msg';
 
 const routes: Array<VueRouter.RouteConfig> = [
@@ -57,12 +57,12 @@ router.beforeEach((to, from, next) => {
     if (to.matched.some(record => record.meta.requiresAuth)) {
         checkAuthorization(to)
             .then(auth => {
-                if (auth === "authorized") {
-                    next();
+                if (auth === "login") {
+                    next({ path: '/login', query: { returnUrl: to.fullPath } });
                 } else if (auth === "unauthorized") {
                     next({ path: '/error/401' });
                 } else {
-                    next({ path: '/login', query: { returnUrl: to.fullPath } });
+                    next();
                 }
             })
             .catch(error => {
@@ -94,12 +94,27 @@ interface AuthorizationViewModel {
     /**
      * Indicates that the user is authorized to share/hide the requested data.
      */
-    canShare: boolean;
+    canShare: string;
 
     /**
      * The email of the user account.
      */
     email: string;
+
+    /**
+     * Indicates that the current user is an administrator.
+     */
+    isAdmin: boolean;
+
+    /**
+     * Indicates that the current user is the site administrator.
+     */
+    isSiteAdmin: boolean;
+
+    /**
+     * Lists the groups the current user manages.
+     */
+    managedGroups: string[];
 
     /**
      * A JWT bearer token.
@@ -113,27 +128,76 @@ interface AuthorizationViewModel {
 }
 
 /**
+ * Calls an API endpoint which authenticates the current user.
+ * @returns {string} Either 'authorized' or 'login' if the user must sign in.
+ */
+export function authenticate(): Promise<string> {
+    let url = '/api/Authorization/Authenticate/';
+    let full = false;
+    if (!Store.store.state.userState.email) {
+        full = true;
+        url += '?full=true';
+    }
+    return fetch(url,
+        {
+            headers: {
+                'Authorization': `bearer ${Store.store.state.userState.token}`
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 401) {
+                    throw Error("login");
+                }
+                throw Error(response.statusText);
+            }
+            return response;
+        })
+        .then(response => response.json() as Promise<AuthorizationViewModel>)
+        .then(data => {
+            if (data.token) {
+                Store.store.commit(Store.setToken, data.token);
+            }
+            if (full) {
+                Store.store.commit(Store.setUsername, data.username);
+                Store.store.commit(Store.setEmail, data.email);
+                Store.store.commit(Store.setIsAdmin, data.isAdmin);
+                Store.store.commit(Store.setIsSiteAdmin, data.isSiteAdmin);
+                Store.store.commit(Store.setManagedGroups, data.managedGroups);
+            }
+            if (data.authorization === "login") {
+                return "login";
+            } else {
+                return "authorized";
+            }
+        })
+        .catch(error => {
+            if (error.message !== "login") {
+                ErrorMsg.logError("router.checkAuthorization", new Error(error));
+            }
+            return "login";
+        });
+}
+
+/**
  * Calls an API endpoint which authorizes the current user for the route being navigated to.
  * @param to The Route being navigated to.
  * @returns {string} Either 'authorized' or 'unauthorized' or 'login' if the user must sign in.
  */
 export function checkAuthorization(to: VueRouter.Route): Promise<string> {
-    let url = '/api/Authorization/Authorize';
-    let dataType: string;
+    let url = '/api/Authorization/Authorize/';
+    let dataType = to.name;
     let op: string;
     let id: string;
-    if (to && to.name && to.name.length) {
-        dataType = to.name;
-        if (dataType.endsWith("DataTable")) {
-            dataType = dataType.substring(0, dataType.length - 9);
-        } else {
-            op = to.params.operation;
-            id = to.params.id;
-        }
-        url += `?dataType=${dataType}`;
-        if (op) url += `&operation=${op}`;
-        if (id) url += `&id=${id}`;
+    if (dataType.endsWith("DataTable")) {
+        dataType = dataType.substring(0, dataType.length - 9);
+    } else {
+        op = to.params.operation;
+        id = to.params.id;
     }
+    url += dataType;
+    if (op) url += `&operation=${op}`;
+    if (id) url += `&id=${id}`;
     return fetch(url,
         {
             headers: {
@@ -151,33 +215,26 @@ export function checkAuthorization(to: VueRouter.Route): Promise<string> {
         })
         .then(response => response.json() as Promise<AuthorizationViewModel>)
         .then(data => {
-            if (data.token) {
-                Store.store.commit(Store.setToken, data.token);
-            }
-            if (data.username) {
-                Store.store.commit(Store.setUsername, data.username);
-            }
-            if (data.email) {
-                Store.store.commit(Store.setEmail, data.email);
-            }
-            if (data.canShare) {
-                if (dataType) {
-                    let permission: SharePermissionData = { dataType };
-                    if (id) { // Permission to share/hide an item.
-                        permission.id = id;
-                    } else { // Permission to share/hide a type.
-                        permission.canShare = true;
-                    }
-                    Store.store.commit(Store.updateSharePermission, permission);
-                }
-            }
-            if (data.authorization === "authorized") {
-                return "authorized";
-            } else if (data.authorization === "unauthorized") {
-                return "unauthorized";
-            } else {
+            if (data.authorization === "login") {
                 return "login";
             }
+            Store.store.commit(Store.setEmail, data.email);
+            Store.store.commit(Store.setIsAdmin, data.isAdmin);
+            Store.store.commit(Store.setIsSiteAdmin, data.isSiteAdmin);
+            Store.store.commit(Store.setManagedGroups, data.managedGroups);
+            Store.store.commit(Store.setToken, data.token);
+            Store.store.commit(Store.setUsername, data.username);
+            let permission: PermissionData = { dataType };
+            if (id) {
+                permission.id = id;
+            }
+            permission.canShare = data.canShare;
+            if (data.authorization !== "authorized"
+                && data.authorization !== "unauthorized") {
+                permission.permission = data.authorization;
+            }
+            Store.store.commit(Store.updatePermission, permission);
+            return data.authorization;
         })
         .catch(error => {
             if (error.message !== "unauthorized") {

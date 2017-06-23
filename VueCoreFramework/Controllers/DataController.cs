@@ -80,7 +80,7 @@ namespace VueCoreFramework.Controllers
                 var roleClaims = await _roleManager.GetClaimsAsync(role);
                 claims = claims.Concat(roleClaims).ToList();
             }
-            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataAdd))
+            if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataAdd) == AuthorizationViewModel.Unauthorized)
             {
                 return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_AddNew) });
             }
@@ -155,7 +155,7 @@ namespace VueCoreFramework.Controllers
                 var roleClaims = await _roleManager.GetClaimsAsync(role);
                 claims = claims.Concat(roleClaims).ToList();
             }
-            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, id))
+            if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataEdit, id) == AuthorizationViewModel.Unauthorized)
             {
                 return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_EditItem) });
             }
@@ -215,7 +215,7 @@ namespace VueCoreFramework.Controllers
                 var roleClaims = await _roleManager.GetClaimsAsync(role);
                 claims = claims.Concat(roleClaims).ToList();
             }
-            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataAdd, id))
+            if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataAdd, id) == AuthorizationViewModel.Unauthorized)
             {
                 return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_AddNew) });
             }
@@ -271,7 +271,7 @@ namespace VueCoreFramework.Controllers
                 var roleClaims = await _roleManager.GetClaimsAsync(role);
                 claims = claims.Concat(roleClaims).ToList();
             }
-            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView, id))
+            if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataView, id) == AuthorizationViewModel.Unauthorized)
             {
                 return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItem) });
             }
@@ -317,7 +317,7 @@ namespace VueCoreFramework.Controllers
                 var roleClaims = await _roleManager.GetClaimsAsync(role);
                 claims = claims.Concat(roleClaims).ToList();
             }
-            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView))
+            if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataView) == AuthorizationViewModel.Unauthorized)
             {
                 return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItems) });
             }
@@ -367,7 +367,7 @@ namespace VueCoreFramework.Controllers
                 var roleClaims = await _roleManager.GetClaimsAsync(role);
                 claims = claims.Concat(roleClaims).ToList();
             }
-            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView))
+            if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataView) == AuthorizationViewModel.Unauthorized)
             {
                 return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItems) });
             }
@@ -435,7 +435,7 @@ namespace VueCoreFramework.Controllers
                 var roleClaims = await _roleManager.GetClaimsAsync(role);
                 claims = claims.Concat(roleClaims).ToList();
             }
-            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView, id))
+            if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataView, id) == AuthorizationViewModel.Unauthorized)
             {
                 return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItem) });
             }
@@ -521,7 +521,7 @@ namespace VueCoreFramework.Controllers
                 var roleClaims = await _roleManager.GetClaimsAsync(role);
                 claims = claims.Concat(roleClaims).ToList();
             }
-            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView, id))
+            if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataView, id) == AuthorizationViewModel.Unauthorized)
             {
                 return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItem) });
             }
@@ -535,7 +535,7 @@ namespace VueCoreFramework.Controllers
                 return Json(new { error = ErrorMessages.MissingPropError });
             }
             var childType = repository.EntityType.FindNavigation(pInfo).GetTargetType().ClrType;
-            if (!AuthorizationController.IsAuthorized(claims, childType.Name, CustomClaimTypes.PermissionDataView))
+            if (AuthorizationController.GetAuthorization(claims, childType.Name, CustomClaimTypes.PermissionDataView) == AuthorizationViewModel.Unauthorized)
             {
                 return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItems) });
             }
@@ -590,7 +590,7 @@ namespace VueCoreFramework.Controllers
                 var roleClaims = await _roleManager.GetClaimsAsync(role);
                 claims = claims.Concat(roleClaims).ToList();
             }
-            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView, id))
+            if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataView, id) == AuthorizationViewModel.Unauthorized)
             {
                 return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItem) });
             }
@@ -745,7 +745,7 @@ namespace VueCoreFramework.Controllers
                 var roleClaims = await _roleManager.GetClaimsAsync(role);
                 claims = claims.Concat(roleClaims).ToList();
             }
-            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView))
+            if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataView) == AuthorizationViewModel.Unauthorized)
             {
                 return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItems) });
             }
@@ -789,7 +789,7 @@ namespace VueCoreFramework.Controllers
                 var roleClaims = await _roleManager.GetClaimsAsync(role);
                 claims = claims.Concat(roleClaims).ToList();
             }
-            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView))
+            if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataView) == AuthorizationViewModel.Unauthorized)
             {
                 return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItems) });
             }
@@ -884,7 +884,7 @@ namespace VueCoreFramework.Controllers
                 var roleClaims = await _roleManager.GetClaimsAsync(role);
                 claims = claims.Concat(roleClaims).ToList();
             }
-            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataAll, id))
+            if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataAll, id) == AuthorizationViewModel.Unauthorized)
             {
                 return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_RemoveItem) });
             }
@@ -944,7 +944,7 @@ namespace VueCoreFramework.Controllers
                 var roleClaims = await _roleManager.GetClaimsAsync(role);
                 claims = claims.Concat(roleClaims).ToList();
             }
-            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, id))
+            if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataEdit, id) == AuthorizationViewModel.Unauthorized)
             {
                 return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_EditItem) });
             }
@@ -1010,7 +1010,7 @@ namespace VueCoreFramework.Controllers
                 var roleClaims = await _roleManager.GetClaimsAsync(role);
                 claims = claims.Concat(roleClaims).ToList();
             }
-            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, id))
+            if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataEdit, id) == AuthorizationViewModel.Unauthorized)
             {
                 return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_EditItem) });
             }
@@ -1077,7 +1077,7 @@ namespace VueCoreFramework.Controllers
             }
             foreach (var id in ids)
             {
-                if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataAll, id))
+                if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataAll, id) == AuthorizationViewModel.Unauthorized)
                 {
                     return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_RemoveItems) });
                 }
@@ -1143,7 +1143,7 @@ namespace VueCoreFramework.Controllers
             List<Guid> guids = new List<Guid>();
             foreach (var id in ids)
             {
-                if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, id))
+                if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataEdit, id) == AuthorizationViewModel.Unauthorized)
                 {
                     return Json(new { error = ErrorMessages.NoPermission("edit one or more of these items") });
                 }
@@ -1226,7 +1226,7 @@ namespace VueCoreFramework.Controllers
                 var roleClaims = await _roleManager.GetClaimsAsync(role);
                 claims = claims.Concat(roleClaims).ToList();
             }
-            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, parentId))
+            if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataEdit, parentId) == AuthorizationViewModel.Unauthorized)
             {
                 return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_EditItem) });
             }
@@ -1299,7 +1299,7 @@ namespace VueCoreFramework.Controllers
                 var roleClaims = await _roleManager.GetClaimsAsync(role);
                 claims = claims.Concat(roleClaims).ToList();
             }
-            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, parentId))
+            if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataEdit, parentId) == AuthorizationViewModel.Unauthorized)
             {
                 return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_EditItem) });
             }
@@ -1408,7 +1408,7 @@ namespace VueCoreFramework.Controllers
             }
             IRepository repository = _context.GetRepositoryForType(type);
             var id = repository.PrimaryKey.PropertyInfo.GetValue(obj).ToString();
-            if (!AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataEdit, id))
+            if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataEdit, id) == AuthorizationViewModel.Unauthorized)
             {
                 return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_EditItem) });
             }

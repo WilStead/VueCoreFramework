@@ -3,6 +3,8 @@ import VueRouter from 'vue-router';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import * as ErrorMsg from '../../error-msg';
 import { DataItem, PageData, Repository } from '../../store/repository';
+import { permissionIncludesTarget, permissions, ShareData } from '../../store/userStore';
+import { ApiResponseViewModel, checkResponse } from '../../router';
 
 /**
  * Describes the header of a Vuetify data table.
@@ -72,6 +74,11 @@ export default class DynamicTableComponent extends Vue {
     parentType: string;
 
     activity = false;
+    allPermission = false;
+    canAdd = false;
+    canShare = false;
+    canDelete = false;
+    canDeleteChildren = false;
     childItems: Array<DataItem> = [];
     childLoading = true;
     childPagination: Pagination = {};
@@ -81,19 +88,43 @@ export default class DynamicTableComponent extends Vue {
     deleteAskingItems = [];
     deletePendingChildItems = [];
     deletePendingItems = [];
+    deletePermissions: any = {};
+    deleteChildPermissions: any = {};
     errorMessage = '';
+    groupMembers: string[] = [];
     headers: Array<TableHeader> = [];
     items: Array<DataItem> = [];
     loading = true;
     pagination: Pagination = {};
     parentRepository: Repository = null;
+    permissionOptions = [
+        { text: 'View', value: permissions.permissionDataView },
+        { text: 'Edit', value: permissions.permissionDataEdit },
+        { text: 'Add', value: permissions.permissionDataAdd },
+        { text: 'All', value: permissions.permissionDataAll }
+    ];
     repository: Repository = null;
     routeName = '';
     search = '';
+    selectedPermission = null;
+    selectedShareGroup = null;
+    selectedShareUsername = null;
     selectErrorDialogMessage = '';
     selectErrorDialogShown = false;
     selected: Array<DataItem> = [];
     selectedChildren: Array<DataItem> = [];
+    shareActivity = false;
+    shareDialog = false;
+    shareErrorMessage = '';
+    shareGroups: string[] = [];
+    shareGroup = '';
+    shareGroupSuggestion = '';
+    shareGroupTimeout = 0;
+    shareUsernameSuggestion = '';
+    shareUsernameTimeout = 0;
+    shares: ShareData[] = [];
+    shareUsername = '';
+    shareWithAll = false;
     totalChildItems = 0;
     totalItems = 0;
     updateTimeout = 0;
@@ -119,6 +150,37 @@ export default class DynamicTableComponent extends Vue {
     @Watch('search')
     onSearchChange(val: string, oldVal: string) {
         this.updateData();
+    }
+
+    @Watch('selectedShareGroup')
+    onSelectedShareGroupChange(val: string, oldVal: string) {
+        this.shareGroup = val;
+    }
+
+    @Watch('selectedShareUsername')
+    onSelectedShareUsernameChange(val: string, oldVal: string) {
+        this.shareUsername = val;
+    }
+
+    @Watch('shareDialog')
+    onShareDialogChange(val: boolean, oldVal: boolean) {
+        if (val) {
+            this.updateShares();
+        }
+    }
+
+    @Watch('shareGroup')
+    onShareGroupChange(val: string, oldVal: string) {
+        if (this.shareGroupTimeout === 0) {
+            this.shareGroupTimeout = setTimeout(this.suggestShareGroup, 500);
+        }
+    }
+
+    @Watch('shareUsername')
+    onShareUsernameChange(val: string, oldVal: string) {
+        if (this.shareUsernameTimeout === 0) {
+            this.shareUsernameTimeout = setTimeout(this.suggestShareUsername, 500);
+        }
     }
 
     @Watch('pagination', { deep: true })
@@ -242,7 +304,7 @@ export default class DynamicTableComponent extends Vue {
 
     onAddSelect() {
         this.activity = true;
-        this.parentRepository.addChildrenToCollection(this.$route.fullPath, this.parentId, this.parentProp, this.selected.map(c => c[c['primaryKeyProperty']]))
+        this.parentRepository.addChildrenToCollection(this.$route.fullPath, this.parentId, this.parentProp, this.selected.map(c => c[c.primaryKeyProperty]))
             .then(data => {
                 if (data.error) {
                     this.errorMessage = data.error;
@@ -270,13 +332,13 @@ export default class DynamicTableComponent extends Vue {
     onDelete() {
         this.activity = true;
         if (this.operation === 'collection') {
-            this.repository.removeRangeFromParent(this.$route.fullPath, this.childProp, this.selected.map(i => i[i['primaryKeyProperty']]))
+            this.repository.removeRangeFromParent(this.$route.fullPath, this.childProp, this.selected.map(i => i[i.primaryKeyProperty]))
                 .then(data => {
                     if (data.error) {
                         this.errorMessage = data.error;
                     } else {
                         for (var i = 0; i < this.selected.length; i++) {
-                            this.items.splice(this.items.findIndex(d => d[d['primaryKeyProperty']] == this.selected[i][this.selected[i]['primaryKeyProperty']]), 1);
+                            this.items.splice(this.items.findIndex(d => d[d.primaryKeyProperty] == this.selected[i][this.selected[i].primaryKeyProperty]), 1);
                         }
                         this.selected = [];
                     }
@@ -288,13 +350,13 @@ export default class DynamicTableComponent extends Vue {
                     ErrorMsg.logError("dynamic-table.onDelete", new Error(error));
                 });
         } else {
-            this.repository.removeRange(this.$route.fullPath, this.selected.map(i => i[i['primaryKeyProperty']]))
+            this.repository.removeRange(this.$route.fullPath, this.selected.map(i => i[i.primaryKeyProperty]))
                 .then(data => {
                     if (data.error) {
                         this.errorMessage = data.error;
                     } else {
                         for (var i = 0; i < this.selected.length; i++) {
-                            this.items.splice(this.items.findIndex(d => d[d['primaryKeyProperty']] == this.selected[i][this.selected[i]['primaryKeyProperty']]), 1);
+                            this.items.splice(this.items.findIndex(d => d[d.primaryKeyProperty] == this.selected[i][this.selected[i].primaryKeyProperty]), 1);
                         }
                         this.selected = [];
                     }
@@ -319,7 +381,7 @@ export default class DynamicTableComponent extends Vue {
                         this.errorMessage = data.error;
                     }
                     else {
-                        this.items.splice(this.items.findIndex(d => d[d['primaryKeyProperty']] == id), 1);
+                        this.items.splice(this.items.findIndex(d => d[d.primaryKeyProperty] == id), 1);
                         let index = this.deletePendingChildItems.indexOf(id);
                         if (index !== -1) {
                             this.deletePendingChildItems.splice(index, 1);
@@ -339,7 +401,7 @@ export default class DynamicTableComponent extends Vue {
                         this.errorMessage = data.error;
                     }
                     else {
-                        this.items.splice(this.items.findIndex(d => d[d['primaryKeyProperty']] == id), 1);
+                        this.items.splice(this.items.findIndex(d => d[d.primaryKeyProperty] == id), 1);
                         let index = this.deletePendingChildItems.indexOf(id);
                         if (index !== -1) {
                             this.deletePendingChildItems.splice(index, 1);
@@ -366,7 +428,7 @@ export default class DynamicTableComponent extends Vue {
                         this.errorMessage = data.error;
                     }
                     else {
-                        this.items.splice(this.items.findIndex(d => d[d['primaryKeyProperty']] == id), 1);
+                        this.items.splice(this.items.findIndex(d => d[d.primaryKeyProperty] == id), 1);
                         let index = this.deletePendingItems.indexOf(id);
                         if (index !== -1) {
                             this.deletePendingItems.splice(index, 1);
@@ -386,7 +448,7 @@ export default class DynamicTableComponent extends Vue {
                         this.errorMessage = data.error;
                     }
                     else {
-                        this.items.splice(this.items.findIndex(d => d[d['primaryKeyProperty']] == id), 1);
+                        this.items.splice(this.items.findIndex(d => d[d.primaryKeyProperty] == id), 1);
                         let index = this.deletePendingItems.indexOf(id);
                         if (index !== -1) {
                             this.deletePendingItems.splice(index, 1);
@@ -410,7 +472,7 @@ export default class DynamicTableComponent extends Vue {
                     this.errorMessage = data.error;
                 }
                 else {
-                    this.$router.push({ name: this.routeName, params: { operation: 'add', id: data.data[data.data['primaryKeyProperty']] } });
+                    this.$router.push({ name: this.routeName, params: { operation: 'add', id: data.data[data.data.primaryKeyProperty] } });
                 }
                 this.activity = false;
             })
@@ -418,6 +480,42 @@ export default class DynamicTableComponent extends Vue {
                 this.errorMessage = "A problem occurred. The item could not be copied.";
                 this.activity = false;
                 ErrorMsg.logError("dynamic-table.onDuplicate", new Error(error));
+            });
+    }
+
+    onHide(share: ShareData) {
+        this.shareActivity = true;
+        this.shareErrorMessage = '';
+        let action: string;
+        if (share.name === 'All Users') {
+            action = 'HideDataFromAll';
+        }
+        if (share.type === 'user') {
+            action = `HideDataFromUser/${share.name}`;
+        } else {
+            action = `HideDataFromGroup/${share.name}`;
+        }
+        fetch(`/api/Authorization/${action}/${this.routeName}?operation=${share.level}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
+                }
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(data => {
+                if (data.error) {
+                    this.shareErrorMessage = data.error;
+                } else {
+                    this.updateShares();
+                }
+                this.shareActivity = false;
+            })
+            .catch(error => {
+                this.shareErrorMessage = 'A problem occurred.';
+                ErrorMsg.logError('dynamic-table.onHide', error);
             });
     }
 
@@ -432,7 +530,7 @@ export default class DynamicTableComponent extends Vue {
                     this.errorMessage = data.error;
                 } else {
                     this.errorMessage = '';
-                    this.$router.push({ name: this.routeName, params: { operation: 'add', id: data.data[data.data['primaryKeyProperty']] } });
+                    this.$router.push({ name: this.routeName, params: { operation: 'add', id: data.data[data.data.primaryKeyProperty] } });
                 }
             })
             .catch(error => {
@@ -444,7 +542,7 @@ export default class DynamicTableComponent extends Vue {
 
     onRemoveSelect() {
         this.activity = true;
-        this.parentRepository.removeChildrenFromCollection(this.$route.fullPath, this.parentId, this.parentProp, this.selectedChildren.map(c => c[c['primaryKeyProperty']]))
+        this.parentRepository.removeChildrenFromCollection(this.$route.fullPath, this.parentId, this.parentProp, this.selectedChildren.map(c => c[c.primaryKeyProperty]))
             .then(data => {
                 if (data.error) {
                     this.errorMessage = data.error;
@@ -471,7 +569,7 @@ export default class DynamicTableComponent extends Vue {
             this.selectErrorDialogMessage = "You can only select a single item.";
             this.selectErrorDialogShown = true;
         } else if (this.childProp) {
-            this.repository.replaceChild(this.$route.fullPath, this.parentId, this.selected[0][this.selected[0]['primaryKeyProperty']], this.childProp)
+            this.repository.replaceChild(this.$route.fullPath, this.parentId, this.selected[0][this.selected[0].primaryKeyProperty], this.childProp)
                 .then(data => {
                     if (data.error) {
                         this.errorMessage = data.error;
@@ -490,6 +588,20 @@ export default class DynamicTableComponent extends Vue {
         }
     }
 
+    onShare() {
+        if (this.selectedPermission || this.allPermission) {
+            if (this.shareWithAll) {
+                this.share('ShareDataWithAll');
+            }
+            if (this.shareGroup) {
+                this.share('ShareDataWithGroup', this.shareGroup);
+            }
+            if (this.shareUsername) {
+                this.share('ShareDataWithUser', this.shareUsername);
+            }
+        }
+    }
+
     onViewChildItem(id: string) {
         this.$router.push({ name: this.parentType.toLowerCase(), params: { operation: 'view', id } });
     }
@@ -498,12 +610,118 @@ export default class DynamicTableComponent extends Vue {
         this.$router.push({ name: this.routeName, params: { operation: 'view', id } });
     }
 
+    share(action: string, target?: string) {
+        this.shareActivity = true;
+        this.shareErrorMessage = '';
+        let url = `/api/Authorization/${action}`;
+        if (target) {
+            url += `/${target}`;
+        }
+        url += `/${this.routeName}`;
+        if (!this.allPermission) {
+            url += `?operation=${this.selectedPermission.value}`;
+        }
+        fetch(url,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
+                }
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(data => {
+                if (data.error) {
+                    this.shareErrorMessage = data.error;
+                } else {
+                    this.updateShares();
+                }
+                this.shareActivity = false;
+            })
+            .catch(error => {
+                this.shareErrorMessage = 'A problem occurred.';
+                ErrorMsg.logError('dynamic-table.share', error);
+            });
+    }
+
+    suggestShareGroup() {
+        this.shareGroupTimeout = 0;
+        if (this.shareGroup) {
+            fetch(`/api/Authorization/GetShareableGroupCompletion/${this.shareGroup}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `bearer ${this.$store.state.userState.token}`
+                    }
+                })
+                .then(response => checkResponse(response, this.$route.fullPath))
+                .then(response => response.json() as Promise<ApiResponseViewModel>)
+                .then(data => {
+                    if (data['error']) {
+                        throw new Error(`There was a problem retrieving a share group suggestion: ${data['error']}`);
+                    } else {
+                        this.shareGroupSuggestion = data.response;
+                    }
+                })
+                .catch(error => {
+                    ErrorMsg.logError('dynamic-table.suggestShareGroup', error);
+                });
+        }
+    }
+
+    suggestShareUsername() {
+        this.shareUsernameTimeout = 0;
+        if (this.shareGroup) {
+            fetch(`/api/Authorization/GetShareableUsernameCompletion/${this.shareUsername}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `bearer ${this.$store.state.userState.token}`
+                    }
+                })
+                .then(response => checkResponse(response, this.$route.fullPath))
+                .then(response => response.json() as Promise<ApiResponseViewModel>)
+                .then(data => {
+                    if (data['error']) {
+                        throw new Error(`There was a problem retrieving a share group suggestion: ${data['error']}`);
+                    } else {
+                        this.shareUsernameSuggestion = data.response;
+                    }
+                })
+                .catch(error => {
+                    ErrorMsg.logError('dynamic-table.suggestShareUsername', error);
+                });
+        }
+    }
+
     updateChildData() {
         if (this.parentRepository) {
             this.getChildData()
                 .then((data: PageData<DataItem>) => {
                     this.childItems = data.pageItems;
                     this.totalChildItems = data.totalItems;
+
+                    this.deleteChildPermissions = {};
+                    let deleteAny = this.canShare; // Admins can delete anything.
+                    if (!deleteAny) {
+                        let permission = this.$store.getters.getPermission(this.routeName);
+                        if (permission === permissions.permissionDataAll) {
+                            deleteAny = true;
+                        }
+                    }
+                    for (var i = 0; i < this.items.length; i++) {
+                        if (deleteAny) {
+                            this.deleteChildPermissions[this.items[i][this.items[i].primaryKeyProperty]] = true;
+                        } else {
+                            let permission = this.$store.getters.getPermission(this.routeName, this.items[i][this.items[i].primaryKeyProperty]);
+                            this.deleteChildPermissions[this.items[i][this.items[i].primaryKeyProperty]] =
+                                permission === permissions.permissionDataAll;
+                        }
+                    }
+                    this.canDeleteChildren = Object.keys(this.deleteChildPermissions).length > 0;
                 })
                 .catch(error => {
                     this.errorMessage = "A problem occurred while loading the data.";
@@ -518,6 +736,25 @@ export default class DynamicTableComponent extends Vue {
                 .then((data: PageData<DataItem>) => {
                     this.items = data.pageItems;
                     this.totalItems = data.totalItems;
+
+                    this.deletePermissions = {};
+                    let deleteAny = this.canShare; // Admins can delete anything.
+                    if (!deleteAny) {
+                        let permission = this.$store.getters.getPermission(this.routeName);
+                        if (permission === permissions.permissionDataAll) {
+                            deleteAny = true;
+                        }
+                    }
+                    for (var i = 0; i < this.items.length; i++) {
+                        if (deleteAny) {
+                            this.deletePermissions[this.items[i][this.items[i].primaryKeyProperty]] = true;
+                        } else {
+                            let permission = this.$store.getters.getPermission(this.routeName, this.items[i][this.items[i].primaryKeyProperty]);
+                            this.deletePermissions[this.items[i][this.items[i].primaryKeyProperty]] =
+                                permission === permissions.permissionDataAll;
+                        }
+                    }
+                    this.canDelete = Object.keys(this.deletePermissions).length > 0;
                 })
                 .catch(error => {
                     this.errorMessage = "A problem occurred while loading the data.";
@@ -526,9 +763,83 @@ export default class DynamicTableComponent extends Vue {
         }
     }
 
+    updateShares() {
+        fetch(`/api/Authorization/GetCurrentShares/${this.routeName}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
+                }
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<Array<ShareData>>)
+            .then(data => {
+                if (data['error']) {
+                    throw new Error(`There was a problem retrieving current shares: ${data['error']}`);
+                } else {
+                    this.shares = [];
+                    for (var i = 0; i < data.length; i++) {
+                        this.shares[i] = data[i];
+                        this.shares[i].id = i;
+                    }
+                }
+            })
+            .catch(error => {
+                ErrorMsg.logError('dynamic-table.updateShares', error);
+            });
+        fetch(`/api/Authorization/GetShareableGroupMembers`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
+                }
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<Array<string>>)
+            .then(data => {
+                if (data['error']) {
+                    throw new Error(`There was a problem retrieving sharable group members: ${data['error']}`);
+                } else {
+                    this.groupMembers = data;
+                }
+            })
+            .catch(error => {
+                ErrorMsg.logError('dynamic-table.updateShares', error);
+            });
+        fetch(`/api/Authorization/GetShareableGroupSubset`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
+                }
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<Array<string>>)
+            .then(data => {
+                if (data['error']) {
+                    this.shareGroups = [];
+                    throw new Error(`There was a problem retrieving sharable groups: ${data['error']}`);
+                } else {
+                    this.shareGroups = data;
+                }
+            })
+            .catch(error => {
+                ErrorMsg.logError('dynamic-table.updateShares', error);
+            });
+    }
+
     updateTable() {
         this.updateTimeout = 0;
         this.activity = true;
+
+        this.canShare = this.$store.state.userState.isAdmin && this.$store.getters.getSharePermission(this.routeName);
+
+        let permission = this.$store.getters.getPermission(this.routeName);
+        this.canAdd = permissionIncludesTarget(permission, permissions.permissionDataAdd);
+
         this.headers = [];
         this.repository.getFieldDefinitions(this.$route.fullPath)
             .then(defData => {

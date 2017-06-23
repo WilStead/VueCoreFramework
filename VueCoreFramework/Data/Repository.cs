@@ -930,8 +930,8 @@ namespace VueCoreFramework.Data
             var dataType = typeof(T).Name;
 
             IQueryable<T> filteredItems = items.Cast<T>().Where(i =>
-               AuthorizationController.IsAuthorized(claims, dataType, CustomClaimTypes.PermissionDataView,
-               PrimaryKey.PropertyInfo.GetValue(i).ToString()));
+               AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataView,
+               PrimaryKey.PropertyInfo.GetValue(i).ToString()) != AuthorizationViewModel.Unauthorized);
 
             if (!string.IsNullOrEmpty(search))
             {
