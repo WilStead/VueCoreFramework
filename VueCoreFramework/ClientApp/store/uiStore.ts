@@ -88,7 +88,7 @@ function addMenuItem(menu: MenuItem, router: VueRouter, data: any, dataClass: st
 
         router.addRoutes([{
             path: baseRoute,
-            meta: { requiresAuth: true },
+            meta: { requiresAuthorize: true },
             component: require('../components/data/dashboard.vue'),
             props: {
                 title: dataClass,
@@ -169,7 +169,7 @@ export function getChildItems(router: VueRouter): Promise<void> {
                 for (var dataClass in data) {
                     router.addRoutes([{
                         path: `/data/${dataClass.toLowerCase()}`,
-                        meta: { requiresAuth: true },
+                        meta: { requiresAuthorize: true },
                         component: require('../components/data/dashboard.vue'),
                         props: {
                             title: dataClass,
@@ -276,6 +276,18 @@ export const uiState = {
             text: 'Data',
             iconClass: 'view_list',
             dataHook: true
+        },
+        {
+            divider: true
+        },
+        {
+            text: 'Groups',
+            header: true
+        },
+        {
+            text: 'Groups',
+            iconClass: 'group',
+            route: '/group/manage'
         }
     ]
 };

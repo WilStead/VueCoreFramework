@@ -17,7 +17,7 @@ const routes: Array<VueRouter.RouteConfig> = [
     },
     {
         path: '/user/manage',
-        meta: { requiresAuth: true },
+        meta: { requiresAuthenticate: true },
         component: require('./components/user/manage.vue')
     },
     {
@@ -32,6 +32,11 @@ const routes: Array<VueRouter.RouteConfig> = [
         path: '/user/reset/:code',
         component: require('./components/user/password/reset.vue'),
         props: true
+    },
+    {
+        path: '/group/manage',
+        meta: { requiresAuthenticate: true },
+        component: require('./components/group/manage.vue')
     },
     { path: '/error/notfound', component: resolve => require(['./components/error/notfound.vue'], resolve) },
     { path: '/error/:code', component: resolve => require(['./components/error/error.vue'], resolve), props: true }
@@ -54,7 +59,7 @@ export const router = new VueRouter({
     }
 });
 router.beforeEach((to, from, next) => {
-    if (to.matched.some(record => record.meta.requiresAuth)) {
+    if (to.matched.some(record => record.meta.requiresAuthorize)) {
         checkAuthorization(to)
             .then(auth => {
                 if (auth === "login") {
@@ -68,6 +73,15 @@ router.beforeEach((to, from, next) => {
             .catch(error => {
                 ErrorMsg.logError("router.beforeEach", error);
                 next({ path: '/login', query: { returnUrl: to.fullPath } });
+            });
+    } else if (to.matched.some(record => record.meta.requiresAuthenticate)) {
+        authenticate()
+            .then(auth => {
+                if (auth === "authorized") {
+                    next();
+                } else {
+                    next({ path: '/login', query: { returnUrl: to.fullPath } });
+                }
             });
     } else {
         next();
@@ -134,7 +148,8 @@ interface AuthorizationViewModel {
 export function authenticate(): Promise<string> {
     let url = '/api/Authorization/Authenticate/';
     let full = false;
-    if (!Store.store.state.userState.email) {
+    if (!Store.store.state.userState.email
+        || Store.store.state.userState.email === "user@example.com") {
         full = true;
         url += '?full=true';
     }

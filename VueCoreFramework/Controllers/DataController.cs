@@ -59,8 +59,7 @@ namespace VueCoreFramework.Controllers
         /// The primary key of the entity which will be set on the <paramref name="childProp"/> property.
         /// </param>
         /// <returns>
-        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
-        /// or a ViewModel representing the newly added item (as JSON).
+        /// An error if there is a problem; or a ViewModel representing the newly added item (as JSON).
         /// </returns>
         [HttpPost("{childProp}/{parentId}")]
         public async Task<IActionResult> Add(string dataType, string childProp, string parentId)
@@ -122,8 +121,7 @@ namespace VueCoreFramework.Controllers
         /// <param name="childProp">The navigation property to which the children will be added.</param>
         /// <param name="childIds">The primary keys of the child entities which will be added.</param>
         /// <returns>
-        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
-        /// or an OK result.
+        /// An error if there is a problem; or a response indicating success.
         /// </returns>
         [HttpPost("{id}/{childProp}")]
         public async Task<IActionResult> AddChildrenToCollection(string dataType, string id, string childProp, [FromBody]string[] childIds)
@@ -186,8 +184,7 @@ namespace VueCoreFramework.Controllers
         /// <param name="dataType">The type of entity to find.</param>
         /// <param name="id">The primary key of the entity to be found.</param>
         /// <returns>
-        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
-        /// or a ViewModel representing the new item (as JSON).
+        /// An error if there is a problem; or a ViewModel representing the new item (as JSON).
         /// </returns>
         [HttpGet("{id}")]
         public async Task<IActionResult> Duplicate(string dataType, string id)
@@ -242,8 +239,8 @@ namespace VueCoreFramework.Controllers
         /// <param name="dataType">The type of entity to find.</param>
         /// <param name="id">The primary key of the entity to be found.</param>
         /// <returns>
-        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
-        /// or a ViewModel representing the item found, or an empty ViewModel if none is found (as JSON).
+        /// An error if there is a problem; or a ViewModel representing the item found, or an empty
+        /// ViewModel if none is found (as JSON).
         /// </returns>
         [HttpGet("{id}")]
         public async Task<IActionResult> Find(string dataType, string id)
@@ -296,8 +293,7 @@ namespace VueCoreFramework.Controllers
         /// cref="ApplicationDbContext"/>'s set.
         /// </summary>
         /// <returns>
-        /// Redirect to an error page in the event of a bad request; or ViewModels representing the
-        /// items (as JSON).
+        /// An error in the event of a bad request; or ViewModels representing the items (as JSON).
         /// </returns>
         [HttpGet]
         public async Task<IActionResult> GetAll(string dataType)
@@ -334,10 +330,7 @@ namespace VueCoreFramework.Controllers
         /// <param name="dataType">The type of the parent entity.</param>
         /// <param name="id">The primary key of the parent entity.</param>
         /// <param name="childProp">The navigation property of the relationship on the parent entity.</param>
-        /// <returns>
-        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
-        /// or the list of child primary keys (as JSON).
-        /// </returns>
+        /// <returns>An error if there is a problem; or the list of child primary keys (as JSON).</returns>
         [HttpGet("{id}/{childProp}")]
         public async Task<IActionResult> GetAllChildIds(
             string dataType,
@@ -402,8 +395,8 @@ namespace VueCoreFramework.Controllers
         /// <param name="id">The primary key of the parent entity.</param>
         /// <param name="childProp">The navigation property of the relationship.</param>
         /// <returns>
-        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
-        /// or the primary key of the child entity (as a JSON object with 'response' set to the value).
+        /// An error if there is a problem; or the primary key of the child entity (as a JSON object
+        /// with 'response' set to the value).
         /// </returns>
         [HttpGet("{id}/{childProp}")]
         public async Task<IActionResult> GetChildId(string dataType, string id, string childProp)
@@ -479,9 +472,8 @@ namespace VueCoreFramework.Controllers
         /// <param name="page">The page number requested.</param>
         /// <param name="rowsPerPage">The number of items per page.</param>
         /// <returns>
-        /// Redirect to an error page in the event of a bad request; return an error if there is a
-        /// problem; or the list of ViewModels representing the child objects on the requested page
-        /// (as JSON).
+        /// An error if there is a problem; or the list of ViewModels representing the child objects
+        /// on the requested page (as JSON).
         /// </returns>
         [HttpGet("{id}/{childProp}")]
         public async Task<IActionResult> GetChildPage(
@@ -557,8 +549,7 @@ namespace VueCoreFramework.Controllers
         /// <param name="id">The primary key of the parent entity.</param>
         /// <param name="childProp">The navigation property of the relationship on the parent entity.</param>
         /// <returns>
-        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
-        /// or the total (as a JSON object with 'response' set to the value).
+        /// An error if there is a problem; or the total (as a JSON object with 'response' set to the value).
         /// </returns>
         [HttpGet("{id}/{childProp}")]
         public async Task<IActionResult> GetChildTotal(string dataType, string id, string childProp)
@@ -618,7 +609,7 @@ namespace VueCoreFramework.Controllers
         /// Called to retrieve a list of all entities which are not MenuClass types.
         /// </summary>
         /// <returns>
-        /// Redirect to an error page in the event of a bad request; or the list of type names (as JSON).
+        /// An error in the event of a bad request; or the list of type names (as JSON).
         /// </returns>
         [AllowAnonymous]
         [HttpGet("/api/[controller]/[action]")]
@@ -672,11 +663,10 @@ namespace VueCoreFramework.Controllers
         }
 
         /// <summary>
-        /// Called to retrieve a list of <see cref="FieldDefinition"/> s for the given data type.
+        /// Called to retrieve a list of <see cref="FieldDefinition"/>s for the given data type.
         /// </summary>
         /// <returns>
-        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
-        /// or the list of <see cref="FieldDefinition"/> s (as JSON).
+        /// An error if there is a problem; or the list of <see cref="FieldDefinition"/>s (as JSON).
         /// </returns>
         [HttpGet]
         public IActionResult GetFieldDefinitions(string dataType)
@@ -713,12 +703,12 @@ namespace VueCoreFramework.Controllers
         /// <param name="page">The page number requested.</param>
         /// <param name="rowsPerPage">The number of items per page.</param>
         /// <param name="except">
-        /// The primary keys of items which should be excluded from the results before
-        /// caluclating the page contents.
+        /// The primary keys of items which should be excluded from the results before caluclating
+        /// the page contents.
         /// </param>
         /// <returns>
-        /// Redirect to an error page in the event of a bad request; return an error if there is a
-        /// problem; or the list of ViewModels representing the entities on the requested page (as JSON).
+        /// An error if there is a problem; or the list of ViewModels representing the entities on
+        /// the requested page (as JSON).
         /// </returns>
         [HttpPost]
         public async Task<IActionResult> GetPage(
@@ -768,8 +758,8 @@ namespace VueCoreFramework.Controllers
         /// </summary>
         /// <param name="dataType">The type of the entity.</param>
         /// <returns>
-        /// Redirect to an error page in the event of a bad request; or the total (as a JSON object
-        /// with 'response' set to the value).
+        /// An error in the event of a bad request; or the total (as a JSON object with 'response'
+        /// set to the value).
         /// </returns>
         [HttpGet]
         public async Task<IActionResult> GetTotal(string dataType)
@@ -805,7 +795,7 @@ namespace VueCoreFramework.Controllers
         /// Called to retrieve a list of all entities which are MenuClass types.
         /// </summary>
         /// <returns>
-        /// Redirect to an error page in the event of a bad request; or the list of type names (as JSON).
+        /// An error in the event of a bad request; or the list of type names (as JSON).
         /// </returns>
         [AllowAnonymous]
         [HttpGet("/api/[controller]/[action]")]
@@ -855,8 +845,7 @@ namespace VueCoreFramework.Controllers
         /// <param name="dataType">The type of entity to remove.</param>
         /// <param name="id">The primary key of the entity to remove.</param>
         /// <returns>
-        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
-        /// or an OK result.
+        /// An error if there is a problem; or a response indicating success.
         /// </returns>
         [HttpPost("{id}")]
         public async Task<IActionResult> Remove(string dataType, string id)
@@ -911,8 +900,7 @@ namespace VueCoreFramework.Controllers
         /// <param name="childProp">The navigation property from which the children will be removed.</param>
         /// <param name="childIds">The primary keys of the child entities which will be removed.</param>
         /// <returns>
-        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
-        /// or an OK result.
+        /// An error if there is a problem; or a response indicating success.
         /// </returns>
         [HttpPost("{id}/{childProp}")]
         public async Task<IActionResult> RemoveChildrenFromCollection(string dataType, string id, string childProp, [FromBody]string[] childIds)
@@ -977,8 +965,7 @@ namespace VueCoreFramework.Controllers
         /// <param name="id">The primary key of the child entity whose relationship is being severed.</param>
         /// <param name="childProp">The navigation property of the relationship being severed.</param>
         /// <returns>
-        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
-        /// or an OK result.
+        /// An error if there is a problem; or a response indicating success.
         /// </returns>
         [HttpPost("{id}/{childProp}")]
         public async Task<IActionResult> RemoveFromParent(string dataType, string id, string childProp)
@@ -1046,8 +1033,7 @@ namespace VueCoreFramework.Controllers
         /// <param name="dataType">The type of entity to remove.</param>
         /// <param name="ids">The primary keys of the entities to remove.</param>
         /// <returns>
-        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
-        /// or an OK result.
+        /// An error if there is a problem; or a response indicating success.
         /// </returns>
         [HttpPost]
         public async Task<IActionResult> RemoveRange(string dataType, [FromBody]List<string> ids)
@@ -1107,8 +1093,7 @@ namespace VueCoreFramework.Controllers
         /// The primary keys of child entities whose relationships are being severed.
         /// </param>
         /// <returns>
-        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
-        /// or an OK result.
+        /// An error if there is a problem; or a response indicating success.
         /// </returns>
         [HttpPost("{id}/{childProp}")]
         public async Task<IActionResult> RemoveRangeFromParent(string dataType, string childProp, [FromBody]List<string> ids)
@@ -1184,8 +1169,7 @@ namespace VueCoreFramework.Controllers
         /// </param>
         /// <param name="childProp">The navigation property of the relationship on the child entity.</param>
         /// <returns>
-        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
-        /// or an OK result.
+        /// An error if there is a problem; or a response indicating success.
         /// </returns>
         [HttpPost("{parentId}/{newChildId}/{childProp}")]
         public async Task<IActionResult> ReplaceChild(string dataType, string parentId, string newChildId, string childProp)
@@ -1257,8 +1241,7 @@ namespace VueCoreFramework.Controllers
         /// <param name="parentId">The primary key of the parent entity in the relationship.</param>
         /// <param name="childProp">The navigation property of the relationship on the child entity.</param>
         /// <returns>
-        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
-        /// or an OK result.
+        /// An error if there is a problem; or a response indicating success.
         /// </returns>
         [HttpPost("{parentId}/{childProp}")]
         public async Task<IActionResult> ReplaceChildWithNew(string dataType, string parentId, string childProp)
@@ -1381,8 +1364,7 @@ namespace VueCoreFramework.Controllers
         /// <param name="dataType">The type of entity to update.</param>
         /// <param name="item">The item to update.</param>
         /// <returns>
-        /// Redirect to an error page in the event of a bad request; an error if there is a problem;
-        /// or a ViewModel representing the updated item (as JSON).
+        /// An error if there is a problem; or a ViewModel representing the updated item (as JSON).
         /// </returns>
         [HttpPost]
         public async Task<IActionResult> Update(string dataType, [FromBody]JObject item)

@@ -102,7 +102,7 @@ namespace VueCoreFramework.Controllers
         /// An <see cref="AuthorizationViewModel"/> indicating whether the current user is authorized.
         /// </returns>
         [HttpGet("{dataType}")]
-        public async Task<IActionResult> Authorize(string dataType, string operation = CustomClaimTypes.PermissionDataView, string id = null)
+        public async Task<IActionResult> Authorize(string dataType, string operation = "view", string id = null)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
@@ -131,6 +131,7 @@ namespace VueCoreFramework.Controllers
             vm.IsSiteAdmin = vm.IsAdmin && roles.Any(r => r == CustomRoles.SiteAdmin);
             vm.ManagedGroups = claims.Where(c => c.Type == CustomClaimTypes.PermissionGroupManager).Select(c => c.Value).ToList();
 
+            operation = $"permission/data/{operation}";
             vm.Authorization = GetAuthorization(claims, dataType, operation, id);
 
             // Admins can share/hide any data, and managers can share/hide any data they have
@@ -152,6 +153,16 @@ namespace VueCoreFramework.Controllers
             return Json(vm);
         }
 
+        /// <summary>
+        /// Called to add a user to a group.
+        /// </summary>
+        /// <param name="username">
+        /// The username of the user to add to the group.
+        /// </param>
+        /// <param name="group">The name of the group to which the user will be added.</param>
+        /// <returns>
+        /// An error if there is a problem; or a response indicating success.
+        /// </returns>
         [HttpPost("{username}/{group}")]
         public async Task<IActionResult> AddUserToGroup(string username, string group)
         {
@@ -255,6 +266,12 @@ namespace VueCoreFramework.Controllers
             return AuthorizationViewModel.Unauthorized;
         }
 
+        /// <summary>
+        /// Called to retrieve the list of users and groups with whom the given data is current shared.
+        /// </summary>
+        /// <param name="dataType">The type of data being shared.</param>
+        /// <param name="id">Optionally, the primary key of a specific item being shared.</param>
+        /// <returns>An error if there is a problem; or a response indicating success.</returns>
         [HttpGet("{dataType}")]
         public async Task<IActionResult> GetCurrentShares(string dataType, string id = null)
         {
@@ -264,9 +281,13 @@ namespace VueCoreFramework.Controllers
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
-            if (user == null || user.AdminLocked)
+            if (user == null)
             {
                 return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (user.AdminLocked)
+            {
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -374,6 +395,48 @@ namespace VueCoreFramework.Controllers
             else return new List<Claim> { claim };
         }
 
+        /// <summary>
+        /// Called to find all groups to which the current user belongs.
+        /// </summary>
+        /// <returns>An error if there is a problem; or a list of <see cref="GroupViewModel"/>.</returns>
+        [HttpGet]
+        public async Task<IActionResult> GetGroupMemberships()
+        {
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (user.AdminLocked)
+            {
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+            }
+
+            // Do not include the site admin or all users special roles.
+            var groups = _context.Roles.Where(r => r.Name != CustomRoles.SiteAdmin && r.Name != CustomRoles.AllUsers);
+
+            List<GroupViewModel> vms = new List<GroupViewModel>();
+            foreach (var group in groups)
+            {
+                var managers = await _userManager.GetUsersForClaimAsync(new Claim(CustomClaimTypes.PermissionGroupManager, group.Name));
+                var members = await _userManager.GetUsersInRoleAsync(group.Name);
+                vms.Add(new GroupViewModel
+                {
+                    Name = group.Name,
+                    Manager = managers.FirstOrDefault().UserName,
+                    Members = members.Select(m => m.UserName).ToList()
+                });
+            }
+            return Json(vms);
+        }
+
+        /// <summary>
+        /// Called to find a group name which starts with the given input. Only groups the current
+        /// user has access to will be returned.
+        /// </summary>
+        /// <param name="input">A search string.</param>
+        /// <returns>An error if there is a problem; or the first matched name.</returns>
         [HttpGet("{input}")]
         public async Task<IActionResult> GetShareableGroupCompletion(string input)
         {
@@ -384,9 +447,13 @@ namespace VueCoreFramework.Controllers
 
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
-            if (user == null || user.AdminLocked)
+            if (user == null)
             {
                 return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (user.AdminLocked)
+            {
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -430,6 +497,12 @@ namespace VueCoreFramework.Controllers
             return Json(new { response = "" });
         }
 
+        /// <summary>
+        /// Called to find a username which starts with the given input. Only names of users the
+        /// current user has access to will be returned.
+        /// </summary>
+        /// <param name="input">A search string.</param>
+        /// <returns>An error if there is a problem; or the first matched name.</returns>
         [HttpGet("{input}")]
         public async Task<IActionResult> GetShareableUsernameCompletion(string input)
         {
@@ -440,9 +513,13 @@ namespace VueCoreFramework.Controllers
 
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
-            if (user == null || user.AdminLocked)
+            if (user == null)
             {
                 return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (user.AdminLocked)
+            {
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -490,14 +567,22 @@ namespace VueCoreFramework.Controllers
             return Json(new { response = "" });
         }
 
+        /// <summary>
+        /// Called to retrieve the list of users with whom the current user may share.
+        /// </summary>
+        /// <returns>An error if there is a problem; or the list of users.</returns>
         [HttpGet]
         public async Task<IActionResult> GetShareableGroupMembers()
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
-            if (user == null || user.AdminLocked)
+            if (user == null)
             {
                 return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (user.AdminLocked)
+            {
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -523,14 +608,22 @@ namespace VueCoreFramework.Controllers
             return Json(members);
         }
 
+        /// <summary>
+        /// Called to retrieve a subset of the list of groups with whom the current user may share.
+        /// </summary>
+        /// <returns>An error if there is a problem; or the list of group names.</returns>
         [HttpGet]
         public async Task<IActionResult> GetShareableGroupSubset()
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
-            if (user == null || user.AdminLocked)
+            if (user == null)
             {
                 return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (user.AdminLocked)
+            {
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -568,6 +661,13 @@ namespace VueCoreFramework.Controllers
             return Json(managedGroups);
         }
 
+        /// <summary>
+        /// Called to stop the given data from being shared with all users.
+        /// </summary>
+        /// <param name="dataType">The type of data being shared.</param>
+        /// <param name="operation">Optionally, an operation whose permission is being removed.</param>
+        /// <param name="id">Optionally, the primary key of a specific item being shared.</param>
+        /// <returns>An error if there is a problem; or a response indicating success.</returns>
         [HttpPost("{dataType}")]
         public async Task<IActionResult> HideDataFromAll(string dataType, string operation, string id)
         {
@@ -617,6 +717,14 @@ namespace VueCoreFramework.Controllers
             return Json(new { Response = ResponseMessages.Success });
         }
 
+        /// <summary>
+        /// Called to stop the given data from being shared with the given group.
+        /// </summary>
+        /// <param name="group">The name of the group with whom the data is being shared.</param>
+        /// <param name="dataType">The type of data being shared.</param>
+        /// <param name="operation">Optionally, an operation whose permission is being removed.</param>
+        /// <param name="id">Optionally, the primary key of a specific item being shared.</param>
+        /// <returns>An error if there is a problem; or a response indicating success.</returns>
         [HttpPost("{group}/{dataType}")]
         public async Task<IActionResult> HideDataFromGroup(string group, string dataType, string operation, string id)
         {
@@ -663,6 +771,14 @@ namespace VueCoreFramework.Controllers
             return Json(new { Response = ResponseMessages.Success });
         }
 
+        /// <summary>
+        /// Called to stop the given data from being shared with the given user.
+        /// </summary>
+        /// <param name="username">The name of the user with whom the data is being shared.</param>
+        /// <param name="dataType">The type of data being shared.</param>
+        /// <param name="operation">Optionally, an operation whose permission is being removed.</param>
+        /// <param name="id">Optionally, the primary key of a specific item being shared.</param>
+        /// <returns>An error if there is a problem; or a response indicating success.</returns>
         [HttpPost("{username}/{dataType}")]
         public async Task<IActionResult> HideDataFromUser(string username, string dataType, string operation, string id)
         {
@@ -702,6 +818,42 @@ namespace VueCoreFramework.Controllers
             return Json(new { Response = ResponseMessages.Success });
         }
 
+        /// <summary>
+        /// Called to remove the current user from the given group.
+        /// </summary>
+        /// <param name="group">The name of the group to leave.</param>
+        /// <returns>An error if there is a problem; or a response indicating success.</returns>
+        [HttpPost("{group}")]
+        public async Task<IActionResult> LeaveGroup(string group)
+        {
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (user.AdminLocked)
+            {
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+            }
+            if (group == CustomRoles.SiteAdmin)
+            {
+                return Json(new { error = ErrorMessages.SiteAdminSingularError });
+            }
+            var groupRole = await _roleManager.FindByNameAsync(group);
+            if (groupRole == null)
+            {
+                return Json(new { error = ErrorMessages.InvalidTargetGroupError });
+            }
+            var managers = await _userManager.GetUsersForClaimAsync(new Claim(CustomClaimTypes.PermissionGroupManager, group));
+            if (managers.Any(m => m == user))
+            {
+                return Json(new { error = ErrorMessages.MustHaveManagerError });
+            }
+            await _userManager.RemoveFromRoleAsync(user, group);
+            return Json(new { Response = ResponseMessages.Success });
+        }
+
         private static bool PermissionIncludesTarget(string permission, string targetPermission)
         {
             if (permission == CustomClaimTypes.PermissionDataAll)
@@ -723,6 +875,12 @@ namespace VueCoreFramework.Controllers
             }
         }
 
+        /// <summary>
+        /// Called to remove the given user from the given group.
+        /// </summary>
+        /// <param name="username">The name of the user to remove from the group.</param>
+        /// <param name="group">The group from which to remove the user.</param>
+        /// <returns>An error if there is a problem; or a response indicating success.</returns>
         [HttpPost("{username}/{group}")]
         public async Task<IActionResult> RemoveUserFromGroup(string username, string group)
         {
@@ -779,6 +937,13 @@ namespace VueCoreFramework.Controllers
             return Json(new { Response = ResponseMessages.Success });
         }
 
+        /// <summary>
+        /// Called to share the given data with all users.
+        /// </summary>
+        /// <param name="dataType">The type of data to be shared.</param>
+        /// <param name="operation">Optionally, an operation for which to grant permission.</param>
+        /// <param name="id">Optionally, the primary key of a specific item to be shared.</param>
+        /// <returns>An error if there is a problem; or a response indicating success.</returns>
         [HttpPost("{dataType}")]
         public async Task<IActionResult> ShareDataWithAll(string dataType, string operation, string id)
         {
@@ -831,6 +996,14 @@ namespace VueCoreFramework.Controllers
             return Json(new { Response = ResponseMessages.Success });
         }
 
+        /// <summary>
+        /// Called to share the given data with the given group.
+        /// </summary>
+        /// <param name="group">The name of the group with whom to share the data.</param>
+        /// <param name="dataType">The type of data to be shared.</param>
+        /// <param name="operation">Optionally, an operation for which to grant permission.</param>
+        /// <param name="id">Optionally, the primary key of a specific item to be shared.</param>
+        /// <returns>An error if there is a problem; or a response indicating success.</returns>
         [HttpPost("{group}/{dataType}")]
         public async Task<IActionResult> ShareDataWithGroup(string group, string dataType, string operation, string id)
         {
@@ -896,6 +1069,14 @@ namespace VueCoreFramework.Controllers
             return Json(new { Response = ResponseMessages.Success });
         }
 
+        /// <summary>
+        /// Called to share the given data with the given user.
+        /// </summary>
+        /// <param name="username">The name of the user with whom to share the data.</param>
+        /// <param name="dataType">The type of data to be shared.</param>
+        /// <param name="operation">Optionally, an operation for which to grant permission.</param>
+        /// <param name="id">Optionally, the primary key of a specific item to be shared.</param>
+        /// <returns>An error if there is a problem; or a response indicating success.</returns>
         [HttpPost("{username}/{dataType}")]
         public async Task<IActionResult> ShareDataWithUser(string username, string dataType, string operation, string id)
         {
@@ -947,6 +1128,11 @@ namespace VueCoreFramework.Controllers
             return Json(new { Response = ResponseMessages.Success });
         }
 
+        /// <summary>
+        /// Called to create a new group with the given name, with the current user as its manager.
+        /// </summary>
+        /// <param name="group">The name of the group to create.</param>
+        /// <returns>An error if there is a problem; or a response indicating success.</returns>
         [HttpPost("{group}")]
         public async Task<IActionResult> StartNewGroup(string group)
         {
@@ -976,6 +1162,12 @@ namespace VueCoreFramework.Controllers
             return Json(new { Response = ResponseMessages.Success });
         }
 
+        /// <summary>
+        /// Called to transfer management of the given group to the given user.
+        /// </summary>
+        /// <param name="username">The name of the user who is to be the new manager.</param>
+        /// <param name="group">The name of the group whose manager is to change.</param>
+        /// <returns>An error if there is a problem; or a response indicating success.</returns>
         [HttpPost("{username}/{group}")]
         public async Task<IActionResult> TransferManagerToUser(string username, string group)
         {
@@ -1035,6 +1227,11 @@ namespace VueCoreFramework.Controllers
             return Json(new { Response = ResponseMessages.Success });
         }
 
+        /// <summary>
+        /// Called to transfer the site admin role to the given user.
+        /// </summary>
+        /// <param name="username">The name of the user who is to be the new site admin.</param>
+        /// <returns>An error if there is a problem; or a response indicating success.</returns>
         [HttpPost("{username}")]
         public async Task<IActionResult> TransferSiteAdminToUser(string username)
         {

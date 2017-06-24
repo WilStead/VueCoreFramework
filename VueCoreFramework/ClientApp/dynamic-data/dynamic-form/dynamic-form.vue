@@ -27,7 +27,7 @@
             <v-card-title class="pt-0 pb-0">
                 <v-spacer></v-spacer>
                 <v-dialog v-if="canShare" v-model="shareDialog" fullscreen>
-                    <v-btn v-tooltip:left="{ html: 'share' }" icon class="info--text" slot="activator"><v-icon light>visibility</v-icon></v-btn>
+                    <v-btn v-tooltip:top="{ html: 'share' }" icon class="info--text" slot="activator"><v-icon light>visibility</v-icon></v-btn>
                     <v-card>
                         <v-card-row class="info">
                             <v-btn icon @click.native="shareDialog = false" light><v-icon>close</v-icon></v-btn>
@@ -53,7 +53,7 @@
                                                     <v-list-tile-sub-title>{{ share.shortLevel }}</v-list-tile-sub-title>
                                                 </v-list-tile-content>
                                                 <v-list-tile-action>
-                                                    <v-btn v-tooltip:left="{ html: 'hide' }" icon class="info--text" @click.native="onHide(share)"><v-icon light>visibility_off</v-icon></v-btn>
+                                                    <v-btn v-tooltip:top="{ html: 'hide' }" icon class="info--text" @click.native="onHide(share)"><v-icon light>visibility_off</v-icon></v-btn>
                                                 </v-list-tile-action>
                                             </v-list-tile>
                                         </v-list-item>
@@ -69,16 +69,28 @@
                         </v-card-row>
                         <v-card-row>
                             <v-card-text>
-                                <v-text-field label="Username" v-model="shareUsername" hint="You may type a username or select from the dropdown below"></v-text-field>
-                                <small v-if="shareUsernameSuggestion && shareUsernameSuggestion !== shareUsername" class="grey--text">{{ shareUsernameSuggestion }}</small>
-                                <v-select label="Group members" v-model="selectedShareUsername" :items="groupMembers" dark single-line auto></v-select>
+                                <v-text-field label="Username" v-model="shareUsername" @input="onShareUsernameChange" :hint="shareUsernameSuggestion"></v-text-field>
+                                <v-select v-if="groupMembers.length > 0"
+                                          label="My group members"
+                                          v-model="selectedShareUsername"
+                                          :items="groupMembers"
+                                          @input="onSelectedShareUsernameChange"
+                                          dark
+                                          single-line
+                                          auto></v-select>
                             </v-card-text>
                         </v-card-row>
                         <v-card-row v-if="canShareGroup">
                             <v-card-text>
-                                <v-text-field label="Group name" v-model="shareGroup" hint="You may type a group name or select from the dropdown below"></v-text-field>
-                                <small v-if="shareGroupSuggestion && shareGroupSuggestion !== shareGroup" class="grey--text">{{ shareGroupSuggestion }}</small>
-                                <v-select label="Groups" v-model="selectedShareGroup" :items="shareGroups" dark single-line auto></v-select>
+                                <v-text-field label="Group name" v-model="shareGroup" @input="onShareGroupChange" :hint="shareGroupSuggestion"></v-text-field>
+                                <v-select v-if="shareGroups.length > 0"
+                                          label="My Groups"
+                                          v-model="selectedShareGroup"
+                                          :items="shareGroups"
+                                          @input="onSelectedShareGroupChange"
+                                          dark
+                                          single-line
+                                          auto></v-select>
                             </v-card-text>
                         </v-card-row>
                         <v-card-row>
@@ -89,7 +101,7 @@
                                             <v-select label="Permission" v-model="selectedPermission" :items="permissionOptions" dark auto></v-select>
                                         </v-flex>
                                         <v-flex xs3>
-                                            <v-btn v-tooltip:left="{ html: 'share' }" dark primary @click.native="onShare()">Share</v-btn>
+                                            <v-btn v-tooltip:top="{ html: 'share' }" dark primary @click.native="onShare()">Share</v-btn>
                                         </v-flex>
                                     </v-layout>
                                 </v-container>

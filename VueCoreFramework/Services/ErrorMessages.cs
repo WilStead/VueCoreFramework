@@ -27,6 +27,7 @@
         public const string ManagerOnlySharedError = "You may only share data permissions with your group that have previously been shared with you.";
         public const string MissingIdError = "The item ID was missing from your request. Please refresh the page before trying again.";
         public const string MissingPropError = "The property name was missing from your request. Please refresh the page before trying again.";
+        public const string MustHaveManagerError = "Your group must have a manager. Before leaving the group, you must first hand off the manager role to another group member.";
         public const string NotForAdminsError = "That action is not valid for administrator accounts.";
         public const string OnlyAdminCanBeAdminError = "To avoid confusion with the official Administrator group, group names may not contain 'administrator.'";
         public const string OwnerOnlyError = "Only the owner of the data may perform that action.";

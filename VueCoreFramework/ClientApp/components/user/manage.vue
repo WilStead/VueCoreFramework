@@ -1,12 +1,11 @@
 ﻿<template>
     <v-layout row wrap justify-center>
         <v-card>
-            <v-card-row>
+            <v-card-row class="primary">
                 <v-card-title>
-                    <span>Welcome, {{ $store.state.username }}</span>
-                    <v-spacer></v-spacer>
-                    <span>Manage your account</span>
+                    <span>Welcome, {{ $store.state.userState.username }}</span>
                 </v-card-title>
+                <v-subheader>Manage your account</v-subheader>
             </v-card-row>
             <v-alert error :value="model.errors.length > 0">
                 <ul>
@@ -37,24 +36,26 @@
                 <v-progress-circular indeterminate class="primary--text"></v-progress-circular>
             </v-card-row>
             <v-card-row v-else-if="changingUsername || changingEmail || changingPassword || settingPassword" class="submit-row">
-                <v-btn default @click.native.stop.prevent="cancelChange">Cancel</v-btn>
-                <v-btn primary @click.native.stop.prevent="onSubmit">Submit</v-btn>
+                <v-btn dark default @click.native.stop.prevent="cancelChange">Cancel</v-btn>
+                <v-btn dark primary @click.native.stop.prevent="onSubmit">Submit</v-btn>
             </v-card-row>
             <v-card-row v-else>
-                <v-card-row>
-                    <dl class="dl-horizontal">
-                        <dt>Username: {{ $store.state.username }}</dt>
-                        <dd><a href="#" @click.stop.prevent="changeUsername">Change username</a></dd>
-                        <dt>Email: {{ $store.state.email }}</dt>
-                        <dd><a href="#" @click.stop.prevent="changeEmail">Change email</a></dd>
-                        <dt>Password</dt>
-                        <dd>
-                            <a v-if="hasPassword" href="#" @click.stop.prevent="changePassword">Change password</a>
-                            <a v-if="!hasPassword" href="#" @click.stop.prevent="setPassword">Add a local password</a>
-                        </dd>
-                    </dl>
+                <dl class="dl-horizontal">
+                    <dt>Username: {{ $store.state.username }}</dt>
+                    <dd><a href="#" @click.stop.prevent="changeUsername">Change username</a></dd>
+                    <dt>Email: {{ $store.state.email }}</dt>
+                    <dd><a href="#" @click.stop.prevent="changeEmail">Change email</a></dd>
+                    <dt>Password</dt>
+                    <dd>
+                        <a v-if="hasPassword" href="#" @click.stop.prevent="changePassword">Change password</a>
+                        <a v-if="!hasPassword" href="#" @click.stop.prevent="setPassword">Add a local password</a>
+                    </dd>
+                </dl>
+            </v-card-row>
+            <v-card-row v-if="!submitting && !changingUsername && !changingEmail && !changingPassword && !settingPassword">
+                <v-card-text>
                     <v-dialog v-model="deleteAccountDialog">
-                        <v-btn error dark slot="activator">Delete Account</v-btn>
+                        <v-btn error light slot="activator">Delete Account</v-btn>
                         <v-card>
                             <v-card-row error>
                                 <v-card-title class="white--text">Are you sure you want to delete your account?</v-card-title>
@@ -89,7 +90,7 @@
                             </v-card-row>
                         </v-card>
                     </v-dialog>
-                </v-card-row>
+                </v-card-text>
             </v-card-row>
         </v-card>
     </v-layout>

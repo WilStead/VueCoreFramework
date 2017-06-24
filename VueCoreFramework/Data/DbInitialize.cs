@@ -61,7 +61,8 @@ namespace VueCoreFramework.Data
                 {
                     user = new ApplicationUser { UserName = "Test_User", Email = "test_user@example.com" };
                     userManager.CreateAsync(user, "Password_1").Wait();
-                    userManager.Users.FirstOrDefault().EmailConfirmed = true;
+                    user = userManager.Users.FirstOrDefault(u => u.UserName == "Test_User");
+                    user.EmailConfirmed = true;
                     userManager.UpdateAsync(user).Wait();
                 }
                 context.SaveChanges();

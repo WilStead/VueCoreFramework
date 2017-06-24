@@ -77,34 +77,10 @@ export default class DynamicFormComponent extends Vue {
         }
     }
 
-    @Watch('selectedShareGroup')
-    onSelectedShareGroupChange(val: string, oldVal: string) {
-        this.shareGroup = val;
-    }
-
-    @Watch('selectedShareUsername')
-    onSelectedShareUsernameChange(val: string, oldVal: string) {
-        this.shareUsername = val;
-    }
-
     @Watch('shareDialog')
     onShareDialogChange(val: boolean, oldVal: boolean) {
         if (val) {
             this.updateShares();
-        }
-    }
-
-    @Watch('shareGroup')
-    onShareGroupChange(val: string, oldVal: string) {
-        if (this.shareGroupTimeout === 0) {
-            this.shareGroupTimeout = setTimeout(this.suggestShareGroup, 500);
-        }
-    }
-
-    @Watch('shareUsername')
-    onShareUsernameChange(val: string, oldVal: string) {
-        if (this.shareUsernameTimeout === 0) {
-            this.shareUsernameTimeout = setTimeout(this.suggestShareUsername, 500);
         }
     }
 
@@ -329,7 +305,7 @@ export default class DynamicFormComponent extends Vue {
         }
         fetch(`/api/Authorization/${action}/${this.$route.name}?operation=${share.level}&id=${this.id}`,
             {
-                method: 'GET',
+                method: 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'Authorization': `bearer ${this.$store.state.userState.token}`
@@ -381,6 +357,14 @@ export default class DynamicFormComponent extends Vue {
                 ErrorMsg.logError("dynamic-form.onSave", new Error(error));
             });
     }
+    
+    onSelectedShareGroupChange(val: string, oldVal: string) {
+        this.shareGroup = val;
+    }
+    
+    onSelectedShareUsernameChange(val: string, oldVal: string) {
+        this.shareUsername = val;
+    }
 
     onShare() {
         if (this.selectedPermission) {
@@ -393,6 +377,18 @@ export default class DynamicFormComponent extends Vue {
             if (this.shareUsername) {
                 this.share('ShareDataWithUser', this.shareUsername);
             }
+        }
+    }
+    
+    onShareGroupChange(val: string, oldVal: string) {
+        if (this.shareGroupTimeout === 0) {
+            this.shareGroupTimeout = setTimeout(this.suggestShareGroup, 500);
+        }
+    }
+    
+    onShareUsernameChange(val: string, oldVal: string) {
+        if (this.shareUsernameTimeout === 0) {
+            this.shareUsernameTimeout = setTimeout(this.suggestShareUsername, 500);
         }
     }
 
@@ -444,7 +440,7 @@ export default class DynamicFormComponent extends Vue {
         url += `/${this.$route.name}?operation=${this.selectedPermission.value}&id=${this.id}`;
         fetch(url,
             {
-                method: 'GET',
+                method: 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'Authorization': `bearer ${this.$store.state.userState.token}`
@@ -462,6 +458,7 @@ export default class DynamicFormComponent extends Vue {
             })
             .catch(error => {
                 this.shareErrorMessage = 'A problem occurred.';
+                this.shareActivity = false;
                 ErrorMsg.logError('dynamic-form.share', error);
             });
     }
@@ -494,7 +491,7 @@ export default class DynamicFormComponent extends Vue {
 
     suggestShareUsername() {
         this.shareUsernameTimeout = 0;
-        if (this.shareGroup) {
+        if (this.shareUsername) {
             fetch(`/api/Authorization/GetShareableUsernameCompletion/${this.shareUsername}`,
                 {
                     method: 'GET',

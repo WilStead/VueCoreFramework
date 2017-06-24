@@ -175,13 +175,13 @@ export default class ManageUserComponent extends Vue {
             .then(response => response.json() as Promise<ApiResponseViewModel>)
             .then(data => {
                 if (data.error) {
-                    ErrorMsg.showErrorMsgAndLog('manage.created', data.error, new Error(`Error in manage.created: ${data.error}`));
+                    ErrorMsg.showErrorMsgAndLog('user/manage.created', data.error, new Error(`Error in manage.created: ${data.error}`));
                 }
                 else if (data.response === "yes") {
                     this.hasPassword = true;
                 }
             })
-            .catch(error => ErrorMsg.logError("manage.created.fetchPW", new Error(error)));
+            .catch(error => ErrorMsg.logError("user/manage.created.fetchPW", new Error(error)));
     }
 
     mounted() {
@@ -194,7 +194,7 @@ export default class ManageUserComponent extends Vue {
             .then(response => response.json() as Promise<AuthProviders>)
             .then(data => {
                 if (data.error) {
-                    ErrorMsg.showErrorMsgAndLog('manage.mounted', data.error, new Error(`Error in manage.mounted: ${data.error}`));
+                    ErrorMsg.showErrorMsgAndLog('user/manage.mounted', data.error, new Error(`Error in manage.mounted: ${data.error}`));
                 }
                 else {
                     if (data.providers) {
@@ -210,7 +210,7 @@ export default class ManageUserComponent extends Vue {
                 }
             })
             .catch(error => {
-                ErrorMsg.logError("manage.mounted", new Error(error));
+                ErrorMsg.logError("user/manage.mounted", new Error(error));
             });
     }
 
@@ -323,7 +323,7 @@ export default class ManageUserComponent extends Vue {
                 this.submitting = false;
             })
             .catch(error => {
-                ErrorMsg.showErrorMsgAndLog("manage.onSignInProviderAdd", "A problem occurred. Login failed.", new Error(error));
+                ErrorMsg.showErrorMsgAndLog("user/manage.onSignInProviderAdd", "A problem occurred. Login failed.", new Error(error));
                 this.submitting = false;
             });
     }
@@ -354,7 +354,7 @@ export default class ManageUserComponent extends Vue {
                 this.submitting = false;
             })
             .catch(error => {
-                ErrorMsg.showErrorMsgAndLog("manage.onSignInProviderRemove", "A problem occurred. Login failed.", new Error(error));
+                ErrorMsg.showErrorMsgAndLog("user/manage.onSignInProviderRemove", "A problem occurred. Login failed.", new Error(error));
                 this.submitting = false;
             });
     }
@@ -395,7 +395,7 @@ export default class ManageUserComponent extends Vue {
                 }
             })
             .catch(error => {
-                ErrorMsg.showErrorMsgAndLog("manage.onSubmit", "A problem occurred. Your request was not received.", new Error(error));
+                ErrorMsg.showErrorMsgAndLog("user/manage.onSubmit", "A problem occurred. Your request was not received.", new Error(error));
                 this.success = false;
             });
     }

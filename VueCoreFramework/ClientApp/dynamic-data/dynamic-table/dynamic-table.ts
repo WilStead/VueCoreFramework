@@ -152,34 +152,10 @@ export default class DynamicTableComponent extends Vue {
         this.updateData();
     }
 
-    @Watch('selectedShareGroup')
-    onSelectedShareGroupChange(val: string, oldVal: string) {
-        this.shareGroup = val;
-    }
-
-    @Watch('selectedShareUsername')
-    onSelectedShareUsernameChange(val: string, oldVal: string) {
-        this.shareUsername = val;
-    }
-
     @Watch('shareDialog')
     onShareDialogChange(val: boolean, oldVal: boolean) {
         if (val) {
             this.updateShares();
-        }
-    }
-
-    @Watch('shareGroup')
-    onShareGroupChange(val: string, oldVal: string) {
-        if (this.shareGroupTimeout === 0) {
-            this.shareGroupTimeout = setTimeout(this.suggestShareGroup, 500);
-        }
-    }
-
-    @Watch('shareUsername')
-    onShareUsernameChange(val: string, oldVal: string) {
-        if (this.shareUsernameTimeout === 0) {
-            this.shareUsernameTimeout = setTimeout(this.suggestShareUsername, 500);
         }
     }
 
@@ -495,9 +471,9 @@ export default class DynamicTableComponent extends Vue {
         } else {
             action = `HideDataFromGroup/${share.name}`;
         }
-        fetch(`/api/Authorization/${action}/${this.routeName}?operation=${share.level}`,
+        fetch(`/api/Authorization/${action}/${this.routeName}?operation=${encodeURIComponent(share.level)}`,
             {
-                method: 'GET',
+                method: 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'Authorization': `bearer ${this.$store.state.userState.token}`
@@ -560,6 +536,14 @@ export default class DynamicTableComponent extends Vue {
                 ErrorMsg.logError("dynamic-table.onDeleteChildItem", new Error(error));
             });
     }
+    
+    onSelectedShareGroupChange(val: string, oldVal: string) {
+        this.shareGroup = val;
+    }
+    
+    onSelectedShareUsernameChange(val: string, oldVal: string) {
+        this.shareUsername = val;
+    }
 
     onSelectItem() {
         if (!this.selected.length) {
@@ -601,6 +585,18 @@ export default class DynamicTableComponent extends Vue {
             }
         }
     }
+    
+    onShareGroupChange(val: string, oldVal: string) {
+        if (this.shareGroupTimeout === 0) {
+            this.shareGroupTimeout = setTimeout(this.suggestShareGroup, 500);
+        }
+    }
+    
+    onShareUsernameChange(val: string, oldVal: string) {
+        if (this.shareUsernameTimeout === 0) {
+            this.shareUsernameTimeout = setTimeout(this.suggestShareUsername, 500);
+        }
+    }
 
     onViewChildItem(id: string) {
         this.$router.push({ name: this.parentType.toLowerCase(), params: { operation: 'view', id } });
@@ -619,11 +615,11 @@ export default class DynamicTableComponent extends Vue {
         }
         url += `/${this.routeName}`;
         if (!this.allPermission) {
-            url += `?operation=${this.selectedPermission.value}`;
+            url += `?operation=${encodeURIComponent(this.selectedPermission)}`;
         }
         fetch(url,
             {
-                method: 'GET',
+                method: 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'Authorization': `bearer ${this.$store.state.userState.token}`
@@ -641,6 +637,7 @@ export default class DynamicTableComponent extends Vue {
             })
             .catch(error => {
                 this.shareErrorMessage = 'A problem occurred.';
+                this.shareActivity = false;
                 ErrorMsg.logError('dynamic-table.share', error);
             });
     }
@@ -673,7 +670,7 @@ export default class DynamicTableComponent extends Vue {
 
     suggestShareUsername() {
         this.shareUsernameTimeout = 0;
-        if (this.shareGroup) {
+        if (this.shareUsername) {
             fetch(`/api/Authorization/GetShareableUsernameCompletion/${this.shareUsername}`,
                 {
                     method: 'GET',
