@@ -4,7 +4,7 @@ import * as Store from '../../store/store';
 import { checkResponse, ApiResponseViewModel } from '../../router';
 import * as ErrorMsg from '../../error-msg';
 
-interface Group {
+export interface Group {
     name: string;
     manager: string;
     members: string[];
@@ -34,6 +34,7 @@ export default class ManageGroupComponent extends Vue {
     searchUsername = '';
     searchUsernameSuggestion = '';
     searchUsernameTimeout = 0;
+    successMessage = '';
     xferGroup: Group = null;
     xferGroupDialog = false;
 
@@ -70,7 +71,8 @@ export default class ManageGroupComponent extends Vue {
                 this.activity = true;
                 this.errorMessage = '';
                 this.createErrorMessage = '';
-                fetch(`/api/Authorization/StartNewGroup/${this.newGroupName}`,
+                this.successMessage = '';
+                fetch(`/api/Group/StartNewGroup/${this.newGroupName}`,
                     {
                         method: 'POST',
                         headers: {
@@ -101,8 +103,9 @@ export default class ManageGroupComponent extends Vue {
     onDeleteGroup() {
         this.activity = true;
         this.errorMessage = '';
+        this.successMessage = '';
         this.deleteGroupDialog = false;
-        fetch(`/api/Authorization/RemoveGroup/${this.deleteGroup.name}`,
+        fetch(`/api/Group/RemoveGroup/${this.deleteGroup.name}`,
             {
                 method: 'POST',
                 headers: {
@@ -135,8 +138,9 @@ export default class ManageGroupComponent extends Vue {
     onGroupSearch() {
         this.activity = true;
         this.errorMessage = '';
+        this.successMessage = '';
         this.leaveGroupDialog = false;
-        fetch(`/api/Authorization/GetGroup/${this.searchGroup}`,
+        fetch(`/api/Group/GetGroup/${this.searchGroup}`,
             {
                 method: 'POST',
                 headers: {
@@ -165,7 +169,29 @@ export default class ManageGroupComponent extends Vue {
 
     onInvite() {
         this.inviteDialog = false;
-        // TODO: send an email invite with a callback link that will create the membership
+        fetch(`/api/Group/InviteUserToGroup/${this.searchUsername}/${this.inviteGroup}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
+                }
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(data => {
+                if (data.error) {
+                    this.errorMessage = data.error;
+                } else {
+                    this.successMessage = 'Invitation sent!';
+                }
+                this.activity = false;
+            })
+            .catch(error => {
+                this.errorMessage = 'A problem occurred.';
+                this.activity = false;
+                ErrorMsg.logError('group/manage.onInvite', error);
+            });
     }
 
     onInviteConfirm(group: Group) {
@@ -176,8 +202,9 @@ export default class ManageGroupComponent extends Vue {
     onLeaveGroup() {
         this.activity = true;
         this.errorMessage = '';
+        this.successMessage = '';
         this.leaveGroupDialog = false;
-        fetch(`/api/Authorization/LeaveGroup/${this.leaveGroup.name}`,
+        fetch(`/api/Group/LeaveGroup/${this.leaveGroup.name}`,
             {
                 method: 'POST',
                 headers: {
@@ -210,7 +237,8 @@ export default class ManageGroupComponent extends Vue {
     onRemoveGroupMember(group: Group, member: string) {
         this.activity = true;
         this.errorMessage = '';
-        fetch(`/api/Authorization/RemoveUserFromGroup/${member}/${group.name}`,
+        this.successMessage = '';
+        fetch(`/api/Group/RemoveUserFromGroup/${member}/${group.name}`,
             {
                 method: 'POST',
                 headers: {
@@ -250,9 +278,10 @@ export default class ManageGroupComponent extends Vue {
     onXferGroup() {
         this.activity = true;
         this.errorMessage = '';
+        this.successMessage = '';
         this.xferGroupDialog = false;
         if (this.xferGroup.name === 'Admin') {
-            fetch(`/api/Authorization/TransferSiteAdminToUser/${this.newManager}`,
+            fetch(`/api/Group/TransferSiteAdminToUser/${this.newManager}`,
                 {
                     method: 'POST',
                     headers: {
@@ -268,7 +297,6 @@ export default class ManageGroupComponent extends Vue {
                     } else {
                         this.$store.state.userState.isSiteAdmin = false;
                         this.refreshGroups();
-                        // TODO: also send a system message to the new site admin
                     }
                     this.activity = false;
                 })
@@ -278,7 +306,7 @@ export default class ManageGroupComponent extends Vue {
                     ErrorMsg.logError('group/manage.onXferGroup', error);
                 });
         } else {
-            fetch(`/api/Authorization/TransferManagerToUser/${this.newManager}/${this.xferGroup.name}`,
+            fetch(`/api/Group/TransferManagerToUser/${this.newManager}/${this.xferGroup.name}`,
                 {
                     method: 'POST',
                     headers: {
@@ -293,7 +321,6 @@ export default class ManageGroupComponent extends Vue {
                         this.errorMessage = data.error;
                     } else {
                         this.refreshGroups();
-                        // TODO: also send a system message to the new manager
                     }
                     this.activity = false;
                 })
@@ -313,7 +340,7 @@ export default class ManageGroupComponent extends Vue {
     refreshGroups() {
         this.activity = true;
         this.errorMessage = '';
-        fetch('/api/Authorization/GetGroupMemberships/',
+        fetch('/api/Group/GetGroupMemberships/',
             {
                 method: 'GET',
                 headers: {
@@ -350,7 +377,7 @@ export default class ManageGroupComponent extends Vue {
     suggestSearchGroup() {
         this.searchGroupTimeout = 0;
         if (this.searchGroup) {
-            fetch(`/api/Authorization/GetShareableGroupCompletion/${this.searchGroup}`,
+            fetch(`/api/Share/GetShareableGroupCompletion/${this.searchGroup}`,
                 {
                     method: 'GET',
                     headers: {
@@ -376,7 +403,7 @@ export default class ManageGroupComponent extends Vue {
     suggestSearchUsername() {
         this.searchGroupTimeout = 0;
         if (this.searchGroup) {
-            fetch(`/api/Authorization/GetShareableUsernameCompletion/${this.searchUsername}`,
+            fetch(`/api/Share/GetShareableUsernameCompletion/${this.searchUsername}`,
                 {
                     method: 'GET',
                     headers: {

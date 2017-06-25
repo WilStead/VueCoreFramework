@@ -471,7 +471,7 @@ export default class DynamicTableComponent extends Vue {
         } else {
             action = `HideDataFromGroup/${share.name}`;
         }
-        fetch(`/api/Authorization/${action}/${this.routeName}?operation=${encodeURIComponent(share.level)}`,
+        fetch(`/api/Share/${action}/${this.routeName}?operation=${encodeURIComponent(share.level)}`,
             {
                 method: 'POST',
                 headers: {
@@ -609,7 +609,7 @@ export default class DynamicTableComponent extends Vue {
     share(action: string, target?: string) {
         this.shareActivity = true;
         this.shareErrorMessage = '';
-        let url = `/api/Authorization/${action}`;
+        let url = `/api/Share/${action}`;
         if (target) {
             url += `/${target}`;
         }
@@ -645,7 +645,7 @@ export default class DynamicTableComponent extends Vue {
     suggestShareGroup() {
         this.shareGroupTimeout = 0;
         if (this.shareGroup) {
-            fetch(`/api/Authorization/GetShareableGroupCompletion/${this.shareGroup}`,
+            fetch(`/api/Share/GetShareableGroupCompletion/${this.shareGroup}`,
                 {
                     method: 'GET',
                     headers: {
@@ -671,7 +671,7 @@ export default class DynamicTableComponent extends Vue {
     suggestShareUsername() {
         this.shareUsernameTimeout = 0;
         if (this.shareUsername) {
-            fetch(`/api/Authorization/GetShareableUsernameCompletion/${this.shareUsername}`,
+            fetch(`/api/Share/GetShareableUsernameCompletion/${this.shareUsername}`,
                 {
                     method: 'GET',
                     headers: {
@@ -761,7 +761,7 @@ export default class DynamicTableComponent extends Vue {
     }
 
     updateShares() {
-        fetch(`/api/Authorization/GetCurrentShares/${this.routeName}`,
+        fetch(`/api/Share/GetCurrentShares/${this.routeName}`,
             {
                 method: 'GET',
                 headers: {
@@ -785,7 +785,7 @@ export default class DynamicTableComponent extends Vue {
             .catch(error => {
                 ErrorMsg.logError('dynamic-table.updateShares', error);
             });
-        fetch(`/api/Authorization/GetShareableGroupMembers`,
+        fetch(`/api/Share/GetShareableGroupMembers`,
             {
                 method: 'GET',
                 headers: {
@@ -805,7 +805,7 @@ export default class DynamicTableComponent extends Vue {
             .catch(error => {
                 ErrorMsg.logError('dynamic-table.updateShares', error);
             });
-        fetch(`/api/Authorization/GetShareableGroupSubset`,
+        fetch(`/api/Share/GetShareableGroupSubset`,
             {
                 method: 'GET',
                 headers: {

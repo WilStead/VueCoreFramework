@@ -27,6 +27,7 @@
         public const string ManagerOnlyError = "Only the group's manager may perform that action.";
         public const string ManagerOrOwnerOnlyError = "Only the group's manager or the owner of the data may perform that action.";
         public const string ManagerOnlySharedError = "You may only share data permissions with your group that have previously been shared with you.";
+        public const string MessageInvalidLengthError = "Messages must be between 1 and 125 characters long.";
         public const string MissingIdError = "The item ID was missing from your request. Please refresh the page before trying again.";
         public const string MissingPropError = "The property name was missing from your request. Please refresh the page before trying again.";
         public const string MustHaveManagerError = "Your group must have a manager. Before leaving the group, you must first hand off the manager role to another group member.";

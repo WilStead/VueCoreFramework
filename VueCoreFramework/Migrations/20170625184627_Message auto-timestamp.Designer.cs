@@ -9,9 +9,10 @@ using VueCoreFramework.Models;
 namespace VueCoreFramework.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20170625184627_Message auto-timestamp")]
+    partial class Messageautotimestamp
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.1.2")
@@ -318,8 +319,6 @@ namespace VueCoreFramework.Migrations
                     b.Property<string>("GroupRecipientId");
 
                     b.Property<string>("GroupRecipientName");
-
-                    b.Property<bool>("IsSystemMessage");
 
                     b.Property<bool>("Received");
 

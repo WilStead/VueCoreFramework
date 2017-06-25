@@ -620,6 +620,7 @@ namespace VueCoreFramework.Controllers
                 var types = _context.Model.GetEntityTypes()
                     .Where(e =>
                         e.Name != nameof(_context.Logs)
+                        && e.Name != nameof(_context.Messages)
                         && e.Name != nameof(_context.RoleClaims)
                         && e.Name != nameof(_context.Roles)
                         && e.Name != nameof(_context.UserClaims)
@@ -806,6 +807,7 @@ namespace VueCoreFramework.Controllers
                 var types = _context.Model.GetEntityTypes()
                     .Where(e =>
                         e.Name != nameof(_context.Logs)
+                        && e.Name != nameof(_context.Messages)
                         && e.Name != nameof(_context.RoleClaims)
                         && e.Name != nameof(_context.Roles)
                         && e.Name != nameof(_context.UserClaims)

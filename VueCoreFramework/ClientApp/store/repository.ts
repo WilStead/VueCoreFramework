@@ -82,7 +82,6 @@ export class Repository {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
-                    'Content-Type': 'application/json',
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })

@@ -13,6 +13,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using VueCoreFramework.Data;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 
 namespace VueCoreFramework.Controllers
 {
@@ -264,6 +265,7 @@ namespace VueCoreFramework.Controllers
             var managerClaims = claims.Where(c => c.Type == CustomClaimTypes.PermissionGroupManager).ToList();
             var ownerClaims = claims.Where(c => c.Type == CustomClaimTypes.PermissionDataOwner).ToList();
 
+            // Transfer data
             ApplicationUser xferUser = null;
             if (!string.IsNullOrEmpty(xferUsername))
             {
@@ -284,6 +286,10 @@ namespace VueCoreFramework.Controllers
                     if (members.Count <= 1)
                     {
                         var role = await _roleManager.FindByNameAsync(managerClaim.Value);
+                        // Delete group messages
+                        var groupMessages = _context.Messages.Where(m => m.GroupRecipient == role);
+                        _context.RemoveRange(groupMessages);
+                        await _context.SaveChangesAsync();
                         await _roleManager.DeleteAsync(role);
                     }
                     // Otherwise, assign the manager role to another member arbitrarily.
@@ -348,6 +354,15 @@ namespace VueCoreFramework.Controllers
                     }
                 }
             }
+
+            // Delete orphaned messages
+            var messages = _context.Messages.Where(m => m.Sender == user || m.SingleRecipient == user)
+                .Include(m => m.Sender)
+                .Include(m => m.SingleRecipient)
+                .Include(m => m.GroupRecipient);
+            _context.RemoveRange(messages.Where(m => m.GroupRecipient == null
+                && (m.Sender == user || m.SingleRecipient == user)));
+            await _context.SaveChangesAsync();
 
             await _userManager.DeleteAsync(user);
 

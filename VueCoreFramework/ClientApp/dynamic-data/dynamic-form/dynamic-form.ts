@@ -303,7 +303,7 @@ export default class DynamicFormComponent extends Vue {
         } else {
             action = `HideDataFromGroup/${share.name}`;
         }
-        fetch(`/api/Authorization/${action}/${this.$route.name}?operation=${share.level}&id=${this.id}`,
+        fetch(`/api/Share/${action}/${this.$route.name}?operation=${share.level}&id=${this.id}`,
             {
                 method: 'POST',
                 headers: {
@@ -433,7 +433,7 @@ export default class DynamicFormComponent extends Vue {
     share(action: string, target?: string) {
         this.shareActivity = true;
         this.shareErrorMessage = '';
-        let url = `/api/Authorization/${action}`;
+        let url = `/api/Share/${action}`;
         if (target) {
             url += `/${target}`;
         }
@@ -466,7 +466,7 @@ export default class DynamicFormComponent extends Vue {
     suggestShareGroup() {
         this.shareGroupTimeout = 0;
         if (this.shareGroup) {
-            fetch(`/api/Authorization/GetShareableGroupCompletion/${this.shareGroup}`,
+            fetch(`/api/Share/GetShareableGroupCompletion/${this.shareGroup}`,
                 {
                     method: 'GET',
                     headers: {
@@ -492,7 +492,7 @@ export default class DynamicFormComponent extends Vue {
     suggestShareUsername() {
         this.shareUsernameTimeout = 0;
         if (this.shareUsername) {
-            fetch(`/api/Authorization/GetShareableUsernameCompletion/${this.shareUsername}`,
+            fetch(`/api/Share/GetShareableUsernameCompletion/${this.shareUsername}`,
                 {
                     method: 'GET',
                     headers: {
@@ -588,7 +588,7 @@ export default class DynamicFormComponent extends Vue {
     }
 
     updateShares() {
-        fetch(`/api/Authorization/GetCurrentShares/${this.$route.name}?id=${this.id}`,
+        fetch(`/api/Share/GetCurrentShares/${this.$route.name}?id=${this.id}`,
             {
                 method: 'GET',
                 headers: {
@@ -612,7 +612,7 @@ export default class DynamicFormComponent extends Vue {
             .catch(error => {
                 ErrorMsg.logError('dynamic-form.updateShares', error);
             });
-        fetch(`/api/Authorization/GetShareableGroupMembers`,
+        fetch(`/api/Share/GetShareableGroupMembers`,
             {
                 method: 'GET',
                 headers: {
@@ -632,7 +632,7 @@ export default class DynamicFormComponent extends Vue {
             .catch(error => {
                 ErrorMsg.logError('dynamic-form.updateShares', error);
             });
-        fetch(`/api/Authorization/GetShareableGroupSubset`,
+        fetch(`/api/Share/GetShareableGroupSubset`,
             {
                 method: 'GET',
                 headers: {

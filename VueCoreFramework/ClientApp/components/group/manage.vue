@@ -86,6 +86,7 @@
                 <v-card-title>Groups</v-card-title>
             </v-card-row>
             <v-alert error :value="errorMessage">{{ errorMessage }}</v-alert>
+            <v-alert success :value="successMessage">{{ successMessage }}</v-alert>
             <v-list two-line>
                 <v-subheader v-if="managedGroups.length > 0">Groups you manage</v-subheader>
                 <v-list-group v-for="group in managedGroups" :key="group.name">

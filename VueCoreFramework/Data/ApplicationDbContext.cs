@@ -17,6 +17,11 @@ namespace VueCoreFramework.Data
         public DbSet<Log> Logs { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="DbSet{TEntity}"/> of <see cref="Message"/>s.
+        /// </summary>
+        public DbSet<Message> Messages { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="DbSet{TEntity}"/> of <see cref="Airline"/>s.
         /// </summary>
         public DbSet<Airline> Airlines { get; set; }
@@ -71,6 +76,11 @@ namespace VueCoreFramework.Data
         {
             base.OnModelCreating(builder);
             // Add your customizations after calling base.OnModelCreating(builder);
+
+            builder.Entity<Message>()
+                .Property(m => m.Timestamp)
+                .HasDefaultValueSql("GETUTCDATE()")
+                .ValueGeneratedOnAdd();
 
             builder.Entity<AirlineCountry>()
                 .HasKey(c => new { c.CountryId, c.AirlineId });

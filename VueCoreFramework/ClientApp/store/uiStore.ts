@@ -289,5 +289,36 @@ export const uiState = {
             iconClass: 'group',
             route: '/group/manage'
         }
-    ]
+    ],
+
+    messaging: {
+        /**
+         * Controls whether the messaging sidebar is shown.
+         */
+        messagingShown: false,
+
+
+        /**
+         * Controls whether the chat window is shown (rather than the menu).
+         */
+        chatShown: false,
+
+
+        /**
+         * Indicates the name of the group the user is currently chatting with.
+         */
+        groupChat: '',
+
+
+        /**
+         * Indicates the name of the user the current user is currently chatting with.
+         */
+        interlocutor: '',
+
+
+        /**
+         * The messages of the current conversation.
+         */
+        messages: ''
+    }
 };
