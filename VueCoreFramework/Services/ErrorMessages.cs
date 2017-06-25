@@ -3,8 +3,10 @@
     public static class ErrorMessages
     {
         public const string AddItemError = "Item could not be added.";
-        public const string AdminOnlyError = "Only an administrator may perform that action.";
         public const string AdminNoManagerError = "The administrator group does not have a manager.";
+        public const string AdminOnlyError = "Only an administrator may perform that action.";
+        public const string AdminRequiredError = "The administratos group cannot be removed.";
+        public const string AllUsersRequiredError = "Membership in the All Users group is automatic.";
         public const string AlreadyLockedError = "The account you specified is already locked.";
         public const string AlreadyUnlockedError = "The account you specified is not locked.";
         public const string AuthProviderError = "There was a problem authorizing with that provider.";

@@ -15,11 +15,27 @@ export default class ManageGroupComponent extends Vue {
     activity = false;
     createErrorMessage = '';
     createGroupDialog = false;
+    deleteFoundGroupDialog = false;
+    deleteGroup: Group = null;
+    deleteGroupDialog = false;
     errorMessage = '';
+    foundGroup: Group = null;
+    inviteDialog = false;
+    inviteGroup: Group = null;
     joinedGroups: Group[] = [];
+    leaveGroup: Group = null;
     leaveGroupDialog = false;
     managedGroups: Group[] = [];
     newGroupName = '';
+    newManager = '';
+    searchGroup = '';
+    searchGroupSuggestion = '';
+    searchGroupTimeout = 0;
+    searchUsername = '';
+    searchUsernameSuggestion = '';
+    searchUsernameTimeout = 0;
+    xferGroup: Group = null;
+    xferGroupDialog = false;
 
     describeMembers(group: Group) {
         let memberNames = [] as string[];
@@ -41,6 +57,10 @@ export default class ManageGroupComponent extends Vue {
             desc += memberNames.join(", ");
         }
         return desc;
+    }
+
+    onContactGroupMember(member: string) {
+        // TODO: open chat system targeted at the user
     }
 
     onCreateGroup() {
@@ -78,11 +98,86 @@ export default class ManageGroupComponent extends Vue {
         }
     }
 
-    onLeaveGroup(group: Group) {
+    onDeleteGroup() {
+        this.activity = true;
+        this.errorMessage = '';
+        this.deleteGroupDialog = false;
+        fetch(`/api/Authorization/RemoveGroup/${this.deleteGroup.name}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
+                }
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(data => {
+                if (data.error) {
+                    this.errorMessage = data.error;
+                } else {
+                    this.refreshGroups();
+                }
+                this.activity = false;
+            })
+            .catch(error => {
+                this.errorMessage = 'A problem occurred.';
+                this.activity = false;
+                ErrorMsg.logError('group/manage.onDeleteGroup', error);
+            });
+    }
+
+    onDeleteGroupConfirm(group: Group) {
+        this.deleteGroup = group;
+        this.deleteGroupDialog = true;
+    }
+
+    onGroupSearch() {
         this.activity = true;
         this.errorMessage = '';
         this.leaveGroupDialog = false;
-        fetch(`/api/Authorization/LeaveGroup/${group.name}`,
+        fetch(`/api/Authorization/GetGroup/${this.searchGroup}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
+                }
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<Group>)
+            .then(data => {
+                if (data['error']) {
+                    this.errorMessage = data['error'];
+                } else if (data['response']) {
+                    this.errorMessage = data['response'];
+                } else {
+                    this.foundGroup = data;
+                }
+                this.activity = false;
+            })
+            .catch(error => {
+                this.errorMessage = 'A problem occurred.';
+                this.activity = false;
+                ErrorMsg.logError('group/manage.onGroupSearch', error);
+            });
+    }
+
+    onInvite() {
+        this.inviteDialog = false;
+        // TODO: send an email invite with a callback link that will create the membership
+    }
+
+    onInviteConfirm(group: Group) {
+        this.inviteGroup = group;
+        this.inviteDialog = true;
+    }
+
+    onLeaveGroup() {
+        this.activity = true;
+        this.errorMessage = '';
+        this.leaveGroupDialog = false;
+        fetch(`/api/Authorization/LeaveGroup/${this.leaveGroup.name}`,
             {
                 method: 'POST',
                 headers: {
@@ -107,10 +202,15 @@ export default class ManageGroupComponent extends Vue {
             });
     }
 
+    onLeaveGroupConfirm(group: Group) {
+        this.leaveGroup = group;
+        this.leaveGroupDialog = true;
+    }
+
     onRemoveGroupMember(group: Group, member: string) {
         this.activity = true;
         this.errorMessage = '';
-        fetch(`/api/Authorization/RemoveUserFromGroup/${member.username}/${group.name}`,
+        fetch(`/api/Authorization/RemoveUserFromGroup/${member}/${group.name}`,
             {
                 method: 'POST',
                 headers: {
@@ -135,6 +235,81 @@ export default class ManageGroupComponent extends Vue {
             });
     }
 
+    onSearchGroupChange(val: string, oldVal: string) {
+        if (this.searchGroupTimeout === 0) {
+            this.searchGroupTimeout = setTimeout(this.suggestSearchGroup, 500);
+        }
+    }
+
+    onSearchUsernameChange(val: string, oldVal: string) {
+        if (this.searchUsernameTimeout === 0) {
+            this.searchUsernameTimeout = setTimeout(this.suggestSearchUsername, 500);
+        }
+    }
+
+    onXferGroup() {
+        this.activity = true;
+        this.errorMessage = '';
+        this.xferGroupDialog = false;
+        if (this.xferGroup.name === 'Admin') {
+            fetch(`/api/Authorization/TransferSiteAdminToUser/${this.newManager}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `bearer ${this.$store.state.userState.token}`
+                    }
+                })
+                .then(response => checkResponse(response, this.$route.fullPath))
+                .then(response => response.json() as Promise<ApiResponseViewModel>)
+                .then(data => {
+                    if (data.error) {
+                        this.errorMessage = data.error;
+                    } else {
+                        this.$store.state.userState.isSiteAdmin = false;
+                        this.refreshGroups();
+                        // TODO: also send a system message to the new site admin
+                    }
+                    this.activity = false;
+                })
+                .catch(error => {
+                    this.errorMessage = 'A problem occurred.';
+                    this.activity = false;
+                    ErrorMsg.logError('group/manage.onXferGroup', error);
+                });
+        } else {
+            fetch(`/api/Authorization/TransferManagerToUser/${this.newManager}/${this.xferGroup.name}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `bearer ${this.$store.state.userState.token}`
+                    }
+                })
+                .then(response => checkResponse(response, this.$route.fullPath))
+                .then(response => response.json() as Promise<ApiResponseViewModel>)
+                .then(data => {
+                    if (data.error) {
+                        this.errorMessage = data.error;
+                    } else {
+                        this.refreshGroups();
+                        // TODO: also send a system message to the new manager
+                    }
+                    this.activity = false;
+                })
+                .catch(error => {
+                    this.errorMessage = 'A problem occurred.';
+                    this.activity = false;
+                    ErrorMsg.logError('group/manage.onXferGroup', error);
+                });
+        }
+    }
+
+    onXferGroupConfirm(group: Group) {
+        this.xferGroup = group;
+        this.xferGroupDialog = true;
+    }
+
     refreshGroups() {
         this.activity = true;
         this.errorMessage = '';
@@ -155,7 +330,8 @@ export default class ManageGroupComponent extends Vue {
                     this.managedGroups = [];
                     this.joinedGroups = [];
                     for (var i = 0; i < data.length; i++) {
-                        if (data[i].manager === this.$store.state.userState.username) {
+                        if (data[i].manager === this.$store.state.userState.username
+                            || data[i].name === 'Admin' && this.$store.state.userState.isSiteAdmin) {
                             this.managedGroups.push(data[i]);
                         } else {
                             this.joinedGroups.push(data[i]);
@@ -169,6 +345,58 @@ export default class ManageGroupComponent extends Vue {
                 this.activity = false;
                 ErrorMsg.logError('group/manage.refreshGroups', error);
             });
+    }
+
+    suggestSearchGroup() {
+        this.searchGroupTimeout = 0;
+        if (this.searchGroup) {
+            fetch(`/api/Authorization/GetShareableGroupCompletion/${this.searchGroup}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `bearer ${this.$store.state.userState.token}`
+                    }
+                })
+                .then(response => checkResponse(response, this.$route.fullPath))
+                .then(response => response.json() as Promise<ApiResponseViewModel>)
+                .then(data => {
+                    if (data['error']) {
+                        throw new Error(`There was a problem retrieving a group suggestion: ${data['error']}`);
+                    } else {
+                        this.searchGroupSuggestion = data.response;
+                    }
+                })
+                .catch(error => {
+                    ErrorMsg.logError('group/manage.suggestSearchGroup', error);
+                });
+        }
+    }
+
+    suggestSearchUsername() {
+        this.searchGroupTimeout = 0;
+        if (this.searchGroup) {
+            fetch(`/api/Authorization/GetShareableUsernameCompletion/${this.searchUsername}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `bearer ${this.$store.state.userState.token}`
+                    }
+                })
+                .then(response => checkResponse(response, this.$route.fullPath))
+                .then(response => response.json() as Promise<ApiResponseViewModel>)
+                .then(data => {
+                    if (data['error']) {
+                        throw new Error(`There was a problem retrieving a username suggestion: ${data['error']}`);
+                    } else {
+                        this.searchUsernameSuggestion = data.response;
+                    }
+                })
+                .catch(error => {
+                    ErrorMsg.logError('group/manage.suggestSearchUsername', error);
+                });
+        }
     }
 
     validateGroupName() {
