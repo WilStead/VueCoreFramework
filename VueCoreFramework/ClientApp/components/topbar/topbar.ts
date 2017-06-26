@@ -11,6 +11,14 @@ export default class TopbarComponent extends Vue {
     lastUpdate: number = 0;
     updateTimeout = 0;
 
+    get totalUnread() {
+        return this.$store.state.uiState.messaging.conversations
+            .filter(c => c.unreadCount)
+            .reduce((a, b) => { return a + b; }, 0)
+            + this.$store.state.uiState.messaging.systemMessages
+                .filter(m => !m.received).length;
+    }
+
     mounted() { this.updateAuth(); }
 
     @Watch('$route')
@@ -32,6 +40,15 @@ export default class TopbarComponent extends Vue {
         this.signedIn = false;
         this.$store.commit(Store.logout);
         this.$router.push('/');
+    }
+
+    onToggleChat() {
+        if (!this.$store.state.uiState.messaging.messagingShown) {
+            this.$store.dispatch(Store.refreshGroups, this.$route.fullPath);
+            this.$store.dispatch(Store.refreshConversations, this.$route.fullPath);
+            this.$store.dispatch(Store.refreshChat, this.$route.fullPath);
+        }
+        this.$store.commit(Store.toggleMessaging);
     }
 
     updateAuth() {

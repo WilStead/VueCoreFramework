@@ -2,10 +2,11 @@ import Vue from 'vue';
 import { Component } from 'vue-property-decorator';
 import * as Store from '../../store/store';
 import { ConversationViewModel, MessageViewModel, messaging } from '../../store/messaging';
-import { checkResponse } from '../../router';
+import { checkResponse, ApiResponseViewModel } from '../../router';
 import { Group } from '../group/manage';
 import * as ErrorMsg from '../../error-msg';
 import VueMarkdown from 'vue-markdown';
+import moment from 'moment';
 
 @Component({
     components: {
@@ -15,16 +16,22 @@ import VueMarkdown from 'vue-markdown';
     }
 })
 export default class AppComponent extends Vue {
-    conversations: ConversationViewModel[] = [];
-    groups: Group[] = [];
+    foundUser = '';
+    foundUserConversations: ConversationViewModel[] = [];
     messageText = '';
     sideNav = false;
     chatErrorMessage = '';
     chatRefreshTimeout = 0;
     conversationRefreshTimeout = 0;
     groupRefreshTimeout = 0;
+    searchUsername = '';
+    searchUsernameSuggestion = '';
+    searchUsernameTimeout = 0;
     systemMessageRefreshTimeout = 0;
-    systemMessages = false;
+
+    get groups() {
+        return this.$store.state.userState.managedGroups.concat(this.$store.state.userState.joinedGroups);
+    }
 
     mounted() {
         let forwardUrl = document.getElementById("forward-url").getAttribute("data-forward-url");
@@ -33,21 +40,21 @@ export default class AppComponent extends Vue {
         }
 
         this.$store.commit(Store.addTypeRoutes, this.$router);
-        
-        if (this.groupRefreshTimeout === 0) {
-            this.groupRefreshTimeout = setTimeout(this.refreshGroups, 10000);
-        }
 
-        if (this.conversationRefreshTimeout === 0) {
-            this.conversationRefreshTimeout = setTimeout(this.refreshConversations, 10000);
+        if (this.groupRefreshTimeout === 0) {
+            this.groupRefreshTimeout = setTimeout(this.refreshGroups, 100);
         }
 
         if (this.systemMessageRefreshTimeout === 0) {
-            this.systemMessageRefreshTimeout = setTimeout(this.refreshSystemMessages, 10000);
+            this.systemMessageRefreshTimeout = setTimeout(this.refreshSystemMessages, 200);
+        }
+
+        if (this.conversationRefreshTimeout === 0) {
+            this.conversationRefreshTimeout = setTimeout(this.refreshConversations, 300);
         }
 
         if (this.chatRefreshTimeout === 0) {
-            this.chatRefreshTimeout = setTimeout(this.refreshChat, 10000);
+            this.chatRefreshTimeout = setTimeout(this.refreshChat, 400);
         }
     }
 
@@ -71,6 +78,10 @@ export default class AppComponent extends Vue {
             desc += memberNames.join(", ");
         }
         return desc;
+    }
+
+    formatTimestamp(timestamp: string) {
+        return moment(timestamp).format('M/D LTS');
     }
 
     getMessageClass(message: MessageViewModel) {
@@ -115,6 +126,15 @@ export default class AppComponent extends Vue {
         }
     }
 
+    onAdminChatProxy(interlocutor: string) {
+        this.$store.commit(Store.startChatAdminReview, { proxySender: this.foundUser, interlocutor });
+        this.$store.dispatch(Store.refreshChat, this.$route.fullPath)
+            .then(() => {
+                let chat = document.getElementById('chat-row');
+                chat.scrollTop = chat.scrollHeight;
+            });
+    }
+
     onDeleteChat(interlocutor: string) {
         messaging.markConversationDeleted(this.$route.fullPath, interlocutor)
             .then(data => {
@@ -130,88 +150,135 @@ export default class AppComponent extends Vue {
     }
 
     onGroupChat(group: Group) {
-        this.$store.commit(Store.startChatWithGroup, group);
-        this.$store.commit(Store.refreshChat, this.$route.fullPath);
+        this.$store.commit(Store.startChatWithGroup, group.name);
+        this.$store.dispatch(Store.refreshChat, this.$route.fullPath)
+            .then(() => {
+                let chat = document.getElementById('chat-row');
+                chat.scrollTop = chat.scrollHeight;
+            });
     }
 
     onHideChat() {
         this.$store.commit(Store.hideChat);
     }
 
+    onSearchUsernameChange(val: string, oldVal: string) {
+        if (this.searchUsernameTimeout === 0) {
+            this.searchUsernameTimeout = setTimeout(this.suggestSearchUsername, 500);
+        }
+    }
+
     onSystemChat() {
         this.$store.commit(Store.startChatWithSystem);
-        this.$store.commit(Store.refreshChat, this.$route.fullPath);
+        this.$store.dispatch(Store.refreshChat, this.$route.fullPath)
+            .then(() => {
+                let chat = document.getElementById('chat-row');
+                chat.scrollTop = chat.scrollHeight;
+            });
     }
 
     onUserChat(interlocutor: string) {
         this.$store.commit(Store.startChatWithUser, interlocutor);
-        this.$store.commit(Store.refreshChat, this.$route.fullPath);
+        this.$store.dispatch(Store.refreshChat, this.$route.fullPath)
+            .then(() => {
+                let chat = document.getElementById('chat-row');
+                chat.scrollTop = chat.scrollHeight;
+            });
+    }
+
+    onUsernameSearch() {
+        this.foundUser = '';
+        if (this.searchUsername) {
+            fetch(`/api/Account/VerifyUsername/${this.searchUsername}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `bearer ${this.$store.state.userState.token}`
+                    }
+                })
+                .then(response => checkResponse(response, this.$route.fullPath))
+                .then(response => response.json() as Promise<ApiResponseViewModel>)
+                .then(data => {
+                    if (data.error) {
+                        throw new Error(data.error);
+                    } else if (data.response) {
+                        this.foundUser = data.response;
+                        messaging.getProxyConversations(this.$route.fullPath, this.foundUser)
+                            .then(data => {
+                                if (data['error']) {
+                                    throw new Error(data['error']);
+                                } else {
+                                    this.foundUserConversations = data;
+                                }
+                            });
+                    }
+                })
+                .catch(error => {
+                    ErrorMsg.logError('app.onUsernameSearch', error);
+                });
+        }
     }
 
     refreshChat() {
         this.chatRefreshTimeout = 0;
         if (this.$store.state.uiState.messaging.messagingShown
             && this.$store.state.uiState.messaging.chatShown) {
-            this.$store.commit(Store.refreshChat, this.$route.fullPath);
+            this.$store.dispatch(Store.refreshChat, this.$route.fullPath)
+                .then(() => {
+                    this.chatRefreshTimeout = setTimeout(this.refreshChat, 10000);
+                })
+                .catch(() => {
+                    this.chatRefreshTimeout = setTimeout(this.refreshChat, 10000);
+                });
+        } else {
+            this.chatRefreshTimeout = setTimeout(this.refreshChat, 10000);
         }
-        this.chatRefreshTimeout = setTimeout(this.refreshChat, 10000);
     }
 
     refreshConversations() {
         this.conversationRefreshTimeout = 0;
-        messaging.getConversations(this.$route.fullPath)
-            .then(data => {
-                if (data['error']) {
-                    throw new Error(data['error']);
-                } else {
-                    this.conversations = data;
-                }
-                this.conversationRefreshTimeout = setTimeout(this.refreshConversations, 10000);
-            })
-            .catch(error => {
-                ErrorMsg.logError('app.refreshConversations', error);
-            });
+        if (this.$store.state.uiState.messaging.messagingShown) {
+            this.$store.dispatch(Store.refreshConversations, this.$route.fullPath)
+                .then(() => {
+                    this.conversationRefreshTimeout = setTimeout(this.refreshConversations, 10000);
+                })
+                .catch(() => {
+                    this.conversationRefreshTimeout = setTimeout(this.refreshConversations, 10000);
+                });
+        } else {
+            this.conversationRefreshTimeout = setTimeout(this.refreshConversations, 10000);
+        }
     }
 
     refreshGroups() {
         this.groupRefreshTimeout = 0;
-        fetch('/api/Group/GetGroupMemberships/',
-            {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'Authorization': `bearer ${this.$store.state.userState.token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<Group[]>)
-            .then(data => {
-                if (data['error']) {
-                    throw new Error(data['error']);
-                } else {
-                    this.groups = data;
+        if (this.$store.state.userState.token) {
+            this.$store.dispatch(Store.refreshGroups, this.$route.fullPath)
+                .then(() => {
                     this.groupRefreshTimeout = setTimeout(this.refreshGroups, 10000);
-                }
-            })
-            .catch(error => {
-                ErrorMsg.logError('app.refreshGroups', error);
-            });
+                })
+                .catch(() => {
+                    this.groupRefreshTimeout = setTimeout(this.refreshGroups, 10000);
+                });
+        } else {
+            this.groupRefreshTimeout = setTimeout(this.refreshGroups, 10000);
+        }
     }
 
     refreshSystemMessages() {
         this.systemMessageRefreshTimeout = 0;
-        messaging.getSystemMessages(this.$route.fullPath)
-            .then(data => {
-                if (data['error']) {
-                    throw new Error(data['error']);
-                } else {
-                    this.systemMessages = data.length > 0;
+        if (this.$store.state.uiState.messaging.messagingShown) {
+            this.$store.dispatch(Store.refreshSystemMessages, this.$route.fullPath)
+                .then(() => {
                     this.systemMessageRefreshTimeout = setTimeout(this.refreshSystemMessages, 10000);
-                }
-            })
-            .catch(error => {
-                ErrorMsg.logError('app.refreshSystemMessages', error);
-            });
+                })
+                .catch(() => {
+                    this.systemMessageRefreshTimeout = setTimeout(this.refreshSystemMessages, 10000);
+                });
+        } else {
+            this.systemMessageRefreshTimeout = setTimeout(this.refreshSystemMessages, 10000);
+        }
     }
 
     sendMessage() {
@@ -226,6 +293,9 @@ export default class AppComponent extends Vue {
                     } else {
                         this.refreshChat();
                     }
+                    this.messageText = '';
+                    let chat = document.getElementById('chat-row');
+                    chat.scrollTop = chat.scrollHeight;
                 })
                 .catch(error => {
                     ErrorMsg.logError('app.sendMessage', error);
@@ -240,9 +310,38 @@ export default class AppComponent extends Vue {
                     } else {
                         this.refreshChat();
                     }
+                    this.messageText = '';
+                    let chat = document.getElementById('chat-row');
+                    chat.scrollTop = chat.scrollHeight;
                 })
                 .catch(error => {
                     ErrorMsg.logError('app.sendMessage', error);
+                });
+        }
+    }
+
+    suggestSearchUsername() {
+        this.searchUsernameTimeout = 0;
+        if (this.searchUsername) {
+            fetch(`/api/Share/GetShareableUsernameCompletion/${this.searchUsername}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `bearer ${this.$store.state.userState.token}`
+                    }
+                })
+                .then(response => checkResponse(response, this.$route.fullPath))
+                .then(response => response.json() as Promise<ApiResponseViewModel>)
+                .then(data => {
+                    if (data['error']) {
+                        throw new Error(`There was a problem retrieving a username suggestion: ${data['error']}`);
+                    } else {
+                        this.searchUsernameSuggestion = data.response;
+                    }
+                })
+                .catch(error => {
+                    ErrorMsg.logError('app.suggestSearchUsername', error);
                 });
         }
     }

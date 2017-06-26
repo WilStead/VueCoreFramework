@@ -169,12 +169,22 @@ namespace VueCoreFramework.Controllers
             List<GroupViewModel> vms = new List<GroupViewModel>();
             foreach (var group in groups)
             {
-                var managers = await _userManager.GetUsersForClaimAsync(new Claim(CustomClaimTypes.PermissionGroupManager, group.Name));
+                string managerName = null;
+                if (group.Name == CustomRoles.Admin)
+                {
+                    var siteAdmin = await _userManager.GetUsersInRoleAsync(CustomRoles.SiteAdmin);
+                    managerName = siteAdmin.FirstOrDefault().UserName;
+                }
+                else
+                {
+                    var managers = await _userManager.GetUsersForClaimAsync(new Claim(CustomClaimTypes.PermissionGroupManager, group.Name));
+                    managerName = managers.FirstOrDefault()?.UserName;
+                }
                 var members = await _userManager.GetUsersInRoleAsync(group.Name);
                 vms.Add(new GroupViewModel
                 {
                     Name = group.Name,
-                    Manager = managers.FirstOrDefault().UserName,
+                    Manager = managerName,
                     Members = members.Select(m => m.UserName).ToList()
                 });
             }
@@ -247,7 +257,17 @@ namespace VueCoreFramework.Controllers
             var targetUser = await _userManager.FindByNameAsync(username);
             if (targetUser == null)
             {
-                return Json(new { error = ErrorMessages.InvalidTargetUserError });
+                if (roles.Contains(CustomRoles.Admin))
+                {
+                    return Json(new { error = ErrorMessages.InvalidTargetUserError });
+                }
+                // Non-admins are not permitted to know the identities of other users who are not
+                // members of common groups. Therefore, indicate success despite there being no such
+                // member, to avoid exposing a way to determine valid usernames.
+                else
+                {
+                    return Json(new { response = ResponseMessages.Success });
+                }
             }
 
             // Generate an email with a callback URL pointing to the 'AddUserToGroup' action.
@@ -444,9 +464,14 @@ namespace VueCoreFramework.Controllers
             {
                 return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
-            if (group.ToLower().Contains("administrator"))
+            var lowerGroup = group.ToLower();
+            if (lowerGroup.StartsWith("admin") || lowerGroup.EndsWith("admin") || lowerGroup.Contains("administrator"))
             {
                 return Json(new { error = ErrorMessages.OnlyAdminCanBeAdminError });
+            }
+            if (lowerGroup == "true" || lowerGroup == "false")
+            {
+                return Json(new { error = ErrorMessages.InvalidNameError });
             }
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole != null)

@@ -11,16 +11,21 @@
     }
 
     i {
+        color: $color-primary;
         font-size: 1.125em;
         margin-right: 0.5em;
+    }
 
-        &.user-icon {
-            width: 100%;
+    .user-icon {
+        margin-left: 0.5em;
+    }
 
-            &:hover {
-                color: $color-secondary;
-            }
-        }
+    .btn {
+        margin: 0;
+        border: 0;
+        height: auto;
+        width: auto;
+        color: $color-primary;
     }
 
     .fa-twitter:hover {
@@ -48,18 +53,23 @@
 
         i {
             color: $color-primary-text;
-
-            &.user-icon {
-                font-size: 1.5em;
-
-                &:hover {
-                    color: $color-secondary;
-                }
-            }
         }
 
         div {
             flex-direction: row;
+        }
+
+        .btn {
+            &:first-child {
+                i {
+                    margin-left: 0.5em;
+                }
+            }
+        }
+
+        .user-icon {
+            font-size: 1.5em;
+            margin-left: 0;
         }
     }
 }

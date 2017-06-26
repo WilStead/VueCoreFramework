@@ -88,9 +88,12 @@
             <v-alert error :value="errorMessage">{{ errorMessage }}</v-alert>
             <v-alert success :value="successMessage">{{ successMessage }}</v-alert>
             <v-list two-line>
-                <v-subheader v-if="managedGroups.length > 0">Groups you manage</v-subheader>
-                <v-list-group v-for="group in managedGroups" :key="group.name">
-                    <v-list-tile slot="item">
+                <v-subheader v-if="$store.state.userState.managedGroups.length > 0">Groups you manage</v-subheader>
+                <v-list-group v-for="group in $store.state.userState.managedGroups" :key="group.name">
+                    <v-list-tile avatar slot="item">
+                        <v-list-tile-avatar>
+                            <v-btn v-tooltip:top="{ html: 'group chat' }" dark icon class="info--text" @click.native="onGroupChat(group)"><v-icon>group</v-icon></v-btn>
+                        </v-list-tile-avatar>
                         <v-list-tile-content>
                             <v-list-tile-title>{{ group.name }}</v-list-tile-title>
                             <v-list-tile-sub-title>{{ describeMembers(group) }}</v-list-tile-sub-title>
@@ -102,7 +105,7 @@
                     <v-list-item v-for="member in group.members.filter(m => m !== $store.state.userState.username)" :key="member">
                         <v-list-tile avatar>
                             <v-list-tile-avatar>
-                                <v-btn v-tooltip:top="{ html: 'contact' }" dark icon class="info--text" @click.native="onContactGroupMember(member)"><v-icon>person</v-icon></v-btn>
+                                <v-btn v-tooltip:top="{ html: 'chat' }" dark icon class="info--text" @click.native="onContactGroupMember(member)"><v-icon>person</v-icon></v-btn>
                             </v-list-tile-avatar>
                             <v-list-tile-content>
                                 <v-list-tile-title>{{ member }}</v-list-tile-title>
@@ -143,10 +146,13 @@
                         </v-list-tile>
                     </v-list-item>
                 </v-list-group>
-                <v-divider v-if="managedGroups.length > 0 && joinedGroups.length > 0"></v-divider>
-                <v-subheader v-if="joinedGroups.length > 0">Groups you belong to</v-subheader>
-                <v-list-group v-for="group in joinedGroups" :key="group.name">
+                <v-divider v-if="$store.state.userState.managedGroups.length > 0 && $store.state.userState.joinedGroups.length > 0"></v-divider>
+                <v-subheader v-if="$store.state.userState.joinedGroups.length > 0">Groups you belong to</v-subheader>
+                <v-list-group v-for="group in $store.state.userState.joinedGroups" :key="group.name">
                     <v-list-tile slot="item">
+                        <v-list-tile-avatar>
+                            <v-btn v-tooltip:top="{ html: 'group chat' }" dark icon class="info--text" @click.native="onGroupChat(group)"><v-icon>group</v-icon></v-btn>
+                        </v-list-tile-avatar>
                         <v-list-tile-content>
                             <v-list-tile-title>{{ group.name }}</v-list-tile-title>
                             <v-list-tile-sub-title>{{ describeMembers(group) }}</v-list-tile-sub-title>
@@ -178,7 +184,7 @@
                     </v-list-item>
                 </v-list-group>
             </v-list>
-            <v-divider v-if="managedGroups.length > 0 && joinedGroups.length > 0"></v-divider>
+            <v-divider v-if="$store.state.userState.managedGroups.length > 0 && $store.state.userState.joinedGroups.length > 0"></v-divider>
             <v-card-row v-if="activity" class="activity-row">
                 <v-progress-circular indeterminate class="primary--text"></v-progress-circular>
             </v-card-row>
@@ -210,21 +216,20 @@
             </v-card-row>
             <v-card-row v-if="$store.state.userState.isAdmin">
                 <v-card-text>
-                    <v-container fluid>
-                        <v-layout row wrap>
-                            <v-flex xs9>
-                                <v-text-field label="Group name" v-model="searchGroup" @input="onSearchGroupChange" :hint="searchGroupSuggestion"></v-text-field>
-                            </v-flex>
-                            <v-flex xs3>
-                                <v-btn primary dark icon @click.native="onGroupSearch"><v-icon>search</v-icon></v-btn>
-                            </v-flex>
-                        </v-layout>
-                    </v-container>
+                    <v-text-field label="Group name"
+                                  v-model="searchGroup"
+                                  @input="onSearchGroupChange"
+                                  :hint="searchGroupSuggestion"
+                                  append-icon="search"
+                                  :append-icon-cb="onGroupSearch"></v-text-field>
                 </v-card-text>
             </v-card-row>
             <v-list two-line v-if="$store.state.userState.isAdmin && foundGroup">
                 <v-list-group>
                     <v-list-tile slot="item">
+                        <v-list-tile-avatar>
+                            <v-btn v-tooltip:top="{ html: 'group chat' }" dark icon class="info--text" @click.native="onGroupChat(foundGroup)"><v-icon>group</v-icon></v-btn>
+                        </v-list-tile-avatar>
                         <v-list-tile-content>
                             <v-list-tile-title>{{ foundGroup.name }}</v-list-tile-title>
                             <v-list-tile-sub-title>{{ describeMembers(foundGroup) }}</v-list-tile-sub-title>

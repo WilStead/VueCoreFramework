@@ -2,9 +2,11 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using VueCoreFramework.Data;
@@ -63,6 +65,8 @@ namespace VueCoreFramework.Controllers
 
             List<ConversationViewModel> vms = new List<ConversationViewModel>();
             foreach(var message in _context.Messages
+                .Include(m => m.Sender)
+                .Include(m => m.SingleRecipient)
                 .Where(m => !m.IsSystemMessage
                 && ((m.Sender == user && !m.SenderDeleted)
                 || (m.SingleRecipient == user && !m.RecipientDeleted))))
@@ -112,7 +116,10 @@ namespace VueCoreFramework.Controllers
             var manager = managers.FirstOrDefault();
 
             var vms = new List<MessageViewModel>();
-            foreach (var message in _context.Messages.Where(m => m.GroupRecipient == groupRole)
+            foreach (var message in _context.Messages
+                .Include(m => m.GroupRecipient)
+                .Include(m => m.Sender)
+                .Where(m => m.GroupRecipient == groupRole)
                 .OrderBy(m => m.Timestamp))
             {
                 var roles = await _userManager.GetRolesAsync(message.Sender);
@@ -123,6 +130,104 @@ namespace VueCoreFramework.Controllers
                     IsUserAdmin = roles.Contains(CustomRoles.Admin),
                     IsUserManager = message.Sender == manager,
                     IsUserSiteAdmin = roles.Contains(CustomRoles.SiteAdmin),
+                    Username = message.SenderUsername,
+                    Timestamp = message.Timestamp
+                });
+            }
+            return Json(vms);
+        }
+
+        /// <summary>
+        /// Called to get a list of users involved in individual conversations in which the given
+        /// user is a sender or recipient. For use by admins to review chat logs.
+        /// </summary>
+        /// <param name="proxy">The name of the user whose conversation will be retrieved.</param>
+        /// <returns>
+        /// An error if there is a problem; or a list of <see cref="ConversationViewModel"/>s.
+        /// </returns>
+        [HttpGet("{proxy}")]
+        public async Task<IActionResult> GetProxyConversations(string proxy)
+        {
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (user.AdminLocked)
+            {
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            if (!roles.Contains(CustomRoles.Admin))
+            {
+                return Json(new { error = ErrorMessages.AdminOnlyError });
+            }
+
+            List<ConversationViewModel> vms = new List<ConversationViewModel>();
+            foreach (var message in _context.Messages
+                .Where(m => !m.IsSystemMessage
+                && (m.SenderUsername == proxy || m.SingleRecipientName == proxy)))
+            {
+                var interlocutor = message.SenderUsername == proxy ? message.SingleRecipientName : message.SenderUsername;
+                var conversation = vms.FirstOrDefault(v => v.Interlocutor == interlocutor);
+                if (conversation == null)
+                {
+                    conversation = new ConversationViewModel { Interlocutor = interlocutor };
+                    vms.Add(conversation);
+                }
+            }
+            return Json(vms);
+        }
+
+        /// <summary>
+        /// Called to get the messages between a proxy user and the given user. For use by admins to
+        /// review chat logs.
+        /// </summary>
+        /// <param name="proxy">
+        /// The name of the user whose conversation with the other user will be retrieved.
+        /// </param>
+        /// <param name="username">
+        /// The name of the user whose conversation with the proxy user will be retrieved.
+        /// </param>
+        /// <returns>
+        /// An error if there is a problem; or the ordered list of <see cref="MessageViewModel"/>s.
+        /// </returns>
+        [HttpGet("{username}")]
+        public async Task<IActionResult> GetProxyUserMessages(string proxy, string username)
+        {
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (user.AdminLocked)
+            {
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            if (!roles.Contains(CustomRoles.Admin))
+            {
+                return Json(new { error = ErrorMessages.AdminOnlyError });
+            }
+
+            var vms = new List<MessageViewModel>();
+            foreach (var message in _context.Messages
+                .Include(m => m.Sender)
+                .Include(m => m.SingleRecipient)
+                .Where(m => (m.SingleRecipientName == proxy && m.SenderUsername == username)
+                || (m.SingleRecipientName == username && m.SenderUsername == proxy))
+                .OrderBy(m => m.Timestamp))
+            {
+                var recipientRoles = await _userManager.GetRolesAsync(message.SenderUsername == proxy ? message.SingleRecipient : message.Sender);
+                vms.Add(new MessageViewModel
+                {
+                    Content = message.Content,
+                    IsSystemMessage = message.IsSystemMessage,
+                    IsUserAdmin = recipientRoles.Contains(CustomRoles.Admin),
+                    IsUserSiteAdmin = recipientRoles.Contains(CustomRoles.SiteAdmin),
+                    Received = message.Received,
                     Username = message.SenderUsername,
                     Timestamp = message.Timestamp
                 });
@@ -150,7 +255,7 @@ namespace VueCoreFramework.Controllers
             {
                 return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
-            
+
             return Json(_context.Messages.Where(m =>
                 m.SingleRecipient == user && m.IsSystemMessage)
                 .OrderBy(m => m.Timestamp)
@@ -158,6 +263,7 @@ namespace VueCoreFramework.Controllers
                 {
                     Content = m.Content,
                     IsSystemMessage = true,
+                    Received = m.Received,
                     Timestamp = m.Timestamp
                 }));
         }
@@ -187,9 +293,11 @@ namespace VueCoreFramework.Controllers
             }
 
             var vms = new List<MessageViewModel>();
-            foreach (var message in _context.Messages.Where(m =>
-               (m.SingleRecipient == user && m.SenderUsername == username && !m.RecipientDeleted)
-               || (m.SingleRecipientName == username && m.Sender == user && !m.SenderDeleted))
+            foreach (var message in _context.Messages
+                .Include(m => m.Sender)
+                .Include(m => m.SingleRecipient)
+                .Where(m => (m.SingleRecipient == user && m.SenderUsername == username && !m.RecipientDeleted)
+                || (m.SingleRecipientName == username && m.Sender == user && !m.SenderDeleted))
                 .OrderBy(m => m.Timestamp))
             {
                 var roles = await _userManager.GetRolesAsync(message.Sender == user ? message.SingleRecipient : message.Sender);
@@ -199,7 +307,8 @@ namespace VueCoreFramework.Controllers
                     IsSystemMessage = message.IsSystemMessage,
                     IsUserAdmin = roles.Contains(CustomRoles.Admin),
                     IsUserSiteAdmin = roles.Contains(CustomRoles.SiteAdmin),
-                    Username = message.Sender == user ? message.SingleRecipientName : message.SenderUsername,
+                    Received = message.Received,
+                    Username = message.SenderUsername,
                     Timestamp = message.Timestamp
                 });
             }
@@ -282,13 +391,40 @@ namespace VueCoreFramework.Controllers
         }
 
         /// <summary>
+        /// Called to mark all system messages sent to the current user read.
+        /// </summary>
+        /// <returns>An error if there is a problem; or a response indicating success.</returns>
+        [HttpPost]
+        public async Task<IActionResult> MarkSystemMessagesRead()
+        {
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (user.AdminLocked)
+            {
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+            }
+
+            foreach (var message in _context.Messages.Where(m => m.SingleRecipient == user && m.IsSystemMessage))
+            {
+                message.Received = true;
+            }
+            await _context.SaveChangesAsync();
+
+            return Json(new { response = ResponseMessages.Success });
+        }
+
+        /// <summary>
         /// Called to send a message to the given group.
         /// </summary>
         /// <param name="group">The name of the group to which the message will be sent.</param>
         /// <param name="message">The message to send.</param>
         /// <returns>An error if there is a problem; or a response indicating success.</returns>
         [HttpPost("{group}")]
-        public async Task<IActionResult> SendMessageToGroup(string group, [FromBody]string message)
+        public async Task<IActionResult> SendMessageToGroup(string group, string message)
         {
             if (string.IsNullOrEmpty(message) || message.Length > 125)
             {
@@ -335,7 +471,7 @@ namespace VueCoreFramework.Controllers
         /// <param name="message">The message to send.</param>
         /// <returns>An error if there is a problem; or a response indicating success.</returns>
         [HttpPost("{username}")]
-        public async Task<IActionResult> SendMessageToUser(string username, [FromBody]string message)
+        public async Task<IActionResult> SendMessageToUser(string username, string message)
         {
             if (string.IsNullOrEmpty(message) || message.Length > 125)
             {

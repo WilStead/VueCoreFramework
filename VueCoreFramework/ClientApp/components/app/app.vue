@@ -1,52 +1,60 @@
 <template>
     <v-app id='app-root'>
-        <v-navigation-drawer persistent clipped disable-route-watcher v-model="sideNav">
+        <v-navigation-drawer light persistent disable-route-watcher v-model="sideNav">
             <v-list>
-                <template v-for="menuItem in $store.state.uiState.menuItems">
-                    <menu-item-component :menuItem="menuItem" :submenu="menuItem.submenu" />
-                </template>
+                <menu-item-component v-for="menuItem in $store.state.uiState.menuItems" :menuItem="menuItem" :submenu="menuItem.submenu" :key="menuItem.key" />
             </v-list>
         </v-navigation-drawer>
-        <v-navigation-drawer right persistent clipped disable-route-watcher v-model="$store.state.uiState.messaging.messagingShown">
-            <v-card v-if="$store.state.uiState.messaging.chatShown">
-                <v-card-row class="primary">
+        <v-navigation-drawer right light persistent disable-route-watcher v-model="$store.state.uiState.messaging.messagingShown">
+            <v-card v-if="$store.state.uiState.messaging.chatShown" style="display: flex; flex-flow: column nowrap; min-height: 100%;">
+                <v-card-row class="primary" style="flex-grow: 0;">
                     <v-btn icon @click.native="onHideChat"><v-icon>arrow_back</v-icon></v-btn>
                     <v-card-title v-if="$store.state.uiState.messaging.groupChat">{{ $store.state.uiState.messaging.groupChat }}</v-card-title>
                     <v-card-title v-else>{{ $store.state.uiState.messaging.interlocutor }}</v-card-title>
+                    <v-subheader v-if="$store.state.uiState.messaging.proxySender">{{ $store.state.uiState.messaging.proxySender }}</v-subheader>
                 </v-card-row>
                 <v-alert error :value="chatErrorMessage">{{ chatErrorMessage }}</v-alert>
-                <v-card-row>
-                    <v-list dense>
-                        <template v-for="message in $store.state.uiState.messaging.messages" :key="message.timestamp">
-                            <v-list-tile avatar>
-                                <v-list-tile-avatar v-tooltip:bottom="{ html: message.timestamp }" v-if="message.isSystemMessage" class="grey--text text--darken-1">[SYSTEM]:</v-list-tile-avatar>
-                                <v-list-tile-avatar v-tooltip:bottom="{ html: message.timestamp }" v-else :class="getMessageClass(message)">[{{ message.username }}]:</v-list-tile-avatar>
+                <v-card-row class="chat-row" id="chat-row">
+                    <v-card-text class="pa-0">
+                        <v-list dense>
+                            <v-list-tile avatar
+                                         v-for="message in $store.state.uiState.messaging.messages"
+                                         :key="message.timestamp"
+                                         v-tooltip:top="{ html: formatTimestamp(message.timestamp) }">
+                                <v-list-tile-content v-if="message.isSystemMessage" class="grey--text text--darken-1">[SYSTEM]:</v-list-tile-content>
+                                <v-list-tile-content v-else :class="getMessageClass(message)">[{{ message.username }}]:</v-list-tile-content>
                                 <v-list-tile-content>
                                     <v-list-tile-title>
                                         <vue-markdown :source="message.content"></vue-markdown>
                                     </v-list-tile-title>
                                 </v-list-tile-content>
                             </v-list-tile>
-                        </template>
-                    </v-list>
+                        </v-list>
+                    </v-card-text>
                 </v-card-row>
-                <v-divider></v-divider>
-                <v-card-row>
-                    <v-card-text>
+                <v-divider style="flex-grow: 0; flex-basis: 1px;"></v-divider>
+                <v-card-row v-if="!$store.state.uiState.messaging.proxySender && ($store.state.uiState.messaging.groupChat || $store.state.uiState.messaging.interlocutor)"
+                            style="flex-grow: 0;">
+                    <v-card-text class="pt-0 pb-0">
                         <v-text-field v-model="messageText"
                                       max="125"
                                       :counter="messageText.length > 125"
                                       label="Send a message"
                                       hint="Accepts markdown"
                                       append-icon="send"
-                                      append-icon-cb="sendMessage"
-                                      single-line></v-text-field>
+                                      :append-icon-cb="sendMessage"
+                                      single-line
+                                      style="margin: 0;"></v-text-field>
                     </v-card-text>
                 </v-card-row>
             </v-card>
             <v-list v-else two-line>
-                <v-list-tile v-if="systemMessages" avatar>
-                    <v-list-tile-avatar><v-icon>settings</v-icon></v-list-tile-avatar>
+                <v-list-tile v-if="$store.state.uiState.messaging.systemMessages.length" avatar>
+                    <v-list-tile-avatar>
+                        <v-icon v-if="$store.state.uiState.messaging.systemMessages.filter(m => !m.received).length"
+                                v-badge="{ value: $store.state.uiState.messaging.systemMessages.filter(m => !m.received).length, overlap: true }">settings</v-icon>
+                        <v-icon v-else>settings</v-icon>
+                    </v-list-tile-avatar>
                     <v-list-tile-content>
                         <v-list-tile-title>System Messages</v-list-tile-title>
                     </v-list-tile-content>
@@ -54,11 +62,11 @@
                         <v-btn dark icon class="info--text" @click.native="onSystemChat"><v-icon>chat</v-icon></v-btn>
                     </v-list-tile-action>
                 </v-list-tile>
-                <v-divider v-if="systemMessages"></v-divider>
+                <v-divider v-if="$store.state.uiState.messaging.systemMessages.length"></v-divider>
                 <v-subheader v-if="groups.length > 0">Groups</v-subheader>
                 <v-list-item v-for="group in groups" :key="group.name">
                     <v-list-tile avatar>
-                        <v-list-tile-avatar><v-icon>group</v-icon></v-list-tile-avatar>
+                        <v-list-tile-avatar><v-icon class="primary--text">group</v-icon></v-list-tile-avatar>
                         <v-list-tile-content>
                             <v-list-tile-title>{{ group.name }}</v-list-tile-title>
                             <v-list-tile-sub-title>{{ describeMembers(group) }}</v-list-tile-sub-title>
@@ -68,10 +76,10 @@
                         </v-list-tile-action>
                     </v-list-tile>
                 </v-list-item>
-                <v-divider v-if="groups.length > 0 && conversations.length > 0"></v-divider>
-                <v-list-item v-for="conversation in conversations.filter(c => c.unreadCount > 0)" :key="conversation.interlocutor">
+                <v-divider v-if="groups.length > 0 && $store.state.uiState.messaging.conversations.length > 0"></v-divider>
+                <v-list-item v-for="conversation in $store.state.uiState.messaging.conversations.filter(c => c.unreadCount > 0)" :key="conversation.interlocutor">
                     <v-list-tile avatar>
-                        <v-list-tile-avatar><v-icon v-badge="{ value: conversation.unreadCount }">person</v-icon></v-list-tile-avatar>
+                        <v-list-tile-avatar><v-icon v-badge="{ value: conversation.unreadCount, overlap: true }" class="blue-grey lighten-4 primary--text info--after">person</v-icon></v-list-tile-avatar>
                         <v-list-tile-content>
                             <v-list-tile-title>{{ conversation.interlocutor }}</v-list-tile-title>
                         </v-list-tile-content>
@@ -83,16 +91,60 @@
                         </v-list-tile-action>
                     </v-list-tile>
                 </v-list-item>
-                <v-list-item v-for="conversation in conversations.filter(c => c.unreadCount === 0)" :key="conversation.interlocutor">
+                <v-list-item v-for="conversation in $store.state.uiState.messaging.conversations.filter(c => c.unreadCount === 0)" :key="conversation.interlocutor">
                     <v-list-tile avatar>
-                        <v-list-tile-avatar><v-icon>person</v-icon></v-list-tile-avatar>
+                        <v-list-tile-avatar><v-icon class="primary--text">person</v-icon></v-list-tile-avatar>
                         <v-list-tile-content>
                             <v-list-tile-title>{{ conversation.interlocutor }}</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
                             <v-btn dark icon class="info--text" @click.native="onUserChat(conversation.interlocutor)"><v-icon>chat</v-icon></v-btn>
                         </v-list-tile-action>
+                        <v-list-tile-action>
+                            <v-btn dark icon class="error--text" @click.native="onDeleteChat(conversation.interlocutor)"><v-icon>delete</v-icon></v-btn>
+                        </v-list-tile-action>
                     </v-list-tile>
+                </v-list-item>
+                <v-list-item>
+                    <v-list-tile>
+                        <v-list-tile-content>
+                            <v-list-tile-title>
+                                <v-text-field label="Username"
+                                              v-model="searchUsername"
+                                              @input="onSearchUsernameChange"
+                                              :hint="searchUsernameSuggestion"
+                                              append-icon="search"
+                                              :append-icon-cb="onUsernameSearch"></v-text-field>
+                            </v-list-tile-title>
+                        </v-list-tile-content>
+                    </v-list-tile>
+                </v-list-item>
+                <v-list-item v-if="foundUser">
+                    <v-list-group>
+                        <v-list-tile avatar slot="item">
+                            <v-list-tile-avatar>
+                                <v-btn dark icon class="info--text" @click.native="onUserChat(foundUser)"><v-icon>chat</v-icon></v-btn>
+                            </v-list-tile-avatar>
+                            <v-list-tile-content>
+                                <v-list-tile-title>{{ foundUser }}</v-list-tile-title>
+                            </v-list-tile-content>
+                            <v-list-tile-action v-if="$store.state.userState.isAdmin && foundUserConversations.length">
+                                <v-icon>keyboard_arrow_down</v-icon>
+                            </v-list-tile-action>
+                        </v-list-tile>
+                        <v-list-subheader v-if="foundUserConversations.length">Conversations</v-list-subheader>
+                        <v-list-item v-for="conversation in foundUserConversations" :key="conversation.interlocutor">
+                            <v-list-tile avatar>
+                                <v-list-tile-avatar><v-icon class="primary--text">person</v-icon></v-list-tile-avatar>
+                                <v-list-tile-content>
+                                    <v-list-tile-title>{{ conversation.interlocutor }}</v-list-tile-title>
+                                </v-list-tile-content>
+                                <v-list-tile-action>
+                                    <v-btn dark icon class="info--text" @click.native="onAdminChatProxy(conversation.interlocutor)"><v-icon>chat</v-icon></v-btn>
+                                </v-list-tile-action>
+                            </v-list-tile>
+                        </v-list-item>
+                    </v-list-group>
                 </v-list-item>
             </v-list>
         </v-navigation-drawer>

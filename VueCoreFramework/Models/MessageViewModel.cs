@@ -33,6 +33,11 @@ namespace VueCoreFramework.Models
         public bool IsUserSiteAdmin { get; set; }
 
         /// <summary>
+        /// Indicates that the single recipient has read the message.
+        /// </summary>
+        public bool Received { get; set; }
+
+        /// <summary>
         /// The name of the user who sent the message.
         /// </summary>
         public string Username { get; set; }

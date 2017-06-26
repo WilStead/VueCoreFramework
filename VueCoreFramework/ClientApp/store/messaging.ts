@@ -1,4 +1,5 @@
 ﻿import { ApiResponseViewModel, checkResponse } from '../router';
+import { store } from './store';
 
 export interface MessageViewModel {
     /**
@@ -25,6 +26,11 @@ export interface MessageViewModel {
      * Indicates that the user who sent the message is the site admin.
      */
     isUserSiteAdmin?: boolean;
+
+    /**
+     * Indicates that the single recipient has read the message.
+     */
+    received?: boolean;
 
     /**
      * The name of the user who sent the message.
@@ -80,6 +86,52 @@ export const messaging = {
      */
     getGroupMessages(returnPath: string, group: string): Promise<MessageViewModel[]> {
         return fetch(`/api/Message/GetGroupMessages/${group}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${store.state.userState.token}`
+                }
+            })
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<MessageViewModel[]>)
+            .catch(error => {
+                throw new Error(`There was a problem with your request. ${error}`);
+            });
+    },
+
+    /**
+     * Called to get a list of users involved in individual conversations in which the given user
+     * is a sender or recipient. For use by admins to review chat logs.
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @param {string} proxy The name of the user whose conversation will be retrieved.
+     * @returns {ConversationViewModel[]} The list of conversations.
+     */
+    getProxyConversations(returnPath: string, proxy: string): Promise<ConversationViewModel[]> {
+        return fetch(`/api/Message/GetProxyConversations`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${store.state.userState.token}`
+                }
+            })
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<ConversationViewModel[]>)
+            .catch(error => {
+                throw new Error(`There was a problem with your request. ${error}`);
+            });
+    },
+
+    /**
+     * Called to get the messages between a proxy user and the given user. For use by admins to review chat logs.
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @param {string} proxy The name of the user whose conversation with the other user will be retrieved.
+     * @param {string} username The name of the user whose conversation with the proxy user will be retrieved.
+     * @returns {MessageViewModel[]} The ordered list of messages.
+     */
+    getProxyUserMessages(returnPath: string, proxy: string, username: string): Promise<MessageViewModel[]> {
+        return fetch(`/api/Message/GetProxyUserMessages/${proxy}/${username}`,
             {
                 method: 'GET',
                 headers: {
@@ -184,6 +236,27 @@ export const messaging = {
     },
 
     /**
+     * Called to mark all system messages sent to the current user read.
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @returns {ApiResponseViewModel} A response object containing any error which occurred.
+     */
+    markSystemMessagesRead(returnPath: string): Promise<ApiResponseViewModel> {
+        return fetch('/api/Message/MarkSystemMessagesRead',
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${store.state.userState.token}`
+                }
+            })
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .catch(error => {
+                throw new Error(`There was a problem with your request. ${error}`);
+            });
+    },
+
+    /**
      * Called to send a message to the given group.
      * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
      * @param {string} group The name of the group to which the message will be sent.
@@ -191,15 +264,13 @@ export const messaging = {
      * @returns {ApiResponseViewModel} A response object containing any error which occurred.
      */
     sendMessageToGroup(returnPath: string, group: string, message: string): Promise<ApiResponseViewModel> {
-        return fetch(`/api/Message/SendMessageToGroup/${group}`,
+        return fetch(`/api/Message/SendMessageToGroup/${group}?message=${encodeURIComponent(message)}`,
             {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
-                    'Content-Type': 'application/json',
                     'Authorization': `bearer ${store.state.userState.token}`
-                },
-                body: message
+                }
             })
             .then(response => checkResponse(response, returnPath))
             .then(response => response.json() as Promise<ApiResponseViewModel>)
@@ -216,15 +287,13 @@ export const messaging = {
      * @returns {ApiResponseViewModel} A response object containing any error which occurred.
      */
     sendMessageToUser(returnPath: string, username: string, message: string): Promise<ApiResponseViewModel> {
-        return fetch(`/api/Message/SendMessageToUser/${username}`,
+        return fetch(`/api/Message/SendMessageToUser/${username}?message=${encodeURIComponent(message)}`,
             {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
-                    'Content-Type': 'application/json',
                     'Authorization': `bearer ${store.state.userState.token}`
-                },
-                body: message
+                }
             })
             .then(response => checkResponse(response, returnPath))
             .then(response => response.json() as Promise<ApiResponseViewModel>)

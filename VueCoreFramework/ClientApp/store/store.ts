@@ -4,7 +4,8 @@ Vue.use(Vuex);
 import { uiState, getMenuItems, getChildItems } from './uiStore';
 import { userState, PermissionData, SharePermission } from './userStore';
 import { Repository } from './repository';
-import { messaging } from './messaging';
+import { ConversationViewModel, MessageViewModel, messaging } from './messaging';
+import { Group } from '../components/group/manage';
 import * as ErrorLog from '../error-msg';
 
 /**
@@ -114,60 +115,15 @@ export const store = new Vuex.Store({
         },
 
         logout(state) {
+            state.uiState.messaging.groupChat = '';
+            state.uiState.messaging.proxySender = '';
+            state.uiState.messaging.interlocutor = '';
+            state.uiState.messaging.chatShown = false;
+            state.uiState.messaging.messagingShown = false;
             state.userState.username = 'user';
             state.userState.email = 'user@example.com';
             state.userState.token = '';
             localStorage.removeItem('token');
-            fetch('/api/Account/Logout', { method: 'POST' });
-        },
-
-        /**
-         * Updates the messages in the chat window.
-         */
-        refreshChat(state, returnPath) {
-            if (state.uiState.messaging.groupChat) {
-                messaging.getGroupMessages(returnPath, state.uiState.messaging.groupChat)
-                    .then(data => {
-                        if (data['error']) {
-                            throw new Error(data['error']);
-                        } else {
-                            state.uiState.messaging.messages = data;
-                        }
-                    })
-                    .catch(error => {
-                        ErrorLog.logError('store.refreshChat', error);
-                    });
-            } else if (state.uiState.messaging.interlocutor) {
-                messaging.getUserMessages(returnPath, state.uiState.messaging.interlocutor)
-                    .then(data => {
-                        if (data['error']) {
-                            throw new Error(data['error']);
-                        } else {
-                            state.uiState.messaging.messages = data;
-                            messaging.markConversationRead(returnPath, state.uiState.messaging.interlocutor)
-                                .then(data => {
-                                    if (data['error']) {
-                                        throw new Error(data['error']);
-                                    }
-                                });
-                        }
-                    })
-                    .catch(error => {
-                        ErrorLog.logError('store.refreshChat', error);
-                    });
-            } else {
-                messaging.getSystemMessages(returnPath)
-                    .then(data => {
-                        if (data['error']) {
-                            throw new Error(data['error']);
-                        } else {
-                            state.uiState.messaging.messages = data;
-                        }
-                    })
-                    .catch(error => {
-                        ErrorLog.logError('store.refreshChat', error);
-                    });
-            }
         },
 
         /**
@@ -194,7 +150,14 @@ export const store = new Vuex.Store({
         /**
          * Sets the current users managed groups.
          */
-        setManagedGroups(state, managedGroups: string[]) {
+        setJoinedGroups(state, joinedGroups: Group[]) {
+            state.userState.joinedGroups = joinedGroups;
+        },
+
+        /**
+         * Sets the current users managed groups.
+         */
+        setManagedGroups(state, managedGroups: Group[]) {
             state.userState.managedGroups = managedGroups;
         },
 
@@ -213,9 +176,21 @@ export const store = new Vuex.Store({
         },
 
         /**
+         * Starts the chat UI with the given user.
+         */
+        startChatAdminReview(state, payload) {
+            state.uiState.messaging.groupChat = '';
+            state.uiState.messaging.proxySender = payload.proxySender;
+            state.uiState.messaging.interlocutor = payload.interlocutor;
+            state.uiState.messaging.chatShown = true;
+            state.uiState.messaging.messagingShown = true;
+        },
+
+        /**
          * Starts the chat UI with the given group.
          */
         startChatWithGroup(state, group: string) {
+            state.uiState.messaging.proxySender = '';
             state.uiState.messaging.interlocutor = '';
             state.uiState.messaging.groupChat = group;
             state.uiState.messaging.chatShown = true;
@@ -226,6 +201,7 @@ export const store = new Vuex.Store({
          * Shown the chat UI for system messages.
          */
         startChatWithSystem(state) {
+            state.uiState.messaging.proxySender = '';
             state.uiState.messaging.groupChat = '';
             state.uiState.messaging.interlocutor = '';
             state.uiState.messaging.chatShown = true;
@@ -236,6 +212,7 @@ export const store = new Vuex.Store({
          * Starts the chat UI with the given user.
          */
         startChatWithUser(state, username: string) {
+            state.uiState.messaging.proxySender = '';
             state.uiState.messaging.groupChat = '';
             state.uiState.messaging.interlocutor = username;
             state.uiState.messaging.chatShown = true;
@@ -247,6 +224,14 @@ export const store = new Vuex.Store({
          */
         toggleMessaging(state) {
             state.uiState.messaging.messagingShown = !state.uiState.messaging.messagingShown;
+        },
+
+        updateConversations(state, conversations: ConversationViewModel[]) {
+            state.uiState.messaging.conversations = conversations;
+        },
+
+        updateMessages(state, messages: MessageViewModel[]) {
+            state.uiState.messaging.messages = messages;
         },
 
         /**
@@ -270,6 +255,154 @@ export const store = new Vuex.Store({
                     state.userState.permissions[permission.dataType].permission = permission.permission;
                 }
             }
+        },
+
+        updateSystemMessages(state, messages: MessageViewModel[]) {
+            state.uiState.messaging.systemMessages = messages;
+        }
+    },
+    actions: {
+        /**
+         * Updates the messages in the chat window.
+         */
+        refreshChat({ commit, state }, returnPath) {
+            if (state.uiState.messaging.groupChat) {
+                return messaging.getGroupMessages(returnPath, state.uiState.messaging.groupChat)
+                    .then(data => {
+                        if (data['error']) {
+                            throw new Error(data['error']);
+                        } else {
+                            commit(updateMessages, data);
+                        }
+                    })
+                    .catch(error => {
+                        commit(updateMessages, []);
+                        ErrorLog.logError('store.refreshChat', error);
+                    });
+            } else if (state.uiState.messaging.proxySender) {
+                return messaging.getProxyUserMessages(returnPath, state.uiState.messaging.proxySender, state.uiState.messaging.interlocutor)
+                    .then(data => {
+                        if (data['error']) {
+                            throw new Error(data['error']);
+                        } else {
+                            commit(updateMessages, data);
+                        }
+                    })
+                    .catch(error => {
+                        commit(updateMessages, []);
+                        ErrorLog.logError('store.refreshChat', error);
+                    });
+            } else if (state.uiState.messaging.interlocutor) {
+                return messaging.getUserMessages(returnPath, state.uiState.messaging.interlocutor)
+                    .then(data => {
+                        if (data['error']) {
+                            throw new Error(data['error']);
+                        } else {
+                            commit(updateMessages, data);
+                            messaging.markConversationRead(returnPath, state.uiState.messaging.interlocutor)
+                                .then(data => {
+                                    if (data['error']) {
+                                        throw new Error(data['error']);
+                                    }
+                                });
+                        }
+                    })
+                    .catch(error => {
+                        commit(updateMessages, []);
+                        ErrorLog.logError('store.refreshChat', error);
+                    });
+            } else {
+                return messaging.getSystemMessages(returnPath)
+                    .then(data => {
+                        if (data['error']) {
+                            throw new Error(data['error']);
+                        } else {
+                            commit(updateMessages, data);
+                            commit(updateSystemMessages, data);
+                            messaging.markSystemMessagesRead(returnPath)
+                                .then(data => {
+                                    if (data['error']) {
+                                        throw new Error(data['error']);
+                                    }
+                                });
+                        }
+                    })
+                    .catch(error => {
+                        commit(updateMessages, []);
+                        commit(updateSystemMessages, []);
+                        ErrorLog.logError('store.refreshChat', error);
+                    });
+            }
+        },
+
+        /**
+         * Updates the user's conversations.
+         */
+        refreshConversations({ commit }, returnPath) {
+            return messaging.getConversations(returnPath)
+                .then(data => {
+                    if (data['error']) {
+                        throw new Error(data['error']);
+                    } else {
+                        commit(updateConversations, data);
+                    }
+                })
+                .catch(error => {
+                    ErrorLog.logError('store.refreshConversations', error);
+                });
+        },
+
+        refreshGroups({ commit, state }, returnPath) {
+            return fetch('/api/Group/GetGroupMemberships/',
+                {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `bearer ${state.userState.token}`
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(response.statusText);
+                    }
+                    return response;
+                })
+                .then(response => response.json() as Promise<Group[]>)
+                .then(data => {
+                    if (data['error']) {
+                        throw new Error(data['error']);
+                    } else {
+                        let managedGroups = [];
+                        let joinedGroups = [];
+                        for (var i = 0; i < data.length; i++) {
+                            if (data[i].manager === state.userState.username
+                                || data[i].name === 'Admin' && state.userState.isSiteAdmin) {
+                                managedGroups.push(data[i]);
+                            } else {
+                                joinedGroups.push(data[i]);
+                            }
+                        }
+                        commit(setManagedGroups, managedGroups);
+                        commit(setJoinedGroups, joinedGroups);
+                    }
+                })
+                .catch(error => {
+                    ErrorLog.logError('store.refreshGroups', error);
+                });
+        },
+
+        refreshSystemMessages({ commit }, returnPath) {
+            return messaging.getSystemMessages(returnPath)
+                .then(data => {
+                    if (data['error']) {
+                        throw new Error(data['error']);
+                    } else {
+                        commit(updateSystemMessages, data);
+                    }
+                })
+                .catch(error => {
+                    ErrorLog.logError('store.refreshSystemMessages', error);
+                });
         }
     }
 });
@@ -278,14 +411,22 @@ export const addTypeRoutes = 'addTypeRoutes';
 export const hideChat = 'hideChat';
 export const logout = 'logout';
 export const refreshChat = 'refreshChat';
+export const refreshConversations = 'refreshConversations';
+export const refreshGroups = 'refreshGroups';
+export const refreshSystemMessages = 'refreshSystemMessages';
 export const setEmail = 'setEmail';
 export const setIsAdmin = 'setIsAdmin';
 export const setIsSiteAdmin = 'setIsSiteAdmin';
+export const setJoinedGroups = 'setJoinedGroups';
 export const setManagedGroups = 'setManagedGroups';
 export const setToken = 'setToken';
 export const setUsername = 'setUsername';
+export const startChatAdminReview = 'startChatAdminReview';
 export const startChatWithGroup = 'startChatWithGroup';
 export const startChatWithSystem = 'startChatWithSystem';
 export const startChatWithUser = 'startChatWithUser';
 export const toggleMessaging = 'toggleMessaging';
+export const updateConversations = 'updateConversations';
+export const updateMessages = 'updateMessages';
 export const updatePermission = 'updatePermission';
+export const updateSystemMessages = 'updateSystemMessages';

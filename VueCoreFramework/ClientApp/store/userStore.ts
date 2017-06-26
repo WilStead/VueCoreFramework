@@ -1,4 +1,6 @@
-﻿export interface PermissionData {
+﻿import { Group } from '../components/group/manage';
+
+export interface PermissionData {
     dataType?: string;
     id?: string;
     canShare?: string;
@@ -64,9 +66,14 @@ export const userState = {
     isSiteAdmin: false,
 
     /**
-     * Lists the groups the current user manages.
+     * The groups to which the current user belongs, but does not manage.
      */
-    managedGroups: [] as string[],
+    joinedGroups: [] as Group[],
+
+    /**
+     * The groups the current user manages.
+     */
+    managedGroups: [] as Group[],
 
     /**
      * A collection of known permissions, as a map of dataTypes to TypeSharePermission

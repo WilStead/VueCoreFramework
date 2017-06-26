@@ -22,10 +22,8 @@ export default class ManageGroupComponent extends Vue {
     foundGroup: Group = null;
     inviteDialog = false;
     inviteGroup: Group = null;
-    joinedGroups: Group[] = [];
     leaveGroup: Group = null;
     leaveGroupDialog = false;
-    managedGroups: Group[] = [];
     newGroupName = '';
     newManager = '';
     searchGroup = '';
@@ -62,7 +60,7 @@ export default class ManageGroupComponent extends Vue {
 
     onContactGroupMember(member: string) {
         this.$store.commit(Store.startChatWithUser, member);
-        this.$store.commit(Store.refreshChat, this.$route.fullPath);
+        this.$store.dispatch(Store.refreshChat, this.$route.fullPath);
     }
 
     onCreateGroup() {
@@ -136,11 +134,15 @@ export default class ManageGroupComponent extends Vue {
         this.deleteGroupDialog = true;
     }
 
+    onGroupChat(group: Group) {
+        this.$store.commit(Store.startChatWithGroup, group.name);
+        this.$store.dispatch(Store.refreshChat, this.$route.fullPath);
+    }
+
     onGroupSearch() {
         this.activity = true;
         this.errorMessage = '';
         this.successMessage = '';
-        this.leaveGroupDialog = false;
         fetch(`/api/Group/GetGroup/${this.searchGroup}`,
             {
                 method: 'POST',
@@ -339,40 +341,7 @@ export default class ManageGroupComponent extends Vue {
     }
 
     refreshGroups() {
-        this.activity = true;
-        this.errorMessage = '';
-        fetch('/api/Group/GetGroupMemberships/',
-            {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'Authorization': `bearer ${this.$store.state.userState.token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<Group[]>)
-            .then(data => {
-                if (data['error']) {
-                    this.errorMessage = data['error'];
-                } else {
-                    this.managedGroups = [];
-                    this.joinedGroups = [];
-                    for (var i = 0; i < data.length; i++) {
-                        if (data[i].manager === this.$store.state.userState.username
-                            || data[i].name === 'Admin' && this.$store.state.userState.isSiteAdmin) {
-                            this.managedGroups.push(data[i]);
-                        } else {
-                            this.joinedGroups.push(data[i]);
-                        }
-                    }
-                }
-                this.activity = false;
-            })
-            .catch(error => {
-                this.errorMessage = 'A problem occurred.';
-                this.activity = false;
-                ErrorMsg.logError('group/manage.refreshGroups', error);
-            });
+        this.$store.dispatch(Store.refreshGroups, this.$route.fullPath);
     }
 
     suggestSearchGroup() {
@@ -402,8 +371,8 @@ export default class ManageGroupComponent extends Vue {
     }
 
     suggestSearchUsername() {
-        this.searchGroupTimeout = 0;
-        if (this.searchGroup) {
+        this.searchUsernameTimeout = 0;
+        if (this.searchUsername) {
             fetch(`/api/Share/GetShareableUsernameCompletion/${this.searchUsername}`,
                 {
                     method: 'GET',

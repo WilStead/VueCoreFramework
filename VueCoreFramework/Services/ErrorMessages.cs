@@ -21,6 +21,7 @@
         public const string GroupMemberOnlyError = "That action is only valid for members of your group.";
         public const string InvalidDataTypeError = "An error occurred while trying to access this data. Please refresh the page before trying again.";
         public const string InvalidLogin = "Invalid login attempt.";
+        public const string InvalidNameError = "The name you selected is invalid.";
         public const string InvalidTargetGroupError = "There was a problem with the group you specified.";
         public const string InvalidTargetUserError = "There was a problem with the account you specified.";
         public const string InvalidUserError = "Your login appears to be invalid or out of date. Please try to log in again.";
@@ -32,7 +33,7 @@
         public const string MissingPropError = "The property name was missing from your request. Please refresh the page before trying again.";
         public const string MustHaveManagerError = "Your group must have a manager. Before leaving the group, you must first hand off the manager role to another group member.";
         public const string NotForAdminsError = "That action is not valid for administrator accounts.";
-        public const string OnlyAdminCanBeAdminError = "To avoid confusion with the official Administrator group, group names may not contain 'administrator.'";
+        public const string OnlyAdminCanBeAdminError = "Names may not appear to imitate official administrators.";
         public const string OwnerOnlyError = "Only the owner of the data may perform that action.";
         public const string SaveItemError = "Item could not be saved.";
         public const string SelfGroupAddError = "You cannot add yourself to a group.";

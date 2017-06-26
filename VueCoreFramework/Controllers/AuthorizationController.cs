@@ -76,7 +76,6 @@ namespace VueCoreFramework.Controllers
             }
             vm.IsAdmin = roles.Any(r => r == CustomRoles.Admin);
             vm.IsSiteAdmin = vm.IsAdmin && roles.Any(r => r == CustomRoles.SiteAdmin);
-            vm.ManagedGroups = claims.Where(c => c.Type == CustomClaimTypes.PermissionGroupManager).Select(c => c.Value).ToList();
 
             return Json(vm);
         }
@@ -120,7 +119,6 @@ namespace VueCoreFramework.Controllers
             }
             vm.IsAdmin = roles.Any(r => r == CustomRoles.Admin);
             vm.IsSiteAdmin = vm.IsAdmin && roles.Any(r => r == CustomRoles.SiteAdmin);
-            vm.ManagedGroups = claims.Where(c => c.Type == CustomClaimTypes.PermissionGroupManager).Select(c => c.Value).ToList();
 
             operation = $"permission/data/{operation}";
             vm.Authorization = GetAuthorization(claims, dataType, operation, id);
@@ -135,7 +133,7 @@ namespace VueCoreFramework.Controllers
                 {
                     vm.CanShare = AuthorizationViewModel.ShareAny;
                 }
-                else if (!string.IsNullOrEmpty(id) && vm.ManagedGroups.Count > 0)
+                else if (!string.IsNullOrEmpty(id) && claims.Any(c => c.Type == CustomClaimTypes.PermissionGroupManager))
                 {
                     vm.CanShare = AuthorizationViewModel.ShareGroup;
                 }

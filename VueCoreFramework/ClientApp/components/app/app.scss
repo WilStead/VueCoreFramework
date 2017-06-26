@@ -16,6 +16,10 @@ table.table tbody td:empty {
     padding: 0;
 }
 
+.navigation-drawer {
+    padding-bottom: 0;
+}
+
 .btn.active.focus,
 .btn.active:focus,
 .btn.focus,
@@ -78,6 +82,38 @@ a.list__tile {
 
     .menuItem {
         align-self: flex-start;
+    }
+}
+
+.chat-row {
+    flex-basis: 0;
+    overflow: auto;
+    position: relative;
+
+    .card__text {
+        position: absolute;
+        top: 0;
+    }
+
+    .list__tile {
+        height: auto;
+
+        .list__tile__content {
+
+            &:first-child {
+                flex-basis: auto;
+                flex-shrink: 0;
+            }
+
+            .list__tile__title {
+                overflow: auto;
+
+                * {
+                    white-space: normal;
+                    margin: 0;
+                }
+            }
+        }
     }
 }
 

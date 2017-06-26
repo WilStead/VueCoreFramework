@@ -126,11 +126,6 @@ interface AuthorizationViewModel {
     isSiteAdmin: boolean;
 
     /**
-     * Lists the groups the current user manages.
-     */
-    managedGroups: string[];
-
-    /**
      * A JWT bearer token.
      */
     token: string;
@@ -178,7 +173,6 @@ export function authenticate(): Promise<string> {
                 Store.store.commit(Store.setEmail, data.email);
                 Store.store.commit(Store.setIsAdmin, data.isAdmin);
                 Store.store.commit(Store.setIsSiteAdmin, data.isSiteAdmin);
-                Store.store.commit(Store.setManagedGroups, data.managedGroups);
             }
             if (data.authorization === "login") {
                 return "login";
@@ -236,7 +230,6 @@ export function checkAuthorization(to: VueRouter.Route): Promise<string> {
             Store.store.commit(Store.setEmail, data.email);
             Store.store.commit(Store.setIsAdmin, data.isAdmin);
             Store.store.commit(Store.setIsSiteAdmin, data.isSiteAdmin);
-            Store.store.commit(Store.setManagedGroups, data.managedGroups);
             Store.store.commit(Store.setToken, data.token);
             Store.store.commit(Store.setUsername, data.username);
             let permission: PermissionData = { dataType };

@@ -351,18 +351,6 @@ namespace VueCoreFramework.Controllers
         }
 
         /// <summary>
-        /// Called to log the current user out.
-        /// </summary>
-        [HttpPost]
-        public async Task Logout()
-        {
-            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            if (user == null) _logger.LogInformation(LogEvent.LOGOUT, "Unknown user logged out.");
-            else _logger.LogInformation(LogEvent.LOGOUT, "User {USER} logged out.", user.Email);
-            await _signInManager.SignOutAsync();
-        }
-
-        /// <summary>
         /// Called to register a new user account with the provided credentials. User accounts cannot
         /// be used immediately after registration; a confirmation email is sent and the link
         /// included must be followed to confirm the address.
@@ -394,6 +382,17 @@ namespace VueCoreFramework.Controllers
             if (existingUser != null)
             {
                 model.Errors.Add(ErrorMessages.DuplicateUsernameError);
+                return model;
+            }
+            var lowerName = model.Username.ToLower();
+            if (lowerName.StartsWith("admin") || lowerName.EndsWith("admin") || lowerName.Contains("administrator"))
+            {
+                model.Errors.Add(ErrorMessages.OnlyAdminCanBeAdminError);
+                return model;
+            }
+            if (lowerName == "true" || lowerName == "false")
+            {
+                model.Errors.Add(ErrorMessages.InvalidNameError);
                 return model;
             }
             user = new ApplicationUser { UserName = model.Username, Email = model.Email };
@@ -505,6 +504,50 @@ namespace VueCoreFramework.Controllers
             var callbackUrl = Url.Action(nameof(ConfirmEmail), "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
             await _emailSender.SendEmailAsync(model.Email, "Confirm your account",
                 $"Please confirm your account by clicking this link: <a href='{callbackUrl}'>link</a>");
+        }
+
+        /// <summary>
+        /// Called to confirm that a user with the given username exists.
+        /// </summary>
+        /// <param name="username">The username to verify.</param>
+        /// <returns>A response indicating false, or the canonical username.</returns>
+        [Authorize]
+        [HttpPost("{username}")]
+        public async Task<IActionResult> VerifyUsername(string username)
+        {
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (user.AdminLocked)
+            {
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+            }
+            var targetUser = await _userManager.FindByNameAsync(username);
+            if (targetUser == null)
+            {
+                return Json(new { response = false });
+            }
+            // Admins may know about any user.
+            var roles = await _userManager.GetRolesAsync(user);
+            if (roles.Contains(CustomRoles.SiteAdmin) || roles.Contains(CustomRoles.Admin))
+            {
+                return Json(new { response = targetUser.UserName });
+            }
+
+            // Those who share a group may know about one another.
+            var groups = await _userManager.GetRolesAsync(user);
+            var targetGroups = await _userManager.GetRolesAsync(targetUser);
+            if (groups.Intersect(targetGroups).Any())
+            {
+                return Json(new { response = targetUser.UserName });
+            }
+
+            // Other users are not permitted to obtain information about other users, so indicate
+            // false even though the user exists.
+            return Json(new { response = false });
         }
     }
 }

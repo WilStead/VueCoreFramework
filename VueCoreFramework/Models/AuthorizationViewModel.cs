@@ -39,11 +39,6 @@ namespace VueCoreFramework.Models
         public bool IsSiteAdmin { get; set; }
 
         /// <summary>
-        /// Lists the groups the user manages.
-        /// </summary>
-        public List<string> ManagedGroups { get; set; }
-
-        /// <summary>
         /// A JWT bearer token.
         /// </summary>
         public string Token { get; set; }

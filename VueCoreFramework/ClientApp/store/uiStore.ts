@@ -2,7 +2,7 @@
 import * as ErrorMsg from '../error-msg';
 import { Repository } from './repository';
 import { router } from '../router';
-import { MessageViewModel } from '../store/messaging';
+import { ConversationViewModel, MessageViewModel } from '../store/messaging';
 
 /**
  * Describes an item in the SPA framework's main menu.
@@ -48,6 +48,11 @@ export interface MenuItem {
      * An optional collection of sub-items contained within this menu item.
      */
     submenu?: Array<MenuItem>;
+
+    /**
+     * A key used to track items in a list.
+     */
+    key?: number;
 }
 
 function addMenuItem(menu: MenuItem, router: VueRouter, data: any, dataClass: string, category: string, iconClass: string) {
@@ -78,7 +83,8 @@ function addMenuItem(menu: MenuItem, router: VueRouter, data: any, dataClass: st
                 text: currentCategory,
                 fontAwesome: data[dataClass].fontAwesome,
                 iconClass,
-                submenu: []
+                submenu: [],
+                key: Date.now()
             };
             menu.submenu.push(menuItem);
         }
@@ -139,7 +145,8 @@ function addMenuItem(menu: MenuItem, router: VueRouter, data: any, dataClass: st
                 text: dataClass,
                 iconClass,
                 fontAwesome: data[dataClass].fontAwesome,
-                route: tableRoute
+                route: tableRoute,
+                key: Date.now()
             };
             menu.submenu.push(menuItem);
         } else {
@@ -264,31 +271,38 @@ export const uiState = {
         {
             text: 'Home',
             iconClass: 'home',
-            route: '/'
+            route: '/',
+            key: 100
         },
         {
-            divider: true
+            divider: true,
+            key: 200
         },
         {
             text: 'Data',
-            header: true
+            header: true,
+            key: 300
         },
         {
             text: 'Data',
             iconClass: 'view_list',
-            dataHook: true
+            dataHook: true,
+            key: 400
         },
         {
-            divider: true
+            divider: true,
+            key: 500
         },
         {
             text: 'Groups',
-            header: true
+            header: true,
+            key: 600
         },
         {
             text: 'Groups',
             iconClass: 'group',
-            route: '/group/manage'
+            route: '/group/manage',
+            key: 700
         }
     ],
 
@@ -303,6 +317,12 @@ export const uiState = {
          * Controls whether the chat window is shown (rather than the menu).
          */
         chatShown: false,
+
+        /**
+         * The individual conversations in which this user is currently involved (does not include
+         * group chats).
+         */
+        conversations: [] as ConversationViewModel[],
 
 
         /**
@@ -320,6 +340,16 @@ export const uiState = {
         /**
          * The messages of the current conversation.
          */
-        messages: [] as MessageViewModel[]
+        messages: [] as MessageViewModel[],
+
+        /**
+         * When an admin is viewing a conversation, this is the sender.
+         */
+        proxySender: '',
+
+        /**
+         * The system messages the current user has received.
+         */
+        systemMessages: [] as MessageViewModel[]
     }
 };
