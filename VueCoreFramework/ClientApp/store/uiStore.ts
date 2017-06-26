@@ -2,6 +2,7 @@
 import * as ErrorMsg from '../error-msg';
 import { Repository } from './repository';
 import { router } from '../router';
+import { MessageViewModel } from '../store/messaging';
 
 /**
  * Describes an item in the SPA framework's main menu.
@@ -319,6 +320,6 @@ export const uiState = {
         /**
          * The messages of the current conversation.
          */
-        messages: ''
+        messages: [] as MessageViewModel[]
     }
 };

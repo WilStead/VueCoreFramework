@@ -18,6 +18,21 @@ namespace VueCoreFramework.Models
         public bool IsSystemMessage { get; set; }
 
         /// <summary>
+        /// Indicates that the user who sent the message is an admin.
+        /// </summary>
+        public bool IsUserAdmin { get; set; }
+
+        /// <summary>
+        /// Indicates that the user who sent the message is the group manager.
+        /// </summary>
+        public bool IsUserManager { get; set; }
+
+        /// <summary>
+        /// Indicates that the user who sent the message is the site admin.
+        /// </summary>
+        public bool IsUserSiteAdmin { get; set; }
+
+        /// <summary>
         /// The name of the user who sent the message.
         /// </summary>
         public string Username { get; set; }

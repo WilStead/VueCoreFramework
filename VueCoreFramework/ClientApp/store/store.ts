@@ -4,6 +4,7 @@ Vue.use(Vuex);
 import { uiState, getMenuItems, getChildItems } from './uiStore';
 import { userState, PermissionData, SharePermission } from './userStore';
 import { Repository } from './repository';
+import { messaging } from './messaging';
 import * as ErrorLog from '../error-msg';
 
 /**
@@ -105,12 +106,68 @@ export const store = new Vuex.Store({
             router.addRoutes([{ path: '*', redirect: '/error/notfound' }]);
         },
 
+        /**
+         * Hides the chat window (returns to the messaging menu).
+         */
+        hideChat(state) {
+            state.uiState.messaging.chatShown = false;
+        },
+
         logout(state) {
             state.userState.username = 'user';
             state.userState.email = 'user@example.com';
             state.userState.token = '';
             localStorage.removeItem('token');
             fetch('/api/Account/Logout', { method: 'POST' });
+        },
+
+        /**
+         * Updates the messages in the chat window.
+         */
+        refreshChat(state, returnPath) {
+            if (state.uiState.messaging.groupChat) {
+                messaging.getGroupMessages(returnPath, state.uiState.messaging.groupChat)
+                    .then(data => {
+                        if (data['error']) {
+                            throw new Error(data['error']);
+                        } else {
+                            state.uiState.messaging.messages = data;
+                        }
+                    })
+                    .catch(error => {
+                        ErrorLog.logError('store.refreshChat', error);
+                    });
+            } else if (state.uiState.messaging.interlocutor) {
+                messaging.getUserMessages(returnPath, state.uiState.messaging.interlocutor)
+                    .then(data => {
+                        if (data['error']) {
+                            throw new Error(data['error']);
+                        } else {
+                            state.uiState.messaging.messages = data;
+                            messaging.markConversationRead(returnPath, state.uiState.messaging.interlocutor)
+                                .then(data => {
+                                    if (data['error']) {
+                                        throw new Error(data['error']);
+                                    }
+                                });
+                        }
+                    })
+                    .catch(error => {
+                        ErrorLog.logError('store.refreshChat', error);
+                    });
+            } else {
+                messaging.getSystemMessages(returnPath)
+                    .then(data => {
+                        if (data['error']) {
+                            throw new Error(data['error']);
+                        } else {
+                            state.uiState.messaging.messages = data;
+                        }
+                    })
+                    .catch(error => {
+                        ErrorLog.logError('store.refreshChat', error);
+                    });
+            }
         },
 
         /**
@@ -156,6 +213,43 @@ export const store = new Vuex.Store({
         },
 
         /**
+         * Starts the chat UI with the given group.
+         */
+        startChatWithGroup(state, group: string) {
+            state.uiState.messaging.interlocutor = '';
+            state.uiState.messaging.groupChat = group;
+            state.uiState.messaging.chatShown = true;
+            state.uiState.messaging.messagingShown = true;
+        },
+
+        /**
+         * Shown the chat UI for system messages.
+         */
+        startChatWithSystem(state) {
+            state.uiState.messaging.groupChat = '';
+            state.uiState.messaging.interlocutor = '';
+            state.uiState.messaging.chatShown = true;
+            state.uiState.messaging.messagingShown = true;
+        },
+
+        /**
+         * Starts the chat UI with the given user.
+         */
+        startChatWithUser(state, username: string) {
+            state.uiState.messaging.groupChat = '';
+            state.uiState.messaging.interlocutor = username;
+            state.uiState.messaging.chatShown = true;
+            state.uiState.messaging.messagingShown = true;
+        },
+
+        /**
+         * Shows/hides the messaging panel.
+         */
+        toggleMessaging(state) {
+            state.uiState.messaging.messagingShown = !state.uiState.messaging.messagingShown;
+        },
+
+        /**
          * Adds permission information to the store.
          */
         updatePermission(state, permission: PermissionData) {
@@ -181,11 +275,17 @@ export const store = new Vuex.Store({
 });
 
 export const addTypeRoutes = 'addTypeRoutes';
+export const hideChat = 'hideChat';
 export const logout = 'logout';
+export const refreshChat = 'refreshChat';
 export const setEmail = 'setEmail';
 export const setIsAdmin = 'setIsAdmin';
 export const setIsSiteAdmin = 'setIsSiteAdmin';
 export const setManagedGroups = 'setManagedGroups';
 export const setToken = 'setToken';
 export const setUsername = 'setUsername';
+export const startChatWithGroup = 'startChatWithGroup';
+export const startChatWithSystem = 'startChatWithSystem';
+export const startChatWithUser = 'startChatWithUser';
+export const toggleMessaging = 'toggleMessaging';
 export const updatePermission = 'updatePermission';

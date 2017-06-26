@@ -61,7 +61,8 @@ export default class ManageGroupComponent extends Vue {
     }
 
     onContactGroupMember(member: string) {
-        // TODO: open chat system targeted at the user
+        this.$store.commit(Store.startChatWithUser, member);
+        this.$store.commit(Store.refreshChat, this.$route.fullPath);
     }
 
     onCreateGroup() {

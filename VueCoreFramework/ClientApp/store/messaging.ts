@@ -12,6 +12,21 @@ export interface MessageViewModel {
     isSystemMessage?: boolean;
 
     /**
+     * Indicates that the user who sent the message is an admin.
+     */
+    isUserAdmin?: boolean;
+
+    /**
+     * Indicates that the user who sent the message is the group manager.
+     */
+    isUserManager?: boolean;
+
+    /**
+     * Indicates that the user who sent the message is the site admin.
+     */
+    isUserSiteAdmin?: boolean;
+
+    /**
      * The name of the user who sent the message.
      */
     username?: string;
@@ -65,6 +80,28 @@ export const messaging = {
      */
     getGroupMessages(returnPath: string, group: string): Promise<MessageViewModel[]> {
         return fetch(`/api/Message/GetGroupMessages/${group}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${store.state.userState.token}`
+                }
+            })
+            .then(response => checkResponse(response, returnPath))
+            .then(response => response.json() as Promise<MessageViewModel[]>)
+            .catch(error => {
+                throw new Error(`There was a problem with your request. ${error}`);
+            });
+    },
+
+    /**
+     * Called to get the system messages sent to the current user which have not been marked
+     * deleted by the current user.
+     * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
+     * @returns {MessageViewModel[]} The ordered list of messages.
+     */
+    getSystemMessages(returnPath: string): Promise<MessageViewModel[]> {
+        return fetch('/api/Message/GetSystemMessages',
             {
                 method: 'GET',
                 headers: {

@@ -63,7 +63,9 @@ namespace VueCoreFramework.Controllers
 
             List<ConversationViewModel> vms = new List<ConversationViewModel>();
             foreach(var message in _context.Messages
-                .Where(m => m.Sender == user || m.SingleRecipient == user))
+                .Where(m => !m.IsSystemMessage
+                && ((m.Sender == user && !m.SenderDeleted)
+                || (m.SingleRecipient == user && !m.RecipientDeleted))))
             {
                 var interlocutor = message.Sender == user ? message.SingleRecipientName : message.SenderUsername;
                 var conversation = vms.FirstOrDefault(v => v.Interlocutor == interlocutor);
@@ -106,14 +108,56 @@ namespace VueCoreFramework.Controllers
             {
                 return Json(new { error = ErrorMessages.InvalidTargetGroupError });
             }
+            var managers = await _userManager.GetUsersForClaimAsync(new Claim(CustomClaimTypes.PermissionGroupManager, group));
+            var manager = managers.FirstOrDefault();
 
-            return Json(_context.Messages.Where(m => m.GroupRecipient == groupRole)
+            var vms = new List<MessageViewModel>();
+            foreach (var message in _context.Messages.Where(m => m.GroupRecipient == groupRole)
+                .OrderBy(m => m.Timestamp))
+            {
+                var roles = await _userManager.GetRolesAsync(message.Sender);
+                vms.Add(new MessageViewModel
+                {
+                    Content = message.Content,
+                    IsSystemMessage = message.IsSystemMessage,
+                    IsUserAdmin = roles.Contains(CustomRoles.Admin),
+                    IsUserManager = message.Sender == manager,
+                    IsUserSiteAdmin = roles.Contains(CustomRoles.SiteAdmin),
+                    Username = message.SenderUsername,
+                    Timestamp = message.Timestamp
+                });
+            }
+            return Json(vms);
+        }
+
+        /// <summary>
+        /// Called to get the system messages sent to the current user which have not been marked
+        /// deleted by the current user.
+        /// </summary>
+        /// <returns>
+        /// An error if there is a problem; or the ordered list of <see cref="MessageViewModel"/>s.
+        /// </returns>
+        [HttpGet]
+        public async Task<IActionResult> GetSystemMessages()
+        {
+            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return Json(new { error = ErrorMessages.InvalidUserError });
+            }
+            if (user.AdminLocked)
+            {
+                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+            }
+            
+            return Json(_context.Messages.Where(m =>
+                m.SingleRecipient == user && m.IsSystemMessage)
                 .OrderBy(m => m.Timestamp)
                 .Select(m => new MessageViewModel
                 {
                     Content = m.Content,
-                    IsSystemMessage = m.IsSystemMessage,
-                    Username = m.SenderUsername,
+                    IsSystemMessage = true,
                     Timestamp = m.Timestamp
                 }));
         }
@@ -141,17 +185,25 @@ namespace VueCoreFramework.Controllers
             {
                 return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
-            
-            return Json(_context.Messages.Where(m =>
+
+            var vms = new List<MessageViewModel>();
+            foreach (var message in _context.Messages.Where(m =>
                (m.SingleRecipient == user && m.SenderUsername == username && !m.RecipientDeleted)
                || (m.SingleRecipientName == username && m.Sender == user && !m.SenderDeleted))
-                .OrderBy(m => m.Timestamp)
-                .Select(m => new MessageViewModel
+                .OrderBy(m => m.Timestamp))
+            {
+                var roles = await _userManager.GetRolesAsync(message.Sender == user ? message.SingleRecipient : message.Sender);
+                vms.Add(new MessageViewModel
                 {
-                    Content = m.Content,
-                    Username = m.Sender == user ? m.SingleRecipientName : m.SenderUsername,
-                    Timestamp = m.Timestamp
-                }));
+                    Content = message.Content,
+                    IsSystemMessage = message.IsSystemMessage,
+                    IsUserAdmin = roles.Contains(CustomRoles.Admin),
+                    IsUserSiteAdmin = roles.Contains(CustomRoles.SiteAdmin),
+                    Username = message.Sender == user ? message.SingleRecipientName : message.SenderUsername,
+                    Timestamp = message.Timestamp
+                });
+            }
+            return Json(vms);
         }
 
         /// <summary>

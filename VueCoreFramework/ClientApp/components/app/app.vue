@@ -10,13 +10,23 @@
         <v-navigation-drawer right persistent clipped disable-route-watcher v-model="$store.state.uiState.messaging.messagingShown">
             <v-card v-if="$store.state.uiState.messaging.chatShown">
                 <v-card-row class="primary">
+                    <v-btn icon @click.native="onHideChat"><v-icon>arrow_back</v-icon></v-btn>
                     <v-card-title v-if="$store.state.uiState.messaging.groupChat">{{ $store.state.uiState.messaging.groupChat }}</v-card-title>
                     <v-card-title v-else>{{ $store.state.uiState.messaging.interlocutor }}</v-card-title>
                 </v-card-row>
+                <v-alert error :value="chatErrorMessage">{{ chatErrorMessage }}</v-alert>
                 <v-card-row>
                     <v-list dense>
-                        <template v-for="message in $store.state.uiState.messaging.messages">
-
+                        <template v-for="message in $store.state.uiState.messaging.messages" :key="message.timestamp">
+                            <v-list-tile avatar>
+                                <v-list-tile-avatar v-tooltip:bottom="{ html: message.timestamp }" v-if="message.isSystemMessage" class="grey--text text--darken-1">[SYSTEM]:</v-list-tile-avatar>
+                                <v-list-tile-avatar v-tooltip:bottom="{ html: message.timestamp }" v-else :class="getMessageClass(message)">[{{ message.username }}]:</v-list-tile-avatar>
+                                <v-list-tile-content>
+                                    <v-list-tile-title>
+                                        <vue-markdown :source="message.content"></vue-markdown>
+                                    </v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-list-tile>
                         </template>
                     </v-list>
                 </v-card-row>
@@ -35,6 +45,16 @@
                 </v-card-row>
             </v-card>
             <v-list v-else two-line>
+                <v-list-tile v-if="systemMessages" avatar>
+                    <v-list-tile-avatar><v-icon>settings</v-icon></v-list-tile-avatar>
+                    <v-list-tile-content>
+                        <v-list-tile-title>System Messages</v-list-tile-title>
+                    </v-list-tile-content>
+                    <v-list-tile-action>
+                        <v-btn dark icon class="info--text" @click.native="onSystemChat"><v-icon>chat</v-icon></v-btn>
+                    </v-list-tile-action>
+                </v-list-tile>
+                <v-divider v-if="systemMessages"></v-divider>
                 <v-subheader v-if="groups.length > 0">Groups</v-subheader>
                 <v-list-item v-for="group in groups" :key="group.name">
                     <v-list-tile avatar>
@@ -57,6 +77,9 @@
                         </v-list-tile-content>
                         <v-list-tile-action>
                             <v-btn dark icon class="info--text" @click.native="onUserChat(conversation.interlocutor)"><v-icon>chat</v-icon></v-btn>
+                        </v-list-tile-action>
+                        <v-list-tile-action>
+                            <v-btn dark icon class="error--text" @click.native="onDeleteChat(conversation.interlocutor)"><v-icon>delete</v-icon></v-btn>
                         </v-list-tile-action>
                     </v-list-tile>
                 </v-list-item>
