@@ -163,27 +163,28 @@ namespace VueCoreFramework.Controllers
                 return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
 
+            var groups = await _userManager.GetRolesAsync(user);
             // Do not include the site admin or all users special roles.
-            var groups = _context.Roles.Where(r => r.Name != CustomRoles.SiteAdmin && r.Name != CustomRoles.AllUsers);
+            groups = groups.Where(g => g != CustomRoles.SiteAdmin && g != CustomRoles.AllUsers).ToList();
 
             List<GroupViewModel> vms = new List<GroupViewModel>();
             foreach (var group in groups)
             {
                 string managerName = null;
-                if (group.Name == CustomRoles.Admin)
+                if (group == CustomRoles.Admin)
                 {
                     var siteAdmin = await _userManager.GetUsersInRoleAsync(CustomRoles.SiteAdmin);
                     managerName = siteAdmin.FirstOrDefault().UserName;
                 }
                 else
                 {
-                    var managers = await _userManager.GetUsersForClaimAsync(new Claim(CustomClaimTypes.PermissionGroupManager, group.Name));
+                    var managers = await _userManager.GetUsersForClaimAsync(new Claim(CustomClaimTypes.PermissionGroupManager, group));
                     managerName = managers.FirstOrDefault()?.UserName;
                 }
-                var members = await _userManager.GetUsersInRoleAsync(group.Name);
+                var members = await _userManager.GetUsersInRoleAsync(group);
                 vms.Add(new GroupViewModel
                 {
-                    Name = group.Name,
+                    Name = group,
                     Manager = managerName,
                     Members = members.Select(m => m.UserName).ToList()
                 });

@@ -13,7 +13,7 @@ export default class TopbarComponent extends Vue {
 
     get totalUnread() {
         return this.$store.state.uiState.messaging.conversations
-            .filter(c => c.unreadCount)
+            .map(c => c.unreadCount)
             .reduce((a, b) => { return a + b; }, 0)
             + this.$store.state.uiState.messaging.systemMessages
                 .filter(m => !m.received).length;

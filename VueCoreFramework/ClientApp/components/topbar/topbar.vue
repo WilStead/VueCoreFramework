@@ -1,11 +1,11 @@
 ﻿<template>
     <v-list class="topbar">
         <router-link title="sign in" v-if="!signedIn" :to="{ path: '/login', query: { returnUrl: getReturnUrl() } }"><v-icon class="user-icon">account_circle</v-icon></router-link>
-        <div v-if="signedIn" class="user-controls-container">
+        <div v-if="signedIn">
             <v-btn dark icon v-tooltip:left="{ html: 'chat' }" @click.native="onToggleChat">
-                <v-icon v-if="totalUnread > 0"
+                <v-icon v-if="totalUnread"
                         v-badge="{ value: totalUnread, overlap: true }"
-                        class="user-icon">chat</v-icon>
+                        class="blue-grey darken-1 info--after user-icon">chat</v-icon>
                 <v-icon v-else class="user-icon">chat</v-icon>
             </v-btn>
             <router-link v-tooltip:left="{ html: 'profile' }" title="profile" to="/user/manage"><v-icon class="user-icon">account_circle</v-icon></router-link>

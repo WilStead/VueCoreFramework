@@ -19,7 +19,7 @@
                 </v-card-row>
             </v-card>
         </v-dialog>
-        <v-dialog v-model="xferGroupDialog">
+        <v-dialog v-if="xferGroup" v-model="xferGroupDialog">
             <v-card>
                 <v-card-row class="warning">
                     <v-card-title>Transfer management of {{ xferGroup }}</v-card-title>
@@ -199,7 +199,7 @@
                             <v-alert error :value="createErrorMessage">{{ createErrorMessage }}</v-alert>
                             <v-card-row>
                                 <v-card-text>
-                                    <v-text-field label="Group name" v-model="newGroupName" rules="[validateGroupName]"></v-text-field>
+                                    <v-text-field label="Group name" v-model="newGroupName" :rules="[validateGroupName]"></v-text-field>
                                 </v-card-text>
                             </v-card-row>
                             <v-card-row actions>
@@ -271,7 +271,7 @@
                             </v-list-tile-action>
                         </v-list-tile>
                     </v-list-item>
-                    <v-list-item v-if="group.name !== 'Admin'">
+                    <v-list-item v-if="foundGroup.name !== 'Admin'">
                         <v-list-tile class="error white--text">
                             <v-list-tile-content>
                                 <v-list-tile-title>Delete this group</v-list-tile-title>

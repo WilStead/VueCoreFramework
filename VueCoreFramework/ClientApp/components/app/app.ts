@@ -238,7 +238,7 @@ export default class AppComponent extends Vue {
 
     refreshConversations() {
         this.conversationRefreshTimeout = 0;
-        if (this.$store.state.uiState.messaging.messagingShown) {
+        if (this.$store.state.userState.token) {
             this.$store.dispatch(Store.refreshConversations, this.$route.fullPath)
                 .then(() => {
                     this.conversationRefreshTimeout = setTimeout(this.refreshConversations, 10000);
@@ -268,7 +268,7 @@ export default class AppComponent extends Vue {
 
     refreshSystemMessages() {
         this.systemMessageRefreshTimeout = 0;
-        if (this.$store.state.uiState.messaging.messagingShown) {
+        if (this.$store.state.userState.token) {
             this.$store.dispatch(Store.refreshSystemMessages, this.$route.fullPath)
                 .then(() => {
                     this.systemMessageRefreshTimeout = setTimeout(this.refreshSystemMessages, 10000);
