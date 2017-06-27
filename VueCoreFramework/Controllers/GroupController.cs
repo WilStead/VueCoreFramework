@@ -135,12 +135,15 @@ namespace VueCoreFramework.Controllers
             {
                 return Json(new { response = ResponseMessages.NoResults });
             }
-            var managers = await _userManager.GetUsersForClaimAsync(new Claim(CustomClaimTypes.PermissionGroupManager, groupRole.Name));
+            var managerId = _context.UserClaims.FirstOrDefault(c =>
+                c.ClaimType == CustomClaimTypes.PermissionGroupManager && c.ClaimValue == groupRole.Name)?
+                .UserId;
+            var manager = await _userManager.FindByIdAsync(managerId);
             var members = await _userManager.GetUsersInRoleAsync(groupRole.Name);
             return Json(new GroupViewModel
             {
                 Name = groupRole.Name,
-                Manager = managers.FirstOrDefault().UserName,
+                Manager = manager?.UserName,
                 Members = members.Select(m => m.UserName).ToList()
             });
         }
@@ -178,8 +181,11 @@ namespace VueCoreFramework.Controllers
                 }
                 else
                 {
-                    var managers = await _userManager.GetUsersForClaimAsync(new Claim(CustomClaimTypes.PermissionGroupManager, group));
-                    managerName = managers.FirstOrDefault()?.UserName;
+                    var managerId = _context.UserClaims.FirstOrDefault(c =>
+                        c.ClaimType == CustomClaimTypes.PermissionGroupManager && c.ClaimValue == group)?
+                        .UserId;
+                    var manager = await _userManager.FindByIdAsync(managerId);
+                    managerName = manager?.UserName;
                 }
                 var members = await _userManager.GetUsersInRoleAsync(group);
                 vms.Add(new GroupViewModel
@@ -244,7 +250,7 @@ namespace VueCoreFramework.Controllers
             else if (!roles.Contains(CustomRoles.Admin))
             {
                 var claims = await _userManager.GetClaimsAsync(user);
-                if (!claims.Contains(new Claim(CustomClaimTypes.PermissionGroupManager, group)))
+                if (!claims.Any(c => c.Type == CustomClaimTypes.PermissionGroupManager && c.Value == group))
                 {
                     return Json(new { error = ErrorMessages.ManagerOnlyError });
                 }
@@ -311,8 +317,10 @@ namespace VueCoreFramework.Controllers
             {
                 return Json(new { error = ErrorMessages.InvalidTargetGroupError });
             }
-            var managers = await _userManager.GetUsersForClaimAsync(new Claim(CustomClaimTypes.PermissionGroupManager, group));
-            if (managers.Any(m => m == user))
+            var managerId = _context.UserClaims.FirstOrDefault(c =>
+                c.ClaimType == CustomClaimTypes.PermissionGroupManager && c.ClaimValue == group)?
+                .UserId;
+            if (managerId == user.Id)
             {
                 return Json(new { error = ErrorMessages.MustHaveManagerError });
             }
@@ -362,7 +370,7 @@ namespace VueCoreFramework.Controllers
             else if (!roles.Contains(CustomRoles.Admin))
             {
                 var claims = await _userManager.GetClaimsAsync(user);
-                if (!claims.Contains(new Claim(CustomClaimTypes.PermissionGroupManager, group)))
+                if (!claims.Any(c => c.Type == CustomClaimTypes.PermissionGroupManager && c.Value == group))
                 {
                     return Json(new { error = ErrorMessages.ManagerOnlyError });
                 }
@@ -427,7 +435,7 @@ namespace VueCoreFramework.Controllers
             else if (!roles.Contains(CustomRoles.Admin))
             {
                 var claims = await _userManager.GetClaimsAsync(user);
-                if (!claims.Contains(new Claim(CustomClaimTypes.PermissionGroupManager, group)))
+                if (!claims.Any(c => c.Type == CustomClaimTypes.PermissionGroupManager && c.Value == group))
                 {
                     return Json(new { error = ErrorMessages.ManagerOnlyError });
                 }
@@ -514,7 +522,7 @@ namespace VueCoreFramework.Controllers
             else if (!roles.Contains(CustomRoles.Admin))
             {
                 var claims = await _userManager.GetClaimsAsync(user);
-                if (!claims.Contains(new Claim(CustomClaimTypes.PermissionGroupManager, group)))
+                if (!claims.Any(c => c.Type == CustomClaimTypes.PermissionGroupManager && c.Value == group))
                 {
                     return Json(new { error = ErrorMessages.ManagerOnlyError });
                 }
@@ -546,8 +554,8 @@ namespace VueCoreFramework.Controllers
                     return Json(new { error = ErrorMessages.GroupMemberOnlyError });
                 }
             }
+            _context.UserClaims.Remove(_context.UserClaims.FirstOrDefault(c => c.ClaimType == CustomClaimTypes.PermissionGroupManager && c.ClaimValue == group));
             await _userManager.AddClaimAsync(targetUser, new Claim(CustomClaimTypes.PermissionGroupManager, group));
-            await _userManager.RemoveClaimAsync(user, new Claim(CustomClaimTypes.PermissionGroupManager, group));
 
             _context.Messages.Add(new Message
             {

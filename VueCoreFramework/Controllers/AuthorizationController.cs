@@ -150,19 +150,41 @@ namespace VueCoreFramework.Controllers
                 return CustomClaimTypes.PermissionDataAll;
             }
 
-            // If not authorized for all data, authorization for the specific operation on all data is checked.
+            var claimTypes = new List<string>();
+
+            // Otherwise, authorization for the specific operation on all data is checked.
             // In the absence of a specific operation, the default action is View.
             var claim = GetHighestClaimForValue(claims, CustomClaimTypes.PermissionAll);
             if (claim != null && PermissionIncludesTarget(claim.Type, claimType))
             {
-                return claim.Type;
+                // If the permission is for all, return it immediately.
+                if (claim.Type == CustomClaimTypes.PermissionDataAll)
+                {
+                    return claim.Type;
+                }
+                // Otherwise, store it and continue checking for other claims, so that the highest
+                // can be returned.
+                else
+                {
+                    claimTypes.Add(claim.Type);
+                }
             }
 
-            // If not authorized for the operation on all data, authorization for the specific data type is checked.
+            // Authorization for the specific data type is also checked.
             claim = GetHighestClaimForValue(claims, dataType);
             if (claim != null && PermissionIncludesTarget(claim.Type, claimType))
             {
-                return claim.Type;
+                // If the permission is for all, return it immediately.
+                if (claim.Type == CustomClaimTypes.PermissionDataAll)
+                {
+                    return claim.Type;
+                }
+                // Otherwise, store it and continue checking for other claims, so that the highest
+                // can be returned.
+                else
+                {
+                    claimTypes.Add(claim.Type);
+                }
             }
 
             // If not authorized for the operation on the data type and an id is provided, the specific item is checked.
@@ -172,17 +194,34 @@ namespace VueCoreFramework.Controllers
                 claim = GetHighestClaimForValue(claims, $"{dataType}{{{id}}}");
                 if (claim != null && PermissionIncludesTarget(claim.Type, claimType))
                 {
-                    return claim.Type;
+                    // If the permission is for all, return it immediately.
+                    if (claim.Type == CustomClaimTypes.PermissionDataAll)
+                    {
+                        return claim.Type;
+                    }
+                    // Otherwise, store it and continue checking for other claims, so that the highest
+                    // can be returned.
+                    else
+                    {
+                        claimTypes.Add(claim.Type);
+                    }
                 }
             }
-            // If no id is provided, only View is allowed (to permit data table display, even if no items can be listed).
+            // If no id is provided, View is allowed (to permit data table display, even if no items can be listed).
             else if (claimType == CustomClaimTypes.PermissionDataView)
             {
-                return CustomClaimTypes.PermissionDataView;
+                claimTypes.Add(CustomClaimTypes.PermissionDataView);
             }
 
-            // No authorizations found.
-            return AuthorizationViewModel.Unauthorized;
+            var highest = GetHighestClaimType(claimTypes);
+            if (string.IsNullOrEmpty(highest))
+            {
+                return AuthorizationViewModel.Unauthorized;
+            }
+            else
+            {
+                return highest;
+            }
         }
 
         private static Claim GetHighestClaimForValue(IList<Claim> claims, string claimValue)
@@ -196,6 +235,19 @@ namespace VueCoreFramework.Controllers
                 }
             }
             return max;
+        }
+
+        private static string GetHighestClaimType(List<string> claimTypes)
+        {
+            string highest = null;
+            foreach (var type in claimTypes)
+            {
+                if (highest == null || PermissionIncludesTarget(type, highest))
+                {
+                    highest = type;
+                }
+            }
+            return highest;
         }
 
         private static bool PermissionIncludesTarget(string permission, string targetPermission)

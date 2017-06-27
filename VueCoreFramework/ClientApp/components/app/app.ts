@@ -6,7 +6,27 @@ import { checkResponse, ApiResponseViewModel } from '../../router';
 import { Group } from '../group/manage';
 import * as ErrorMsg from '../../error-msg';
 import VueMarkdown from 'vue-markdown';
-import moment from 'moment';
+import * as moment from 'moment';
+
+/**
+ * Used to transfer information about a user.
+ */
+interface UserViewModel {
+    /**
+     * The user's email address
+     */
+    email: string;
+
+    /**
+     * Indicates whether the user's account has been locked by an admin.
+     */
+    isLocked: boolean;
+
+    /**
+     * The username of the user.
+     */
+    username: string;
+}
 
 @Component({
     components: {
@@ -16,7 +36,7 @@ import moment from 'moment';
     }
 })
 export default class AppComponent extends Vue {
-    foundUser = '';
+    foundUser: UserViewModel = null;
     foundUserConversations: ConversationViewModel[] = [];
     messageText = '';
     sideNav = false;
@@ -162,6 +182,29 @@ export default class AppComponent extends Vue {
         this.$store.commit(Store.hideChat);
     }
 
+    onLockAccount() {
+        fetch(`/api/Manage/LockAccount/${this.foundUser.username}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
+                }
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                } else {
+                    this.foundUser.isLocked = true;
+                }
+            })
+            .catch(error => {
+                ErrorMsg.showErrorMsgAndLog('app.onLockAccount', "A problem occurred. The account was not locked.", error);
+            });
+    }
+
     onSearchUsernameChange(val: string, oldVal: string) {
         if (this.searchUsernameTimeout === 0) {
             this.searchUsernameTimeout = setTimeout(this.suggestSearchUsername, 500);
@@ -177,6 +220,29 @@ export default class AppComponent extends Vue {
             });
     }
 
+    onUnlockAccount() {
+        fetch(`/api/Manage/UnlockAccount/${this.foundUser.username}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
+                }
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                } else {
+                    this.foundUser.isLocked = false;
+                }
+            })
+            .catch(error => {
+                ErrorMsg.showErrorMsgAndLog('app.onUnlockAccount', "A problem occurred. The account was not unlocked.", error);
+            });
+    }
+
     onUserChat(interlocutor: string) {
         this.$store.commit(Store.startChatWithUser, interlocutor);
         this.$store.dispatch(Store.refreshChat, this.$route.fullPath)
@@ -187,9 +253,9 @@ export default class AppComponent extends Vue {
     }
 
     onUsernameSearch() {
-        this.foundUser = '';
+        this.foundUser = null;
         if (this.searchUsername) {
-            fetch(`/api/Account/VerifyUsername/${this.searchUsername}`,
+            fetch(`/api/Account/VerifyUser/${this.searchUsername}`,
                 {
                     method: 'POST',
                     headers: {
@@ -198,13 +264,13 @@ export default class AppComponent extends Vue {
                     }
                 })
                 .then(response => checkResponse(response, this.$route.fullPath))
-                .then(response => response.json() as Promise<ApiResponseViewModel>)
+                .then(response => response.json() as Promise<UserViewModel>)
                 .then(data => {
-                    if (data.error) {
-                        throw new Error(data.error);
-                    } else if (data.response) {
-                        this.foundUser = data.response;
-                        messaging.getProxyConversations(this.$route.fullPath, this.foundUser)
+                    if (data['error']) {
+                        throw new Error(data['error']);
+                    } else if (!data['response']) {
+                        this.foundUser = data;
+                        messaging.getProxyConversations(this.$route.fullPath, this.foundUser.username)
                             .then(data => {
                                 if (data['error']) {
                                     throw new Error(data['error']);

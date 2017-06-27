@@ -61,7 +61,7 @@ namespace VueCoreFramework.Controllers
         /// <returns>
         /// An error if there is a problem; or a ViewModel representing the newly added item (as JSON).
         /// </returns>
-        [HttpPost("{childProp}/{parentId}")]
+        [HttpPost("{childProp?}/{parentId?}")]
         public async Task<IActionResult> Add(string dataType, string childProp, string parentId)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;

@@ -507,13 +507,16 @@ namespace VueCoreFramework.Controllers
         }
 
         /// <summary>
-        /// Called to confirm that a user with the given username exists.
+        /// Called to get information about the user with the given username. Admin only.
         /// </summary>
         /// <param name="username">The username to verify.</param>
-        /// <returns>A response indicating false, or the canonical username.</returns>
+        /// <returns>
+        /// An error message if there is a problem; a false response to indicate that no such user
+        /// exists; or a <see cref="UserViewModel"/>.
+        /// </returns>
         [Authorize]
         [HttpPost("{username}")]
-        public async Task<IActionResult> VerifyUsername(string username)
+        public async Task<IActionResult> VerifyUser(string username)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
@@ -525,29 +528,24 @@ namespace VueCoreFramework.Controllers
             {
                 return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
             }
+            // Only Admins may get information about a user.
+            var roles = await _userManager.GetRolesAsync(user);
+            if (!roles.Contains(CustomRoles.Admin))
+            {
+                return Json(new { error = ErrorMessages.AdminOnlyError });
+            }
+
             var targetUser = await _userManager.FindByNameAsync(username);
             if (targetUser == null)
             {
                 return Json(new { response = false });
             }
-            // Admins may know about any user.
-            var roles = await _userManager.GetRolesAsync(user);
-            if (roles.Contains(CustomRoles.SiteAdmin) || roles.Contains(CustomRoles.Admin))
+            return Json(new UserViewModel
             {
-                return Json(new { response = targetUser.UserName });
-            }
-
-            // Those who share a group may know about one another.
-            var groups = await _userManager.GetRolesAsync(user);
-            var targetGroups = await _userManager.GetRolesAsync(targetUser);
-            if (groups.Intersect(targetGroups).Any())
-            {
-                return Json(new { response = targetUser.UserName });
-            }
-
-            // Other users are not permitted to obtain information about other users, so indicate
-            // false even though the user exists.
-            return Json(new { response = false });
+                Email = targetUser.Email,
+                IsLocked = targetUser.AdminLocked,
+                Username = targetUser.UserName
+            });
         }
     }
 }

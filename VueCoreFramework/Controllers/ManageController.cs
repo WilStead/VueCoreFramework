@@ -307,8 +307,10 @@ namespace VueCoreFramework.Controllers
                         var roleClaims = await _roleManager.GetClaimsAsync(role);
                         if (roleClaims.Any(c => c.Value == ownerClaim.Value))
                         {
-                            var managers = await _userManager.GetUsersForClaimAsync(new Claim(CustomClaimTypes.PermissionGroupManager, role.Name));
-                            var manager = managers.FirstOrDefault();
+                            var managerId = _context.UserClaims.FirstOrDefault(c =>
+                                c.ClaimType == CustomClaimTypes.PermissionGroupManager && c.ClaimValue == role.Name)?
+                                .UserId;
+                            var manager = await _userManager.FindByIdAsync(managerId);
                             if (manager != null)
                             {
                                 managerShares.Add(manager);
@@ -316,8 +318,15 @@ namespace VueCoreFramework.Controllers
                         }
                     }
 
-                    var shares = await _userManager.GetUsersForClaimAsync(new Claim(CustomClaimTypes.PermissionDataView, ownerClaim.Value));
-                    shares = shares.Concat(await _userManager.GetUsersForClaimAsync(new Claim(CustomClaimTypes.PermissionDataEdit, ownerClaim.Value))).ToList();
+                    var sharedClaimIds = _context.UserClaims.Where(c =>
+                        c.ClaimValue == ownerClaim.Value &&
+                        (c.ClaimType == CustomClaimTypes.PermissionDataView || c.ClaimType == CustomClaimTypes.PermissionDataEdit))
+                        .Select(c => c.UserId);
+                    var shares = new List<ApplicationUser>();
+                    foreach (var shareId in sharedClaimIds)
+                    {
+                        shares.Add(await _userManager.FindByIdAsync(shareId));
+                    }
 
 
                     // Prefer a previously-selected user, if it's within the share group.
@@ -460,6 +469,11 @@ namespace VueCoreFramework.Controllers
             return Json(xferUsers.Select(u => u.UserName).ToArray());
         }
 
+        /// <summary>
+        /// Called to lock a user's account. Admin only.
+        /// </summary>
+        /// <param name="username">The username of the account to lock.</param>
+        /// <returns>An error if a problem occurs, or a response indicating success.</returns>
         [HttpPost("{username}")]
         public async Task<IActionResult> LockAccount(string username)
         {
@@ -501,7 +515,7 @@ namespace VueCoreFramework.Controllers
 
             _logger.LogInformation(LogEvent.LOCK_ACCOUNT, "The account belonging to User {USER} has been locked by Admin {ADMIN}.", lockUser.Email, user.Email);
 
-            return Ok();
+            return Json(new { response = ResponseMessages.Success });
         }
 
         /// <summary>
@@ -573,6 +587,11 @@ namespace VueCoreFramework.Controllers
             return model;
         }
 
+        /// <summary>
+        /// Called to unlock a user's account. Admin only.
+        /// </summary>
+        /// <param name="username">The username of the account to unlock.</param>
+        /// <returns>An error if a problem occurs, or a response indicating success.</returns>
         [HttpPost("{username}")]
         public async Task<IActionResult> UnlockAccount(string username)
         {
@@ -610,7 +629,7 @@ namespace VueCoreFramework.Controllers
 
             _logger.LogInformation(LogEvent.UNLOCK_ACCOUNT, "The account belonging to User {USER} has been unlocked by Admin {ADMIN}.", lockUser.Email, user.Email);
 
-            return Ok();
+            return Json(new { response = ResponseMessages.Success });
         }
     }
 }

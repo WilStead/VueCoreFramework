@@ -357,11 +357,11 @@ export default class DynamicFormComponent extends Vue {
                 ErrorMsg.logError("dynamic-form.onSave", new Error(error));
             });
     }
-    
+
     onSelectedShareGroupChange(val: string, oldVal: string) {
         this.shareGroup = val;
     }
-    
+
     onSelectedShareUsernameChange(val: string, oldVal: string) {
         this.shareUsername = val;
     }
@@ -379,13 +379,13 @@ export default class DynamicFormComponent extends Vue {
             }
         }
     }
-    
+
     onShareGroupChange(val: string, oldVal: string) {
         if (this.shareGroupTimeout === 0) {
             this.shareGroupTimeout = setTimeout(this.suggestShareGroup, 500);
         }
     }
-    
+
     onShareUsernameChange(val: string, oldVal: string) {
         if (this.shareUsernameTimeout === 0) {
             this.shareUsernameTimeout = setTimeout(this.suggestShareUsername, 500);

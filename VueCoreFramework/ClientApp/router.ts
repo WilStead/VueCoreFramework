@@ -205,8 +205,15 @@ export function checkAuthorization(to: VueRouter.Route): Promise<string> {
         id = to.params.id;
     }
     url += dataType;
-    if (op) url += `&operation=${op}`;
-    if (id) url += `&id=${id}`;
+    if (op) url += `?operation=${op}`;
+    if (id) {
+        if (op) {
+            url += '&';
+        } else {
+            url += '?';
+        }
+        url += `id=${id}`;
+    }
     return fetch(url,
         {
             headers: {

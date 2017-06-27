@@ -96,6 +96,38 @@ namespace VueCoreFramework.Data
         {
             var item = typeof(T).GetConstructor(Type.EmptyTypes).Invoke(new object[] { });
 
+            // Ensure non-nullable values have a default value.
+            foreach (var prop in EntityType.GetProperties().Where(p => !p.IsNullable))
+            {
+                if (prop.PropertyInfo.GetValue(item) == null)
+                {
+                    var type = Nullable.GetUnderlyingType(prop.ClrType);
+                    if (type == null)
+                    {
+                        type = prop.ClrType;
+                    }
+                    if (type == typeof(string))
+                    {
+                        prop.PropertyInfo.SetValue(item, string.Empty);
+                    }
+                    else if (type.IsNumeric())
+                    {
+                        prop.PropertyInfo.SetValue(item, 0);
+                    }
+                    else if (type.IsArray)
+                    {
+                        prop.PropertyInfo.SetValue(item, Array.CreateInstance(type, 0));
+                    }
+                    // The only other types that are not navigation properties should be DbGeography
+                    // and DbGeometry. These are not supported directly, and require the class author
+                    // to provide initialization logic (e.g. with Fluent API in OnModelCreating).
+                    else
+                    {
+                        throw new Exception($"Type {typeof(T).Name} contains a property which may be null, but is unable to be initialized to a default value. Property name: {prop.Name}.");
+                    }
+                }
+            }
+
             if (childProp != null && !string.IsNullOrEmpty(parentId))
             {
                 var parentKey = GetPrimaryKeyFromString(childProp.PropertyType, parentId);

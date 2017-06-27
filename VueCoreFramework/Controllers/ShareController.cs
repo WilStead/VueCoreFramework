@@ -475,8 +475,8 @@ namespace VueCoreFramework.Controllers
             if (!roles.Contains(CustomRoles.Admin))
             {
                 var claims = await _userManager.GetClaimsAsync(user);
-                if (!claims.Contains(new Claim(CustomClaimTypes.PermissionGroupManager, group))
-                    && !claims.Contains(new Claim(CustomClaimTypes.PermissionDataOwner, $"{dataType}{{{id}}}")))
+                if (!claims.Any(c => c.Type == CustomClaimTypes.PermissionGroupManager && c.Value == group)
+                    && !claims.Any(c => c.Type == CustomClaimTypes.PermissionDataOwner && c.Value == $"{dataType}{{{id}}}"))
                 {
                     return Json(new { error = ErrorMessages.ManagerOrOwnerOnlyError });
                 }
@@ -527,7 +527,7 @@ namespace VueCoreFramework.Controllers
                 return Json(new { error = ErrorMessages.AdminOnlyError });
             }
             if (!roles.Contains(CustomRoles.Admin)
-                && !claims.Contains(new Claim(CustomClaimTypes.PermissionDataOwner, $"{dataType}{{{id}}}")))
+                && !claims.Any(c => c.Type == CustomClaimTypes.PermissionDataOwner && c.Value == $"{dataType}{{{id}}}"))
             {
                 return Json(new { error = ErrorMessages.OwnerOnlyError });
             }
@@ -644,7 +644,7 @@ namespace VueCoreFramework.Controllers
             }
             // Admins can share data with any group as if they owned that data, regardless of their own membership.
             if (roles.Contains(CustomRoles.Admin)
-                || claims.Contains(new Claim(CustomClaimTypes.PermissionDataOwner, $"{dataType}{{{id}}}")))
+                || claims.Any(c => c.Type == CustomClaimTypes.PermissionDataOwner && c.Value == $"{dataType}{{{id}}}"))
             {
                 // Permissions other than view/edit can only be shared for an entire type.
                 if (!string.IsNullOrEmpty(id)
@@ -657,12 +657,12 @@ namespace VueCoreFramework.Controllers
             else
             {
                 // Managers of groups can re-share data with their group which has been shared with them.
-                if (claims.Contains(new Claim(CustomClaimTypes.PermissionGroupManager, group)))
+                if (claims.Any(c => c.Type == CustomClaimTypes.PermissionGroupManager && c.Value == group))
                 {
                     // If the manager has edit permission, the manager can also share view permission.
                     if (!claims.Contains(claim) &&
                         (operation != CustomClaimTypes.PermissionDataView
-                        || !claims.Contains(new Claim(CustomClaimTypes.PermissionDataEdit, $"{dataType}{{{id}}}"))))
+                        || !claims.Any(c => c.Type == CustomClaimTypes.PermissionDataEdit && c.Value == $"{dataType}{{{id}}}")))
                     {
                         return Json(new { error = ErrorMessages.ManagerOnlySharedError });
                     }
@@ -708,7 +708,7 @@ namespace VueCoreFramework.Controllers
             }
             // Admins can share data with any user as if they owned that data.
             if (roles.Contains(CustomRoles.Admin)
-                || claims.Contains(new Claim(CustomClaimTypes.PermissionDataOwner, $"{dataType}{{{id}}}")))
+                || claims.Any(c => c.Type == CustomClaimTypes.PermissionDataOwner && c.Value == $"{dataType}{{{id}}}"))
             {
                 // Permissions other than view/edit can only be shared for an entire type.
                 if (!string.IsNullOrEmpty(id)

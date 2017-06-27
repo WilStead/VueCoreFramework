@@ -123,10 +123,10 @@
                     <v-list-group>
                         <v-list-tile avatar slot="item">
                             <v-list-tile-avatar>
-                                <v-btn dark icon class="info--text" @click.native="onUserChat(foundUser)"><v-icon>chat</v-icon></v-btn>
+                                <v-btn dark icon class="info--text" @click.native="onUserChat(foundUser.username)"><v-icon>chat</v-icon></v-btn>
                             </v-list-tile-avatar>
                             <v-list-tile-content>
-                                <v-list-tile-title>{{ foundUser }}</v-list-tile-title>
+                                <v-list-tile-title>{{ foundUser.username }}</v-list-tile-title>
                             </v-list-tile-content>
                             <v-list-tile-action v-if="$store.state.userState.isAdmin && foundUserConversations.length">
                                 <v-icon>keyboard_arrow_down</v-icon>
@@ -141,6 +141,24 @@
                                 </v-list-tile-content>
                                 <v-list-tile-action>
                                     <v-btn dark icon class="info--text" @click.native="onAdminChatProxy(conversation.interlocutor)"><v-icon>chat</v-icon></v-btn>
+                                </v-list-tile-action>
+                            </v-list-tile>
+                        </v-list-item>
+                        <v-list-item>
+                            <v-list-tile v-if="foundUser.isLocked" class="primary">
+                                <v-list-tile-content>
+                                    <v-list-tile-title>Unlock user account</v-list-tile-title>
+                                </v-list-tile-content>
+                                <v-list-tile-action>
+                                    <v-btn dark icon class="white success--text" @click.native="onUnlockAccount()"><v-icon>lock_open</v-icon></v-btn>
+                                </v-list-tile-action>
+                            </v-list-tile>
+                            <v-list-tile v-else class="error">
+                                <v-list-tile-content>
+                                    <v-list-tile-title>Lock user account</v-list-tile-title>
+                                </v-list-tile-content>
+                                <v-list-tile-action>
+                                    <v-btn dark icon class="white error--text" @click.native="onLockAccount()"><v-icon>lock</v-icon></v-btn>
                                 </v-list-tile-action>
                             </v-list-tile>
                         </v-list-item>

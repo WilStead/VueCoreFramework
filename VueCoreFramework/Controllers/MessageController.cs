@@ -112,8 +112,10 @@ namespace VueCoreFramework.Controllers
             {
                 return Json(new { error = ErrorMessages.InvalidTargetGroupError });
             }
-            var managers = await _userManager.GetUsersForClaimAsync(new Claim(CustomClaimTypes.PermissionGroupManager, group));
-            var manager = managers.FirstOrDefault();
+            var managerId = _context.UserClaims.FirstOrDefault(c =>
+                c.ClaimType == CustomClaimTypes.PermissionGroupManager && c.ClaimValue == group)?
+                .UserId;
+            var manager = await _userManager.FindByIdAsync(managerId);
 
             var vms = new List<MessageViewModel>();
             foreach (var message in _context.Messages

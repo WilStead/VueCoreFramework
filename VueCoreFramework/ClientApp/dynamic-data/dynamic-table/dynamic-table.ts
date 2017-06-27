@@ -82,6 +82,8 @@ export default class DynamicTableComponent extends Vue {
     childItems: Array<DataItem> = [];
     childLoading = true;
     childPagination: Pagination = {};
+    childPaginationInitialization = 0;
+    childRoutePagination: Pagination = null;
     childSearch = '';
     deleteDialogShown = false;
     deleteAskingChildItems = [];
@@ -96,6 +98,7 @@ export default class DynamicTableComponent extends Vue {
     items: Array<DataItem> = [];
     loading = true;
     pagination: Pagination = {};
+    paginationInitialization = 0;
     parentRepository: Repository = null;
     permissionOptions = [
         { text: 'View', value: permissions.permissionDataView },
@@ -105,7 +108,9 @@ export default class DynamicTableComponent extends Vue {
     ];
     repository: Repository = null;
     routeName = '';
+    routePagination: Pagination = null;
     search = '';
+    searchDebounce = 0;
     selectedPermission = null;
     selectedShareGroup = null;
     selectedShareUsername = null;
@@ -113,6 +118,7 @@ export default class DynamicTableComponent extends Vue {
     selectErrorDialogShown = false;
     selected: Array<DataItem> = [];
     selectedChildren: Array<DataItem> = [];
+    settingParameters = false;
     shareActivity = false;
     shareDialog = false;
     shareErrorMessage = '';
@@ -130,8 +136,37 @@ export default class DynamicTableComponent extends Vue {
     updateTimeout = 0;
 
     @Watch('childPagination', { deep: true })
-    onChildPaginationChange(val: Pagination, oldVal: Pagination) {
-        this.updateChildData();
+    onChildPaginationChange(val: Pagination) {
+        if (this.childPaginationInitialization < 2) {
+            this.childPaginationInitialization++;
+            if (this.childRoutePagination) {
+                this.childPagination.sortBy = this.childRoutePagination.sortBy;
+                this.childPagination.descending = this.childRoutePagination.descending;
+                this.childPagination.page = this.childRoutePagination.page;
+                this.childPagination.rowsPerPage = this.childRoutePagination.rowsPerPage;
+            }
+        } else if (!this.childRoutePagination ||
+            (val.sortBy !== this.childRoutePagination.sortBy
+                || val.descending !== this.childRoutePagination.descending
+                || val.page !== this.childRoutePagination.page
+                || val.rowsPerPage !== this.childRoutePagination.rowsPerPage)) {
+            this.$router.push({
+                name: this.$route.name,
+                params: this.$route.params,
+                query: {
+                    search: this.$route.query.search || '',
+                    sortBy: this.pagination.sortBy || '',
+                    descending: this.pagination.descending.toString(),
+                    page: this.pagination.page.toString(),
+                    rowsPerPage: this.pagination.rowsPerPage.toString(),
+                    childSearch: this.$route.query.childSearch || '',
+                    childSortBy: val.sortBy || '',
+                    childDescending: val.descending.toString(),
+                    childPage: val.page.toString(),
+                    childRowsPerPage: val.rowsPerPage.toString()
+                }
+            });
+        }
     }
 
     @Watch('childSearch')
@@ -149,7 +184,8 @@ export default class DynamicTableComponent extends Vue {
 
     @Watch('search')
     onSearchChange(val: string, oldVal: string) {
-        this.updateData();
+        clearTimeout(this.searchDebounce);
+        this.searchDebounce = setTimeout(this.onSearch, 500);
     }
 
     @Watch('shareDialog')
@@ -160,13 +196,45 @@ export default class DynamicTableComponent extends Vue {
     }
 
     @Watch('pagination', { deep: true })
-    onPaginationChange(val: Pagination, oldVal: Pagination) {
-        this.updateData();
+    onPaginationChange(val: Pagination) {
+        if (this.paginationInitialization < 2) {
+            this.paginationInitialization++;
+            if (this.routePagination) {
+                this.pagination.sortBy = this.routePagination.sortBy;
+                this.pagination.descending = this.routePagination.descending;
+                this.pagination.page = this.routePagination.page;
+                this.pagination.rowsPerPage = this.routePagination.rowsPerPage;
+            }
+        } else if (!this.routePagination ||
+            (val.sortBy !== this.routePagination.sortBy
+                || val.descending !== this.routePagination.descending
+                || val.page !== this.routePagination.page
+                || val.rowsPerPage !== this.routePagination.rowsPerPage)) {
+            let query: any = {
+                search: this.$route.query.search || '',
+                sortBy: val.sortBy || '',
+                descending: val.descending.toString(),
+                page: val.page.toString(),
+                rowsPerPage: val.rowsPerPage.toString()
+            };
+            if (this.parentType) {
+                query.childSearch = this.$route.query.childSearch || '';
+                query.childSortBy = val.sortBy || '';
+                query.childDescending = val.descending.toString();
+                query.childPage = val.page.toString();
+                query.childRowsPerPage = val.rowsPerPage.toString();
+            }
+            this.$router.push({
+                name: this.$route.name,
+                params: this.$route.params,
+                query
+            });
+        }
     }
 
     @Watch('$route')
-    onRouteChange(val: VueRouter.Route, oldVal: VueRouter.Route) {
-        this.routeName = val.name.substr(0, val.name.length - 9); // remove 'DataTable'
+    onRouteChange(val: VueRouter.Route) {
+        this.getRouteData();
         this.repository = this.$store.getters.getRepository(this.routeName);
         if (this.updateTimeout === 0) {
             this.updateTimeout = setTimeout(this.updateTable, 125);
@@ -174,7 +242,13 @@ export default class DynamicTableComponent extends Vue {
     }
 
     mounted() {
-        this.routeName = this.$route.name.substr(0, this.$route.name.length - 9); // remove 'DataTable'
+        this.getRouteData();
+        if (this.routePagination) {
+            this.paginationInitialization--;
+        }
+        if (this.childRoutePagination) {
+            this.childPaginationInitialization--;
+        }
         this.repository = this.$store.getters.getRepository(this.routeName);
         if (this.parentType) {
             this.parentRepository = this.$store.getters.getRepository(this.parentType);
@@ -201,8 +275,9 @@ export default class DynamicTableComponent extends Vue {
     getChildData(): Promise<PageData<DataItem>> {
         this.childLoading = true;
         return new Promise((resolve, reject) => {
-            const { sortBy, descending, page, rowsPerPage } = this.childPagination;
-            this.parentRepository.getChildPage(this.$route.fullPath, this.parentId, this.parentProp, this.childSearch, sortBy, descending, page, rowsPerPage)
+            let childRouteSearch = this.$route.query.childSearch || '';
+            const { sortBy, descending, page, rowsPerPage } = this.childRoutePagination || this.childPagination;
+            this.parentRepository.getChildPage(this.$route.fullPath, this.parentId, this.parentProp, childRouteSearch, sortBy, descending, page, rowsPerPage)
                 .then(data => {
                     this.childLoading = false;
                     resolve({
@@ -218,15 +293,38 @@ export default class DynamicTableComponent extends Vue {
         });
     }
 
+    getChildRoutePagination(): Pagination {
+        if (this.$route.query.childSortBy || this.$route.query.childDescending
+            || this.$route.query.childPage || this.$route.query.childRowsPerPage) {
+            let page = Number(this.$route.query.childPage);
+            if (isNaN(page)) {
+                page = 1;
+            }
+            let rowsPerPage = Number(this.$route.query.childRowsPerPage);
+            if (isNaN(rowsPerPage)) {
+                rowsPerPage = 5;
+            }
+            return {
+                sortBy: this.$route.query.childSortBy,
+                descending: this.$route.query.childDescending === "true",
+                page,
+                rowsPerPage
+            };
+        } else {
+            return undefined;
+        }
+    }
+
     getData(): Promise<PageData<DataItem>> {
         this.loading = true;
         return new Promise((resolve, reject) => {
-            const { sortBy, descending, page, rowsPerPage } = this.pagination;
+            let routeSearch = this.$route.query.search || '';
+            const { sortBy, descending, page, rowsPerPage } = this.routePagination || this.pagination;
             if (this.parentRepository) {
                 if (this.operation === "multiselect") {
                     this.parentRepository.getAllChildIds(this.$route.fullPath, this.parentId, this.parentProp)
                         .then(childIds => {
-                            this.repository.getPage(this.$route.fullPath, this.search, sortBy, descending, page, rowsPerPage, childIds)
+                            this.repository.getPage(this.$route.fullPath, routeSearch, sortBy, descending, page, rowsPerPage, childIds)
                                 .then(data => {
                                     this.loading = false;
                                     resolve({
@@ -246,7 +344,7 @@ export default class DynamicTableComponent extends Vue {
                             reject("A problem occurred while loading the data.");
                         });
                 } else {
-                    this.parentRepository.getChildPage(this.$route.fullPath, this.parentId, this.parentProp, this.search, sortBy, descending, page, rowsPerPage)
+                    this.parentRepository.getChildPage(this.$route.fullPath, this.parentId, this.parentProp, routeSearch, sortBy, descending, page, rowsPerPage)
                         .then(data => {
                             this.loading = false;
                             resolve({
@@ -261,7 +359,7 @@ export default class DynamicTableComponent extends Vue {
                         });
                 }
             } else {
-                this.repository.getPage(this.$route.fullPath, this.search, sortBy, descending, page, rowsPerPage)
+                this.repository.getPage(this.$route.fullPath, routeSearch, sortBy, descending, page, rowsPerPage)
                     .then(data => {
                         this.loading = false;
                         resolve({
@@ -276,6 +374,46 @@ export default class DynamicTableComponent extends Vue {
                     });
             }
         });
+    }
+
+    getRouteData() {
+        this.routeName = this.$route.name.substr(0, this.$route.name.length - 9); // remove 'DataTable'
+        this.routePagination = this.getRoutePagination();
+        this.childRoutePagination = this.getChildRoutePagination();
+        if (this.routePagination) {
+            this.pagination.sortBy = this.routePagination.sortBy;
+            this.pagination.descending = this.routePagination.descending;
+            this.pagination.page = this.routePagination.page;
+            this.pagination.rowsPerPage = this.routePagination.rowsPerPage;
+        }
+        if (this.childRoutePagination) {
+            this.childPagination.sortBy = this.childRoutePagination.sortBy;
+            this.childPagination.descending = this.childRoutePagination.descending;
+            this.childPagination.page = this.childRoutePagination.page;
+            this.childPagination.rowsPerPage = this.childRoutePagination.rowsPerPage;
+        }
+    }
+
+    getRoutePagination(): Pagination {
+        if (this.$route.query.sortBy || this.$route.query.descending
+            || this.$route.query.page || this.$route.query.rowsPerPage) {
+            let page = Number(this.$route.query.page);
+            if (isNaN(page)) {
+                page = 1;
+            }
+            let rowsPerPage = Number(this.$route.query.rowsPerPage);
+            if (isNaN(rowsPerPage)) {
+                rowsPerPage = 5;
+            }
+            return {
+                sortBy: this.$route.query.sortBy,
+                descending: this.$route.query.descending === "true",
+                page,
+                rowsPerPage
+            };
+        } else {
+            return undefined;
+        }
     }
 
     onAddSelect() {
@@ -536,11 +674,26 @@ export default class DynamicTableComponent extends Vue {
                 ErrorMsg.logError("dynamic-table.onDeleteChildItem", new Error(error));
             });
     }
-    
+
+    onSearch() {
+        this.searchDebounce = 0;
+        this.$router.push({
+            name: this.$route.name,
+            params: this.$route.params,
+            query: {
+                search: this.search,
+                sortBy: this.pagination.sortBy,
+                descending: this.pagination.descending.toString(),
+                page: this.pagination.page.toString(),
+                rowsPerPage: this.pagination.rowsPerPage.toString()
+            }
+        });
+    }
+
     onSelectedShareGroupChange(val: string, oldVal: string) {
         this.shareGroup = val;
     }
-    
+
     onSelectedShareUsernameChange(val: string, oldVal: string) {
         this.shareUsername = val;
     }
@@ -585,13 +738,13 @@ export default class DynamicTableComponent extends Vue {
             }
         }
     }
-    
+
     onShareGroupChange(val: string, oldVal: string) {
         if (this.shareGroupTimeout === 0) {
             this.shareGroupTimeout = setTimeout(this.suggestShareGroup, 500);
         }
     }
-    
+
     onShareUsernameChange(val: string, oldVal: string) {
         if (this.shareUsernameTimeout === 0) {
             this.shareUsernameTimeout = setTimeout(this.suggestShareUsername, 500);
