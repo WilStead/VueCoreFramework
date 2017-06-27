@@ -659,10 +659,9 @@ namespace VueCoreFramework.Controllers
                 // Managers of groups can re-share data with their group which has been shared with them.
                 if (claims.Any(c => c.Type == CustomClaimTypes.PermissionGroupManager && c.Value == group))
                 {
-                    // If the manager has edit permission, the manager can also share view permission.
-                    if (!claims.Contains(claim) &&
-                        (operation != CustomClaimTypes.PermissionDataView
-                        || !claims.Any(c => c.Type == CustomClaimTypes.PermissionDataEdit && c.Value == $"{dataType}{{{id}}}")))
+                    if (!AuthorizationController.PermissionIncludesTarget(
+                        AuthorizationController.GetAuthorization(claims, dataType, claim.Type, id),
+                        claim.Type))
                     {
                         return Json(new { error = ErrorMessages.ManagerOnlySharedError });
                     }
@@ -744,12 +743,6 @@ namespace VueCoreFramework.Controllers
                 return false;
             }
             dataType = dataType.ToInitialCaps();
-            // Entity isn't used, but is parsed to enure it's valid.
-            var entity = _context.Model.GetEntityTypes().FirstOrDefault(e => e.Name.Substring(e.Name.LastIndexOf('.') + 1) == dataType);
-            if (entity == null)
-            {
-                return false;
-            }
 
             // Permission on the data type itself, rather than an item.
             if (string.IsNullOrEmpty(id))
@@ -770,11 +763,6 @@ namespace VueCoreFramework.Controllers
             // Permission on a specific item.
             else
             {
-                // The Guid isn't used, but it is parsed to ensure it's valid.
-                if (!Guid.TryParse(id, out Guid guid))
-                {
-                    return false;
-                }
                 // All permissions on the item.
                 if (string.IsNullOrEmpty(operation))
                 {

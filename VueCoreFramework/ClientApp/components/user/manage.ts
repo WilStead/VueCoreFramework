@@ -1,7 +1,7 @@
 ﻿import Vue from 'vue';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import * as Store from '../../store/store';
-import { checkResponse, ApiResponseViewModel } from '../../router';
+import { checkResponse, ApiResponseViewModel, authenticate } from '../../router';
 import { OperationReply } from '../../store/repository';
 import VueFormGenerator from 'vue-form-generator';
 import { Schema, VFGOptions } from '../../vfg/vfg';
@@ -215,36 +215,44 @@ export default class ManageUserComponent extends Vue {
     }
 
     cancelChange() {
-        this.success = false;
         this.changingEmail = false;
         this.changingPassword = false;
         this.changingUsername = false;
         this.settingPassword = false;
+        this.schema.fields[0].visible = false;
+        this.schema.fields[1].visible = false;
+        this.schema.fields[2].visible = false;
+        this.schema.fields[3].visible = false;
+        this.schema.fields[4].visible = false;
     }
 
     changeEmail() {
         this.success = false;
         this.changingEmail = true;
+        this.schema.fields[1].visible = true;
     }
 
     changePassword() {
         this.success = false;
         this.changingPassword = true;
+        this.schema.fields[2].visible = true;
+        this.schema.fields[3].visible = true;
+        this.schema.fields[4].visible = true;
     }
 
     changeUsername() {
         this.success = false;
         this.changingUsername = true;
+        this.schema.fields[0].visible = true;
     }
 
     loadXferUsernames() {
         this.xferLoading = true;
         fetch('/api/Manage/LoadXferUsernames',
             {
-                method: 'POST',
+                method: 'GET',
                 headers: {
                     'Accept': 'application/json',
-                    'Content-Type': 'application/json',
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })
@@ -258,7 +266,9 @@ export default class ManageUserComponent extends Vue {
                 this.xferLoading = false;
                 this.xferData = true;
             })
-            .catch(error => { });
+            .catch(error => {
+                this.xferLoading = false;
+            });
     }
 
     onDeleteAccount() {
@@ -266,7 +276,7 @@ export default class ManageUserComponent extends Vue {
         this.submitting = true;
         let url = '/api/Manage/DeleteAccount';
         if (this.selectedXferUsername) {
-            url += `/${this.selectedXferUsername}`;
+            url += `?xferUsername=${this.selectedXferUsername}`;
         }
         fetch(url,
             {
@@ -284,15 +294,15 @@ export default class ManageUserComponent extends Vue {
                 if (data.error) {
                     this.model.errors = [data.error];
                 } else {
-                    // On success, the user is no longer a signed-in user (since they no longer have an account).
-                    this.$store.commit(Store.logout);
-                    this.successMessage = "Your account has been successfully deleted. You will be returned to the homepage shortly.";
+                    this.deleteAccountDialog = false;
+                    this.successMessage = "Your request to delete your account has been received. An email has just been sent to the address on your account. Please click on the link in this email to confirm the deletion of your account.";
                     this.success = true;
-                    setTimeout(() => this.$router.push('/'), 5000);
                 }
             })
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                this.model.errors = ["A problem occurred. Your account has not been deleted."];
+                ErrorMsg.logError("user/manage.onDeleteAccount", new Error(error));
+                this.submitting = false;
             });
     }
 
@@ -388,6 +398,7 @@ export default class ManageUserComponent extends Vue {
                 if (Object.keys(data.errors).length === 0) {
                     this.success = true;
                     this.successMessage = "Success!";
+                    authenticate(true);
                     this.cancelChange();
                 } else {
                     this.success = false;
@@ -395,7 +406,8 @@ export default class ManageUserComponent extends Vue {
                 }
             })
             .catch(error => {
-                ErrorMsg.showErrorMsgAndLog("user/manage.onSubmit", "A problem occurred. Your request was not received.", new Error(error));
+                this.model.errors = ["A problem occurred. Your request was not received."];
+                ErrorMsg.logError("user/manage.onSubmit", new Error(error));
                 this.success = false;
             });
     }
@@ -434,13 +446,16 @@ export default class ManageUserComponent extends Vue {
     setPassword() {
         this.success = false;
         this.settingPassword = true;
+        this.schema.fields[2].visible = true;
+        this.schema.fields[3].visible = true;
+        this.schema.fields[4].visible = true;
     }
 
     usernameValidation() {
         if (this.selectedXferUsername
             && (this.selectedXferUsername.length < 6
                 || this.selectedXferUsername.length > 24
-                || !RegExp(/^[\w.@-]+&/).test(this.selectedXferUsername))) {
+                || !RegExp(/^[\w.@-]+$/).test(this.selectedXferUsername))) {
             this.validXferUsername = false;
             return "Invalid username";
         }

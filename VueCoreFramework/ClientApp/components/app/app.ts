@@ -107,6 +107,8 @@ export default class AppComponent extends Vue {
     getMessageClass(message: MessageViewModel) {
         if (message.username === this.$store.state.userState.username) {
             return { 'blue--text': true };
+        } else if (message.username === this.$store.state.uiState.messaging.proxySender) {
+            return { 'blue--text': true, 'text--lighten-2': true };
         } else if (message.isUserSiteAdmin) {
             return { 'yellow--text': true, 'text--accent-4': true };
         } else if (message.isUserAdmin) {
@@ -147,7 +149,7 @@ export default class AppComponent extends Vue {
     }
 
     onAdminChatProxy(interlocutor: string) {
-        this.$store.commit(Store.startChatAdminReview, { proxySender: this.foundUser, interlocutor });
+        this.$store.commit(Store.startChatAdminReview, { proxySender: this.foundUser.username, interlocutor });
         this.$store.dispatch(Store.refreshChat, this.$route.fullPath)
             .then(() => {
                 let chat = document.getElementById('chat-row');
@@ -205,9 +207,21 @@ export default class AppComponent extends Vue {
             });
     }
 
+    onMessageTextKeypress(event: KeyboardEvent) {
+        if (event.key === "Enter") {
+            this.sendMessage();
+        }
+    }
+
     onSearchUsernameChange(val: string, oldVal: string) {
         if (this.searchUsernameTimeout === 0) {
             this.searchUsernameTimeout = setTimeout(this.suggestSearchUsername, 500);
+        }
+    }
+
+    onSearchUsernameKeypress(event: KeyboardEvent) {
+        if (event.key === "Enter") {
+            this.onUsernameSearch();
         }
     }
 
@@ -268,7 +282,7 @@ export default class AppComponent extends Vue {
                 .then(data => {
                     if (data['error']) {
                         throw new Error(data['error']);
-                    } else if (!data['response']) {
+                    } else if (data['response'] !== false) {
                         this.foundUser = data;
                         messaging.getProxyConversations(this.$route.fullPath, this.foundUser.username)
                             .then(data => {

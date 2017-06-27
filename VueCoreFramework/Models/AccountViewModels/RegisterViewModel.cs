@@ -42,16 +42,6 @@ namespace VueCoreFramework.Models.AccountViewModels
         public string ConfirmPassword { get; set; }
 
         /// <summary>
-        /// An optional URL to which the user will be redirected.
-        /// </summary>
-        public string ReturnUrl { get; set; }
-
-        /// <summary>
-        /// Indicates that the user is to be redirected to another page.
-        /// </summary>
-        public bool Redirect { get; set; }
-
-        /// <summary>
         /// A list of errors generated during the operation.
         /// </summary>
         public List<string> Errors { get; set; }

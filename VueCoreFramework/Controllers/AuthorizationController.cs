@@ -250,7 +250,7 @@ namespace VueCoreFramework.Controllers
             return highest;
         }
 
-        private static bool PermissionIncludesTarget(string permission, string targetPermission)
+        internal static bool PermissionIncludesTarget(string permission, string targetPermission)
         {
             if (permission == CustomClaimTypes.PermissionDataAll)
             {

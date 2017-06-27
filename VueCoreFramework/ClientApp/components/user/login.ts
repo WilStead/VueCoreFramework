@@ -155,8 +155,10 @@ export default class LoginComponent extends Vue {
             {
                 method: 'POST',
                 headers: {
-                    'Authorization': `bearer ${this.$store.state.userState.token}`
-                }
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(this.model)
             })
             .then(response => response.json() as Promise<ApiResponseViewModel>)
             .then(data => {
@@ -171,6 +173,7 @@ export default class LoginComponent extends Vue {
             .catch(error => {
                 this.model.errors.push("A problem occurred. Your request was not received.");
                 ErrorMsg.logError("login.resetPassword", new Error(error));
+                this.submitting = false;
             });
     }
 

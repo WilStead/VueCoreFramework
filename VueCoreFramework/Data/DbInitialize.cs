@@ -67,6 +67,20 @@ namespace VueCoreFramework.Data
                 }
                 context.SaveChanges();
             }
+            if (!context.Users.Any(u => !u.Roles.Any()))
+            {
+                var userManager = provider.GetRequiredService<UserManager<ApplicationUser>>();
+                var user = context.Users.FirstOrDefault(u => u.Email == "test_user_2@example.com");
+                if (user == null)
+                {
+                    user = new ApplicationUser { UserName = "Test_User_2", Email = "test_user_2@example.com" };
+                    userManager.CreateAsync(user, "Password_1").Wait();
+                    user = userManager.Users.FirstOrDefault(u => u.UserName == "Test_User_2");
+                    user.EmailConfirmed = true;
+                    userManager.UpdateAsync(user).Wait();
+                }
+                context.SaveChanges();
+            }
 
             if (!context.Countries.Any())
             {

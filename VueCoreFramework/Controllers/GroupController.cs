@@ -478,6 +478,10 @@ namespace VueCoreFramework.Controllers
             {
                 return Json(new { error = ErrorMessages.OnlyAdminCanBeAdminError });
             }
+            if (lowerGroup == "system")
+            {
+                return Json(new { error = ErrorMessages.CannotBeSystemError });
+            }
             if (lowerGroup == "true" || lowerGroup == "false")
             {
                 return Json(new { error = ErrorMessages.InvalidNameError });

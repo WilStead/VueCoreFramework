@@ -137,7 +137,7 @@ export const requireUsername = <VFG_Validator>function (value, field, model, mes
     if (value === undefined || value === null || value === "") {
         return ["A username is required"];
     }
-    let re = /^[\w.@-]+&/;
+    let re = /^[\w.@-]+$/;
     if (!re.test(value))
         return ["Usernames can contain only letters, numbers, underscores, hyphens, and periods"];
 }

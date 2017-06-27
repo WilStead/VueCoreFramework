@@ -65,7 +65,7 @@ export default class ManageGroupComponent extends Vue {
 
     onCreateGroup() {
         if (this.newGroupName) {
-            let re = /^[\w.@-]+&/;
+            let re = /^[\w.@-]+$/;
             if (re.test(this.newGroupName)) {
                 this.activity = true;
                 this.errorMessage = '';
@@ -172,7 +172,7 @@ export default class ManageGroupComponent extends Vue {
 
     onInvite() {
         this.inviteDialog = false;
-        fetch(`/api/Group/InviteUserToGroup/${this.searchUsername}/${this.inviteGroup}`,
+        fetch(`/api/Group/InviteUserToGroup/${this.searchUsername}/${this.inviteGroup.name}`,
             {
                 method: 'POST',
                 headers: {
@@ -269,6 +269,12 @@ export default class ManageGroupComponent extends Vue {
     onSearchGroupChange(val: string, oldVal: string) {
         if (this.searchGroupTimeout === 0) {
             this.searchGroupTimeout = setTimeout(this.suggestSearchGroup, 500);
+        }
+    }
+
+    onSearchGroupKeypress(event: KeyboardEvent) {
+        if (event.key === "Enter") {
+            this.onGroupSearch();
         }
     }
 
@@ -400,7 +406,7 @@ export default class ManageGroupComponent extends Vue {
         if (!this.newGroupName) {
             return "A name is required";
         } else {
-            let re = /^[\w.@-]+&/;
+            let re = /^[\w.@-]+$/;
             if (!re.test(this.newGroupName)) {
                 return "Group names can contain only letters, numbers, underscores, hyphens, and periods";
             }

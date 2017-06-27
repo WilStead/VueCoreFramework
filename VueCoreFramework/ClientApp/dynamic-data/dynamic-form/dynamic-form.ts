@@ -61,6 +61,7 @@ export default class DynamicFormComponent extends Vue {
     shareGroup = '';
     shareGroupSuggestion = '';
     shareGroupTimeout = 0;
+    shareSuccessMessage = '';
     shareUsernameSuggestion = '';
     shareUsernameTimeout = 0;
     shares: ShareData[] = [];
@@ -294,6 +295,7 @@ export default class DynamicFormComponent extends Vue {
     onHide(share: ShareData) {
         this.shareActivity = true;
         this.shareErrorMessage = '';
+        this.shareSuccessMessage = '';
         let action: string;
         if (share.name === 'All Users') {
             action = 'HideDataFromAll';
@@ -318,6 +320,7 @@ export default class DynamicFormComponent extends Vue {
                     this.shareErrorMessage = data.error;
                 } else {
                     this.updateShares();
+                    this.shareSuccessMessage = 'Success';
                 }
                 this.shareActivity = false;
             })
@@ -433,11 +436,12 @@ export default class DynamicFormComponent extends Vue {
     share(action: string, target?: string) {
         this.shareActivity = true;
         this.shareErrorMessage = '';
+        this.shareSuccessMessage = '';
         let url = `/api/Share/${action}`;
         if (target) {
             url += `/${target}`;
         }
-        url += `/${this.$route.name}?operation=${this.selectedPermission.value}&id=${this.id}`;
+        url += `/${this.$route.name}?operation=${this.selectedPermission}&id=${this.id}`;
         fetch(url,
             {
                 method: 'POST',
@@ -453,6 +457,7 @@ export default class DynamicFormComponent extends Vue {
                     this.shareErrorMessage = data.error;
                 } else {
                     this.updateShares();
+                    this.shareSuccessMessage = 'Success';
                 }
                 this.shareActivity = false;
             })

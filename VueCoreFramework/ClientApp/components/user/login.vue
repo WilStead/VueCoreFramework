@@ -15,8 +15,8 @@
             </v-card-row>
             <div v-else>
                 <v-card-row class="submit-row">
-                    <v-btn dark primary ripple v-if="this.forgottenPassword" @click.native="resetPassword">Reset</v-btn>
-                    <v-btn dark primary ripple v-if="!this.forgottenPassword" @click.native="onSubmit">Sign In</v-btn>
+                    <v-btn dark primary ripple v-if="this.forgottenPassword" @click.native="resetPassword">Reset Password</v-btn>
+                    <v-btn dark primary ripple v-else @click.native="onSubmit">Sign In</v-btn>
                     <router-link class="ml-5 mr-3" :to="{ path: '/register', query: { returnUrl }}">New? Register here</router-link>
                 </v-card-row>
                 <v-card-row>

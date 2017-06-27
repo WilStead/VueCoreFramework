@@ -30,16 +30,6 @@ interface RegisterViewModel {
     confirmPassword: string;
 
     /**
-     * An optional URL to which the user will be redirected.
-     */
-    returnUrl: string;
-
-    /**
-     * Indicates that the user is to be redirected to another page.
-     */
-    redirect: boolean;
-
-    /**
      * A list of errors generated during the operation.
      */
     errors: Array<string>;
@@ -54,16 +44,17 @@ export default class RegisterComponent extends Vue {
         'vue-form-generator': VueFormGenerator.component
     };
 
+    formOptions: VFGOptions = {
+        validateAfterChanged: true
+    };
+    isValid = false;
     model: RegisterViewModel = {
         username: '',
         email: '',
         password: '',
         confirmPassword: '',
-        returnUrl: this.returnUrl || '',
-        redirect: false,
         errors: []
     };
-
     schema: Schema = {
         fields: [
             {
@@ -105,12 +96,9 @@ export default class RegisterComponent extends Vue {
             }
         ]
     };
+    success = false;
+    submitting = false;
 
-    formOptions: VFGOptions = {
-        validateAfterChanged: true
-    };
-
-    isValid = false;
     onValidated(isValid: boolean, errors: Array<any>) {
         this.isValid = isValid;
     }
@@ -124,8 +112,8 @@ export default class RegisterComponent extends Vue {
         }
     }
 
-    submitting = false;
     onSubmit() {
+        this.success = false;
         if (!this.isValid) return;
         this.model.errors = [];
         fetch('/api/Account/Register',
@@ -139,12 +127,15 @@ export default class RegisterComponent extends Vue {
             })
             .then(response => response.json() as Promise<RegisterViewModel>)
             .then(data => {
-                if (data.redirect) {
-                    this.$router.push(data.returnUrl);
-                } else {
+                if (data.errors) {
                     this.model.errors = data.errors;
+                } else {
+                    this.success = true;
                 }
             })
-            .catch(error => ErrorMsg.showErrorMsgAndLog("register.onSubmit", "A problem occurred. Your account acould not be registered.", new Error(error)));
+            .catch(error => {
+                this.model.errors = ["A problem occurred. Your account acould not be registered."];
+                ErrorMsg.logError("register.onSubmit", new Error(error));
+            });
     }
 }

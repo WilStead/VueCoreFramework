@@ -10,6 +10,7 @@
         public const string AlreadyLockedError = "The account you specified is already locked.";
         public const string AlreadyUnlockedError = "The account you specified is not locked.";
         public const string AuthProviderError = "There was a problem authorizing with that provider.";
+        public const string CannotBeSystemError = "Names may not appear to imitate the system.";
         public const string ChangeEmailLimitError = "You may not change the email on your account more than once per day.";
         public const string ConfirmEmailLoginError = "You must have a confirmed email to log in. Please check your email for your confirmation link. If you've lost the email, please register again.";
         public const string ConfirmEmailRegisterError = "An account with this email has already been registered, but your email address has not been confirmed. A new link has just been sent, in case the last one got lost. Please check your spam if you don't see it after a few minutes.";

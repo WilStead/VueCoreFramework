@@ -20,8 +20,8 @@
                             <v-list-tile avatar
                                          v-for="message in $store.state.uiState.messaging.messages"
                                          :key="message.timestamp"
-                                         v-tooltip:top="{ html: formatTimestamp(message.timestamp) }">
-                                <v-list-tile-content v-if="message.isSystemMessage" class="grey--text text--darken-1">[SYSTEM]:</v-list-tile-content>
+                                         v-tooltip:bottom="{ html: formatTimestamp(message.timestamp) }">
+                                <v-list-tile-content v-if="message.isSystemMessage" class="grey--text text--darken-1">[***SYSTEM***]:</v-list-tile-content>
                                 <v-list-tile-content v-else :class="getMessageClass(message)">[{{ message.username }}]:</v-list-tile-content>
                                 <v-list-tile-content>
                                     <v-list-tile-title>
@@ -35,7 +35,7 @@
                 <v-divider style="flex-grow: 0; flex-basis: 1px;"></v-divider>
                 <v-card-row v-if="!$store.state.uiState.messaging.proxySender && ($store.state.uiState.messaging.groupChat || $store.state.uiState.messaging.interlocutor)"
                             style="flex-grow: 0;">
-                    <v-card-text class="pt-0 pb-0">
+                    <v-card-text class="pt-0 pb-0" @keypress.stop="onMessageTextKeypress($event)">
                         <v-text-field v-model="messageText"
                                       max="125"
                                       :counter="messageText.length > 125"
@@ -108,7 +108,7 @@
                 <v-list-item>
                     <v-list-tile>
                         <v-list-tile-content>
-                            <v-list-tile-title>
+                            <v-list-tile-title @keypress.stop="onSearchUsernameKeypress($event)">
                                 <v-text-field label="Username"
                                               v-model="searchUsername"
                                               @input="onSearchUsernameChange"
@@ -121,14 +121,14 @@
                 </v-list-item>
                 <v-list-item v-if="foundUser">
                     <v-list-group>
-                        <v-list-tile avatar slot="item">
+                        <v-list-tile avatar slot="item" v-tooltip:top="{ html: foundUser.email }">
                             <v-list-tile-avatar>
                                 <v-btn dark icon class="info--text" @click.native="onUserChat(foundUser.username)"><v-icon>chat</v-icon></v-btn>
                             </v-list-tile-avatar>
                             <v-list-tile-content>
                                 <v-list-tile-title>{{ foundUser.username }}</v-list-tile-title>
                             </v-list-tile-content>
-                            <v-list-tile-action v-if="$store.state.userState.isAdmin && foundUserConversations.length">
+                            <v-list-tile-action>
                                 <v-icon>keyboard_arrow_down</v-icon>
                             </v-list-tile-action>
                         </v-list-tile>

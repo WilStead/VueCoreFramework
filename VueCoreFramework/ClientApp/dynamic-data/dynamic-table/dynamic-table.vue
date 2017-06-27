@@ -12,6 +12,7 @@
                             <v-card-title><span class="white--text">Sharing</span></v-card-title>
                         </v-card-row>
                         <v-alert error :value="shareErrorMessage">{{ shareErrorMessage }}</v-alert>
+                        <v-alert success :value="shareSuccessMessage">{{ shareSuccessMessage }}</v-alert>
                         <v-card-row>
                             <v-card-text>
                                 <v-list>
@@ -176,8 +177,7 @@
                     <span v-if="deleteAskingChildItems.indexOf(props.item[props.item.primaryKeyProperty]) !== -1">Are you sure?</span>
                     <v-btn v-else icon v-tooltip:top="{ html: 'view/edit' }" @click.native="onViewChildItem(props.item[props.item.primaryKeyProperty])"><v-icon class="info--text">edit</v-icon></v-btn>
                 </td>
-                <td v-if="deletePendingChildItems.indexOf(props.item[props.item.primaryKeyProperty]) === -1">
-                </td>
+                <td v-if="deletePendingChildItems.indexOf(props.item[props.item.primaryKeyProperty]) === -1"></td>
                 <td v-if="deletePendingChildItems.indexOf(props.item[props.item.primaryKeyProperty]) === -1 && (canAdd || deleteAskingChildItems.indexOf(props.item[props.item.primaryKeyProperty]) !== -1)">
                     <v-btn v-if="deleteAskingChildItems.indexOf(props.item[props.item.primaryKeyProperty]) !== -1" icon v-tooltip:top="{ html: 'cancel delete' }" @click.native="cancelDeleteChild(props.item[props.item.primaryKeyProperty])"><v-icon class="success--text">undo</v-icon></v-btn>
                     <v-btn v-else-if="canAdd" icon v-tooltip:top="{ html: 'copy' }" @click.native="onDuplicate(props.item[props.item.primaryKeyProperty])"><v-icon class="info--text">content_copy</v-icon></v-btn>
@@ -191,14 +191,12 @@
         <v-card-row v-if="activity" class="activity-row">
             <v-progress-circular indeterminate class="primary--text"></v-progress-circular>
         </v-card-row>
-        <v-card-row v-else>
-            <div v-if="operation === 'select'" class="submit-row condensed">
-                <v-btn dark default @click.native="onCancel">Cancel</v-btn>
-                <v-btn dark primary @click.native.stop="onSelectItem">Submit</v-btn>
-            </div>
-            <div v-else-if="operation === 'multiselect' || operation === 'collection'" class="submit-row condensed">
-                <v-btn dark primary @click.native="onCancel">Finish</v-btn>
-            </div>
+        <v-card-row v-else-if="operation === 'select'" class="submit-row condensed">
+            <v-btn dark default @click.native="onCancel">Cancel</v-btn>
+            <v-btn dark primary @click.native.stop="onSelectItem">Submit</v-btn>
+        </v-card-row>
+        <v-card-row v-else-if="operation === 'multiselect' || operation === 'collection'" class="submit-row condensed">
+            <v-btn dark primary @click.native="onCancel">Finish</v-btn>
         </v-card-row>
         <v-dialog v-model="selectErrorDialogShown">
             <v-card>

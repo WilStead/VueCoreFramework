@@ -108,7 +108,7 @@ export const messaging = {
      * @returns {ConversationViewModel[]} The list of conversations.
      */
     getProxyConversations(returnPath: string, proxy: string): Promise<ConversationViewModel[]> {
-        return fetch(`/api/Message/GetProxyConversations`,
+        return fetch(`/api/Message/GetProxyConversations/${proxy}`,
             {
                 method: 'GET',
                 headers: {

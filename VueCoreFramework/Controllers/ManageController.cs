@@ -178,7 +178,7 @@ namespace VueCoreFramework.Controllers
         /// An error if there is a problem; or redirects to the SPA page for account deletion.
         /// </returns>
         [HttpPost("api/[controller]/[action]")]
-        public async Task<IActionResult> DeleteAccount()
+        public async Task<IActionResult> DeleteAccount(string xferUsername)
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
@@ -196,34 +196,7 @@ namespace VueCoreFramework.Controllers
                 return Json(new { error = ErrorMessages.DeleteLimitError });
             }
 
-            // Redirect to the 'delete account' page in the SPA with a code that will later be used
-            // to verify the user by email.
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            return RedirectToAction(nameof(HomeController.Index), "Home", new { forwardUrl = $"/user/delete/:{code}" });
-        }
-
-        /// <summary>
-        /// Called to confirm an account deletion for a user.
-        /// </summary>
-        /// <param name="code">A confirmation token.</param>
-        /// <param name="xferUsername">
-        /// Optional: the username of a user to whom all owned data and group manager roles will be transferred.
-        /// </param>
-        /// <returns>
-        /// An error if there is a problem; or an Ok result.
-        /// </returns>
-        [HttpPost("api/[controller]/[action]")]
-        public async Task<IActionResult> DeleteAccountConfirm(string code, string xferUsername)
-        {
-            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            if (user == null)
-            {
-                return Json(new { error = ErrorMessages.InvalidUserError });
-            }
-            if (user.AdminLocked)
-            {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
-            }
             var restoreCallbackUrl = Url.Action(
                 nameof(ManageController.DeleteAccountCallback),
                 "Manage",
@@ -232,7 +205,7 @@ namespace VueCoreFramework.Controllers
             var loginLink = Url.Action(nameof(HomeController.Index), "Home", new { forwardUrl = "/login" });
             await _emailSender.SendEmailAsync(user.Email, "Confirm your account deletion",
                 $"A request was made to delete your account. If you wish to permanently delete your account, please click this link to confirm: <a href='{restoreCallbackUrl}'>link</a>. If you did not initiate this action, please do not click the link. Instead, you should <a href='{loginLink}'>log into your account</a> and change your password to prevent any further unauthorized use.");
-            return Ok();
+            return Json(new { response = ResponseMessages.Success });
         }
 
         /// <summary>
@@ -474,7 +447,7 @@ namespace VueCoreFramework.Controllers
         /// </summary>
         /// <param name="username">The username of the account to lock.</param>
         /// <returns>An error if a problem occurs, or a response indicating success.</returns>
-        [HttpPost("{username}")]
+        [HttpPost("api/[controller]/[action]/{username}")]
         public async Task<IActionResult> LockAccount(string username)
         {
             if (string.IsNullOrEmpty(username))
@@ -592,7 +565,7 @@ namespace VueCoreFramework.Controllers
         /// </summary>
         /// <param name="username">The username of the account to unlock.</param>
         /// <returns>An error if a problem occurs, or a response indicating success.</returns>
-        [HttpPost("{username}")]
+        [HttpPost("api/[controller]/[action]/{username}")]
         public async Task<IActionResult> UnlockAccount(string username)
         {
             if (string.IsNullOrEmpty(username))

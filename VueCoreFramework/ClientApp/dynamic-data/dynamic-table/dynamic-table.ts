@@ -122,6 +122,7 @@ export default class DynamicTableComponent extends Vue {
     shareActivity = false;
     shareDialog = false;
     shareErrorMessage = '';
+    shareSuccessMessage = '';
     shareGroups: string[] = [];
     shareGroup = '';
     shareGroupSuggestion = '';
@@ -600,6 +601,7 @@ export default class DynamicTableComponent extends Vue {
     onHide(share: ShareData) {
         this.shareActivity = true;
         this.shareErrorMessage = '';
+        this.shareSuccessMessage = '';
         let action: string;
         if (share.name === 'All Users') {
             action = 'HideDataFromAll';
@@ -624,6 +626,7 @@ export default class DynamicTableComponent extends Vue {
                     this.shareErrorMessage = data.error;
                 } else {
                     this.updateShares();
+                    this.shareSuccessMessage = 'Success';
                 }
                 this.shareActivity = false;
             })
@@ -762,6 +765,7 @@ export default class DynamicTableComponent extends Vue {
     share(action: string, target?: string) {
         this.shareActivity = true;
         this.shareErrorMessage = '';
+        this.shareSuccessMessage = '';
         let url = `/api/Share/${action}`;
         if (target) {
             url += `/${target}`;
@@ -785,6 +789,7 @@ export default class DynamicTableComponent extends Vue {
                     this.shareErrorMessage = data.error;
                 } else {
                     this.updateShares();
+                    this.shareSuccessMessage = 'Success';
                 }
                 this.shareActivity = false;
             })

@@ -140,10 +140,10 @@ interface AuthorizationViewModel {
  * Calls an API endpoint which authenticates the current user.
  * @returns {string} Either 'authorized' or 'login' if the user must sign in.
  */
-export function authenticate(): Promise<string> {
+export function authenticate(full?: boolean): Promise<string> {
     let url = '/api/Authorization/Authenticate/';
-    let full = false;
-    if (!Store.store.state.userState.email
+    if (full
+        || !Store.store.state.userState.email
         || Store.store.state.userState.email === "user@example.com") {
         full = true;
         url += '?full=true';

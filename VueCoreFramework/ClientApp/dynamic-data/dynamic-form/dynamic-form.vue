@@ -1,27 +1,5 @@
 ﻿<template>
     <v-card>
-        <v-dialog v-model="model.deleteDialogShown">
-            <v-card>
-                <v-card-row>
-                    <v-card-title>Are you sure you want to delete this item?</v-card-title>
-                </v-card-row>
-                <v-card-row actions>
-                    <v-btn class="success--text" flat @click.native="onCancelDelete">Cancel</v-btn>
-                    <v-btn class="error--text" flat @click.native="onDelete">Delete</v-btn>
-                </v-card-row>
-            </v-card>
-        </v-dialog>
-        <v-dialog v-model="model.replaceDialogShown">
-            <v-card>
-                <v-card-row>
-                    <v-card-title>Are you sure you want to replace the current item? This action cannot be undone.</v-card-title>
-                </v-card-row>
-                <v-card-row actions>
-                    <v-btn class="success--text" flat @click.native="onCancelReplace">Cancel</v-btn>
-                    <v-btn class="error--text" flat @click.native="onReplace">Replace</v-btn>
-                </v-card-row>
-            </v-card>
-        </v-dialog>
         <v-alert error :value="errorMessage">{{ errorMessage }}</v-alert>
         <v-card-row>
             <v-card-title class="pt-0 pb-0">
@@ -34,6 +12,7 @@
                             <v-card-title><span class="white--text">Sharing</span></v-card-title>
                         </v-card-row>
                         <v-alert error :value="shareErrorMessage">{{ shareErrorMessage }}</v-alert>
+                        <v-alert success :value="shareSuccessMessage">{{ shareSuccessMessage }}</v-alert>
                         <v-card-row>
                             <v-card-text>
                                 <v-list>
@@ -133,6 +112,28 @@
                 <v-btn dark primary :class="{ 'btn--disabled': !isValid }" @click.native="onSave">Save</v-btn>
             </div>
         </v-card-row>
+        <v-dialog v-model="model.deleteDialogShown">
+            <v-card>
+                <v-card-row>
+                    <v-card-title>Are you sure you want to delete this item?</v-card-title>
+                </v-card-row>
+                <v-card-row actions>
+                    <v-btn class="success--text" flat @click.native="onCancelDelete">Cancel</v-btn>
+                    <v-btn class="error--text" flat @click.native="onDelete">Delete</v-btn>
+                </v-card-row>
+            </v-card>
+        </v-dialog>
+        <v-dialog v-model="model.replaceDialogShown">
+            <v-card>
+                <v-card-row>
+                    <v-card-title>Are you sure you want to replace the current item? This action cannot be undone.</v-card-title>
+                </v-card-row>
+                <v-card-row actions>
+                    <v-btn class="success--text" flat @click.native="onCancelReplace">Cancel</v-btn>
+                    <v-btn class="error--text" flat @click.native="onReplace">Replace</v-btn>
+                </v-card-row>
+            </v-card>
+        </v-dialog>
     </v-card>
 </template>
 

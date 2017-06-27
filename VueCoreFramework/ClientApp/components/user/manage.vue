@@ -9,7 +9,7 @@
             </v-card-row>
             <v-alert error :value="model.errors.length > 0">
                 <ul>
-                    <li v-for="error in model.errors" class="error--text">{{ error }}</li>
+                    <li v-for="error in model.errors" class="white--text">{{ error }}</li>
                 </ul>
             </v-alert>
             <v-alert success v-model="success">{{ successMessage }}</v-alert>
@@ -54,11 +54,11 @@
             </v-card-row>
             <v-card-row v-if="!submitting && !changingUsername && !changingEmail && !changingPassword && !settingPassword">
                 <v-card-text>
-                    <v-dialog v-model="deleteAccountDialog">
+                    <v-dialog v-model="deleteAccountDialog" fullscreen>
                         <v-btn error light slot="activator">Delete Account</v-btn>
                         <v-card>
-                            <v-card-row error>
-                                <v-card-title class="white--text">Are you sure you want to delete your account?</v-card-title>
+                            <v-card-row>
+                                <v-card-title class="error white--text">Are you sure you want to delete your account?</v-card-title>
                             </v-card-row>
                             <v-card-row>
                                 <v-card-text class="error--text">This will delete all data associated with your account that isn't being shared with others (unless you choose to transfer it, below). Even if you sign up again later with the same account information, any deleted data will remain lost.</v-card-text>
@@ -72,21 +72,21 @@
                             <v-divider></v-divider>
                             <v-card-row>
                                 <v-checkbox dark label="Transfer my data to another user" v-model="xferData"></v-checkbox>
-                                <div v-if="xferData">
-                                    <v-text-field label="Username"
-                                                  hint="Type or select below"
-                                                  v-model="selectedXferUsername"
-                                                  rules="[usernameValidation]"></v-text-field>
-                                    <v-select dark single-line auto :items="xferUsernames" v-model="selectedXferUsername"></v-select>
-                                </div>
                             </v-card-row>
-                            <v-divider></v-divider>
+                            <v-card-row v-if="xferData">
+                                <v-text-field label="Username"
+                                              v-model="selectedXferUsername"
+                                              :rules="[usernameValidation]"></v-text-field>
+                            </v-card-row>
+                            <v-card-row v-if="xferData && xferUsernames.length > 0">
+                                <v-select label="Known users" dark single-line auto :items="xferUsernames.filter(u => u !== $store.state.userState.username)" v-model="selectedXferUsername"></v-select>
+                            </v-card-row>
                             <v-card-row v-if="xferLoading" class="activity-row">
                                 <v-progress-circular indeterminate class="primary--text"></v-progress-circular>
                             </v-card-row>
                             <v-card-row v-else actions>
-                                <v-btn primary dark flat @click.native="deleteAccountDialog = false">Cancel</v-btn>
-                                <v-btn :disabled="xferData && !validXferUsername" error dark flat @click.native="onDeleteAccount">Delete Account</v-btn>
+                                <v-btn dark flat class="success--text" @click.native="deleteAccountDialog = false">Cancel</v-btn>
+                                <v-btn :disabled="xferData && !validXferUsername" error dark @click.native="onDeleteAccount">Delete Account</v-btn>
                             </v-card-row>
                         </v-card>
                     </v-dialog>

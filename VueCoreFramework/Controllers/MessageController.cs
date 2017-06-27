@@ -68,6 +68,7 @@ namespace VueCoreFramework.Controllers
                 .Include(m => m.Sender)
                 .Include(m => m.SingleRecipient)
                 .Where(m => !m.IsSystemMessage
+                && m.GroupRecipient == null
                 && ((m.Sender == user && !m.SenderDeleted)
                 || (m.SingleRecipient == user && !m.RecipientDeleted))))
             {
@@ -124,17 +125,30 @@ namespace VueCoreFramework.Controllers
                 .Where(m => m.GroupRecipient == groupRole)
                 .OrderBy(m => m.Timestamp))
             {
-                var roles = await _userManager.GetRolesAsync(message.Sender);
-                vms.Add(new MessageViewModel
+                if (message.IsSystemMessage)
                 {
-                    Content = message.Content,
-                    IsSystemMessage = message.IsSystemMessage,
-                    IsUserAdmin = roles.Contains(CustomRoles.Admin),
-                    IsUserManager = message.Sender == manager,
-                    IsUserSiteAdmin = roles.Contains(CustomRoles.SiteAdmin),
-                    Username = message.SenderUsername,
-                    Timestamp = message.Timestamp
-                });
+                    vms.Add(new MessageViewModel
+                    {
+                        Content = message.Content,
+                        IsSystemMessage = true,
+                        Username = message.SenderUsername,
+                        Timestamp = message.Timestamp
+                    });
+                }
+                else
+                {
+                    var roles = await _userManager.GetRolesAsync(message.Sender);
+                    vms.Add(new MessageViewModel
+                    {
+                        Content = message.Content,
+                        IsSystemMessage = false,
+                        IsUserAdmin = roles.Contains(CustomRoles.Admin),
+                        IsUserManager = message.Sender == manager,
+                        IsUserSiteAdmin = roles.Contains(CustomRoles.SiteAdmin),
+                        Username = message.SenderUsername,
+                        Timestamp = message.Timestamp
+                    });
+                }
             }
             return Json(vms);
         }
@@ -195,7 +209,7 @@ namespace VueCoreFramework.Controllers
         /// <returns>
         /// An error if there is a problem; or the ordered list of <see cref="MessageViewModel"/>s.
         /// </returns>
-        [HttpGet("{username}")]
+        [HttpGet("{proxy}/{username}")]
         public async Task<IActionResult> GetProxyUserMessages(string proxy, string username)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;

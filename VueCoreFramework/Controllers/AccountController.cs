@@ -203,7 +203,11 @@ namespace VueCoreFramework.Controllers
         [HttpPost]
         public async Task<IActionResult> ForgotPassword([FromBody]LoginViewModel model)
         {
-            var user = await _userManager.FindByEmailAsync(model.Username);
+            var user = await _userManager.FindByNameAsync(model.Username);
+            if (user == null)
+            {
+                user = await _userManager.FindByEmailAsync(model.Username);
+            }
             if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
             {
                 // Don't reveal that the user does not exist or is not confirmed
@@ -221,7 +225,7 @@ namespace VueCoreFramework.Controllers
             await _emailSender.SendEmailAsync(model.Username, "Reset Password",
                 $"Please reset your password by clicking here: <a href='{callbackUrl}'>{callbackUrl}</a>");
             _logger.LogInformation(LogEvent.RESET_PW_REQUEST, "Password reset request received for {USER}.", user.Email);
-            return Ok();
+            return Json(new { response = ResponseMessages.Success });
         }
 
         /// <summary>
@@ -390,6 +394,11 @@ namespace VueCoreFramework.Controllers
                 model.Errors.Add(ErrorMessages.OnlyAdminCanBeAdminError);
                 return model;
             }
+            if (lowerName == "system")
+            {
+                model.Errors.Add(ErrorMessages.CannotBeSystemError);
+                return model;
+            }
             if (lowerName == "true" || lowerName == "false")
             {
                 model.Errors.Add(ErrorMessages.InvalidNameError);
@@ -402,8 +411,6 @@ namespace VueCoreFramework.Controllers
                 await SendConfirmationEmail(model, user);
 
                 _logger.LogInformation(LogEvent.NEW_ACCOUNT, "New account created for {USER} with username {USERNAME}.", user.Email, user.UserName);
-
-                model.Redirect = true;
             }
             else
             {
