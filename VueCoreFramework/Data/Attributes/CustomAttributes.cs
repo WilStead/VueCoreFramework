@@ -34,27 +34,6 @@ namespace VueCoreFramework.Data.Attributes
     }
 
     /// <summary>
-    /// Allows setting a default value for a property.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Property)]
-    internal class DefaultAttribute : Attribute
-    {
-        /// <summary>
-        /// The default value of the property.
-        /// </summary>
-        public object Default { get; set; }
-
-        /// <summary>
-        /// Default constructor.
-        /// </summary>
-        /// <param name="defaultValue">The default value for the property.</param>
-        public DefaultAttribute(object defaultValue)
-        {
-            Default = defaultValue;
-        }
-    }
-
-    /// <summary>
     /// Allows setting help text for a property's field.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]

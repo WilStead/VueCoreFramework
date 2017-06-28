@@ -8,11 +8,6 @@ namespace VueCoreFramework.Models
     public class FieldDefinition
     {
         /// <summary>
-        /// An optional default value for the field.
-        /// </summary>
-        public object Default { get; set; }
-
-        /// <summary>
         /// Indicates whether the field is disabled.
         /// </summary>
         public bool? Disabled { get; set; }

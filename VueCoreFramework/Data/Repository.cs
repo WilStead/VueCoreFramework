@@ -788,13 +788,6 @@ namespace VueCoreFramework.Data
                     }
                     fd.Validator = "number";
                 }
-                // Guids (when not used as keys or hidden) are shown as labels, since editing is not
-                // presumed to be valid.
-                else if (pInfo.PropertyType == typeof(Guid)
-                    || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(Guid))
-                {
-                    fd.Type = "label";
-                }
                 // Unrecognized types are represented as plain labels.
                 else
                 {
@@ -844,8 +837,6 @@ namespace VueCoreFramework.Data
                 }
             }
 
-            fd.Default = pInfo.GetCustomAttribute<DefaultAttribute>()?.Default;
-
             var range = pInfo.GetCustomAttribute<RangeAttribute>();
             fd.Min = range?.Minimum;
             fd.Max = range?.Maximum;
@@ -871,17 +862,20 @@ namespace VueCoreFramework.Data
                 var textAttr = pInfo.GetCustomAttribute<TextAttribute>();
                 fd.Prefix = textAttr?.Prefix;
                 fd.Suffix = textAttr?.Suffix;
-                fd.Rows = textAttr?.Rows;
-                if (fd.Rows < 1)
+                if (fd.InputType != "number")
                 {
-                    // Row amounts less than 1 are invalid, so the specified amount is disregarded.
-                    fd.Rows = null;
-                }
-                if (fd.Rows > 1)
-                {
-                    // A row amount greater than 1 automatically indicates a textarea even if the
-                    // property wasn't explicitly marked as such with a datatype attribute.
-                    fd.InputType = "textArea";
+                    fd.Rows = textAttr?.Rows;
+                    if (fd.Rows < 1)
+                    {
+                        // Row amounts less than 1 are invalid, so the specified amount is disregarded.
+                        fd.Rows = null;
+                    }
+                    if (fd.Rows > 1)
+                    {
+                        // A row amount greater than 1 automatically indicates a textarea even if the
+                        // property wasn't explicitly marked as such with a datatype attribute.
+                        fd.InputType = "textArea";
+                    }
                 }
             }
 
