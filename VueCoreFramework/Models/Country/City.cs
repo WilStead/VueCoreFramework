@@ -99,9 +99,9 @@ namespace VueCoreFramework.Models
         /// </summary>
         /// <remarks>
         /// Although Entity Framework can automatically create foreign keys, the SPA framework
-        /// requires explicitly defined foreign keys for one-to-one and many-to-one relationships,
-        /// which must fit the pattern {navigation property name}+'Id'. Guid properties are never
-        /// shown by the framework, so it isn't necessary to mark it as hidden.
+        /// requires explicitly defined foreign keys for one-to-one and many-to-one relationships.
+        /// Foreign key properties are never shown by the framework, so it isn't necessary to mark it
+        /// as hidden.
         /// </remarks>
         public Guid CountryId { get; set; }
 

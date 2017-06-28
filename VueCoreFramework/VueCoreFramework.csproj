@@ -12,6 +12,7 @@
     <Company>Wil Stead</Company>
     <Copyright>Wil Stead</Copyright>
     <PackageProjectUrl>https://github.com/WilStead/VueCoreFramework</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/WilStead/VueCoreFramework/blob/master/LICENSE.txt</PackageLicenseUrl>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="JSNLog.AspNetCore" Version="2.23.0" />
