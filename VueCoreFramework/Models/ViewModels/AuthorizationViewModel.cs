@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace VueCoreFramework.Models
+namespace VueCoreFramework.Models.ViewModels
 {
     /// <summary>
     /// A ViewModel used to transfer information during user account authorization tasks.

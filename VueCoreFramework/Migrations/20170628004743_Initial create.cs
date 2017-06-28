@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace VueCoreFramework.Migrations
 {
-    public partial class InitialCreate : Migration
+    public partial class Initialcreate : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -199,6 +199,47 @@ namespace VueCoreFramework.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Messages",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    Content = table.Column<string>(maxLength: 125, nullable: true),
+                    GroupRecipientId = table.Column<string>(nullable: true),
+                    GroupRecipientName = table.Column<string>(nullable: true),
+                    IsSystemMessage = table.Column<bool>(nullable: false),
+                    Received = table.Column<bool>(nullable: false),
+                    RecipientDeleted = table.Column<bool>(nullable: false),
+                    SenderDeleted = table.Column<bool>(nullable: false),
+                    SenderId = table.Column<string>(nullable: true),
+                    SenderUsername = table.Column<string>(nullable: true),
+                    SingleRecipientId = table.Column<string>(nullable: true),
+                    SingleRecipientName = table.Column<string>(nullable: true),
+                    Timestamp = table.Column<DateTime>(nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Messages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Messages_AspNetRoles_GroupRecipientId",
+                        column: x => x.GroupRecipientId,
+                        principalTable: "AspNetRoles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Messages_AspNetUsers_SenderId",
+                        column: x => x.SenderId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Messages_AspNetUsers_SingleRecipientId",
+                        column: x => x.SingleRecipientId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AirlineCountry",
                 columns: table => new
                 {
@@ -332,6 +373,21 @@ namespace VueCoreFramework.Migrations
                 table: "Leaders",
                 column: "CountryId",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messages_GroupRecipientId",
+                table: "Messages",
+                column: "GroupRecipientId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messages_SenderId",
+                table: "Messages",
+                column: "SenderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messages_SingleRecipientId",
+                table: "Messages",
+                column: "SingleRecipientId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -364,16 +420,19 @@ namespace VueCoreFramework.Migrations
                 name: "Logs");
 
             migrationBuilder.DropTable(
-                name: "AspNetRoles");
-
-            migrationBuilder.DropTable(
-                name: "AspNetUsers");
+                name: "Messages");
 
             migrationBuilder.DropTable(
                 name: "Airlines");
 
             migrationBuilder.DropTable(
                 name: "Countries");
+
+            migrationBuilder.DropTable(
+                name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUsers");
         }
     }
 }

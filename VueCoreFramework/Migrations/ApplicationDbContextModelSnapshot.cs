@@ -313,7 +313,8 @@ namespace VueCoreFramework.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("Content");
+                    b.Property<string>("Content")
+                        .HasMaxLength(125);
 
                     b.Property<string>("GroupRecipientId");
 

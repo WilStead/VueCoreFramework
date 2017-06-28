@@ -168,7 +168,11 @@ namespace VueCoreFramework
                     defaults: new { controller = "Home", action = "Index" });
             });
 
+            // Seed the database
             DbInitialize.Initialize(app.ApplicationServices);
+
+            // Add sample data
+            DbInitialize.InitializeSampleData(app.ApplicationServices);
         }
     }
 }

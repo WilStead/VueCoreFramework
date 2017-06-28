@@ -1,3 +1,0 @@
-﻿(1. One-time: Enable SSL on project, set port to match Startup.cs)
-2. If vendor dependencies have changed, run from cmd: webpack --config webpack.config.vendor.js
-3. If database must be scaffolded, run from cmd: dotnet ef database update (or update-database from PMC)

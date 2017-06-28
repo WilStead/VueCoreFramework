@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using VueCoreFramework.Models;
-using VueCoreFramework.Models.ManageViewModels;
+using VueCoreFramework.Models.ViewModels;
 using VueCoreFramework.Services;
 using System.Security.Claims;
 using System;

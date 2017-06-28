@@ -6,11 +6,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using VueCoreFramework.Data;
 using VueCoreFramework.Models;
+using VueCoreFramework.Models.ViewModels;
 using VueCoreFramework.Services;
 
 namespace VueCoreFramework.Controllers

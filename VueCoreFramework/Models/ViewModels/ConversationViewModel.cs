@@ -1,4 +1,4 @@
-﻿namespace VueCoreFramework.Models
+﻿namespace VueCoreFramework.Models.ViewModels
 {
     /// <summary>
     /// Used to send information about a conversation.

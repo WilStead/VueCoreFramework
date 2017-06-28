@@ -21,6 +21,8 @@ namespace VueCoreFramework.Data
         /// </summary>
         public DbSet<Message> Messages { get; set; }
 
+        #region Sample Data DbSets
+
         /// <summary>
         /// Gets or sets the <see cref="DbSet{TEntity}"/> of <see cref="Airline"/>s.
         /// </summary>
@@ -37,6 +39,8 @@ namespace VueCoreFramework.Data
         /// Gets or sets the <see cref="DbSet{TEntity}"/> of <see cref="Leader"/>s.
         /// </summary>
         public DbSet<Leader> Leaders { get; set; }
+
+        #endregion Sample Data DbSets
 
         /// <summary>
         /// Caches instances of <see cref="IRepository"/> for the entity types tracked by this
@@ -82,6 +86,7 @@ namespace VueCoreFramework.Data
                 .HasDefaultValueSql("GETUTCDATE()")
                 .ValueGeneratedOnAdd();
 
+            // Sample data types
             builder.Entity<AirlineCountry>()
                 .HasKey(c => new { c.CountryId, c.AirlineId });
             builder.Entity<AirlineCountry>()

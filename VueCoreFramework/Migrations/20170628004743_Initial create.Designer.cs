@@ -9,8 +9,8 @@ using VueCoreFramework.Models;
 namespace VueCoreFramework.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20170625175020_Messages")]
-    partial class Messages
+    [Migration("20170628004743_Initial create")]
+    partial class Initialcreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -314,11 +314,14 @@ namespace VueCoreFramework.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("Content");
+                    b.Property<string>("Content")
+                        .HasMaxLength(125);
 
                     b.Property<string>("GroupRecipientId");
 
                     b.Property<string>("GroupRecipientName");
+
+                    b.Property<bool>("IsSystemMessage");
 
                     b.Property<bool>("Received");
 
@@ -334,7 +337,9 @@ namespace VueCoreFramework.Migrations
 
                     b.Property<string>("SingleRecipientName");
 
-                    b.Property<DateTime>("Timestamp");
+                    b.Property<DateTime>("Timestamp")
+                        .ValueGeneratedOnAdd()
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.HasKey("Id");
 

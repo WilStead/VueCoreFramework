@@ -25,7 +25,8 @@ export interface MenuItem {
 
     /**
      * Indicates that this menu item is where all auto-generated menu items will be nested. Only
-     * the first such item found will be used, if more than one is set.
+     * the first such item found will be used, if more than one is set. At least one *must* be
+     * present, or the framework will be unable to scaffold data type items dynamically.
      */
     dataHook?: boolean;
 
@@ -54,6 +55,115 @@ export interface MenuItem {
      */
     key?: number;
 }
+
+/**
+ * An object containing information about the state of the UI.
+ */
+export const uiState = {
+    /**
+     * The site author(s).
+     */
+    author: 'Wil Stead',
+
+    /**
+     * The contact email address for the site.
+     */
+    contact: 'wil.stead@williamstead.com',
+
+    /**
+     * The copyright year(s) for the site.
+     */
+    year: '2017',
+
+    /**
+     * The MenuItems displayed in the SPA framework's main menu.
+     */
+    menuItems: <MenuItem[]>[
+        {
+            text: 'Home',
+            iconClass: 'home',
+            route: '/',
+            key: 100
+        },
+        {
+            divider: true,
+            key: 200
+        },
+        {
+            text: 'Data',
+            header: true,
+            key: 300
+        },
+        {
+            text: 'Data',
+            iconClass: 'view_list',
+            dataHook: true,
+            key: 400
+        },
+        {
+            divider: true,
+            key: 500
+        },
+        {
+            text: 'Groups',
+            header: true,
+            key: 600
+        },
+        {
+            text: 'Groups',
+            iconClass: 'group',
+            route: '/group/manage',
+            key: 700
+        }
+    ],
+
+    messaging: {
+        /**
+         * Controls whether the messaging sidebar is shown.
+         */
+        messagingShown: false,
+
+
+        /**
+         * Controls whether the chat window is shown (rather than the menu).
+         */
+        chatShown: false,
+
+        /**
+         * The individual conversations in which this user is currently involved (does not include
+         * group chats).
+         */
+        conversations: [] as ConversationViewModel[],
+
+
+        /**
+         * Indicates the name of the group the user is currently chatting with.
+         */
+        groupChat: '',
+
+
+        /**
+         * Indicates the name of the user the current user is currently chatting with.
+         */
+        interlocutor: '',
+
+
+        /**
+         * The messages of the current conversation.
+         */
+        messages: [] as MessageViewModel[],
+
+        /**
+         * When an admin is viewing a conversation, this is the sender.
+         */
+        proxySender: '',
+
+        /**
+         * The system messages the current user has received.
+         */
+        systemMessages: [] as MessageViewModel[]
+    }
+};
 
 function addMenuItem(menu: MenuItem, router: VueRouter, data: any, dataClass: string, category: string, iconClass: string) {
     if (!iconClass) {
@@ -244,112 +354,3 @@ export function getMenuItems(router: VueRouter, menu: MenuItem): Promise<void> {
             ErrorMsg.logError("uiStore.getMenuItems", new Error(error));
         });
 }
-
-/**
- * An object containing information about the state of the UI.
- */
-export const uiState = {
-    /**
-     * The site author(s).
-     */
-    author: 'Wil Stead',
-
-    /**
-     * The contact email address for the site.
-     */
-    contact: 'wil.stead@williamstead.com',
-
-    /**
-     * The copyright year(s) for the site.
-     */
-    year: '2017',
-
-    /**
-     * The MenuItems displayed in the SPA framework's main menu.
-     */
-    menuItems: <MenuItem[]>[
-        {
-            text: 'Home',
-            iconClass: 'home',
-            route: '/',
-            key: 100
-        },
-        {
-            divider: true,
-            key: 200
-        },
-        {
-            text: 'Data',
-            header: true,
-            key: 300
-        },
-        {
-            text: 'Data',
-            iconClass: 'view_list',
-            dataHook: true,
-            key: 400
-        },
-        {
-            divider: true,
-            key: 500
-        },
-        {
-            text: 'Groups',
-            header: true,
-            key: 600
-        },
-        {
-            text: 'Groups',
-            iconClass: 'group',
-            route: '/group/manage',
-            key: 700
-        }
-    ],
-
-    messaging: {
-        /**
-         * Controls whether the messaging sidebar is shown.
-         */
-        messagingShown: false,
-
-
-        /**
-         * Controls whether the chat window is shown (rather than the menu).
-         */
-        chatShown: false,
-
-        /**
-         * The individual conversations in which this user is currently involved (does not include
-         * group chats).
-         */
-        conversations: [] as ConversationViewModel[],
-
-
-        /**
-         * Indicates the name of the group the user is currently chatting with.
-         */
-        groupChat: '',
-
-
-        /**
-         * Indicates the name of the user the current user is currently chatting with.
-         */
-        interlocutor: '',
-
-
-        /**
-         * The messages of the current conversation.
-         */
-        messages: [] as MessageViewModel[],
-
-        /**
-         * When an admin is viewing a conversation, this is the sender.
-         */
-        proxySender: '',
-
-        /**
-         * The system messages the current user has received.
-         */
-        systemMessages: [] as MessageViewModel[]
-    }
-};

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using VueCoreFramework.Models;
+using VueCoreFramework.Models.ViewModels;
 using VueCoreFramework.Services;
 using System.Collections.Generic;
 using System.Linq;

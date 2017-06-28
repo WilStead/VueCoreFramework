@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using VueCoreFramework.Data;
 using VueCoreFramework.Models;
+using VueCoreFramework.Models.ViewModels;
 using VueCoreFramework.Services;
 using System.Collections.Generic;
 using System.Linq;

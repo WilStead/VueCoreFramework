@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace VueCoreFramework.Models
+namespace VueCoreFramework.Models.ViewModels
 {
     /// <summary>
     /// Used to transfer information about a message.

@@ -1,13 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.13
+VisualStudioVersion = 15.0.26430.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VueCoreFramework", "VueCoreFramework\VueCoreFramework.csproj", "{776A472F-5D33-4991-8DAE-641EDD2AE246}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{39B448DF-A080-4957-856D-9EB6DC3F4E0A}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		LICENSE.txt = LICENSE.txt
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VueCoreFramework.Test", "VueCoreFramework.Test\VueCoreFramework.Test.csproj", "{E1317757-3CDE-4A25-9B22-532DC81397E1}"

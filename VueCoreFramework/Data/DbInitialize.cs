@@ -56,7 +56,22 @@ namespace VueCoreFramework.Data
                 }
                 userManager.AddToRoleAsync(user, CustomRoles.SiteAdmin).Wait();
                 userManager.AddToRoleAsync(user, CustomRoles.Admin).Wait();
-                user = context.Users.FirstOrDefault(u => u.Email == "test_user@example.com");
+                context.SaveChanges();
+            }
+        }
+
+        /// <summary>
+        /// Seeds the application's database with sample data.
+        /// </summary>
+        public static void InitializeSampleData(IServiceProvider provider)
+        {
+            var context = provider.GetRequiredService<ApplicationDbContext>();
+            var roleManager = provider.GetRequiredService<RoleManager<IdentityRole>>();
+
+            if (!context.Users.Any(u => !u.Roles.Any()))
+            {
+                var userManager = provider.GetRequiredService<UserManager<ApplicationUser>>();
+                var user = context.Users.FirstOrDefault(u => u.Email == "test_user@example.com");
                 if (user == null)
                 {
                     user = new ApplicationUser { UserName = "Test_User", Email = "test_user@example.com" };
@@ -65,12 +80,7 @@ namespace VueCoreFramework.Data
                     user.EmailConfirmed = true;
                     userManager.UpdateAsync(user).Wait();
                 }
-                context.SaveChanges();
-            }
-            if (!context.Users.Any(u => !u.Roles.Any()))
-            {
-                var userManager = provider.GetRequiredService<UserManager<ApplicationUser>>();
-                var user = context.Users.FirstOrDefault(u => u.Email == "test_user_2@example.com");
+                user = context.Users.FirstOrDefault(u => u.Email == "test_user_2@example.com");
                 if (user == null)
                 {
                     user = new ApplicationUser { UserName = "Test_User_2", Email = "test_user_2@example.com" };
