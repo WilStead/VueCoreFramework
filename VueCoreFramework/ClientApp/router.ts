@@ -175,12 +175,14 @@ export function authenticate(full?: boolean): Promise<string> {
                 Store.store.commit(Store.setIsSiteAdmin, data.isSiteAdmin);
             }
             if (data.authorization === "login") {
+                Store.store.commit(Store.setToken, '');
                 return "login";
             } else {
                 return "authorized";
             }
         })
         .catch(error => {
+            Store.store.commit(Store.setToken, '');
             if (error.message !== "login") {
                 ErrorMsg.logError("router.checkAuthorization", new Error(error));
             }
@@ -232,6 +234,7 @@ export function checkAuthorization(to: VueRouter.Route): Promise<string> {
         .then(response => response.json() as Promise<AuthorizationViewModel>)
         .then(data => {
             if (data.authorization === "login") {
+                Store.store.commit(Store.setToken, '');
                 return "login";
             }
             Store.store.commit(Store.setEmail, data.email);

@@ -75,7 +75,7 @@ namespace VueCoreFramework.Data
                 if (user == null)
                 {
                     user = new ApplicationUser { UserName = "Test_User", Email = "test_user@example.com" };
-                    userManager.CreateAsync(user, "Password_1").Wait();
+                    userManager.CreateAsync(user, "Password*1").Wait();
                     user = userManager.Users.FirstOrDefault(u => u.UserName == "Test_User");
                     user.EmailConfirmed = true;
                     userManager.UpdateAsync(user).Wait();
@@ -84,7 +84,7 @@ namespace VueCoreFramework.Data
                 if (user == null)
                 {
                     user = new ApplicationUser { UserName = "Test_User_2", Email = "test_user_2@example.com" };
-                    userManager.CreateAsync(user, "Password_1").Wait();
+                    userManager.CreateAsync(user, "Password*2").Wait();
                     user = userManager.Users.FirstOrDefault(u => u.UserName == "Test_User_2");
                     user.EmailConfirmed = true;
                     userManager.UpdateAsync(user).Wait();

@@ -7,8 +7,7 @@
                 lazy
                 :nudge-left="40"
                 offset-y
-                transition="v-scale-transition"
-                style="flex-grow: 1;">
+                transition="v-scale-transition">
             <v-text-field slot="activator"
                           v-model="formattedDate"
                           :disabled="disabled"
@@ -41,7 +40,7 @@
                 :nudge-left="40"
                 offset-y
                 transition="v-scale-transition"
-                :style="{ 'margin-left': (schema.inputType === 'time' || schema.inputType === 'dateTime') ? '15px' : 0, 'flex-grow': 1 }">
+                :style="{ 'margin-left': (schema.inputType === 'time' || schema.inputType === 'dateTime') ? '15px' : 0 }">
             <v-text-field slot="activator"
                           v-model="valueTime"
                           :disabled="disabled"
