@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using VueCoreFramework.Models;
+using VueCoreFramework.Models.ViewModels;
 using VueCoreFramework.Models.ViewModels.AccountViewModels;
 using VueCoreFramework.Services;
 using System;

@@ -80,11 +80,11 @@ namespace VueCoreFramework.Models
         /// </summary>
         /// <remarks>
         /// Although the SPA framework can handle TimeSpan properties, SQL databases cannot store
-        /// TimeSpans greater than 7 days, so the SPA framework can also interpret long values as
-        /// TimeSpan Ticks by indicating the Duration DataType. Display Description is used to set
-        /// hint text for the field. The DisplayFormat DataFormatString can be used to indicate which
-        /// values of the TimeSpan will be displayed (and available for editing); it must take the
-        /// form 'y:M:d:h:m:s' representing years, months, days, hours, minutes, seconds (including
+        /// TimeSpans >= 24 hours, so the SPA framework can also interpret long values as TimeSpan
+        /// Ticks by indicating the Duration DataType. Display Description is used to set hint text
+        /// for the field. The DisplayFormat DataFormatString can be used to indicate which values of
+        /// the TimeSpan will be displayed (and available for editing); it must take the form
+        /// 'y:M:d:h:m:s' representing years, months, days, hours, minutes, seconds (including
         /// fractional seconds). Any number of indicators may be omitted from the beginning or end
         /// (e.g. the format below shows only years, months, and days; not hours, minutes, or
         /// seconds), but omitting any in the middle is disregarded (since overflow from a low unit

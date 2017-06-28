@@ -4,7 +4,7 @@
               :disabled="disabled"
               :errors="errors"
               :hint="schema.hint"
-              :items="schema.values"
+              :items="schema.inputType === 'multiple' ? schema.values.filter(v => v.value !== 0) : schema.values"
               :label="schema.placeholder"
               :multiple="schema.inputType === 'multiple'"
               :name="schema.inputName"
