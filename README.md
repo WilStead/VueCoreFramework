@@ -35,6 +35,7 @@ VueCoreFramework was built with the essential help of libraries and technologies
 * [jQuery](https://jquery.com/)
 * [JSNLog](http://nodejs.jsnlog.com/)
 * [Moment.js](http://momentjs.com/)
+* [NLog](http://nlog-project.org/)
 * [Typescript](http://www.typescriptlang.org/)
 * [Vue](https://vuejs.org/)
 * [vue-class-component](https://github.com/vuejs/vue-class-component)
