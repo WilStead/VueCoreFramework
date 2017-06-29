@@ -208,7 +208,7 @@ export class Repository {
                 }
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<Array<string> | ApiResponseViewModel>)
+            .then(response => response.json() as Promise<Array<string>>)
             .then(data => {
                 if (data['error']) {
                     throw new Error(data['error']);
