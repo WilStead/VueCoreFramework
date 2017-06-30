@@ -515,11 +515,14 @@ namespace VueCoreFramework.Data
             var nav = EntityType.FindNavigation(pInfo);
             if (nav != null)
             {
+                fd.Type = "navigation";
+
                 // The input type for navigation properties is the type name.
                 fd.InputType = nav.GetTargetType().ClrType.Name;
 
                 var inverse = nav.FindInverse();
                 fd.InverseType = inverse.Name;
+                fd.ParentType = inverse.GetTargetType().ClrType.Name;
 
                 if (nav.IsCollection())
                 {
@@ -528,7 +531,7 @@ namespace VueCoreFramework.Data
                     // the parent's collection.
                     if (IsManyToManyNavigation(nav))
                     {
-                        fd.Type = "objectMultiSelect";
+                        fd.NavigationType = "objectMultiSelect";
                         // Inverse type is different for many-to-many relationships: it must pass
                         // through the join and find the type of the actual joined entity.
                         var parentNav = nav.FindInverse();
@@ -544,20 +547,20 @@ namespace VueCoreFramework.Data
                     // relationships, and also items which are MenuClass types in their own right.
                     else
                     {
-                        fd.Type = "objectCollection";
+                        fd.NavigationType = "objectCollection";
                     }
                 }
                 // Reverse-navigation properties only allow view/edit. No adding/deleting, since the
                 // child object shouldn't add/delete a parent.
                 else if (nav.IsDependentToPrincipal())
                 {
-                    fd.Type = "objectReference";
+                    fd.NavigationType = "objectReference";
                 }
                 // Children in a many-to-one relationship (i.e. which can have more than one
                 // parent) can be selected from a list, as well as added/edited/deleted.
                 else if (inverse.IsCollection())
                 {
-                    fd.Type = "objectSelect";
+                    fd.NavigationType = "objectSelect";
                 }
                 // Children in a one-to-one relationship are treated as purely nested objects, and
                 // can only be added, edited, and deleted, to prevent any child from being referenced
@@ -566,7 +569,7 @@ namespace VueCoreFramework.Data
                 // item in its own right, but for this relationship the controls make no assumptions.
                 else
                 {
-                    fd.Type = "object";
+                    fd.NavigationType = "object";
                 }
             }
             else

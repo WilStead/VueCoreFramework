@@ -4,7 +4,7 @@ export default {
     mixins: [abstractField],
     data() {
         return {
-            nullCheck: this.schema.inputType !== 'number' || (this.value !== undefined && this.value !== null && this.value !== '[None]'),
+            nullCheck: this.schema.inputType !== 'number' || this.schema.required || (this.value !== undefined && this.value !== null && this.value !== '[None]'),
             pwVis: false
         };
     },

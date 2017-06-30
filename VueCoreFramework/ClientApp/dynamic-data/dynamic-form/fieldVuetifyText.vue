@@ -9,7 +9,7 @@
                           :append-icon="schema.inputType === 'password' ? (pwVis ? 'visibility_off' : 'visibility') : ''"
                           :append-icon-cb="() => (pwVis = !pwVis)"
                           :counter="value && value.length > schema.max"
-                          :disabled="disabled || !nullCheck"
+                          :disabled="disabled || (schema.inputType === 'number' && !schema.required && !nullCheck)"
                           :errors="errors"
                           :hint="schema.hint"
                           :label="schema.placeholder"

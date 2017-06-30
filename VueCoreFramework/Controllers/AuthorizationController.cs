@@ -16,7 +16,6 @@ namespace VueCoreFramework.Controllers
     /// <summary>
     /// An MVC controller for handling user authorization tasks.
     /// </summary>
-    [Authorize]
     [Route("api/[controller]/[action]")]
     public class AuthorizationController : Controller
     {
@@ -46,7 +45,11 @@ namespace VueCoreFramework.Controllers
         [HttpGet]
         public async Task<IActionResult> Authenticate(string full = null)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(email))
+            {
+                return Json(new AuthorizationViewModel { Authorization = AuthorizationViewModel.Login });
+            }
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null || user.AdminLocked)
             {
@@ -95,7 +98,11 @@ namespace VueCoreFramework.Controllers
         [HttpGet("{dataType}")]
         public async Task<IActionResult> Authorize(string dataType, string operation = "view", string id = null)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(email))
+            {
+                return Json(new AuthorizationViewModel { Authorization = AuthorizationViewModel.Login });
+            }
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null || user.AdminLocked)
             {

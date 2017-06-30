@@ -73,6 +73,16 @@ namespace VueCoreFramework.Models
         public string Model { get; set; }
 
         /// <summary>
+        /// For navigation properties, indicates the type of navigation property.
+        /// </summary>
+        public string NavigationType { get; set; }
+
+        /// <summary>
+        /// For navigation properties, indicates the name of the parent data type.
+        /// </summary>
+        public string ParentType { get; set; }
+
+        /// <summary>
         /// An optional regex pattern used to validate the field.
         /// </summary>
         public string Pattern { get; set; }

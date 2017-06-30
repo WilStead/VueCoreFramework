@@ -8,7 +8,7 @@ export default {
             formattedDate: this.value === undefined || this.value === null || this.value === "[None]" ? "" : new Date(this.value).toDateString(),
             menuDate: false,
             menuTime: false,
-            valueTime: moment(this.value).format("h:mma")
+            valueTime: this.value === undefined || this.value === null || this.value === "[None]" ? "12:00am" : moment(this.value).format("h:mma")
         }
     },
     methods: {
@@ -23,7 +23,8 @@ export default {
     watch: {
         valueTime(newValue) {
             let t = moment(newValue, "h:mma");
-            this.value = moment(this.value).utc().set({ 'hour': t.hours(), 'minute': t.minutes() }).toISOString();
+            let base = this.value === undefined || this.value === null || this.value === "[None]" ? moment().utc() : moment(this.value).utc();
+            this.value = base.set({ 'hour': t.hours(), 'minute': t.minutes() }).toISOString();
         }
     }
 };

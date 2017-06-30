@@ -23,6 +23,11 @@ interface ButtonDefinition {
  */
 export interface FieldDefinition {
     /**
+     * Indicates the buttons to be included on a navigation field.
+     */
+    allowedButtons?: Array<string>
+
+    /**
      * Indicates that this text field can be auto-completed.
      */
     autocomplete?: boolean;
@@ -102,6 +107,21 @@ export interface FieldDefinition {
      * The name of the model property represented by the field.
      */
     model: string;
+
+    /**
+     * For navigation properties, indicates the type of navigation property.
+     */
+    navigationType?: string;
+
+    /**
+     * For navigation properties, indicates the id of the parent.
+     */
+    parentId?: string;
+
+    /**
+     * For navigation properties, indicates the name of the parent data type.
+     */
+    parentType?: string;
 
     /**
      * An optional regex pattern used to validate the field.

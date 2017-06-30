@@ -125,15 +125,32 @@
         font-size: 0.75em;
     }
 
-    .field-label {
+    .field-navigation {
         .field-wrap {
             border-bottom: 1px dotted #ccc;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
 
-            span {
-                font-size: 1.2em;
+            .field-container {
+                display: flex;
+                align-items: center;
+
+                .field-content {
+                    font-size: 1.2em;
+                }
+
+                .progress-circular {
+                    margin: 8px;
+                }
+
+                .progress-circular-placeholder {
+                    margin: 8px;
+                    height: 32px;
+                    width: 32px;
+                }
+
+                .field-button-container {
+                    display: flex;
+                    align-items: center;
+                }
             }
         }
 
