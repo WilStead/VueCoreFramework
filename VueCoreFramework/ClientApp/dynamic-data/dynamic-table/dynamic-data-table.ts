@@ -100,6 +100,13 @@ export default class DynamicDataTable extends Vue {
     totalItems = 0;
     updateTimeout = 0;
 
+    @Watch('dataType')
+    onDataTypeChange(val: string) {
+        if (val) {
+            this.repository = this.$store.getters.getRepository(this.dataType);
+        }
+    }
+
     @Watch('internalSearch')
     onSearchChange(val: string, oldVal: string) {
         clearTimeout(this.searchDebounce);
@@ -133,6 +140,13 @@ export default class DynamicDataTable extends Vue {
         }
     }
 
+    @Watch('parentType')
+    onParentTypeChange(val: string) {
+        if (val) {
+            this.parentRepository = this.$store.getters.getRepository(this.parentType);
+        }
+    }
+
     @Watch('selected')
     onSelectedChanged(val: Array<DataItem>) {
         this.$emit('update:selected', val);
@@ -150,7 +164,9 @@ export default class DynamicDataTable extends Vue {
             this.internalPagination.page = this.pagination.page;
             this.internalPagination.rowsPerPage = this.pagination.rowsPerPage;
         }
-        this.repository = this.$store.getters.getRepository(this.dataType);
+        if (this.dataType) {
+            this.repository = this.$store.getters.getRepository(this.dataType);
+        }
         if (this.parentType) {
             this.parentRepository = this.$store.getters.getRepository(this.parentType);
         }
