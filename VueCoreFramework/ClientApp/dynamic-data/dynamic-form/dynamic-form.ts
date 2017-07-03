@@ -102,32 +102,6 @@ export default class DynamicFormComponent extends Vue {
 
     addFieldToSchema(field: FieldDefinition) {
         let newField: FieldDefinition = Object.assign({}, field);
-        if (newField.navigationType) {
-            newField.parentId = this.id;
-            newField.allowedButtons = [];
-            if (newField.navigationType === "object"
-                || newField.navigationType === "objectSelect") {
-                if (this.operation === "edit" || this.operation === "add") {
-                    if (newField.navigationType === "objectSelect") {
-                        newField.allowedButtons.push('select');
-                    }
-                    if (newField.navigationType === "objectSelect"
-                        || this.model[newField.model] === "[None]") {
-                        newField.allowedButtons.push('new');
-                    }
-                }
-                if (this.model[newField.model] !== "[None]") {
-                    newField.allowedButtons.push('details');
-                }
-                if ((this.operation === "edit" || this.operation === "add")
-                    && !newField.required
-                    && this.model[newField.model] !== "[None]") {
-                    newField.allowedButtons.push('delete');
-                }
-            } else {
-                newField.allowedButtons.push('details');
-            }
-        }
         if (field.groupName) {
             let group = this.schema.groups.find(g => g.legend == field.groupName);
             if (field.isName) {

@@ -2,7 +2,7 @@
 import VueRouter from 'vue-router';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import * as Store from '../../store/store';
-import { authenticate } from '../../router';
+import { authenticate } from '../../authorization';
 import * as moment from 'moment';
 
 @Component

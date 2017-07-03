@@ -3,6 +3,7 @@ import Vuex from 'vuex';
 Vue.use(Vuex);
 import { uiState, getMenuItems, getChildItems } from './uiStore';
 import { userState, PermissionData, SharePermission } from './userStore';
+import { AuthorizationViewModel, checkAuthorization } from '../authorization';
 import { Repository } from './repository';
 import { ConversationViewModel, MessageViewModel, messaging } from './messaging';
 import { Group } from '../components/group/manage';
@@ -38,10 +39,21 @@ export const store = new Vuex.Store({
         userState
     },
     getters: {
+        getHaveCurrentUser: (state, getters) => (): boolean => {
+            return state.userState.email !== ''
+                && state.userState.email !== "user@example.com"
+                && state.userState.token !== '';
+        },
+
         /**
          * Gets the stored permission for the given data, if any exists.
          */
         getPermission: (state, getters) => (dataType: string, id?: string): string => {
+            // If no permission is cached, try getting it.
+            if (!state.userState.permissions[dataType]) {
+                checkAuthorization(dataType, "view", id);
+            }
+            // If it still doesn't exist, the user has no permission (or the parameters are invalid)
             if (!state.userState.permissions[dataType]) {
                 return undefined;
             }
@@ -71,6 +83,11 @@ export const store = new Vuex.Store({
          * Gets the stored share permission for the given data, if any exists.
          */
         getSharePermission: (state, getters) => (dataType: string, id?: string): string => {
+            // If no permission is cached, try getting it.
+            if (!state.userState.permissions[dataType]) {
+                checkAuthorization(dataType, "view", id);
+            }
+            // If it still doesn't exist, the user has no permission (or the parameters are invalid)
             if (!state.userState.permissions[dataType]) {
                 return undefined;
             }

@@ -526,6 +526,8 @@ namespace VueCoreFramework.Data
 
                 if (nav.IsCollection())
                 {
+                    fd.Type = "collection";
+
                     // Children in a many-to-many relationship are manipulated in a table containing
                     // all the items of the child type, where items can be added to or removed from
                     // the parent's collection.

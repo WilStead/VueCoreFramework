@@ -215,14 +215,13 @@ function addMenuItem(menu: MenuItem, router: VueRouter, data: any, dataClass: st
             children: [
                 {
                     name: dataClass + "DataTable",
-                    path: 'table/:operation?/:parentType?/:parentId?/:parentProp?/:childProp?',
+                    path: 'table',
                     components: {
                         content: data[dataClass].dashboardTableContent
                             ? require(`../components/data/${data[dataClass].dashboardTableContent}.vue`)
                             : require('../components/data/empty.vue'),
                         data: require('../dynamic-data/dynamic-table/dynamic-table.vue')
-                    },
-                    props: { content: false, data: true }
+                    }
                 },
                 {
                     name: dataClass,
@@ -297,7 +296,7 @@ export function getChildItems(router: VueRouter): Promise<void> {
                         children: [
                             {
                                 name: dataClass + "DataTable",
-                                path: 'table/:operation?/:parentType?/:parentId?/:parentProp?/:childProp?',
+                                path: 'table',
                                 components: {
                                     content: data[dataClass].dashboardTableContent
                                         ? require(`../components/data/${data[dataClass].dashboardTableContent}.vue`)

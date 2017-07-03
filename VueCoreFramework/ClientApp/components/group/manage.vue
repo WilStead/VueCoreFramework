@@ -1,5 +1,5 @@
 ﻿<template>
-    <div class="main-content">
+    <v-layout row wrap justify-center>
         <v-card>
             <v-card-row class="primary">
                 <v-card-title>Groups</v-card-title>
@@ -284,7 +284,7 @@
                 </v-card-row>
             </v-card>
         </v-dialog>
-    </div>
+    </v-layout>
 </template>
 
 <script src="./manage.ts"></script>

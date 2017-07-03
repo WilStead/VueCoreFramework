@@ -54,7 +54,7 @@
             </v-card-row>
             <v-card-row v-if="!submitting && !changingUsername && !changingEmail && !changingPassword && !settingPassword">
                 <v-card-text>
-                    <v-dialog v-model="deleteAccountDialog" fullscreen>
+                    <v-dialog v-model="deleteAccountDialog" fullscreen :overlay="false">
                         <v-btn error light slot="activator">Delete Account</v-btn>
                         <v-card>
                             <v-card-row>

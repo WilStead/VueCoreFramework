@@ -4,8 +4,8 @@
         <v-card-row>
             <v-card-title class="pt-0 pb-0">
                 <v-spacer></v-spacer>
-                <v-dialog v-if="canShare" v-model="shareDialog" fullscreen>
-                    <v-btn v-tooltip:top="{ html: 'share' }" icon class="info--text" slot="activator"><v-icon light>visibility</v-icon></v-btn>
+                <v-dialog v-if="canShare" v-model="shareDialog" fullscreen :overlay="false">
+                    <v-btn v-tooltip:top="{ html: 'item sharing' }" icon class="info--text" slot="activator"><v-icon light>visibility</v-icon></v-btn>
                     <v-card>
                         <v-card-row class="info">
                             <v-btn icon @click.native="shareDialog = false" light><v-icon>close</v-icon></v-btn>

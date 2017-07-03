@@ -1,7 +1,8 @@
 ﻿import Vue from 'vue';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import * as Store from '../../store/store';
-import { checkResponse, ApiResponseViewModel, authenticate } from '../../router';
+import { authenticate } from '../../authorization';
+import { checkResponse, ApiResponseViewModel } from '../../router';
 import { OperationReply } from '../../store/repository';
 import VueFormGenerator from 'vue-form-generator';
 import { Schema, VFGOptions } from '../../vfg/vfg';

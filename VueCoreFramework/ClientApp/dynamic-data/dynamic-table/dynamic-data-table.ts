@@ -1,4 +1,5 @@
 ﻿import Vue from 'vue';
+import VueRouter from 'vue-router';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import * as ErrorMsg from '../../error-msg';
 import { DataItem, PageData, Repository } from '../../store/repository';
@@ -57,13 +58,13 @@ export interface Pagination {
 @Component
 export default class DynamicDataTable extends Vue {
     @Prop()
+    allowEdit: boolean;
+
+    @Prop()
     childProp: string;
 
     @Prop()
     dataType: string;
-
-    @Prop()
-    pagination: Pagination;
 
     @Prop()
     parentId: string;
@@ -90,7 +91,8 @@ export default class DynamicDataTable extends Vue {
     items: Array<DataItem> = [];
     loading = true;
     internalPagination: Pagination = {};
-    internalSearch = this.search;
+    internalSearch = this.search || '';
+    pagination: Pagination;
     paginationInitialization = 0;
     parentRepository: Repository = null;
     repository: Repository = null;
@@ -152,7 +154,24 @@ export default class DynamicDataTable extends Vue {
         this.$emit('update:selected', val);
     }
 
+    @Watch('$route')
+    onRouteChange(val: VueRouter.Route) {
+        this.getRouteData();
+        if (this.pagination
+            && (this.pagination.sortBy
+                || this.pagination.descending
+                || this.pagination.page
+                || this.pagination.rowsPerPage)) {
+            this.internalPagination.sortBy = this.pagination.sortBy;
+            this.internalPagination.descending = this.pagination.descending;
+            this.internalPagination.page = this.pagination.page;
+            this.internalPagination.rowsPerPage = this.pagination.rowsPerPage;
+        }
+        this.refresh();
+    }
+
     mounted() {
+        this.getRouteData();
         if (this.pagination
             && (this.pagination.sortBy
                 || this.pagination.descending
@@ -233,6 +252,39 @@ export default class DynamicDataTable extends Vue {
                     });
             }
         });
+    }
+
+    getRouteData() {
+        this.pagination = {};
+        let routePagination = this.getRoutePagination();
+        if (routePagination) {
+            this.pagination.sortBy = routePagination.sortBy;
+            this.pagination.descending = routePagination.descending;
+            this.pagination.page = routePagination.page;
+            this.pagination.rowsPerPage = routePagination.rowsPerPage;
+        }
+    }
+
+    getRoutePagination(): Pagination {
+        if (this.$route.query.sortBy || this.$route.query.descending
+            || this.$route.query.page || this.$route.query.rowsPerPage) {
+            let page = Number(this.$route.query.page);
+            if (isNaN(page)) {
+                page = 1;
+            }
+            let rowsPerPage = Number(this.$route.query.rowsPerPage);
+            if (isNaN(rowsPerPage)) {
+                rowsPerPage = 5;
+            }
+            return {
+                sortBy: this.$route.query.sortBy,
+                descending: this.$route.query.descending === "true",
+                page,
+                rowsPerPage
+            };
+        } else {
+            return undefined;
+        }
     }
 
     onDelete() {
@@ -391,20 +443,22 @@ export default class DynamicDataTable extends Vue {
                     this.totalItems = data.totalItems;
 
                     this.deletePermissions = {};
-                    let deleteAny = this.$store.state.userState.isAdmin; // Admins can delete anything.
-                    if (!deleteAny) {
-                        let permission = this.$store.getters.getPermission(this.dataType);
-                        if (permission === permissions.permissionDataAll) {
-                            deleteAny = true;
+                    if (this.allowEdit) {
+                        let deleteAny = this.$store.state.userState.isAdmin; // Admins can delete anything.
+                        if (!deleteAny) {
+                            let permission = this.$store.getters.getPermission(this.dataType);
+                            if (permission === permissions.permissionDataAll) {
+                                deleteAny = true;
+                            }
                         }
-                    }
-                    for (var i = 0; i < this.items.length; i++) {
-                        if (deleteAny) {
-                            this.deletePermissions[this.items[i][this.items[i].primaryKeyProperty]] = true;
-                        } else {
-                            let permission = this.$store.getters.getPermission(this.dataType, this.items[i][this.items[i].primaryKeyProperty]);
-                            this.deletePermissions[this.items[i][this.items[i].primaryKeyProperty]] =
-                                permission === permissions.permissionDataAll;
+                        for (var i = 0; i < this.items.length; i++) {
+                            if (deleteAny) {
+                                this.deletePermissions[this.items[i][this.items[i].primaryKeyProperty]] = true;
+                            } else {
+                                let permission = this.$store.getters.getPermission(this.dataType, this.items[i][this.items[i].primaryKeyProperty]);
+                                this.deletePermissions[this.items[i][this.items[i].primaryKeyProperty]] =
+                                    permission === permissions.permissionDataAll;
+                            }
                         }
                     }
                     this.canDelete = Object.keys(this.deletePermissions).length > 0;

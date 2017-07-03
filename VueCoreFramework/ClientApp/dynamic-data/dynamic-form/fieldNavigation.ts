@@ -1,6 +1,8 @@
 ﻿import { abstractField } from 'vue-form-generator';
-import { Repository } from '../../store/repository';
+import { DataItem, Repository } from '../../store/repository';
 import * as ErrorMsg from '../../error-msg';
+
+import DynamicDataTable from '../dynamic-table/dynamic-data-table';
 
 export default {
     mixins: [abstractField],
@@ -9,7 +11,12 @@ export default {
             activity: false,
             deleteDialogShown: false,
             replaceDialogShown: false,
-            repository: this.$store.getters.getRepository(this.schema.parentType)
+            repository: this.$store.getters.getRepository(this.schema.parentType) as Repository,
+            selectActivity: true,
+            selectDialogShown: false,
+            selected: [] as DataItem[],
+            selectErrorMessage: '',
+            selectWarningMessage: '',
         };
     },
     methods: {
@@ -17,7 +24,7 @@ export default {
             this.deleteDialogShown = false;
             this.errors.splice(0);
             this.activity = true;
-            this.repository.removeFromParent(this.$route.fullPath, this.schema.parentId, this.schema.model)
+            this.repository.removeFromParent(this.$route.fullPath, this.model[this.model.primaryKeyProperty], this.schema.model)
                 .then(data => {
                     if (data.error) {
                         this.errors.push(data.error);
@@ -64,7 +71,7 @@ export default {
             this.replaceDialogShown = false;
             this.errors.splice(0);
             this.activity = true;
-            this.repository.replaceChildWithNew(this.$route.fullPath, this.schema.parentId, this.schema.model)
+            this.repository.replaceChildWithNew(this.$route.fullPath, this.model[this.model.primaryKeyProperty], this.schema.model)
                 .then(data => {
                     if (data.error) {
                         this.activity = false;
@@ -83,59 +90,61 @@ export default {
         },
 
         onSelect() {
-            this.$router.push({
-                name: this.schema.inputType + "DataTable",
-                params: {
-                    childProp: this.schema.inverseType,
-                    operation: 'select',
-                    parentType: this.model.dataType,
-                    parentId: this.model[this.model.primaryKeyProperty],
-                    parentProp: this.schema.model
-                }
-            });
+            if (!this.selected.length) {
+                this.selectErrorMessage = '';
+                this.selectWarningMessage = "You have not selected an item.";
+            } else if (this.selected.length > 1) {
+                this.selectErrorMessage = '';
+                this.selectWarningMessage = "You can only select a single item.";
+            } else if (this.childProp) {
+                this.selectWarningMessage = '';
+                this.selectActivity = true;
+                this.repository.replaceChild(this.$route.fullPath,
+                    this.model[this.model.primaryKeyProperty],
+                    this.selected[0][this.selected[0].primaryKeyProperty],
+                    this.schema.inverseType)
+                    .then(data => {
+                        if (data.error) {
+                            this.selectErrorMessage = data.error;
+                        } else {
+                            this.selectErrorMessage = '';
+                            this.selectDialogShown = false;
+                        }
+                        this.selectActivity = false;
+                    })
+                    .catch(error => {
+                        this.selectActivity = false;
+                        this.selectErrorMessage = "A problem occurred. The item could not be updated.";
+                        ErrorMsg.logError("fieldNavigation.onSelect", new Error(error));
+                    });
+            } else {
+                this.selectWarningMessage = '';
+                this.selectErrorMessage = "There was a problem saving your selection. Please try going back to the previous page before trying again.";
+            }
+        },
+
+        onSelectError(error: string) {
+            this.selectErrorMessage = error;
         },
 
         onView() {
-            if (this.schema.navigationType === "objectMultiSelect") {
-                this.$router.push({
-                    name: this.schema.inputType + "DataTable",
-                    params: {
-                        operation: 'multiselect',
-                        parentType: this.model.dataType,
-                        parentId: this.model[this.model.primaryKeyProperty],
-                        parentProp: this.schema.model
-                    }
-                });
-            } else if (this.schema.navigationType === "objectCollection") {
-                this.$router.push({
-                    name: this.schema.inputType + "DataTable",
-                    params: {
-                        childProp: this.schema.inverseType,
-                        operation: 'collection',
-                        parentType: this.model.dataType,
-                        parentId: this.model[this.model.primaryKeyProperty],
-                        parentProp: this.schema.model
-                    }
-                });
-            } else {
-                this.activity = true;
-                this.repository.getChildId(this.$route.fullPath, this.schema.parentId, this.schema.model)
-                    .then(data => {
-                        this.activity = false;
-                        if (data.error) {
-                            this.errors.push(data.error);
-                            this.$emit("validated", this.errors.length === 0, this.errors, this);
-                        } else {
-                            this.$router.push({ name: this.schema.inputType, params: { operation: 'view', id: data.response } });
-                        }
-                    })
-                    .catch(error => {
-                        this.activity = false;
-                        this.errors.push("A problem occurred. The item could not be accessed.");
+            this.activity = true;
+            this.repository.getChildId(this.$route.fullPath, this.model[this.model.primaryKeyProperty], this.schema.model)
+                .then(data => {
+                    this.activity = false;
+                    if (data.error) {
+                        this.errors.push(data.error);
                         this.$emit("validated", this.errors.length === 0, this.errors, this);
-                        ErrorMsg.logError("fieldNavigation.onView", new Error(error));
-                    });
-            }
+                    } else {
+                        this.$router.push({ name: this.schema.inputType, params: { operation: 'view', id: data.response } });
+                    }
+                })
+                .catch(error => {
+                    this.activity = false;
+                    this.errors.push("A problem occurred. The item could not be accessed.");
+                    this.$emit("validated", this.errors.length === 0, this.errors, this);
+                    ErrorMsg.logError("fieldNavigation.onView", new Error(error));
+                });
         }
     }
 };

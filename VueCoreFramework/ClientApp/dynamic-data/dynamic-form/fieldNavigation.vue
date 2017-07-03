@@ -4,10 +4,30 @@
         <v-progress-circular v-if="activity" indeterminate class="primary--text"></v-progress-circular>
         <div v-else class="progress-circular-placeholder"></div>
         <div class="field-button-container">
-            <v-btn v-if="schema.allowedButtons.indexOf('new') !== -1" icon v-tooltip:top="{ html: 'new' }" @click.native="onNew"><v-icon class="success--text">add_circle</v-icon></v-btn>
-            <v-btn v-if="schema.allowedButtons.indexOf('select') !== -1" icon v-tooltip:top="{ html: 'select' }" @click.native="onSelect"><v-icon class="primary--text">view_list</v-icon></v-btn>
-            <v-btn v-if="schema.allowedButtons.indexOf('details') !== -1" icon v-tooltip:top="{ html: 'view/edit' }" @click.native="onView"><v-icon class="info--text">edit</v-icon></v-btn>
-            <v-dialog v-if="schema.allowedButtons.indexOf('delete') !== -1" v-model="deleteDialogShown">
+            <v-btn v-if="!schema.disabled && schema.navigationType !== 'objectReference' && (schema.navigationType === 'objectSelect' || model[schema.model] === '[None]')" icon v-tooltip:top="{ html: 'new' }" @click.native="onNew"><v-icon class="success--text">add_circle</v-icon></v-btn>
+            <v-dialog fullscreen v-if="!schema.disabled && schema.navigationType === 'objectSelect'" v-model="selectDialogShown" :overlay="false">
+                <v-btn icon slot="activator" v-tooltip:top="{ html: 'select' }"><v-icon class="primary--text">view_list</v-icon></v-btn>
+                <v-card>
+                    <v-alert error :value="selectErrorMessage">{{ selectErrorMessage }}</v-alert>
+                    <v-alert warning :value="selectWarningMessage">{{ selectWarningMessage }}</v-alert>
+                    <dynamic-data-table :childProp="schema.inverseType"
+                                        :dataType="schema.inputType"
+                                        :parentId="model[model.primaryKeyProperty]"
+                                        :parentProp="schema.model"
+                                        :parentType="model.dataType"
+                                        :selected.sync="selected"
+                                        @onError="onSelectError"></dynamic-data-table>
+                    <v-card-row v-if="selectActivity" class="activity-row">
+                        <v-progress-circular indeterminate class="primary--text"></v-progress-circular>
+                    </v-card-row>
+                    <v-card-row v-else class="submit-row condensed">
+                        <v-btn dark default @click.native="selectDialogShown = false">Cancel</v-btn>
+                        <v-btn dark primary @click.native.stop="onSelect">Submit</v-btn>
+                    </v-card-row>
+                </v-card>
+            </v-dialog>
+            <v-btn v-if="model[schema.model] !== '[None]'" icon v-tooltip:top="{ html: 'view/edit' }" @click.native="onView"><v-icon class="info--text">edit</v-icon></v-btn>
+            <v-dialog v-if="!schema.disabled && schema.navigationType !== 'objectReference' && (!schema.required && model[schema.model] !== '[None]')" v-model="deleteDialogShown">
                 <v-btn icon slot="activator" v-tooltip:top="{ html: 'delete' }"><v-icon class="error--text">remove_circle</v-icon></v-btn>
                 <v-card>
                     <v-card-row>

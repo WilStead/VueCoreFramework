@@ -10,6 +10,7 @@ Vue.use(Vuetify);
 
 import VueFormGenerator from 'vue-form-generator';
 
+Vue.component("dynamic-data-table", require('./dynamic-data/dynamic-table/dynamic-data-table.vue'));
 Vue.component("fieldVuetifyText", require('./dynamic-data/dynamic-form/fieldVuetifyText.vue'));
 Vue.component("fieldVuetifyCheckbox", require('./dynamic-data/dynamic-form/fieldVuetifyCheckbox.vue'));
 Vue.component("fieldVuetifySelect", require('./dynamic-data/dynamic-form/fieldVuetifySelect.vue'));
@@ -17,6 +18,7 @@ Vue.component("fieldVuetifyDateTime", require('./dynamic-data/dynamic-form/field
 Vue.component("fieldVuetifyTimespan", require('./dynamic-data/dynamic-form/fieldVuetifyTimespan.vue'));
 Vue.component("fieldVuetifyColor", require('./dynamic-data/dynamic-form/fieldVuetifyColor.vue'));
 Vue.component("fieldNavigation", require('./dynamic-data/dynamic-form/fieldNavigation.vue'));
+Vue.component("fieldCollection", require('./dynamic-data/dynamic-form/fieldCollection.vue'));
 
 Vue.use(VueFormGenerator);
 
