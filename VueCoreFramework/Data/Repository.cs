@@ -123,7 +123,7 @@ namespace VueCoreFramework.Data
                     // to provide initialization logic (e.g. with Fluent API in OnModelCreating).
                     else
                     {
-                        throw new Exception($"Type {typeof(T).Name} contains a property which may be null, but is unable to be initialized to a default value. Property name: {prop.Name}.");
+                        throw new Exception($"Type {typeof(T).Name} contains a property which may not be null, but is unable to be initialized to a default value. Property name: {prop.Name}.");
                     }
                 }
             }

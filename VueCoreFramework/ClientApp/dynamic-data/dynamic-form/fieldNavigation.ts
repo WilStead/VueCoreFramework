@@ -9,6 +9,7 @@ export default {
     data() {
         return {
             activity: false,
+            childRepository: this.$store.getters.getRepository(this.schema.inputType) as Repository,
             deleteDialogShown: false,
             replaceDialogShown: false,
             repository: this.$store.getters.getRepository(this.schema.parentType) as Repository,
@@ -45,7 +46,8 @@ export default {
         onNew() {
             if (this.value === "[None]") {
                 this.activity = true;
-                this.repository.add(this.$route.fullPath, this.schema.inverseType, this.model[this.model.primaryKeyProperty])
+                this.errors.splice(0);
+                this.childRepository.add(this.$route.fullPath, this.schema.inverseType, this.model[this.model.primaryKeyProperty])
                     .then(data => {
                         this.activity = false;
                         if (data.error) {
@@ -129,6 +131,7 @@ export default {
 
         onView() {
             this.activity = true;
+            this.errors.splice(0);
             this.repository.getChildId(this.$route.fullPath, this.model[this.model.primaryKeyProperty], this.schema.model)
                 .then(data => {
                     this.activity = false;
