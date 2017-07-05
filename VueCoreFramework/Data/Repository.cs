@@ -588,6 +588,10 @@ namespace VueCoreFramework.Data
                         {
                             fd.Type = "vuetifyColor";
                         }
+                        else if (dataType.CustomDataType == "Label")
+                        {
+                            fd.Type = "label";
+                        }
                         else if (dataType.CustomDataType == "Name")
                         {
                             fd.Type = "vuetifyText";
@@ -687,8 +691,8 @@ namespace VueCoreFramework.Data
                                 fd.Validator = "string";
                                 break;
                             default:
-                                // If a data type was specified but not one of those recognized, it is
-                                // treated as a simple text field.
+                                // If a data type was specified but is not recognized, it is treated
+                                // as a simple text field.
                                 fd.Type = "vuetifyText";
                                 fd.InputType = "text";
                                 fd.Validator = "string";
@@ -1222,7 +1226,8 @@ namespace VueCoreFramework.Data
                     vm[pInfo.Name.ToInitialLower()] = "[None]";
                 }
                 // Other recognized types are represented with their ToString equivalent.
-                else if (pInfo.PropertyType == typeof(string)
+                else if (_context.Model.GetEntityTypes().Any(e => e.ClrType == pInfo.PropertyType)
+                    || pInfo.PropertyType == typeof(string)
                     || pInfo.PropertyType.IsNumeric()
                     || pInfo.PropertyType == typeof(bool)
                     || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(bool)

@@ -70,11 +70,11 @@ namespace VueCoreFramework.Models
         /// The country's capitol city.
         /// </summary>
         /// <remarks>
-        /// This is a computed property which finds the child with the relevant property. It is
-        /// marked read-only because it is used to read-only information in forms and tables.
+        /// This is a computed property which finds the child with the relevant property. Since it is
+        /// a reference to an entity type, but is not an actual Entity Framework navigation property,
+        /// VueCoreFramework will show it as a read-only label.
         /// </remarks>
-        [Editable(false)]
-        public string Capitol => Cities.FirstOrDefault(c => c.IsCapitol)?.Name;
+        public City Capitol => Cities.FirstOrDefault(c => c.IsCapitol);
 
         /// <summary>
         /// The cities of the country.
