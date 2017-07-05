@@ -382,28 +382,6 @@ namespace VueCoreFramework.Test.Data
         }
 
         [TestMethod]
-        public async Task ReplaceChildWithNewAsyncTest()
-        {
-            var parentRepo = context.GetRepositoryForType(typeof(Country));
-            var childRepo = context.GetRepositoryForType(typeof(Leader));
-
-            var childProp = typeof(Leader).GetProperty(nameof(Leader.Country));
-
-            await parentRepo.AddAsync(null, null);
-            var parent = context.Countries.FirstOrDefault();
-
-            await childRepo.AddAsync(childProp, parent.Id.ToString());
-            var oldChild = context.Leaders.FirstOrDefault();
-
-            var count = context.Leaders.Count();
-
-            var (vm, oldId) = await childRepo.ReplaceChildWithNewAsync(parent.Id.ToString(), childProp);
-            var newCount = context.Leaders.Count();
-            Assert.IsNotNull(oldId);
-            Assert.AreEqual(count, newCount);
-        }
-
-        [TestMethod]
         public async Task UpdateAsyncTest()
         {
             var repo = context.GetRepositoryForType(typeof(Country));

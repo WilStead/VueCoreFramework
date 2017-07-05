@@ -265,7 +265,7 @@ namespace VueCoreFramework.Data
                     {
                         prop.SetValue(newItem, $"{prop.GetValue(oldItem)} (Copy)");
                     }
-                    else
+                    else if (prop.CanWrite)
                     {
                         prop.SetValue(newItem, prop.GetValue(oldItem));
                     }
@@ -1094,9 +1094,12 @@ namespace VueCoreFramework.Data
             vm[primaryKeyVMProperty] = PrimaryKey.Name.ToInitialLower();
 
             // Load all navigation properties.
-            foreach (var nav in entry.Navigations)
+            if (entry != null)
             {
-                await nav.LoadAsync();
+                foreach (var nav in entry.Navigations)
+                {
+                    await nav.LoadAsync();
+                }
             }
 
             foreach (var pInfo in typeof(T).GetTypeInfo().GetProperties())
