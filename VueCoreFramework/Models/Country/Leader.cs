@@ -28,11 +28,7 @@ namespace VueCoreFramework.Models
     /// <summary>
     /// A <see cref="NamedDataItem"/> representing a country's head of government.
     /// </summary>
-    /// <remarks>
-    /// The DashboardFormContent property indicates that a custom component exists which will be
-    /// displayed above data forms when viewing leaders.
-    /// </remarks>
-    [DataClass(DashboardFormContent = "country/leader", IconClass = "person")]
+    [DataClass(IconClass = "person")]
     public class Leader : NamedDataItem
     {
         /// <summary>

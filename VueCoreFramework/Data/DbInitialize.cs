@@ -243,7 +243,8 @@ namespace VueCoreFramework.Data
                         Population = 131554,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
-                        CountryId = countries[0].Id
+                        CountryId = countries[0].Id,
+                        IsCapitol = true
                     },
                     new City
                     {
@@ -259,7 +260,8 @@ namespace VueCoreFramework.Data
                         Population = 115227,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
-                        CountryId = countries[1].Id
+                        CountryId = countries[1].Id,
+                        IsCapitol = true
                     },
                     new City
                     {
@@ -267,7 +269,8 @@ namespace VueCoreFramework.Data
                         Population = 422510,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 10, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
-                        CountryId = countries[2].Id
+                        CountryId = countries[2].Id,
+                        IsCapitol = true
                     },
                     new City
                     {
@@ -283,7 +286,8 @@ namespace VueCoreFramework.Data
                         Population = 5607300,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 8, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
-                        CountryId = countries[3].Id
+                        CountryId = countries[3].Id,
+                        IsCapitol = true
                     },
                     new City
                     {
@@ -291,7 +295,8 @@ namespace VueCoreFramework.Data
                         Population = 1259079,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
-                        CountryId = countries[4].Id
+                        CountryId = countries[4].Id,
+                        IsCapitol = true
                     },
                     new City
                     {
@@ -307,7 +312,8 @@ namespace VueCoreFramework.Data
                         Population = 3421829,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
-                        CountryId = countries[5].Id
+                        CountryId = countries[5].Id,
+                        IsCapitol = true
                     },
                     new City
                     {
@@ -323,7 +329,8 @@ namespace VueCoreFramework.Data
                         Population = 3165235,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
-                        CountryId = countries[6].Id
+                        CountryId = countries[6].Id,
+                        IsCapitol = true
                     },
                     new City
                     {
@@ -339,7 +346,8 @@ namespace VueCoreFramework.Data
                         Population = 1812605,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
-                        CountryId = countries[7].Id
+                        CountryId = countries[7].Id,
+                        IsCapitol = true
                     },
                     new City
                     {
@@ -355,7 +363,8 @@ namespace VueCoreFramework.Data
                         Population = 1515017,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
-                        CountryId = countries[8].Id
+                        CountryId = countries[8].Id,
+                        IsCapitol = true
                     },
                     new City
                     {
@@ -371,7 +380,8 @@ namespace VueCoreFramework.Data
                         Population = 975744,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
-                        CountryId = countries[9].Id
+                        CountryId = countries[9].Id,
+                        IsCapitol = true
                     },
                     new City
                     {
@@ -383,18 +393,6 @@ namespace VueCoreFramework.Data
                     }
                 };
                 context.Cities.AddRange(cities);
-                context.SaveChanges();
-                var cityList = context.Cities.ToList();
-                countries[0].Capitol = cityList[0];
-                countries[1].Capitol = cityList[2];
-                countries[2].Capitol = cityList[3];
-                countries[3].Capitol = cityList[5];
-                countries[4].Capitol = cityList[6];
-                countries[5].Capitol = cityList[8];
-                countries[6].Capitol = cityList[10];
-                countries[7].Capitol = cityList[12];
-                countries[8].Capitol = cityList[14];
-                countries[9].Capitol = cityList[16];
                 context.SaveChanges();
             }
 

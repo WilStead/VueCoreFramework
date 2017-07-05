@@ -482,7 +482,7 @@ export default class DynamicDataTable extends Vue {
             .then(defData => {
                 this.headers = [];
                 defData.forEach(field => {
-                    if (!field.hideInTable && field.visible !== false) {
+                    if (!field.hideInTable) {
                         let h: TableHeader = {
                             text: field.label || field.placeholder,
                             value: field.model,

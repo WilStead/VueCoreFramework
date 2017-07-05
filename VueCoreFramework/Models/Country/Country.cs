@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace VueCoreFramework.Models
 {
@@ -69,16 +70,11 @@ namespace VueCoreFramework.Models
         /// The country's capitol city.
         /// </summary>
         /// <remarks>
-        /// This is a one-to-one relationship with a child object (an object which doesn't get listed
-        /// on the menu, and is only accessible through this parent object). The InverseProperty is
-        /// set for EntityFramework's benefit, because Cities and Countries have two relationships;
-        /// the SPA does not rely on the Attirbute. This navigation property is not hidden in the
-        /// table since non-collections use their ToString representations, which in the case of City
-        /// is its Name property. Only if Capitol is null will placeholder text be shown.
+        /// This is a computed property which finds the child with the relevant property. It is
+        /// marked read-only because it is used to read-only information in forms and tables.
         /// </remarks>
-        [JsonIgnore]
-        [InverseProperty(nameof(City.CountryCapitol))]
-        public City Capitol { get; set; }
+        [Editable(false)]
+        public string Capitol => Cities.FirstOrDefault(c => c.IsCapitol)?.Name;
 
         /// <summary>
         /// The cities of the country.

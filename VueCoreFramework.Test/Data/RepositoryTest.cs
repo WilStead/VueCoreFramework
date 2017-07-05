@@ -161,15 +161,15 @@ namespace VueCoreFramework.Test.Data
         public async Task GetChildIdAsyncTest()
         {
             var parentRepo = context.GetRepositoryForType(typeof(Country));
-            var childRepo = context.GetRepositoryForType(typeof(City));
+            var childRepo = context.GetRepositoryForType(typeof(Leader));
 
             await parentRepo.AddAsync(null, null);
             var parent = context.Countries.FirstOrDefault();
 
             Assert.IsNotNull(parent);
 
-            var parentProp = typeof(Country).GetProperty(nameof(Country.Capitol));
-            var childProp = typeof(City).GetProperty(nameof(City.CountryCapitol));
+            var parentProp = typeof(Country).GetProperty(nameof(Country.Leader));
+            var childProp = typeof(Leader).GetProperty(nameof(Leader.Country));
 
             var vm = await childRepo.AddAsync(childProp, parent.Id.ToString());
             var childId = vm[nameof(DataItem.Id).ToInitialLower()];
@@ -361,22 +361,22 @@ namespace VueCoreFramework.Test.Data
         public async Task ReplaceChildAsyncTest()
         {
             var parentRepo = context.GetRepositoryForType(typeof(Country));
-            var childRepo = context.GetRepositoryForType(typeof(City));
+            var childRepo = context.GetRepositoryForType(typeof(Leader));
 
-            var childProp = typeof(City).GetProperty(nameof(City.CountryCapitol));
+            var childProp = typeof(Leader).GetProperty(nameof(Leader.Country));
 
             await parentRepo.AddAsync(null, null);
             var parent = context.Countries.FirstOrDefault();
 
             await childRepo.AddAsync(childProp, parent.Id.ToString());
-            var oldChild = context.Cities.FirstOrDefault();
+            var oldChild = context.Leaders.FirstOrDefault();
             await childRepo.AddAsync(null, null);
-            var newChild = context.Cities.FirstOrDefault(c => c != oldChild);
+            var newChild = context.Leaders.FirstOrDefault(c => c != oldChild);
 
-            var count = context.Cities.Count();
+            var count = context.Leaders.Count();
 
             var oldId = await childRepo.ReplaceChildAsync(parent.Id.ToString(), newChild.Id.ToString(), childProp);
-            var newCount = context.Cities.Count();
+            var newCount = context.Leaders.Count();
             Assert.IsNotNull(oldId);
             Assert.AreEqual(count - 1, newCount);
         }
@@ -385,20 +385,20 @@ namespace VueCoreFramework.Test.Data
         public async Task ReplaceChildWithNewAsyncTest()
         {
             var parentRepo = context.GetRepositoryForType(typeof(Country));
-            var childRepo = context.GetRepositoryForType(typeof(City));
+            var childRepo = context.GetRepositoryForType(typeof(Leader));
 
-            var childProp = typeof(City).GetProperty(nameof(City.CountryCapitol));
+            var childProp = typeof(Leader).GetProperty(nameof(Leader.Country));
 
             await parentRepo.AddAsync(null, null);
             var parent = context.Countries.FirstOrDefault();
 
             await childRepo.AddAsync(childProp, parent.Id.ToString());
-            var oldChild = context.Cities.FirstOrDefault();
+            var oldChild = context.Leaders.FirstOrDefault();
 
-            var count = context.Cities.Count();
+            var count = context.Leaders.Count();
 
             var (vm, oldId) = await childRepo.ReplaceChildWithNewAsync(parent.Id.ToString(), childProp);
-            var newCount = context.Cities.Count();
+            var newCount = context.Leaders.Count();
             Assert.IsNotNull(oldId);
             Assert.AreEqual(count, newCount);
         }

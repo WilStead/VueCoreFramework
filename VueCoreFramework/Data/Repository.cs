@@ -1089,6 +1089,12 @@ namespace VueCoreFramework.Data
             // Add a property to the VM which identifies the primary key.
             vm[primaryKeyVMProperty] = PrimaryKey.Name.ToInitialLower();
 
+            // Load all navigation properties.
+            foreach (var nav in entry.Navigations)
+            {
+                await nav.LoadAsync();
+            }
+
             foreach (var pInfo in typeof(T).GetTypeInfo().GetProperties())
             {
                 var dataType = pInfo.GetCustomAttribute<DataTypeAttribute>();
@@ -1105,13 +1111,6 @@ namespace VueCoreFramework.Data
 
                 if (nav != null)
                 {
-                    if (entry != null)
-                    {
-                        await entry.Navigation(pInfo.Name).LoadAsync();
-                        // Repeat now that nav has been loaded.
-                        value = item == null ? null : pInfo.GetValue(item);
-                    }
-
                     // Collection navigation properties are represented as placeholder text, varying
                     // depending on whether the collection is empty or not.
                     if (nav.IsCollection())

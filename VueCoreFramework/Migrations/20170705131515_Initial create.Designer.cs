@@ -9,7 +9,7 @@ using VueCoreFramework.Models;
 namespace VueCoreFramework.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20170628004743_Initial create")]
+    [Migration("20170705131515_Initial create")]
     partial class Initialcreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -216,9 +216,9 @@ namespace VueCoreFramework.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<Guid?>("CountryCapitolId");
-
                     b.Property<Guid>("CountryId");
+
+                    b.Property<bool>("IsCapitol");
 
                     b.Property<DateTime>("LocalTimeAtGMTMidnight");
 
@@ -230,9 +230,6 @@ namespace VueCoreFramework.Migrations
                     b.Property<int>("Transit");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CountryCapitolId")
-                        .IsUnique();
 
                     b.HasIndex("CountryId");
 
@@ -404,10 +401,6 @@ namespace VueCoreFramework.Migrations
 
             modelBuilder.Entity("VueCoreFramework.Models.City", b =>
                 {
-                    b.HasOne("VueCoreFramework.Models.Country", "CountryCapitol")
-                        .WithOne("Capitol")
-                        .HasForeignKey("VueCoreFramework.Models.City", "CountryCapitolId");
-
                     b.HasOne("VueCoreFramework.Models.Country", "Country")
                         .WithMany("Cities")
                         .HasForeignKey("CountryId")

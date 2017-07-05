@@ -268,8 +268,8 @@ namespace VueCoreFramework.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
-                    CountryCapitolId = table.Column<Guid>(nullable: true),
                     CountryId = table.Column<Guid>(nullable: false),
+                    IsCapitol = table.Column<bool>(nullable: false),
                     LocalTimeAtGMTMidnight = table.Column<DateTime>(nullable: false),
                     Name = table.Column<string>(nullable: false),
                     Population = table.Column<int>(nullable: false),
@@ -278,12 +278,6 @@ namespace VueCoreFramework.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Cities", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Cities_Countries_CountryCapitolId",
-                        column: x => x.CountryCapitolId,
-                        principalTable: "Countries",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Cities_Countries_CountryId",
                         column: x => x.CountryId,
@@ -355,12 +349,6 @@ namespace VueCoreFramework.Migrations
                 name: "UserNameIndex",
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Cities_CountryCapitolId",
-                table: "Cities",
-                column: "CountryCapitolId",
                 unique: true);
 
             migrationBuilder.CreateIndex(

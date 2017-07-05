@@ -38,9 +38,11 @@ namespace VueCoreFramework.Models
     /// <remarks>
     /// Because this class doesn't have the <see cref="MenuClassAttribute"/>, it will not appear in
     /// the menu of the SPA, and items of this type will therefore only be available to view or edit
-    /// as children of another object (a <see cref="Models.Country"/>, in this case).
+    /// as children of another object (a <see cref="Models.Country"/>, in this case). The
+    /// DashboardFormContent property indicates that a custom component exists which will be
+    /// displayed above data forms when viewing cities.
     /// </remarks>
-    [DataClass(IconClass = "location_city")]
+    [DataClass(DashboardFormContent = "country/city", IconClass = "location_city")]
     public class City : NamedDataItem
     {
         /// <summary>
@@ -106,20 +108,15 @@ namespace VueCoreFramework.Models
         public Guid CountryId { get; set; }
 
         /// <summary>
-        /// The country of which this city is the capitol.
-        /// </summary>
-        [JsonIgnore]
-        [InverseProperty(nameof(Models.Country.Capitol))]
-        [Hidden]
-        public Country CountryCapitol { get; set; }
-
-        /// <summary>
-        /// The foreign key for <see cref="CountryCapitol"/>.
+        /// Indicates that this city is the capitol of the country.
         /// </summary>
         /// <remarks>
-        /// Since this key is nullable, the relationship is zero-or-one-to-one, rather than
-        /// one-to-one (i.e., not required).
+        /// Since only one city may be the capitol, but there is no way to enforce such a constraint
+        /// with the Entity Framework and VueCoreFramework Attribute decoration system, a custom
+        /// control is provided on the City form to perform this function instead. Therefore, it is
+        /// hidden from the normal form (but not in tables).
         /// </remarks>
-        public Guid? CountryCapitolId { get; set; }
+        [Hidden(true, HideInTable = false)]
+        public bool IsCapitol { get; set; }
     }
 }
