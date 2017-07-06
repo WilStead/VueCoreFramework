@@ -511,6 +511,8 @@ namespace VueCoreFramework.Data
 
             fd.HideInTable = hidden?.HideInTable;
 
+            fd.IsName = pInfo.GetCustomAttribute<NameAttribute>() != null;
+
             // Navigation properties use special fields.
             var nav = EntityType.FindNavigation(pInfo);
             if (nav != null)
@@ -591,13 +593,6 @@ namespace VueCoreFramework.Data
                         else if (dataType.CustomDataType == "Label")
                         {
                             fd.Type = "label";
-                        }
-                        else if (dataType.CustomDataType == "Name")
-                        {
-                            fd.Type = "vuetifyText";
-                            fd.InputType = "text";
-                            fd.Validator = "string";
-                            fd.IsName = true;
                         }
                         // Any custom data type not recognized as one of the special types handled above is
                         // treated as a simple text field.
