@@ -6,10 +6,10 @@
                 <span style="margin-left: 0.5em;">{{ title }}</span>
                 <v-spacer></v-spacer>
                 <v-dialog v-if="$store.state.userState.isAdmin" v-model="shareDialog" fullscreen :overlay="false">
-                    <v-btn v-tooltip:top="{ html: 'type sharing' }" icon class="info--text" slot="activator"><v-icon light>visibility</v-icon></v-btn>
+                    <v-btn v-tooltip:top="{ html: 'type sharing' }" icon class="info--text" slot="activator"><v-icon>visibility</v-icon></v-btn>
                     <v-card>
                         <v-card-title primary-title class="info">
-                            <v-btn icon @click.native="shareDialog = false" light><v-icon>close</v-icon></v-btn>
+                            <v-btn icon @click.native="shareDialog = false"><v-icon>close</v-icon></v-btn>
                             <span class="white--text headline">Share {{routeName}} Data Type</span>
                         </v-card-title>
                         <v-alert error :value="shareErrorMessage">{{ shareErrorMessage }}</v-alert>
@@ -31,7 +31,7 @@
                                             <v-list-tile-sub-title>{{ share.shortLevel }}</v-list-tile-sub-title>
                                         </v-list-tile-content>
                                         <v-list-tile-action>
-                                            <v-btn v-tooltip:top="{ html: 'hide' }" icon class="info--text" @click.native="onHide(share)"><v-icon light>visibility_off</v-icon></v-btn>
+                                            <v-btn v-tooltip:top="{ html: 'hide' }" icon class="info--text" @click.native="onHide(share)"><v-icon>visibility_off</v-icon></v-btn>
                                         </v-list-tile-action>
                                     </v-list-tile>
                                 </v-list-group>

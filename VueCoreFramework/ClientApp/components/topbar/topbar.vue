@@ -1,6 +1,6 @@
 ﻿<template>
     <v-list class="topbar">
-        <router-link title="sign in" v-if="!signedIn" :to="{ path: '/login', query: { returnUrl: getReturnUrl() } }"><v-icon class="user-icon">account_circle</v-icon></router-link>
+        <router-link class="btn btn--icon btn--raised" title="sign in" v-if="!signedIn" :to="{ path: '/login', query: { returnUrl: getReturnUrl() } }"><v-icon class="user-icon">account_circle</v-icon></router-link>
         <div v-if="signedIn">
             <v-btn icon v-tooltip:left="{ html: 'chat' }" @click.native="onToggleChat">
                 <v-icon v-badge="{ value: totalUnread, overlap: true, visible: totalUnread > 0 }"

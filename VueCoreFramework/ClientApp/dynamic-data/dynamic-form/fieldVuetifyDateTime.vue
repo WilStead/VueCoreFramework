@@ -61,7 +61,7 @@
             </v-time-picker>
         </v-menu>
         <div v-if="!schema.required" class="null-clear-container">
-            <v-btn class="btn-null-clear" floating primary :disabled="disabled" @click.native="onClear"><v-icon light>remove</v-icon></v-btn>
+            <v-btn class="btn-null-clear" floating primary :disabled="disabled" @click.native="onClear"><v-icon>remove</v-icon></v-btn>
         </div>
     </div>
 </template>

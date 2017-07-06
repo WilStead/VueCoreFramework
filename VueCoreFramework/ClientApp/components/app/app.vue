@@ -1,18 +1,20 @@
 <template>
     <v-app light id='app-root'>
-        <v-navigation-drawer light persistent disable-route-watcher v-model="sideNav">
+        <v-navigation-drawer persistent disable-route-watcher v-model="sideNav">
             <v-list>
                 <menu-item-component v-for="menuItem in $store.state.uiState.menuItems" :menuItem="menuItem" :submenu="menuItem.submenu" :key="menuItem.key" />
             </v-list>
         </v-navigation-drawer>
-        <v-navigation-drawer right light persistent disable-route-watcher v-model="$store.state.uiState.messaging.messagingShown">
+        <v-navigation-drawer right persistent disable-route-watcher v-model="$store.state.uiState.messaging.messagingShown">
             <v-card v-if="$store.state.uiState.messaging.chatShown" style="display: flex; flex-flow: column nowrap; min-height: 100%;">
-                <v-card-title primary-title class="primary headline" style="flex-grow: 0;">
+                <v-toolbar card class="primary" style="flex-grow: 0;">
                     <v-btn icon @click.native="onHideChat"><v-icon>arrow_back</v-icon></v-btn>
-                    <span v-if="$store.state.uiState.messaging.groupChat">{{ $store.state.uiState.messaging.groupChat }}</span>
-                    <span v-else>{{ $store.state.uiState.messaging.interlocutor }}</span>
-                    <v-subheader v-if="$store.state.uiState.messaging.proxySender">{{ $store.state.uiState.messaging.proxySender }}</v-subheader>
-                </v-card-title>
+                    <v-toolbar-title>
+                        <span v-if="$store.state.uiState.messaging.groupChat">{{ $store.state.uiState.messaging.groupChat }}</span>
+                        <span v-else>{{ $store.state.uiState.messaging.interlocutor }}</span>
+                        <v-subheader v-if="$store.state.uiState.messaging.proxySender">{{ $store.state.uiState.messaging.proxySender }}</v-subheader>
+                    </v-toolbar-title>
+                </v-toolbar>
                 <v-alert error :value="chatErrorMessage">{{ chatErrorMessage }}</v-alert>
                 <v-card-text class="chat-row" id="chat-row">
                     <div class="chat-container pa-0">
@@ -156,7 +158,7 @@
             </v-list>
         </v-navigation-drawer>
         <v-toolbar fixed class="primary topnav">
-            <v-toolbar-side-icon light @click.native.stop="sideNav = !sideNav" />
+            <v-toolbar-side-icon @click.native.stop="sideNav = !sideNav" />
             <div class="logo-container">
                 <router-link to="/"><span class="logo-link"></span></router-link>
             </div>

@@ -52,7 +52,7 @@
             </v-card-text>
             <v-card-text v-if="!submitting && !changingUsername && !changingEmail && !changingPassword && !settingPassword">
                 <v-dialog v-model="deleteAccountDialog" fullscreen :overlay="false">
-                    <v-btn error light slot="activator">Delete Account</v-btn>
+                    <v-btn error slot="activator">Delete Account</v-btn>
                     <v-card>
                         <v-card-title primary-title class="error white--text headline">Are you sure you want to delete your account?</v-card-title>
                         <v-card-text class="error--text">This will delete all data associated with your account that isn't being shared with others (unless you choose to transfer it, below). Even if you sign up again later with the same account information, any deleted data will remain lost.</v-card-text>

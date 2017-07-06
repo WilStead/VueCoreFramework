@@ -35,7 +35,7 @@
                             <v-list-tile-title>Invite a new member</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
-                            <v-btn light icon class="success--text" @click.native.stop="onInviteConfirm(group)"><v-icon>person_add</v-icon></v-btn>
+                            <v-btn icon class="success--text" @click.native.stop="onInviteConfirm(group)"><v-icon>person_add</v-icon></v-btn>
                         </v-list-tile-action>
                     </v-list-tile>
                     <v-list-tile v-if="group.name !== 'Admin' && group.members.length > 1">
@@ -43,7 +43,7 @@
                             <v-list-tile-title>Transfer management</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
-                            <v-btn light icon class="primary--text" @click.native.stop="onXferGroupConfirm(group)"><v-icon>transfer_within_a_station</v-icon></v-btn>
+                            <v-btn icon class="primary--text" @click.native.stop="onXferGroupConfirm(group)"><v-icon>transfer_within_a_station</v-icon></v-btn>
                         </v-list-tile-action>
                     </v-list-tile>
                     <v-list-tile v-if="group.name !== 'Admin'" class="error white--text">
@@ -51,7 +51,7 @@
                             <v-list-tile-title>Delete this group</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
-                            <v-btn light icon class="white--text" @click.native="onDeleteConfirm(group)"><v-icon>remove_circle</v-icon></v-btn>
+                            <v-btn icon class="white--text" @click.native="onDeleteConfirm(group)"><v-icon>remove_circle</v-icon></v-btn>
                         </v-list-tile-action>
                     </v-list-tile>
                 </v-list-group>
@@ -84,7 +84,7 @@
                             <v-list-tile-title>Leave this group</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
-                            <v-btn slot="activator" light icon class="white--text" @click.native.stop="onLeaveGroupConfirm(group)"><v-icon>remove_circle</v-icon></v-btn>
+                            <v-btn slot="activator" icon class="white--text" @click.native.stop="onLeaveGroupConfirm(group)"><v-icon>remove_circle</v-icon></v-btn>
                         </v-list-tile-action>
                     </v-list-tile>
                 </v-list-group>
@@ -149,7 +149,7 @@
                             <v-list-tile-title>Invite a new member</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
-                            <v-btn light icon class="success--text" @click.native="onInviteConfirm(foundGroup)"><v-icon>person_add</v-icon></v-btn>
+                            <v-btn icon class="success--text" @click.native="onInviteConfirm(foundGroup)"><v-icon>person_add</v-icon></v-btn>
                         </v-list-tile-action>
                     </v-list-tile>
                     <v-list-tile>
@@ -157,7 +157,7 @@
                             <v-list-tile-title>Transfer management</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
-                            <v-btn light icon class="primary--text" @click.native="onXferGroupConfirm(foundGroup)"><v-icon>transfer_within_a_station</v-icon></v-btn>
+                            <v-btn icon class="primary--text" @click.native="onXferGroupConfirm(foundGroup)"><v-icon>transfer_within_a_station</v-icon></v-btn>
                         </v-list-tile-action>
                     </v-list-tile>
                     <v-list-tile v-if="foundGroup.name !== 'Admin'" class="error white--text">
@@ -165,7 +165,7 @@
                             <v-list-tile-title>Delete this group</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
-                            <v-btn light icon class="white--text" @click.native="onDeleteConfirm(foundGroup)"><v-icon>remove_circle</v-icon></v-btn>
+                            <v-btn icon class="white--text" @click.native="onDeleteConfirm(foundGroup)"><v-icon>remove_circle</v-icon></v-btn>
                         </v-list-tile-action>
                     </v-list-tile>
                 </v-list-group>
