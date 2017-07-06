@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +25,8 @@ namespace VueCoreFramework.Controllers
     {
         private readonly AdminOptions _adminOptions;
         private readonly ApplicationDbContext _context;
+        private readonly IStringLocalizer<ErrorMessages> _errorLocalizer;
+        private readonly IStringLocalizer<ResponseMessages> _responseLocalizer;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly UserManager<ApplicationUser> _userManager;
 
@@ -33,11 +36,15 @@ namespace VueCoreFramework.Controllers
         public MessageController(
             IOptions<AdminOptions> adminOptions,
             ApplicationDbContext context,
+            IStringLocalizer<ErrorMessages> localizer,
+            IStringLocalizer<ResponseMessages> responseLocalizer,
             RoleManager<IdentityRole> roleManager,
             UserManager<ApplicationUser> userManager)
         {
             _adminOptions = adminOptions.Value;
             _context = context;
+            _errorLocalizer = localizer;
+            _responseLocalizer = responseLocalizer;
             _roleManager = roleManager;
             _userManager = userManager;
         }
@@ -56,11 +63,11 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
 
             List<ConversationViewModel> vms = new List<ConversationViewModel>();
@@ -101,17 +108,17 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
 
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return Json(new { error = ErrorMessages.InvalidTargetGroupError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetGroupError] });
             }
             var managerId = _context.UserClaims.FirstOrDefault(c =>
                 c.ClaimType == CustomClaimTypes.PermissionGroupManager && c.ClaimValue == group)?
@@ -172,16 +179,16 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             if (!roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = ErrorMessages.AdminOnlyError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
             }
 
             List<ConversationViewModel> vms = new List<ConversationViewModel>();
@@ -220,16 +227,16 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             if (!roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = ErrorMessages.AdminOnlyError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
             }
 
             var vms = new List<MessageViewModel>();
@@ -269,11 +276,11 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
 
             return Json(_context.Messages.Where(m =>
@@ -305,11 +312,11 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
 
             var vms = new List<MessageViewModel>();
@@ -349,11 +356,11 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
 
             foreach (var message in _context.Messages.Where(m =>
@@ -376,7 +383,7 @@ namespace VueCoreFramework.Controllers
             }
             await _context.SaveChangesAsync();
 
-            return Json(new { response = ResponseMessages.Success });
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
 
         /// <summary>
@@ -393,11 +400,11 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
 
             foreach (var message in _context.Messages.Where(m => m.SingleRecipient == user
@@ -407,7 +414,7 @@ namespace VueCoreFramework.Controllers
             }
             await _context.SaveChangesAsync();
 
-            return Json(new { response = ResponseMessages.Success });
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
 
         /// <summary>
@@ -421,11 +428,11 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
 
             foreach (var message in _context.Messages.Where(m => m.SingleRecipient == user && m.IsSystemMessage))
@@ -434,7 +441,7 @@ namespace VueCoreFramework.Controllers
             }
             await _context.SaveChangesAsync();
 
-            return Json(new { response = ResponseMessages.Success });
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
 
         /// <summary>
@@ -448,23 +455,23 @@ namespace VueCoreFramework.Controllers
         {
             if (string.IsNullOrEmpty(message) || message.Length > 125)
             {
-                return Json(new { error = ErrorMessages.MessageInvalidLengthError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MessageInvalidLengthError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
 
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return Json(new { error = ErrorMessages.InvalidTargetGroupError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetGroupError] });
             }
 
             var messages = _context.Messages.Where(m => m.GroupRecipient == groupRole);
@@ -481,7 +488,7 @@ namespace VueCoreFramework.Controllers
                 GroupRecipientName = groupRole.Name
             });
             await _context.SaveChangesAsync();
-            return Json(new { response = ResponseMessages.Success });
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
 
         /// <summary>
@@ -495,23 +502,23 @@ namespace VueCoreFramework.Controllers
         {
             if (string.IsNullOrEmpty(message) || message.Length > 125)
             {
-                return Json(new { error = ErrorMessages.MessageInvalidLengthError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MessageInvalidLengthError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
 
             var targetUser = await _userManager.FindByNameAsync(username);
             if (targetUser == null)
             {
-                return Json(new { error = ErrorMessages.InvalidTargetUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetUserError] });
             }
 
             var messages = _context.Messages.Where(m =>
@@ -530,7 +537,7 @@ namespace VueCoreFramework.Controllers
                 SingleRecipientName = targetUser.UserName
             });
             await _context.SaveChangesAsync();
-            return Json(new { response = ResponseMessages.Success });
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
     }
 }

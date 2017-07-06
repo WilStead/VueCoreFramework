@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Localization;
 
 namespace VueCoreFramework.Controllers
 {
@@ -24,6 +25,8 @@ namespace VueCoreFramework.Controllers
         private readonly AdminOptions _adminOptions;
         private readonly ApplicationDbContext _context;
         private readonly IEmailSender _emailSender;
+        private readonly IStringLocalizer<ErrorMessages> _errorLocalizer;
+        private readonly IStringLocalizer<ResponseMessages> _responseLocalizer;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly UserManager<ApplicationUser> _userManager;
 
@@ -34,12 +37,16 @@ namespace VueCoreFramework.Controllers
             IOptions<AdminOptions> adminOptions,
             ApplicationDbContext context,
             IEmailSender emailSender,
+            IStringLocalizer<ErrorMessages> localizer,
+            IStringLocalizer<ResponseMessages> responseLocalizer,
             RoleManager<IdentityRole> roleManager,
             UserManager<ApplicationUser> userManager)
         {
             _adminOptions = adminOptions.Value;
             _context = context;
             _emailSender = emailSender;
+            _errorLocalizer = localizer;
+            _responseLocalizer = responseLocalizer;
             _roleManager = roleManager;
             _userManager = userManager;
         }
@@ -96,45 +103,45 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             if (group == CustomRoles.SiteAdmin)
             {
                 if (roles.Contains(CustomRoles.SiteAdmin))
                 {
-                    return Json(new { error = ErrorMessages.SiteAdminSingularError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminSingularError] });
                 }
                 else
                 {
-                    return Json(new { error = ErrorMessages.SiteAdminOnlyError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminOnlyError] });
                 }
             }
             else if (group == CustomRoles.Admin)
             {
                 if (!roles.Contains(CustomRoles.SiteAdmin))
                 {
-                    return Json(new { error = ErrorMessages.SiteAdminOnlyError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminOnlyError] });
                 }
             }
             else if (group == CustomRoles.AllUsers)
             {
-                return Json(new { error = ErrorMessages.AllUsersRequiredError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.AllUsersRequiredError] });
             }
             // Only Admins can retrieve information about a group by name.
             else if (!roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = ErrorMessages.AdminOnlyError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
             }
 
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return Json(new { response = ResponseMessages.NoResults });
+                return Json(new { response = _responseLocalizer[ResponseMessages.NoResults] });
             }
             var managerId = _context.UserClaims.FirstOrDefault(c =>
                 c.ClaimType == CustomClaimTypes.PermissionGroupManager && c.ClaimValue == groupRole.Name)?
@@ -160,11 +167,11 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
 
             var groups = await _userManager.GetRolesAsync(user);
@@ -214,38 +221,38 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
             if (username == user.UserName)
             {
-                return Json(new { error = ErrorMessages.SelfGroupAddError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.SelfGroupAddError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             if (group == CustomRoles.SiteAdmin)
             {
                 if (roles.Contains(CustomRoles.SiteAdmin))
                 {
-                    return Json(new { error = ErrorMessages.SiteAdminSingularError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminSingularError] });
                 }
                 else
                 {
-                    return Json(new { error = ErrorMessages.SiteAdminOnlyError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminOnlyError] });
                 }
             }
             else if (group == CustomRoles.Admin)
             {
                 if (!roles.Contains(CustomRoles.SiteAdmin))
                 {
-                    return Json(new { error = ErrorMessages.SiteAdminOnlyError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminOnlyError] });
                 }
             }
             else if (group == CustomRoles.AllUsers)
             {
-                return Json(new { error = ErrorMessages.AllUsersRequiredError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.AllUsersRequiredError] });
             }
             // Admins can invite users to any non-admin group, regardless of their own membership.
             else if (!roles.Contains(CustomRoles.Admin))
@@ -253,28 +260,28 @@ namespace VueCoreFramework.Controllers
                 var claims = await _userManager.GetClaimsAsync(user);
                 if (!claims.Any(c => c.Type == CustomClaimTypes.PermissionGroupManager && c.Value == group))
                 {
-                    return Json(new { error = ErrorMessages.ManagerOnlyError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.ManagerOnlyError] });
                 }
             }
 
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return Json(new { error = ErrorMessages.InvalidTargetGroupError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetGroupError] });
             }
             var targetUser = await _userManager.FindByNameAsync(username);
             if (targetUser == null)
             {
                 if (roles.Contains(CustomRoles.Admin))
                 {
-                    return Json(new { error = ErrorMessages.InvalidTargetUserError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetUserError] });
                 }
                 // Non-admins are not permitted to know the identities of other users who are not
                 // members of common groups. Therefore, indicate success despite there being no such
                 // member, to avoid exposing a way to determine valid usernames.
                 else
                 {
-                    return Json(new { response = ResponseMessages.Success });
+                    return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
                 }
             }
 
@@ -284,7 +291,7 @@ namespace VueCoreFramework.Controllers
             await _emailSender.SendEmailAsync(targetUser.Email, "You've been invited to join a group",
                 $"You've been invited to join the {group} group. If you would like to accept the invitation, please click this link to become a group member: <a href='{acceptCallbackUrl}'>link</a>");
 
-            return Json(new { response = ResponseMessages.Success });
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
 
         /// <summary>
@@ -299,34 +306,34 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
             if (group == CustomRoles.SiteAdmin)
             {
-                return Json(new { error = ErrorMessages.SiteAdminSingularError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminSingularError] });
             }
             else if (group == CustomRoles.AllUsers)
             {
-                return Json(new { error = ErrorMessages.AllUsersRequiredError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.AllUsersRequiredError] });
             }
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return Json(new { error = ErrorMessages.InvalidTargetGroupError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetGroupError] });
             }
             var managerId = _context.UserClaims.FirstOrDefault(c =>
                 c.ClaimType == CustomClaimTypes.PermissionGroupManager && c.ClaimValue == group)?
                 .UserId;
             if (managerId == user.Id)
             {
-                return Json(new { error = ErrorMessages.MustHaveManagerError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MustHaveManagerError] });
             }
             await _userManager.RemoveFromRoleAsync(user, group);
-            return Json(new { response = ResponseMessages.Success });
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
 
         /// <summary>
@@ -341,22 +348,22 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             if (group == CustomRoles.SiteAdmin)
             {
                 if (roles.Contains(CustomRoles.SiteAdmin))
                 {
-                    return Json(new { error = ErrorMessages.SiteAdminSingularError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminSingularError] });
                 }
                 else
                 {
-                    return Json(new { error = ErrorMessages.SiteAdminOnlyError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminOnlyError] });
                 }
             }
             else if (group == CustomRoles.Admin)
@@ -365,7 +372,7 @@ namespace VueCoreFramework.Controllers
             }
             else if (group == CustomRoles.AllUsers)
             {
-                return Json(new { error = ErrorMessages.AllUsersRequiredError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.AllUsersRequiredError] });
             }
             // Admins can delete any non-admin group, regardless of their own membership.
             else if (!roles.Contains(CustomRoles.Admin))
@@ -373,21 +380,21 @@ namespace VueCoreFramework.Controllers
                 var claims = await _userManager.GetClaimsAsync(user);
                 if (!claims.Any(c => c.Type == CustomClaimTypes.PermissionGroupManager && c.Value == group))
                 {
-                    return Json(new { error = ErrorMessages.ManagerOnlyError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.ManagerOnlyError] });
                 }
             }
 
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return Json(new { error = ErrorMessages.InvalidTargetGroupError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetGroupError] });
             }
             // Delete group messages
             var groupMessages = _context.Messages.Where(m => m.GroupRecipient == groupRole);
             _context.RemoveRange(groupMessages);
             await _context.SaveChangesAsync();
             await _roleManager.DeleteAsync(groupRole);
-            return Json(new { response = ResponseMessages.Success });
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
 
         /// <summary>
@@ -403,34 +410,34 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             if (group == CustomRoles.SiteAdmin)
             {
                 if (roles.Contains(CustomRoles.SiteAdmin))
                 {
-                    return Json(new { error = ErrorMessages.SiteAdminSingularError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminSingularError] });
                 }
                 else
                 {
-                    return Json(new { error = ErrorMessages.SiteAdminOnlyError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminOnlyError] });
                 }
             }
             else if (group == CustomRoles.Admin)
             {
                 if (!roles.Contains(CustomRoles.SiteAdmin))
                 {
-                    return Json(new { error = ErrorMessages.SiteAdminOnlyError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminOnlyError] });
                 }
             }
             else if (group == CustomRoles.AllUsers)
             {
-                return Json(new { error = ErrorMessages.AllUsersRequiredError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.AllUsersRequiredError] });
             }
             // Admins can remove users from any non-admin group, regardless of their own membership.
             else if (!roles.Contains(CustomRoles.Admin))
@@ -438,22 +445,22 @@ namespace VueCoreFramework.Controllers
                 var claims = await _userManager.GetClaimsAsync(user);
                 if (!claims.Any(c => c.Type == CustomClaimTypes.PermissionGroupManager && c.Value == group))
                 {
-                    return Json(new { error = ErrorMessages.ManagerOnlyError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.ManagerOnlyError] });
                 }
             }
 
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return Json(new { error = ErrorMessages.InvalidTargetGroupError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetGroupError] });
             }
             var targetUser = await _userManager.FindByNameAsync(username);
             if (targetUser == null)
             {
-                return Json(new { error = ErrorMessages.InvalidTargetUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetUserError] });
             }
             await _userManager.RemoveFromRoleAsync(targetUser, groupRole.Name);
-            return Json(new { response = ResponseMessages.Success });
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
 
         /// <summary>
@@ -468,35 +475,35 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
             var lowerGroup = group.ToLower();
             if (lowerGroup.StartsWith("admin") || lowerGroup.EndsWith("admin") || lowerGroup.Contains("administrator"))
             {
-                return Json(new { error = ErrorMessages.OnlyAdminCanBeAdminError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.OnlyAdminCanBeAdminError] });
             }
             if (lowerGroup == "system")
             {
-                return Json(new { error = ErrorMessages.CannotBeSystemError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.CannotBeSystemError] });
             }
             if (lowerGroup == "true" || lowerGroup == "false")
             {
-                return Json(new { error = ErrorMessages.InvalidNameError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidNameError] });
             }
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole != null)
             {
-                return Json(new { error = ErrorMessages.DuplicateGroupNameError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.DuplicateGroupNameError] });
             }
             var role = new IdentityRole(group);
             await _roleManager.CreateAsync(role);
             await _userManager.AddToRoleAsync(user, group);
             await _userManager.AddClaimAsync(user, new Claim(CustomClaimTypes.PermissionGroupManager, group));
-            return Json(new { response = ResponseMessages.Success });
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
 
         /// <summary>
@@ -512,16 +519,16 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             if (group == CustomRoles.SiteAdmin || group == CustomRoles.Admin)
             {
-                return Json(new { error = ErrorMessages.AdminNoManagerError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.AdminNoManagerError] });
             }
             // Admins can transfer the manager role of any non-admin group, regardless of membership.
             else if (!roles.Contains(CustomRoles.Admin))
@@ -529,19 +536,19 @@ namespace VueCoreFramework.Controllers
                 var claims = await _userManager.GetClaimsAsync(user);
                 if (!claims.Any(c => c.Type == CustomClaimTypes.PermissionGroupManager && c.Value == group))
                 {
-                    return Json(new { error = ErrorMessages.ManagerOnlyError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.ManagerOnlyError] });
                 }
             }
 
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return Json(new { error = ErrorMessages.InvalidTargetGroupError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetGroupError] });
             }
             var targetUser = await _userManager.FindByNameAsync(username);
             if (targetUser == null)
             {
-                return Json(new { error = ErrorMessages.InvalidTargetUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetUserError] });
             }
             var member = await _userManager.IsInRoleAsync(targetUser, group);
             if (!member)
@@ -556,7 +563,7 @@ namespace VueCoreFramework.Controllers
                 // The manager may only transfer the membership role to an existing member of the group.
                 else
                 {
-                    return Json(new { error = ErrorMessages.GroupMemberOnlyError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.GroupMemberOnlyError] });
                 }
             }
             _context.UserClaims.Remove(_context.UserClaims.FirstOrDefault(c => c.ClaimType == CustomClaimTypes.PermissionGroupManager && c.ClaimValue == group));
@@ -571,7 +578,7 @@ namespace VueCoreFramework.Controllers
             });
             await _context.SaveChangesAsync();
 
-            return Json(new { response = ResponseMessages.Success });
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
 
         /// <summary>
@@ -586,22 +593,22 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             if (!roles.Contains(CustomRoles.SiteAdmin))
             {
-                return Json(new { error = ErrorMessages.SiteAdminOnlyError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminOnlyError] });
             }
 
             var targetUser = await _userManager.FindByNameAsync(username);
             if (targetUser == null)
             {
-                return Json(new { error = ErrorMessages.InvalidTargetUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetUserError] });
             }
             await _userManager.AddToRoleAsync(targetUser, CustomRoles.SiteAdmin);
             await _userManager.RemoveFromRoleAsync(user, CustomRoles.SiteAdmin);
@@ -615,7 +622,7 @@ namespace VueCoreFramework.Controllers
             });
             await _context.SaveChangesAsync();
 
-            return Json(new { response = ResponseMessages.Success });
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
     }
 }

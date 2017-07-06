@@ -1,6 +1,6 @@
 ﻿namespace VueCoreFramework.Services
 {
-    public static class ErrorMessages
+    public class ErrorMessages
     {
         public const string AddItemError = "Item could not be added.";
         public const string AdminNoManagerError = "The administrator group does not have a manager.";
@@ -46,13 +46,14 @@
 
         public const string PermissionAction_AddNew = "add new items of this type";
         public const string PermissionAction_EditItem = "edit this item";
+        public const string PermissionAction_EditItems = "edit one or more of these items";
         public const string PermissionAction_ViewItem = "view this item";
         public const string PermissionAction_ViewItems = "view items of this type";
         public const string PermissionAction_RemoveItem = "remove this item";
         public const string PermissionAction_RemoveItems = "remove one or more of these items";
 
-        public static string NoPermission(string action) => $"You don't have permission to {action}.";
+        public static string NoPermission = "You don't have permission to {0}.";
 
-        public static string LockedAccount(string email) => $"Your account has been locked. Please contact an administrator at {email} for assistance.";
+        public static string LockedAccount = "Your account has been locked. Please contact an administrator at {0} for assistance.";
     }
 }

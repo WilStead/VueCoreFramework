@@ -17,6 +17,7 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 
 namespace VueCoreFramework.Controllers
 {
@@ -27,8 +28,10 @@ namespace VueCoreFramework.Controllers
     [Route("api/[controller]/{dataType}/[action]")]
     public class DataController : Controller
     {
-        private readonly ILogger<AccountController> _logger;
         private readonly ApplicationDbContext _context;
+        private readonly IStringLocalizer<ErrorMessages> _errorLocalizer;
+        private readonly ILogger<AccountController> _logger;
+        private readonly IStringLocalizer<ResponseMessages> _responseLocalizer;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly UserManager<ApplicationUser> _userManager;
 
@@ -36,13 +39,17 @@ namespace VueCoreFramework.Controllers
         /// Initializes a new instance of <see cref="DataController"/>.
         /// </summary>
         public DataController(
-            ILogger<AccountController> logger,
             ApplicationDbContext context,
+            IStringLocalizer<ErrorMessages> localizer,
+            ILogger<AccountController> logger,
+            IStringLocalizer<ResponseMessages> responseLocalizer,
             RoleManager<IdentityRole> roleManager,
             UserManager<ApplicationUser> userManager)
         {
-            _logger = logger;
             _context = context;
+            _errorLocalizer = localizer;
+            _logger = logger;
+            _responseLocalizer = responseLocalizer;
             _roleManager = roleManager;
             _userManager = userManager;
         }
@@ -61,14 +68,14 @@ namespace VueCoreFramework.Controllers
         /// <returns>
         /// An error if there is a problem; or a ViewModel representing the newly added item (as JSON).
         /// </returns>
-        [HttpPost("{culture}/{childProp?}/{parentId?}")]
-        public async Task<IActionResult> Add(string dataType, string culture, string childProp, string parentId)
+        [HttpPost("{childProp?}/{parentId?}")]
+        public async Task<IActionResult> Add(string dataType, string childProp, string parentId, string culture)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -81,11 +88,11 @@ namespace VueCoreFramework.Controllers
             }
             if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataAdd) == AuthorizationViewModel.Unauthorized)
             {
-                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_AddNew) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_AddNew]] });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             PropertyInfo pInfo = null;
             if (!string.IsNullOrEmpty(parentId) && !string.IsNullOrEmpty(childProp))
@@ -108,7 +115,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = ErrorMessages.SaveItemError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.SaveItemError] });
             }
         }
 
@@ -128,21 +135,21 @@ namespace VueCoreFramework.Controllers
         {
             if (string.IsNullOrEmpty(id))
             {
-                return Json(new { error = ErrorMessages.MissingIdError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingIdError] });
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = ErrorMessages.MissingPropError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -155,7 +162,7 @@ namespace VueCoreFramework.Controllers
             }
             if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataEdit, id) == AuthorizationViewModel.Unauthorized)
             {
-                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_EditItem) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_EditItem]] });
             }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
@@ -164,16 +171,16 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = ErrorMessages.MissingPropError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
             }
             try
             {
                 await repository.AddChildrenToCollectionAsync(id, pInfo, childIds);
-                return Json(new { response = ResponseMessages.Success });
+                return Json(new { response = _errorLocalizer[ResponseMessages.Success] });
             }
             catch
             {
-                return Json(new { error = ErrorMessages.DataError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
             }
         }
 
@@ -186,22 +193,22 @@ namespace VueCoreFramework.Controllers
         /// <returns>
         /// An error if there is a problem; or a ViewModel representing the new item (as JSON).
         /// </returns>
-        [HttpGet("{culture}/{id}")]
-        public async Task<IActionResult> Duplicate(string dataType, string culture, string id)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Duplicate(string dataType, string id, string culture)
         {
             if (string.IsNullOrEmpty(id))
             {
-                return Json(new { error = ErrorMessages.MissingIdError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingIdError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -214,7 +221,7 @@ namespace VueCoreFramework.Controllers
             }
             if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataAdd, id) == AuthorizationViewModel.Unauthorized)
             {
-                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_AddNew) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_AddNew]] });
             }
             object newItem = null;
             try
@@ -223,11 +230,11 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = ErrorMessages.DataError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
             }
             if (newItem == null)
             {
-                return Json(new { error = ErrorMessages.DataError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
             }
             return Json(new { data = newItem });
         }
@@ -242,22 +249,22 @@ namespace VueCoreFramework.Controllers
         /// An error if there is a problem; or a ViewModel representing the item found, or an empty
         /// ViewModel if none is found (as JSON).
         /// </returns>
-        [HttpGet("{culture}/{id}")]
-        public async Task<IActionResult> Find(string dataType, string culture, string id)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Find(string dataType, string id, string culture)
         {
             if (string.IsNullOrEmpty(id))
             {
-                return Json(new { error = ErrorMessages.MissingIdError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingIdError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -270,7 +277,7 @@ namespace VueCoreFramework.Controllers
             }
             if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataView, id) == AuthorizationViewModel.Unauthorized)
             {
-                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItem) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_ViewItem]] });
             }
             object item = null;
             try
@@ -279,11 +286,11 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = ErrorMessages.DataError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
             }
             if (item == null)
             {
-                return Json(new { error = ErrorMessages.DataError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
             }
             return Json(new { data = item });
         }
@@ -295,14 +302,14 @@ namespace VueCoreFramework.Controllers
         /// <returns>
         /// An error in the event of a bad request; or ViewModels representing the items (as JSON).
         /// </returns>
-        [HttpGet("{culture}")]
+        [HttpGet]
         public async Task<IActionResult> GetAll(string dataType, string culture)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -315,11 +322,11 @@ namespace VueCoreFramework.Controllers
             }
             if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataView) == AuthorizationViewModel.Unauthorized)
             {
-                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItems) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_ViewItems]] });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             return Json(await repository.GetAllAsync(culture));
         }
@@ -339,17 +346,17 @@ namespace VueCoreFramework.Controllers
         {
             if (string.IsNullOrEmpty(id))
             {
-                return Json(new { error = ErrorMessages.MissingIdError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingIdError] });
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = ErrorMessages.MissingPropError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -362,11 +369,11 @@ namespace VueCoreFramework.Controllers
             }
             if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataView) == AuthorizationViewModel.Unauthorized)
             {
-                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItems) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_ViewItems]] });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
@@ -375,7 +382,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = ErrorMessages.MissingPropError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
             }
             try
             {
@@ -384,7 +391,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = ErrorMessages.DataError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
             }
         }
 
@@ -403,21 +410,21 @@ namespace VueCoreFramework.Controllers
         {
             if (string.IsNullOrEmpty(id))
             {
-                return Json(new { error = ErrorMessages.MissingIdError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingIdError] });
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = ErrorMessages.MissingPropError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -430,7 +437,7 @@ namespace VueCoreFramework.Controllers
             }
             if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataView, id) == AuthorizationViewModel.Unauthorized)
             {
-                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItem) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_ViewItem]] });
             }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
@@ -439,7 +446,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = ErrorMessages.MissingPropError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
             }
             try
             {
@@ -448,7 +455,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = ErrorMessages.DataError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
             }
         }
 
@@ -475,35 +482,35 @@ namespace VueCoreFramework.Controllers
         /// An error if there is a problem; or the list of ViewModels representing the child objects
         /// on the requested page (as JSON).
         /// </returns>
-        [HttpGet("{culture}/{id}/{childProp}")]
+        [HttpGet("{id}/{childProp}")]
         public async Task<IActionResult> GetChildPage(
             string dataType,
-            string culture,
             string id,
             string childProp,
             string search,
             string sortBy,
             bool descending,
             int page,
-            int rowsPerPage)
+            int rowsPerPage,
+            string culture)
         {
             if (string.IsNullOrEmpty(id))
             {
-                return Json(new { error = ErrorMessages.MissingIdError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingIdError] });
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = ErrorMessages.MissingPropError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -516,7 +523,7 @@ namespace VueCoreFramework.Controllers
             }
             if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataView, id) == AuthorizationViewModel.Unauthorized)
             {
-                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItem) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_ViewItem]] });
             }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
@@ -525,12 +532,12 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = ErrorMessages.MissingPropError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
             }
             var childType = repository.EntityType.FindNavigation(pInfo).GetTargetType().ClrType;
             if (AuthorizationController.GetAuthorization(claims, childType.Name, CustomClaimTypes.PermissionDataView) == AuthorizationViewModel.Unauthorized)
             {
-                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItems) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_ViewItems]] });
             }
             try
             {
@@ -539,7 +546,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = ErrorMessages.DataError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
             }
         }
 
@@ -557,21 +564,21 @@ namespace VueCoreFramework.Controllers
         {
             if (string.IsNullOrEmpty(id))
             {
-                return Json(new { error = ErrorMessages.MissingIdError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingIdError] });
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = ErrorMessages.MissingPropError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -584,7 +591,7 @@ namespace VueCoreFramework.Controllers
             }
             if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataView, id) == AuthorizationViewModel.Unauthorized)
             {
-                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItem) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_ViewItem]] });
             }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
@@ -593,7 +600,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = ErrorMessages.MissingPropError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
             }
             try
             {
@@ -602,7 +609,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = ErrorMessages.DataError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
             }
         }
 
@@ -660,7 +667,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = ErrorMessages.DataError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
             }
         }
 
@@ -675,7 +682,7 @@ namespace VueCoreFramework.Controllers
         {
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             try
             {
@@ -683,7 +690,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = ErrorMessages.DataError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
             }
         }
 
@@ -712,22 +719,22 @@ namespace VueCoreFramework.Controllers
         /// An error if there is a problem; or the list of ViewModels representing the entities on
         /// the requested page (as JSON).
         /// </returns>
-        [HttpPost("{culture}")]
+        [HttpPost]
         public async Task<IActionResult> GetPage(
             string dataType,
-            string culture,
             string search,
             string sortBy,
             bool descending,
             int page,
             int rowsPerPage,
-            [FromBody]string[] except)
+            [FromBody]string[] except,
+            string culture)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -740,11 +747,11 @@ namespace VueCoreFramework.Controllers
             }
             if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataView) == AuthorizationViewModel.Unauthorized)
             {
-                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItems) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_ViewItems]] });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             try
             {
@@ -752,7 +759,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = ErrorMessages.DataError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
             }
         }
 
@@ -771,7 +778,7 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -784,11 +791,11 @@ namespace VueCoreFramework.Controllers
             }
             if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataView) == AuthorizationViewModel.Unauthorized)
             {
-                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_ViewItems) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_ViewItems]] });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             var total = await repository.GetTotalAsync();
             return Json(new { response = total });
@@ -839,7 +846,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = ErrorMessages.DataError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
             }
         }
 
@@ -856,17 +863,17 @@ namespace VueCoreFramework.Controllers
         {
             if (string.IsNullOrEmpty(id))
             {
-                return Json(new { error = ErrorMessages.MissingIdError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingIdError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -879,7 +886,7 @@ namespace VueCoreFramework.Controllers
             }
             if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataAll, id) == AuthorizationViewModel.Unauthorized)
             {
-                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_RemoveItem) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_RemoveItem]] });
             }
             try
             {
@@ -890,9 +897,9 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = ErrorMessages.RemoveItemError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.RemoveItemError] });
             }
-            return Json(new { reponse = ResponseMessages.Success });
+            return Json(new { reponse = _responseLocalizer[ResponseMessages.Success] });
         }
 
         /// <summary>
@@ -911,21 +918,21 @@ namespace VueCoreFramework.Controllers
         {
             if (string.IsNullOrEmpty(id))
             {
-                return Json(new { error = ErrorMessages.MissingIdError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingIdError] });
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = ErrorMessages.MissingPropError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -938,7 +945,7 @@ namespace VueCoreFramework.Controllers
             }
             if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataEdit, id) == AuthorizationViewModel.Unauthorized)
             {
-                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_EditItem) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_EditItem]] });
             }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
@@ -947,16 +954,16 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = ErrorMessages.MissingPropError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
             }
             try
             {
                 await repository.RemoveChildrenFromCollectionAsync(id, pInfo, childIds);
-                return Json(new { response = ResponseMessages.Success });
+                return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
             }
             catch
             {
-                return Json(new { error = ErrorMessages.DataError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
             }
         }
 
@@ -976,21 +983,21 @@ namespace VueCoreFramework.Controllers
         {
             if (string.IsNullOrEmpty(id))
             {
-                return Json(new { error = ErrorMessages.MissingIdError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingIdError] });
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = ErrorMessages.MissingPropError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -1003,7 +1010,7 @@ namespace VueCoreFramework.Controllers
             }
             if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataEdit, id) == AuthorizationViewModel.Unauthorized)
             {
-                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_EditItem) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_EditItem]] });
             }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
@@ -1012,7 +1019,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = ErrorMessages.MissingPropError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
             }
             try
             {
@@ -1023,11 +1030,11 @@ namespace VueCoreFramework.Controllers
                     _context.RoleClaims.RemoveRange(_context.RoleClaims.Where(c => c.ClaimValue == $"{dataType}{{{id}}}"));
                     await _context.SaveChangesAsync();
                 }
-                return Json(new { response = ResponseMessages.Success });
+                return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
             }
             catch
             {
-                return Json(new { error = ErrorMessages.RemoveItemError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.RemoveItemError] });
             }
         }
 
@@ -1044,17 +1051,17 @@ namespace VueCoreFramework.Controllers
         {
             if (ids == null || ids.Count == 0)
             {
-                return Json(new { error = ErrorMessages.MissingIdError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingIdError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -1069,7 +1076,7 @@ namespace VueCoreFramework.Controllers
             {
                 if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataAll, id) == AuthorizationViewModel.Unauthorized)
                 {
-                    return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_RemoveItems) });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_RemoveItems]] });
                 }
             }
             try
@@ -1081,9 +1088,9 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = ErrorMessages.RemoveItemsError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.RemoveItemsError] });
             }
-            return Json(new { response = ResponseMessages.Success });
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
 
         /// <summary>
@@ -1104,21 +1111,21 @@ namespace VueCoreFramework.Controllers
         {
             if (ids == null || ids.Count == 0)
             {
-                return Json(new { error = ErrorMessages.MissingIdError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingIdError] });
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = ErrorMessages.MissingPropError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -1134,7 +1141,7 @@ namespace VueCoreFramework.Controllers
             {
                 if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataEdit, id) == AuthorizationViewModel.Unauthorized)
                 {
-                    return Json(new { error = ErrorMessages.NoPermission("edit one or more of these items") });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_EditItems]] });
                 }
             }
             var pInfo = repository.GetType()
@@ -1144,7 +1151,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = ErrorMessages.MissingPropError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
             }
             try
             {
@@ -1152,11 +1159,11 @@ namespace VueCoreFramework.Controllers
                 _context.UserClaims.RemoveRange(_context.UserClaims.Where(c => removedIds.Any(id => c.ClaimValue == $"{dataType}{{{id}}}")));
                 _context.RoleClaims.RemoveRange(_context.RoleClaims.Where(c => removedIds.Any(id => c.ClaimValue == $"{dataType}{{{id}}}")));
                 await _context.SaveChangesAsync();
-                return Json(new { response = ResponseMessages.Success });
+                return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
             }
             catch
             {
-                return Json(new { error = ErrorMessages.RemoveItemsError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.RemoveItemsError] });
             }
         }
 
@@ -1180,21 +1187,21 @@ namespace VueCoreFramework.Controllers
         {
             if (string.IsNullOrEmpty(parentId) || string.IsNullOrEmpty(newChildId))
             {
-                return Json(new { error = ErrorMessages.MissingIdError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingIdError] });
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = ErrorMessages.MissingPropError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
@@ -1203,7 +1210,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = ErrorMessages.MissingPropError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -1216,7 +1223,7 @@ namespace VueCoreFramework.Controllers
             }
             if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataEdit, parentId) == AuthorizationViewModel.Unauthorized)
             {
-                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_EditItem) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_EditItem]] });
             }
             try
             {
@@ -1227,11 +1234,11 @@ namespace VueCoreFramework.Controllers
                     _context.RoleClaims.RemoveRange(_context.RoleClaims.Where(c => c.ClaimValue == $"{dataType}{{{replacedId}}}"));
                     await _context.SaveChangesAsync();
                 }
-                return Json(new { response = ResponseMessages.Success });
+                return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
             }
             catch
             {
-                return Json(new { error = ErrorMessages.AddItemError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.AddItemError] });
             }
         }
 
@@ -1247,26 +1254,26 @@ namespace VueCoreFramework.Controllers
         /// <returns>
         /// An error if there is a problem; or a response indicating success.
         /// </returns>
-        [HttpPost("{culture}/{parentId}/{childProp}")]
-        public async Task<IActionResult> ReplaceChildWithNew(string dataType, string culture, string parentId, string childProp)
+        [HttpPost("{parentId}/{childProp}")]
+        public async Task<IActionResult> ReplaceChildWithNew(string dataType, string parentId, string childProp, string culture)
         {
             if (string.IsNullOrEmpty(parentId))
             {
-                return Json(new { error = ErrorMessages.MissingIdError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingIdError] });
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = ErrorMessages.MissingPropError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
@@ -1275,7 +1282,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = ErrorMessages.MissingPropError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -1288,7 +1295,7 @@ namespace VueCoreFramework.Controllers
             }
             if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataEdit, parentId) == AuthorizationViewModel.Unauthorized)
             {
-                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_EditItem) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_EditItem]] });
             }
             try
             {
@@ -1308,7 +1315,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = ErrorMessages.AddItemError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.AddItemError] });
             }
         }
 
@@ -1370,18 +1377,18 @@ namespace VueCoreFramework.Controllers
         /// <returns>
         /// An error if there is a problem; or a ViewModel representing the updated item (as JSON).
         /// </returns>
-        [HttpPost("{culture}")]
+        [HttpPost]
         public async Task<IActionResult> Update(string dataType, string culture, [FromBody]JObject item)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (!TryResolveObject(dataType, item, out object obj, out Type type))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -1396,7 +1403,7 @@ namespace VueCoreFramework.Controllers
             var id = repository.PrimaryKey.PropertyInfo.GetValue(obj).ToString();
             if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataEdit, id) == AuthorizationViewModel.Unauthorized)
             {
-                return Json(new { error = ErrorMessages.NoPermission(ErrorMessages.PermissionAction_EditItem) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_EditItem]] });
             }
             try
             {
@@ -1405,7 +1412,7 @@ namespace VueCoreFramework.Controllers
             }
             catch
             {
-                return Json(new { error = ErrorMessages.SaveItemError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.SaveItemError] });
             }
         }
     }

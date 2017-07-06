@@ -20,6 +20,7 @@ using NLog.Web;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Globalization;
 
 namespace VueCoreFramework
 {
@@ -66,11 +67,14 @@ namespace VueCoreFramework
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
+            services.AddLocalization(options => options.ResourcesPath = "Resources");
+
             services.AddMvc(options =>
             {
                 options.SslPort = 44393;
                 options.Filters.Add(new RequireHttpsAttribute());
-            });
+            })
+            .AddDataAnnotationsLocalization();
 
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
@@ -95,7 +99,8 @@ namespace VueCoreFramework
             {
                 app.UseDeveloperExceptionPage();
                 app.UseDatabaseErrorPage();
-                app.UseWebpackDevMiddleware(new WebpackDevMiddlewareOptions {
+                app.UseWebpackDevMiddleware(new WebpackDevMiddlewareOptions
+                {
                     HotModuleReplacement = true
                 });
             }
@@ -136,6 +141,13 @@ namespace VueCoreFramework
 
             var options = new RewriteOptions().AddRedirectToHttps();
             app.UseRewriter(options);
+
+            app.UseRequestLocalization(new RequestLocalizationOptions
+            {
+                DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture(CultureInfo.CurrentCulture),
+                SupportedCultures = { CultureInfo.CurrentCulture },
+                SupportedUICultures = { CultureInfo.CurrentUICulture }
+            });
 
             app.UseStaticFiles();
 

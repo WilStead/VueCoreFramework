@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Localization;
 
 namespace VueCoreFramework.Controllers
 {
@@ -24,6 +25,8 @@ namespace VueCoreFramework.Controllers
     {
         private readonly AdminOptions _adminOptions;
         private readonly ApplicationDbContext _context;
+        private readonly IStringLocalizer<ErrorMessages> _errorLocalizer;
+        private readonly IStringLocalizer<ResponseMessages> _responseLocalizer;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly UserManager<ApplicationUser> _userManager;
 
@@ -33,11 +36,15 @@ namespace VueCoreFramework.Controllers
         public ShareController(
             IOptions<AdminOptions> adminOptions,
             ApplicationDbContext context,
+            IStringLocalizer<ErrorMessages> localizer,
+            IStringLocalizer<ResponseMessages> responseLocalizer,
             RoleManager<IdentityRole> roleManager,
             UserManager<ApplicationUser> userManager)
         {
             _adminOptions = adminOptions.Value;
             _context = context;
+            _errorLocalizer = localizer;
+            _responseLocalizer = responseLocalizer;
             _roleManager = roleManager;
             _userManager = userManager;
         }
@@ -53,17 +60,17 @@ namespace VueCoreFramework.Controllers
         {
             if (string.IsNullOrEmpty(dataType))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -176,11 +183,11 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -242,11 +249,11 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -305,11 +312,11 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -346,11 +353,11 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -400,23 +407,23 @@ namespace VueCoreFramework.Controllers
         {
             if (string.IsNullOrEmpty(dataType))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             // Only Admins can hide data from all.
             if (!roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = ErrorMessages.AdminOnlyError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
             }
 
             dataType = dataType.ToInitialCaps();
@@ -424,7 +431,7 @@ namespace VueCoreFramework.Controllers
             var entity = _context.Model.GetEntityTypes().FirstOrDefault(e => e.Name.Substring(e.Name.LastIndexOf('.') + 1) == dataType);
             if (entity == null)
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             var allRole = await _roleManager.FindByNameAsync(CustomRoles.AllUsers);
             Claim claim = null;
@@ -441,7 +448,7 @@ namespace VueCoreFramework.Controllers
             {
                 await _roleManager.RemoveClaimAsync(allRole, impliedClaim);
             }
-            return Json(new { response = ResponseMessages.Success });
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
 
         /// <summary>
@@ -459,17 +466,17 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             // Only admins can hide a data type, rather than a particular item
             if (string.IsNullOrEmpty(id) && !roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = ErrorMessages.AdminOnlyError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
             }
             // Admins can hide data from any group, regardless of their own membership.
             if (!roles.Contains(CustomRoles.Admin))
@@ -478,24 +485,24 @@ namespace VueCoreFramework.Controllers
                 if (!claims.Any(c => c.Type == CustomClaimTypes.PermissionGroupManager && c.Value == group)
                     && !claims.Any(c => c.Type == CustomClaimTypes.PermissionDataOwner && c.Value == $"{dataType}{{{id}}}"))
                 {
-                    return Json(new { error = ErrorMessages.ManagerOrOwnerOnlyError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.ManagerOrOwnerOnlyError] });
                 }
             }
 
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return Json(new { error = ErrorMessages.InvalidTargetGroupError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetGroupError] });
             }
             if (!TryGetClaim(dataType, operation, id, out Claim claim))
             {
-                return Json(new { error = ErrorMessages.DataError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
             }
             foreach (var impliedClaim in GetImpliedClaimsForRemove(claim))
             {
                 await _roleManager.RemoveClaimAsync(groupRole, impliedClaim);
             }
-            return Json(new { response = ResponseMessages.Success });
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
 
         /// <summary>
@@ -513,36 +520,36 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             var claims = await _userManager.GetClaimsAsync(user);
             // Only admins can hide a data type, rather than a particular item
             if (string.IsNullOrEmpty(id) && !roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = ErrorMessages.AdminOnlyError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
             }
             if (!roles.Contains(CustomRoles.Admin)
                 && !claims.Any(c => c.Type == CustomClaimTypes.PermissionDataOwner && c.Value == $"{dataType}{{{id}}}"))
             {
-                return Json(new { error = ErrorMessages.OwnerOnlyError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.OwnerOnlyError] });
             }
 
             var targetUser = await _userManager.FindByNameAsync(username);
             if (targetUser == null)
             {
-                return Json(new { error = ErrorMessages.InvalidTargetUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetUserError] });
             }
             if (!TryGetClaim(dataType, operation, id, out Claim claim))
             {
-                return Json(new { error = ErrorMessages.DataError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
             }
             await _userManager.RemoveClaimsAsync(targetUser, GetImpliedClaimsForRemove(claim));
-            return Json(new { response = ResponseMessages.Success });
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
 
         /// <summary>
@@ -557,28 +564,28 @@ namespace VueCoreFramework.Controllers
         {
             if (string.IsNullOrEmpty(dataType))
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             // Only Admins can share data with all.
             if (!roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = ErrorMessages.AdminOnlyError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
             }
             if (operation != CustomClaimTypes.PermissionDataView
                 && operation != CustomClaimTypes.PermissionDataEdit)
             {
-                return Json(new { error = ErrorMessages.ViewEditOnlyError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.ViewEditOnlyError] });
             }
 
             dataType = dataType.ToInitialCaps();
@@ -586,7 +593,7 @@ namespace VueCoreFramework.Controllers
             var entity = _context.Model.GetEntityTypes().FirstOrDefault(e => e.Name.Substring(e.Name.LastIndexOf('.') + 1) == dataType);
             if (entity == null)
             {
-                return Json(new { error = ErrorMessages.InvalidDataTypeError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
             }
             var allRole = await _roleManager.FindByNameAsync(CustomRoles.AllUsers);
             var roleClaims = await _roleManager.GetClaimsAsync(allRole);
@@ -601,7 +608,7 @@ namespace VueCoreFramework.Controllers
                 claim = new Claim(operation, $"{dataType}{{{id}}}");
             }
             await _roleManager.AddClaimAsync(allRole, claim);
-            return Json(new { response = ResponseMessages.Success });
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
 
         /// <summary>
@@ -619,20 +626,20 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return Json(new { error = ErrorMessages.InvalidTargetGroupError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetGroupError] });
             }
             if (!TryGetClaim(dataType, operation, id, out Claim claim))
             {
-                return Json(new { error = ErrorMessages.DataError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -640,7 +647,7 @@ namespace VueCoreFramework.Controllers
             // Only admins can share a data type, rather than a particular item
             if (string.IsNullOrEmpty(id) && !roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = ErrorMessages.AdminOnlyError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
             }
             // Admins can share data with any group as if they owned that data, regardless of their own membership.
             if (roles.Contains(CustomRoles.Admin)
@@ -651,7 +658,7 @@ namespace VueCoreFramework.Controllers
                     && operation != CustomClaimTypes.PermissionDataView
                     && operation != CustomClaimTypes.PermissionDataEdit)
                 {
-                    return Json(new { error = ErrorMessages.ViewEditOnlyError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.ViewEditOnlyError] });
                 }
             }
             else
@@ -663,17 +670,17 @@ namespace VueCoreFramework.Controllers
                         AuthorizationController.GetAuthorization(claims, dataType, claim.Type, id),
                         claim.Type))
                     {
-                        return Json(new { error = ErrorMessages.ManagerOnlySharedError });
+                        return Json(new { error = _errorLocalizer[ErrorMessages.ManagerOnlySharedError] });
                     }
                 }
                 else
                 {
-                    return Json(new { error = ErrorMessages.ManagerOrOwnerOnlyError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.ManagerOrOwnerOnlyError] });
                 }
             }
 
             await _roleManager.AddClaimAsync(groupRole, claim);
-            return Json(new { response = ResponseMessages.Success });
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
 
         /// <summary>
@@ -691,11 +698,11 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -703,7 +710,7 @@ namespace VueCoreFramework.Controllers
             // Only admins can share a data type, rather than a particular item
             if (string.IsNullOrEmpty(id) && !roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = ErrorMessages.AdminOnlyError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
             }
             // Admins can share data with any user as if they owned that data.
             if (roles.Contains(CustomRoles.Admin)
@@ -714,25 +721,25 @@ namespace VueCoreFramework.Controllers
                     && operation != CustomClaimTypes.PermissionDataView
                     && operation != CustomClaimTypes.PermissionDataEdit)
                 {
-                    return Json(new { error = ErrorMessages.ViewEditOnlyError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.ViewEditOnlyError] });
                 }
             }
             else
             {
-                return Json(new { error = ErrorMessages.OwnerOnlyError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.OwnerOnlyError] });
             }
 
             var targetUser = await _userManager.FindByNameAsync(username);
             if (targetUser == null)
             {
-                return Json(new { error = ErrorMessages.InvalidTargetUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetUserError] });
             }
             if (!TryGetClaim(dataType, operation, id, out Claim claim))
             {
-                return Json(new { error = ErrorMessages.DataError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
             }
             await _userManager.AddClaimAsync(targetUser, claim);
-            return Json(new { response = ResponseMessages.Success });
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
 
         private bool TryGetClaim(string dataType, string operation, string id, out Claim claim)

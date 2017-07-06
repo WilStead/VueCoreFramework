@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using VueCoreFramework.Data;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 
 namespace VueCoreFramework.Controllers
 {
@@ -26,7 +27,9 @@ namespace VueCoreFramework.Controllers
         private readonly AdminOptions _adminOptions;
         private readonly ApplicationDbContext _context;
         private readonly IEmailSender _emailSender;
+        private readonly IStringLocalizer<ErrorMessages> _errorLocalizer;
         private readonly ILogger<ManageController> _logger;
+        private readonly IStringLocalizer<ResponseMessages> _responseLocalizer;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
@@ -38,7 +41,9 @@ namespace VueCoreFramework.Controllers
             IOptions<AdminOptions> adminOptions,
             ApplicationDbContext context,
             IEmailSender emailSender,
+            IStringLocalizer<ErrorMessages> localizer,
             ILogger<ManageController> logger,
+            IStringLocalizer<ResponseMessages> responseLocalizer,
             RoleManager<IdentityRole> roleManager,
             SignInManager<ApplicationUser> signInManager,
             UserManager<ApplicationUser> userManager)
@@ -46,7 +51,9 @@ namespace VueCoreFramework.Controllers
             _adminOptions = adminOptions.Value;
             _context = context;
             _emailSender = emailSender;
+            _errorLocalizer = localizer;
             _logger = logger;
+            _responseLocalizer = responseLocalizer;
             _roleManager = roleManager;
             _signInManager = signInManager;
             _userManager = userManager;
@@ -63,23 +70,23 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                model.Errors.Add(ErrorMessages.InvalidUserError);
+                model.Errors.Add(_errorLocalizer[ErrorMessages.InvalidUserError]);
                 return model;
             }
             if (user.AdminLocked)
             {
-                model.Errors.Add(ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress));
+                model.Errors.Add(_errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
                 return model;
             }
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
             if (existingUser != null)
             {
-                model.Errors.Add(ErrorMessages.DuplicateEmailError);
+                model.Errors.Add(_errorLocalizer[ErrorMessages.DuplicateEmailError]);
                 return model;
             }
             if (user.LastEmailChange > DateTime.Now.Subtract(TimeSpan.FromDays(1)))
             {
-                model.Errors.Add(ErrorMessages.ChangeEmailLimitError);
+                model.Errors.Add(_errorLocalizer[ErrorMessages.ChangeEmailLimitError]);
                 return model;
             }
 
@@ -91,16 +98,16 @@ namespace VueCoreFramework.Controllers
             // or from an unauthorized source.
             var confirmCode = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var restoreCallbackUrl = Url.Action(nameof(AccountController.RestoreEmail), "Account", new { userId = user.Id, code = confirmCode }, protocol: HttpContext.Request.Scheme);
-            await _emailSender.SendEmailAsync(user.Email, "Confirm your email change",
-                $"A request was made to change the email address on your account from this email address to a new one. If this was a mistake, please click this link to reject the requested change: <a href='{restoreCallbackUrl}'>link</a>");
+            await _emailSender.SendEmailAsync(user.Email, _responseLocalizer[ResponseMessages.ConfirmEmailChangeSubject],
+                $"{_responseLocalizer[ResponseMessages.ConfirmEmailChangeCancelBody]}: <a href='{restoreCallbackUrl}'>link</a>");
 
             // Generate an email with a callback URL pointing to the 'ChangeEmail' action in the
             // 'Account' controller, which will confirm the change by validating that the newly
             // requested email belongs to the user.
             var changeCode = await _userManager.GenerateChangeEmailTokenAsync(user, user.NewEmail);
             var changeCallbackUrl = Url.Action(nameof(AccountController.ChangeEmail), "Account", new { userId = user.Id, code = changeCode }, protocol: HttpContext.Request.Scheme);
-            await _emailSender.SendEmailAsync(user.NewEmail, "Confirm your email change",
-                $"Please confirm your email address change by clicking this link: <a href='{changeCallbackUrl}'>link</a>");
+            await _emailSender.SendEmailAsync(user.NewEmail, _responseLocalizer[ResponseMessages.ConfirmEmailChangeSubject],
+                $"{_responseLocalizer[ResponseMessages.ConfirmEmailChangeCancelBody]}: <a href='{changeCallbackUrl}'>link</a>");
 
             _logger.LogInformation(LogEvent.EMAIL_CHANGE_REQUEST, "Email change request received, from {OLDEMAIL} to {NEWEMAIL}.", user.Email, user.NewEmail);
 
@@ -118,12 +125,12 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                model.Errors.Add(ErrorMessages.InvalidUserError);
+                model.Errors.Add(_errorLocalizer[ErrorMessages.InvalidUserError]);
                 return model;
             }
             if (user.AdminLocked)
             {
-                model.Errors.Add(ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress));
+                model.Errors.Add(_errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
                 return model;
             }
             var result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
@@ -148,18 +155,18 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                model.Errors.Add(ErrorMessages.InvalidUserError);
+                model.Errors.Add(_errorLocalizer[ErrorMessages.InvalidUserError]);
                 return model;
             }
             if (user.AdminLocked)
             {
-                model.Errors.Add(ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress));
+                model.Errors.Add(_errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
                 return model;
             }
             var existingUser = await _userManager.FindByNameAsync(model.Username);
             if (existingUser != null)
             {
-                model.Errors.Add(ErrorMessages.DuplicateUsernameError);
+                model.Errors.Add(_errorLocalizer[ErrorMessages.DuplicateUsernameError]);
                 return model;
             }
 
@@ -183,17 +190,17 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
             if (user.LastEmailChange > DateTime.Now.Subtract(TimeSpan.FromDays(1)))
             {
                 // Deletion within a day of changing the email is prevented to allow time for a user
                 // to recover from an unauthorized email change.
-                return Json(new { error = ErrorMessages.DeleteLimitError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.DeleteLimitError] });
             }
 
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -203,9 +210,9 @@ namespace VueCoreFramework.Controllers
                 new { userId = user.Id, code = code, xferUsername = xferUsername },
                 protocol: HttpContext.Request.Scheme);
             var loginLink = Url.Action(nameof(HomeController.Index), "Home", new { forwardUrl = "/login" });
-            await _emailSender.SendEmailAsync(user.Email, "Confirm your account deletion",
-                $"A request was made to delete your account. If you wish to permanently delete your account, please click this link to confirm: <a href='{restoreCallbackUrl}'>link</a>. If you did not initiate this action, please do not click the link. Instead, you should <a href='{loginLink}'>log into your account</a> and change your password to prevent any further unauthorized use.");
-            return Json(new { response = ResponseMessages.Success });
+            await _emailSender.SendEmailAsync(user.Email, _responseLocalizer[ResponseMessages.ConfirmAccountDeletionSubject],
+                $"{_responseLocalizer[ResponseMessages.ConfirmAccountDeletionBody]}: <a href='{restoreCallbackUrl}'>link</a>. {_responseLocalizer[ResponseMessages.ConfirmAccountDeletionBody2]}: <a href='{loginLink}'>login</a>.");
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
 
         /// <summary>
@@ -226,7 +233,7 @@ namespace VueCoreFramework.Controllers
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
             var result = await _userManager.ConfirmEmailAsync(user, code);
             if (!result.Succeeded)
@@ -245,7 +252,7 @@ namespace VueCoreFramework.Controllers
                 xferUser = await _userManager.FindByNameAsync(xferUsername);
                 if (xferUser == null || xferUser == user)
                 {
-                    return Json(new { error = ErrorMessages.InvalidTargetUserError });
+                    return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetUserError] });
                 }
                 await _userManager.AddClaimsAsync(xferUser, managerClaims);
                 await _userManager.AddClaimsAsync(xferUser, ownerClaims);
@@ -367,7 +374,7 @@ namespace VueCoreFramework.Controllers
             var provider = _signInManager.GetExternalAuthenticationSchemes().SingleOrDefault(a => a.DisplayName == model.AuthProvider);
             if (provider == null)
             {
-                model.Errors.Add(ErrorMessages.AuthProviderError);
+                model.Errors.Add(_errorLocalizer[ErrorMessages.AuthProviderError]);
                 _logger.LogWarning(LogEvent.EXTERNAL_PROVIDER_NOTFOUND, "Could not find provider {PROVIDER}.", model.AuthProvider);
                 return new JsonResult(model);
             }
@@ -389,18 +396,18 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                model.Errors.Add(ErrorMessages.AuthProviderError);
+                model.Errors.Add(_errorLocalizer[ErrorMessages.AuthProviderError]);
                 return model;
             }
             if (user.AdminLocked)
             {
-                model.Errors.Add(ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress));
+                model.Errors.Add(_errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
                 return model;
             }
             var info = await _signInManager.GetExternalLoginInfoAsync(await _userManager.GetUserIdAsync(user));
             if (info == null)
             {
-                model.Errors.Add(ErrorMessages.AuthProviderError);
+                model.Errors.Add(_errorLocalizer[ErrorMessages.AuthProviderError]);
                 return model;
             }
             var result = await _userManager.AddLoginAsync(user, info);
@@ -424,11 +431,11 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -461,34 +468,34 @@ namespace VueCoreFramework.Controllers
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
 
             var admins = await _userManager.GetUsersInRoleAsync(CustomRoles.Admin);
             if (!admins.Contains(user))
             {
-                return Json(new { error = ErrorMessages.AdminOnlyError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
             }
 
             var lockUser = await _userManager.FindByNameAsync(username);
             if (lockUser == null)
             {
-                return Json(new { error = ErrorMessages.InvalidTargetUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetUserError] });
             }
             if (admins.Contains(lockUser))
             {
-                return Json(new { error = ErrorMessages.NotForAdminsError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.NotForAdminsError] });
             }
             if (lockUser.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.AlreadyLockedError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.AlreadyLockedError] });
             }
             lockUser.AdminLocked = true;
             await _userManager.UpdateAsync(lockUser);
 
             _logger.LogInformation(LogEvent.LOCK_ACCOUNT, "The account belonging to User {USER} has been locked by Admin {ADMIN}.", lockUser.Email, user.Email);
 
-            return Json(new { response = ResponseMessages.Success });
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
 
         /// <summary>
@@ -502,19 +509,19 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                model.Errors.Add(ErrorMessages.InvalidUserError);
+                model.Errors.Add(_errorLocalizer[ErrorMessages.InvalidUserError]);
                 return model;
             }
             if (user.AdminLocked)
             {
-                model.Errors.Add(ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress));
+                model.Errors.Add(_errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
                 return model;
             }
             var userLogins = await _userManager.GetLoginsAsync(user);
             var provider = userLogins.SingleOrDefault(a => a.ProviderDisplayName == model.AuthProvider);
             if (provider == null)
             {
-                model.Errors.Add(ErrorMessages.AuthProviderError);
+                model.Errors.Add(_errorLocalizer[ErrorMessages.AuthProviderError]);
                 _logger.LogWarning(LogEvent.EXTERNAL_PROVIDER_NOTFOUND, "Could not find provider {PROVIDER}.", model.AuthProvider);
                 return model;
             }
@@ -541,12 +548,12 @@ namespace VueCoreFramework.Controllers
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                model.Errors.Add(ErrorMessages.InvalidUserError);
+                model.Errors.Add(_errorLocalizer[ErrorMessages.InvalidUserError]);
                 return model;
             }
             if (user.AdminLocked)
             {
-                model.Errors.Add(ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress));
+                model.Errors.Add(_errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
                 return model;
             }
             var result = await _userManager.AddPasswordAsync(user, model.NewPassword);
@@ -570,39 +577,39 @@ namespace VueCoreFramework.Controllers
         {
             if (string.IsNullOrEmpty(username))
             {
-                return Json(new { error = ErrorMessages.InvalidTargetUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetUserError] });
             }
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                return Json(new { error = ErrorMessages.InvalidUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.LockedAccount(_adminOptions.AdminEmailAddress) });
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
             }
 
             var roles = await _userManager.GetRolesAsync(user);
             if (!roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = ErrorMessages.AdminOnlyError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
             }
 
             var lockUser = await _userManager.FindByNameAsync(username);
             if (lockUser == null)
             {
-                return Json(new { error = ErrorMessages.InvalidTargetUserError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetUserError] });
             }
             if (!lockUser.AdminLocked)
             {
-                return Json(new { error = ErrorMessages.AlreadyUnlockedError });
+                return Json(new { error = _errorLocalizer[ErrorMessages.AlreadyUnlockedError] });
             }
             lockUser.AdminLocked = false;
             await _userManager.UpdateAsync(lockUser);
 
             _logger.LogInformation(LogEvent.UNLOCK_ACCOUNT, "The account belonging to User {USER} has been unlocked by Admin {ADMIN}.", lockUser.Email, user.Email);
 
-            return Json(new { response = ResponseMessages.Success });
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
         }
     }
 }
