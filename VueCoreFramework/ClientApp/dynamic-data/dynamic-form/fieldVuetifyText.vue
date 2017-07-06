@@ -1,10 +1,10 @@
 ﻿<template>
     <v-layout row wrap style="margin: 0;">
         <div v-if="schema.inputType === 'number' && !schema.required" style="margin-right: 12px;">
-            <v-checkbox dark v-model="nullCheck" :disabled="disabled || schema.readonly"></v-checkbox>
+            <v-checkbox v-model="nullCheck" :disabled="disabled || schema.readonly"></v-checkbox>
         </div>
         <div style="flex-grow: 1;">
-            <v-text-field :type="schema.inputType === 'password' ? (pwVis ? 'text' : schema.inputType) : schema.inputType"
+            <v-text-field :type="schema.inputType === 'password' ? (pwVis ? 'text' : schema.inputType) : (schema.inputType === 'cultural' ? 'text' : schema.inputType)"
                           v-model="value"
                           :append-icon="schema.inputType === 'password' ? (pwVis ? 'visibility_off' : 'visibility') : ''"
                           :append-icon-cb="() => (pwVis = !pwVis)"

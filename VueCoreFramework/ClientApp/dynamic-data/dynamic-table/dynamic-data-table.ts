@@ -22,12 +22,17 @@ interface TableHeader {
     /**
      * Optionally indicates that this column is left-aligned (right-align is the default).
      */
-    left?: boolean;
+    align?: string;
 
     /**
      * Optionally indicates that this column is sortable (false by default).
      */
     sortable?: boolean;
+
+    /**
+     * Indicates that this field is a cultural object (false by default).
+     */
+    cultural?: boolean;
 }
 
 /**
@@ -197,6 +202,18 @@ export default class DynamicDataTable extends Vue {
         if (index !== -1) {
             this.deleteAskingItems.splice(index, 1);
         }
+    }
+
+    getCulturalValue(value: string): string {
+        let cValue = JSON.parse(value);
+        let v = cValue[this.$store.state.userState.culture];
+        if (!v) {
+            let def = cValue.default;
+            if (def) {
+                v = cValue[def];
+            }
+        }
+        return v;
     }
 
     getData(): Promise<PageData<DataItem>> {
@@ -498,7 +515,8 @@ export default class DynamicDataTable extends Vue {
                                     || field.inputType === 'datetime-local'))
                                 || field.type === 'vuetifyText'
                                 || field.type === 'vuetifyDateTime'
-                                || field.type === 'vuetifyTimespan')
+                                || field.type === 'vuetifyTimespan'),
+                            cultural: field.inputType === 'cultural'
                         };
                         if (field.type === 'vuetifySelect'
                             || field.type === 'vuetifyDateTime'
@@ -506,7 +524,7 @@ export default class DynamicDataTable extends Vue {
                             h.value = field.model + "Formatted";
                         }
                         if (field.isName) {
-                            h.left = true;
+                            h.align = 'left';
                             this.headers.unshift(h);
                         } else {
                             this.headers.push(h);

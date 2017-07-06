@@ -1,29 +1,30 @@
 ﻿<template>
     <v-card flat>
-        <v-card-row v-if="totalItems > 5">
+        <v-card-text v-if="totalItems > 5" class="pb-0">
             <v-spacer></v-spacer>
             <v-text-field append-icon="search"
                           label="Search"
                           single-line
                           hide-details
                           v-model="internalSearch"></v-text-field>
-        </v-card-row>
-        <v-card-row v-if="allowEdit">
-            <v-spacer></v-spacer>
-            <v-btn v-if="canAdd" icon v-tooltip:top="{ html: 'new' }" @click.native="onNew"><v-icon class="success--text">add_circle</v-icon></v-btn>
-            <v-dialog v-if="canDelete" v-model="deleteDialogShown">
-                <v-btn icon slot="activator" v-tooltip:top="{ html: 'delete' }"><v-icon :class="{ 'error--text': selected.length > 0 }">remove_circle</v-icon></v-btn>
-                <v-card>
-                    <v-card-row>
-                        <v-card-title>Are you sure you want to delete {{ selected.length > 1 ? 'these' : 'this' }} item{{ selected.length > 1 ? 's' : '' }}?</v-card-title>
-                    </v-card-row>
-                    <v-card-row actions>
-                        <v-btn class="success--text" flat @click.native="deleteDialogShown = false">Cancel</v-btn>
-                        <v-btn class="error--text" flat @click.native="onDelete">Delete</v-btn>
-                    </v-card-row>
-                </v-card>
-            </v-dialog>
-        </v-card-row>
+        </v-card-text>
+        <v-card-text v-if="allowEdit" class="pa-0">
+            <v-container fluid class="pa-0">
+                <v-layout justify-end>
+                    <v-btn v-if="canAdd" icon v-tooltip:top="{ html: 'new' }" @click.native="onNew"><v-icon class="success--text">add_circle</v-icon></v-btn>
+                    <v-dialog v-if="canDelete" v-model="deleteDialogShown">
+                        <v-btn icon slot="activator" v-tooltip:top="{ html: 'delete' }"><v-icon :class="{ 'error--text': selected.length > 0 }">remove_circle</v-icon></v-btn>
+                        <v-card>
+                            <v-card-title primary-title class="headline">Are you sure you want to delete {{ selected.length > 1 ? 'these' : 'this' }} item{{ selected.length > 1 ? 's' : '' }}?</v-card-title>
+                            <v-card-actions>
+                                <v-btn class="success--text" flat @click.native="deleteDialogShown = false">Cancel</v-btn>
+                                <v-btn class="error--text" flat @click.native="onDelete">Delete</v-btn>
+                            </v-card-actions>
+                        </v-card>
+                    </v-dialog>
+                </v-layout>
+            </v-container>
+        </v-card-text>
         <v-data-table v-model="selected"
                       select-all
                       :headers="headers"
@@ -35,7 +36,10 @@
                       :search="internalSearch">
             <template slot="items" scope="props">
                 <td><v-checkbox hide-details primary v-model="props.selected" v-if="deletePendingItems.indexOf(props.item[props.item.primaryKeyProperty]) === -1"></v-checkbox></td>
-                <td v-for="field in headers" :class="{ 'text-xs-right': field.text !== 'Name' }">{{ props.item[field.value] }}</td>
+                <td v-for="field in headers" :class="{ 'text-xs-right': field.text !== 'Name' }">
+                    <span v-if="field.cultural">{{ getCulturalValue(props.item[field.value]) }}</span>
+                    <span v-else>{{ props.item[field.value] }}</span>
+                </td>
                 <td v-if="deletePendingItems.indexOf(props.item[props.item.primaryKeyProperty]) !== -1" colspan="3">Deleting...</td>
                 <td v-else>
                     <span v-if="deleteAskingItems.indexOf(props.item[props.item.primaryKeyProperty]) !== -1">Are you sure?</span>

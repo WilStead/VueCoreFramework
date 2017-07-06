@@ -13,6 +13,7 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Metadata;
+using System.Globalization;
 
 namespace VueCoreFramework.Data
 {
@@ -91,8 +92,9 @@ namespace VueCoreFramework.Data
         /// <param name="parentId">
         /// The primary key of the entity which will be set on the <paramref name="childProp"/> property, as a string.
         /// </param>
+        /// <param name="culture">A string indicating the current culture.</param>
         /// <returns>A ViewModel instance representing the newly added entity.</returns>
-        public async Task<IDictionary<string, object>> AddAsync(PropertyInfo childProp, string parentId)
+        public async Task<IDictionary<string, object>> AddAsync(PropertyInfo childProp, string parentId, string culture)
         {
             var item = typeof(T).GetConstructor(Type.EmptyTypes).Invoke(new object[] { });
 
@@ -139,8 +141,22 @@ namespace VueCoreFramework.Data
             items.Add(item as T);
             await _context.SaveChangesAsync();
 
-            return await GetViewModelAsync(item as T);
+            return await GetViewModelAsync(item as T, culture);
         }
+
+        /// <summary>
+        /// Asynchronously creates a new instance of <see cref="T"/> and adds it to the <see
+        /// cref="ApplicationDbContext"/> instance.
+        /// </summary>
+        /// <param name="childProp">
+        /// An optional navigation property which will be set on the new object.
+        /// </param>
+        /// <param name="parentId">
+        /// The primary key of the entity which will be set on the <paramref name="childProp"/> property, as a string.
+        /// </param>
+        /// <returns>A ViewModel instance representing the newly added entity.</returns>
+        public async Task<IDictionary<string, object>> AddAsync(PropertyInfo childProp, string parentId)
+            => await AddAsync(childProp, parentId, CultureInfo.CurrentCulture.Name);
 
         /// <summary>
         /// Asynchronously adds an assortment of child entities to a parent entity under the given
@@ -217,13 +233,14 @@ namespace VueCoreFramework.Data
         /// ViewModel representing the new copy.
         /// </summary>
         /// <param name="id">The primary key of the entity to be copied, as a string.</param>
+        /// <param name="culture">A string indicating the current culture.</param>
         /// <returns>A ViewModel representing the new item.</returns>
         /// <remarks>
         /// All non-navigation properties are copied. Navigation properties for one-to-many or
         /// many-to-many relationships are duplicated. Navigation properties for other
         /// relationships are left null (since the relationship forbids having more than one).
         /// </remarks>
-        public async Task<IDictionary<string, object>> DuplicateAsync(string id)
+        public async Task<IDictionary<string, object>> DuplicateAsync(string id, string culture)
         {
             var key = GetPrimaryKeyFromString(id);
             var oldItem = await items.FindAsync(key);
@@ -305,7 +322,35 @@ namespace VueCoreFramework.Data
                 await _context.SaveChangesAsync();
             }
 
-            return await GetViewModelAsync(newItem as T);
+            return await GetViewModelAsync(newItem as T, culture);
+        }
+
+        /// <summary>
+        /// Asynchronously duplicates an entity in the <see cref="ApplicationDbContext"/>. Returns a
+        /// ViewModel representing the new copy.
+        /// </summary>
+        /// <param name="id">The primary key of the entity to be copied, as a string.</param>
+        /// <returns>A ViewModel representing the new item.</returns>
+        /// <remarks>
+        /// All non-navigation properties are copied. Navigation properties for one-to-many or
+        /// many-to-many relationships are duplicated. Navigation properties for other
+        /// relationships are left null (since the relationship forbids having more than one).
+        /// </remarks>
+        public async Task<IDictionary<string, object>> DuplicateAsync(string id)
+            => await DuplicateAsync(id, CultureInfo.CurrentCulture.Name);
+
+        /// <summary>
+        /// Finds an entity with the given primary key value and returns a ViewModel for that entity.
+        /// If no entity is found, an empty ViewModel is returned (not null).
+        /// </summary>
+        /// <param name="id">The primary key of the entity to be found, as a string.</param>
+        /// <param name="culture">A string indicating the current culture.</param>
+        /// <returns>A ViewModel representing the item found, or an empty ViewModel if none is found.</returns>
+        public async Task<IDictionary<string, object>> FindAsync(string id, string culture)
+        {
+            var key = GetPrimaryKeyFromString(id);
+            var item = await items.FindAsync(key);
+            return await GetViewModelAsync(item, culture);
         }
 
         /// <summary>
@@ -315,11 +360,7 @@ namespace VueCoreFramework.Data
         /// <param name="id">The primary key of the entity to be found, as a string.</param>
         /// <returns>A ViewModel representing the item found, or an empty ViewModel if none is found.</returns>
         public async Task<IDictionary<string, object>> FindAsync(string id)
-        {
-            var key = GetPrimaryKeyFromString(id);
-            var item = await items.FindAsync(key);
-            return await GetViewModelAsync(item);
-        }
+            => await FindAsync(id, CultureInfo.CurrentCulture.Name);
 
         /// <summary>
         /// Finds an entity with the given primary key value. If no entity is found, then null is returned.
@@ -358,16 +399,25 @@ namespace VueCoreFramework.Data
         /// Enumerates all the entities in the <see cref="ApplicationDbContext"/>'s set, returning a
         /// ViewModel representing each.
         /// </summary>
+        /// <param name="culture">A string indicating the current culture.</param>
         /// <returns>ViewModels representing the items in the set.</returns>
-        public async Task<IList<IDictionary<string, object>>> GetAllAsync()
+        public async Task<IList<IDictionary<string, object>>> GetAllAsync(string culture)
         {
             IList<IDictionary<string, object>> all = new List<IDictionary<string, object>>();
             foreach (var item in items)
             {
-                all.Add(await GetViewModelAsync(item));
+                all.Add(await GetViewModelAsync(item, culture));
             }
             return all;
         }
+
+        /// <summary>
+        /// Enumerates all the entities in the <see cref="ApplicationDbContext"/>'s set, returning a
+        /// ViewModel representing each.
+        /// </summary>
+        /// <returns>ViewModels representing the items in the set.</returns>
+        public async Task<IList<IDictionary<string, object>>> GetAllAsync()
+            => await GetAllAsync(CultureInfo.CurrentCulture.Name);
 
         /// <summary>
         /// Finds the primary keys of all child entities in the given relationship, as strings.
@@ -423,6 +473,7 @@ namespace VueCoreFramework.Data
         /// </param>
         /// <param name="page">The page number requested.</param>
         /// <param name="rowsPerPage">The number of items per page.</param>
+        /// <param name="culture">A string indicating the current culture.</param>
         public async Task<IList<IDictionary<string, object>>> GetChildPageAsync(
             string id,
             PropertyInfo childProp,
@@ -431,7 +482,8 @@ namespace VueCoreFramework.Data
             bool descending,
             int page,
             int rowsPerPage,
-            IList<Claim> claims)
+            IList<Claim> claims,
+            string culture)
         {
             var item = await FindItemAsync(id);
             var coll = _context.Entry(item).Collection(childProp.Name);
@@ -449,15 +501,46 @@ namespace VueCoreFramework.Data
                     await _context.Entry(child).Navigation(mtmChildNav.Name).LoadAsync();
                 }
                 var childItems = coll.CurrentValue.Cast<object>().Select(c => mtmChildNav.PropertyInfo.GetValue(c)).AsQueryable();
-                return await childRepo.GetPageItemsAsync(childItems, search, sortBy, descending, page, rowsPerPage, claims);
+                return await childRepo.GetPageItemsAsync(childItems, search, sortBy, descending, page, rowsPerPage, claims, culture);
             }
             else
             {
                 var childRepo = _context.GetRepositoryForType(childType.ClrType);
                 var childItems = coll.CurrentValue.Cast<object>().AsQueryable();
-                return await childRepo.GetPageItemsAsync(childItems, search, sortBy, descending, page, rowsPerPage, claims);
+                return await childRepo.GetPageItemsAsync(childItems, search, sortBy, descending, page, rowsPerPage, claims, culture);
             }
         }
+
+        /// <summary>
+        /// Calculates and enumerates the set of child entities in a given relationship with the
+        /// given paging parameters, as ViewModels.
+        /// </summary>
+        /// <param name="dataType">The type of the parent entity.</param>
+        /// <param name="id">The primary key of the parent entity, as a string.</param>
+        /// <param name="childProp">The navigation property of the relationship on the parent entity.</param>
+        /// <param name="search">
+        /// An optional search term which will filter the results. Any string or numeric property
+        /// with matching text will be included.
+        /// </param>
+        /// <param name="sortBy">
+        /// An optional property name which will be used to sort the items before calculating the
+        /// page contents.
+        /// </param>
+        /// <param name="descending">
+        /// Indicates whether the sort is descending; if false, the sort is ascending.
+        /// </param>
+        /// <param name="page">The page number requested.</param>
+        /// <param name="rowsPerPage">The number of items per page.</param>
+        public async Task<IList<IDictionary<string, object>>> GetChildPageAsync(
+            string id,
+            PropertyInfo childProp,
+            string search,
+            string sortBy,
+            bool descending,
+            int page,
+            int rowsPerPage,
+            IList<Claim> claims)
+            => await GetChildPageAsync(id, childProp, search, sortBy, descending, page, rowsPerPage, claims, CultureInfo.CurrentCulture.Name);
 
         /// <summary>
         /// Retrieves the total number of child entities in the given relationship.
@@ -512,6 +595,8 @@ namespace VueCoreFramework.Data
             fd.HideInTable = hidden?.HideInTable;
 
             fd.IsName = pInfo.GetCustomAttribute<NameAttribute>() != null;
+
+            var isCultural = pInfo.GetCustomAttribute<CulturalAttribute>() != null;
 
             // Navigation properties use special fields.
             var nav = EntityType.FindNavigation(pInfo);
@@ -575,6 +660,12 @@ namespace VueCoreFramework.Data
                 {
                     fd.NavigationType = "object";
                 }
+            }
+            else if (isCultural)
+            {
+                fd.Type = "vuetifyText";
+                fd.InputType = "cultural";
+                fd.Validator = "string";
             }
             else
             {
@@ -916,6 +1007,39 @@ namespace VueCoreFramework.Data
         /// An enumeration of primary keys of items which should be excluded from the results before
         /// caluclating the page contents, as strings.
         /// </param>
+        /// <param name="culture">A string indicating the current culture.</param>
+        public async Task<IList<IDictionary<string, object>>> GetPageAsync(
+            string search,
+            string sortBy,
+            bool descending,
+            int page,
+            int rowsPerPage,
+            IEnumerable<string> except,
+            IList<Claim> claims,
+            string culture)
+            => await GetPageItemsAsync(items.Where(i => !except.Contains(PrimaryKey.PropertyInfo.GetValue(i).ToString())),
+                search, sortBy, descending, page, rowsPerPage, claims, culture);
+
+        /// <summary>
+        /// Calculates and enumerates the set of entities with the given paging parameters, as ViewModels.
+        /// </summary>
+        /// <param name="search">
+        /// An optional search term which will filter the results. Any string or numeric property
+        /// with matching text will be included.
+        /// </param>
+        /// <param name="sortBy">
+        /// An optional property name which will be used to sort the items before calculating the
+        /// page contents.
+        /// </param>
+        /// <param name="descending">
+        /// Indicates whether the sort is descending; if false, the sort is ascending.
+        /// </param>
+        /// <param name="page">The page number requested.</param>
+        /// <param name="rowsPerPage">The number of items per page.</param>
+        /// <param name="except">
+        /// An enumeration of primary keys of items which should be excluded from the results before
+        /// caluclating the page contents, as strings.
+        /// </param>
         public async Task<IList<IDictionary<string, object>>> GetPageAsync(
             string search,
             string sortBy,
@@ -924,8 +1048,7 @@ namespace VueCoreFramework.Data
             int rowsPerPage,
             IEnumerable<string> except,
             IList<Claim> claims)
-            => await GetPageItemsAsync(items.Where(i => !except.Contains(PrimaryKey.PropertyInfo.GetValue(i).ToString())),
-                search, sortBy, descending, page, rowsPerPage, claims);
+            => await GetPageAsync(search, sortBy, descending, page, rowsPerPage, except, claims, CultureInfo.CurrentCulture.Name);
 
         /// <summary>
         /// Calculates and enumerates the given items with the given paging parameters, as ViewModels.
@@ -948,6 +1071,7 @@ namespace VueCoreFramework.Data
         /// An enumeration of primary keys of items which should be excluded from the results before
         /// caluclating the page contents.
         /// </param>
+        /// <param name="culture">A string indicating the current culture.</param>
         public async Task<IList<IDictionary<string, object>>> GetPageItemsAsync(
             IQueryable<object> items,
             string search,
@@ -955,7 +1079,8 @@ namespace VueCoreFramework.Data
             bool descending,
             int page,
             int rowsPerPage,
-            IList<Claim> claims)
+            IList<Claim> claims,
+            string culture)
         {
             var dataType = typeof(T).Name;
 
@@ -997,7 +1122,7 @@ namespace VueCoreFramework.Data
             IList<IDictionary<string, object>> vms = new List<IDictionary<string, object>>();
             foreach (var item in filteredItems)
             {
-                vms.Add(await GetViewModelAsync(item));
+                vms.Add(await GetViewModelAsync(item, culture));
             }
             return vms;
         }
@@ -1079,7 +1204,7 @@ namespace VueCoreFramework.Data
         /// </summary>
         public async Task<long> GetTotalAsync() => await items.LongCountAsync();
 
-        private async Task<IDictionary<string, object>> GetViewModelAsync(T item)
+        private async Task<IDictionary<string, object>> GetViewModelAsync(T item, string culture)
         {
             IDictionary<string, object> vm = new Dictionary<string, object>();
 
@@ -1111,6 +1236,13 @@ namespace VueCoreFramework.Data
                     value = pInfo.PropertyType.GetProperty("Value").GetValue(value);
                 }
 
+                var isCultural = pInfo.PropertyType.GetInterfaces().Any(i => i == typeof(ICulturalDataItem));
+                ICulturalDataItem cValue = null;
+                if (value != null && isCultural)
+                {
+                    cValue = value as ICulturalDataItem;
+                }
+
                 if (nav != null)
                 {
                     // Collection navigation properties are represented as placeholder text, varying
@@ -1125,7 +1257,7 @@ namespace VueCoreFramework.Data
                     else
                     {
                         vm[pInfo.Name.ToInitialLower()] =
-                            (item == null || value == null ? "[None]" : value.ToString());
+                            (item == null || value == null ? "[None]" : (isCultural ? cValue.ToString(culture) : value.ToString()));
                     }
                 }
                 // Keys are always hidden in the SPA framework, but are still included in the
@@ -1139,7 +1271,7 @@ namespace VueCoreFramework.Data
                     }
                     else
                     {
-                        vm[pInfo.Name.ToInitialLower()] = value.ToString();
+                        vm[pInfo.Name.ToInitialLower()] = isCultural ? cValue.ToString(culture) : value.ToString();
                     }
                 }
                 // Enum properties are given their actual (integer) value, but are also given a
@@ -1232,7 +1364,7 @@ namespace VueCoreFramework.Data
                     || pInfo.PropertyType == typeof(Guid)
                     || Nullable.GetUnderlyingType(pInfo.PropertyType) == typeof(Guid))
                 {
-                    vm[pInfo.Name.ToInitialLower()] = value.ToString();
+                    vm[pInfo.Name.ToInitialLower()] = isCultural ? cValue.ToString(culture) : value.ToString();
                 }
                 // Unsupported types are not displayed with toString, to avoid cases where this
                 // only shows the type name. Instead placeholder text is used for any value.
@@ -1472,7 +1604,8 @@ namespace VueCoreFramework.Data
         /// </summary>
         /// <param name="parentId">The primary key of the parent entity in the relationship, as a string.</param>
         /// <param name="childProp">The navigation property of the relationship on the child entity.</param>
-        public async Task<(IDictionary<string, object>, string)> ReplaceChildWithNewAsync(string parentId, PropertyInfo childProp)
+        /// <param name="culture">A string indicating the current culture.</param>
+        public async Task<(IDictionary<string, object>, string)> ReplaceChildWithNewAsync(string parentId, PropertyInfo childProp, string culture)
         {
             var parentRepo = _context.GetRepositoryForType(childProp.PropertyType);
             var parent = await parentRepo.FindItemAsync(parentId);
@@ -1480,11 +1613,40 @@ namespace VueCoreFramework.Data
             var nav = EntityType.FindNavigation(childProp.Name);
             var oldChildId = PrimaryKey.PropertyInfo.GetValue(nav.FindInverse().PropertyInfo.GetValue(parent)).ToString();
 
-            var newItem = await AddAsync(childProp, parentId);
+            var newItem = await AddAsync(childProp, parentId, culture);
 
             var removed = await RemoveFromParentAsync(oldChildId, childProp);
 
             return removed ? (newItem, oldChildId) : (newItem, (string)null);
+        }
+
+        /// <summary>
+        /// Asynchronously creates a relationship between two entities, replacing another entity
+        /// which was previously in that relationship with a new entity. If the replaced entity is
+        /// made an orphan by the removal and is not a MenuClass object, it is then removed from the
+        /// <see cref="ApplicationDbContext"/> entirely.
+        /// </summary>
+        /// <param name="parentId">The primary key of the parent entity in the relationship, as a string.</param>
+        /// <param name="childProp">The navigation property of the relationship on the child entity.</param>
+        public async Task<(IDictionary<string, object>, string)> ReplaceChildWithNewAsync(string parentId, PropertyInfo childProp)
+            => await ReplaceChildWithNewAsync(parentId, childProp, CultureInfo.CurrentCulture.Name);
+
+        /// <summary>
+        /// Asynchronously updates an entity in the <see cref="ApplicationDbContext"/>. Returns a
+        /// ViewModel representing the updated item.
+        /// </summary>
+        /// <param name="item">The item to update.</param>
+        /// <param name="culture">A string indicating the current culture.</param>
+        /// <returns>A ViewModel representing the updated item.</returns>
+        public async Task<IDictionary<string, object>> UpdateAsync(object item, string culture)
+        {
+            if (item == null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
+            items.Update(item as T);
+            await _context.SaveChangesAsync();
+            return await GetViewModelAsync(item as T, culture);
         }
 
         /// <summary>
@@ -1494,14 +1656,6 @@ namespace VueCoreFramework.Data
         /// <param name="item">The item to update.</param>
         /// <returns>A ViewModel representing the updated item.</returns>
         public async Task<IDictionary<string, object>> UpdateAsync(object item)
-        {
-            if (item == null)
-            {
-                throw new ArgumentNullException(nameof(item));
-            }
-            items.Update(item as T);
-            await _context.SaveChangesAsync();
-            return await GetViewModelAsync(item as T);
-        }
+            => await UpdateAsync(item, CultureInfo.CurrentCulture.Name);
     }
 }

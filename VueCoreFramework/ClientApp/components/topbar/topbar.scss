@@ -7,65 +7,59 @@
         align-items: center;
     }
 
-    a {
-        text-align: right;
+    i {
+        font-size: 1.125em;
     }
 
-    i {
-        color: $color-primary;
-        font-size: 1.125em;
-        margin: 0.5em 0.5em 0 0.5em;
+    .user-icon {
+        font-size: 1.5em;
     }
 
     .btn {
         margin: 0;
-        border: 0;
-        height: auto;
-        width: auto;
-        color: $color-primary;
     }
 
-    .fa-twitter:hover {
-        color: $twitter-color;
+    a.btn:hover {
+        .fa-twitter {
+            color: $twitter-color;
+        }
+
+        .fa-facebook-official {
+            color: $facebook-color;
+        }
+
+        .fa-google-plus-official {
+            color: $google-color;
+        }
+
+        .fa-reddit-alien {
+            color: $reddit-color;
+        }
     }
 
-    .fa-facebook-official:hover {
-        color: $facebook-color;
-    }
-
-    .fa-google-plus-official:hover {
-        color: $google-color;
-    }
-
-    .fa-reddit-alien:hover {
-        color: $reddit-color;
+    .btn--icon:hover .btn__content:before,
+    .btn--icon:focus .btn__content:before {
+        background-color: inherit;
     }
 
     &.topbar-header {
+        background-color: $color-primary;
         display: flex;
         flex-direction: row-reverse;
-        align-items: center;
         padding-bottom: 0;
 
-        i {
-            color: $color-primary-text;
-            margin-left: 0;
+        .btn {
+            .icon {
+                color: $color-primary-text;
+            }
         }
 
         div {
             flex-direction: row;
         }
 
-        .btn {
-            &:first-child {
-                i {
-                    margin-left: 0.5em;
-                }
-            }
-        }
-
         .user-icon {
-            font-size: 1.5em;
+            color: $color-primary-text;
         }
     }
 }

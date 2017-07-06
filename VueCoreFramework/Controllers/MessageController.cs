@@ -116,7 +116,11 @@ namespace VueCoreFramework.Controllers
             var managerId = _context.UserClaims.FirstOrDefault(c =>
                 c.ClaimType == CustomClaimTypes.PermissionGroupManager && c.ClaimValue == group)?
                 .UserId;
-            var manager = await _userManager.FindByIdAsync(managerId);
+            ApplicationUser manager = null;
+            if (managerId != null)
+            {
+                manager = await _userManager.FindByIdAsync(managerId);
+            }
 
             var vms = new List<MessageViewModel>();
             foreach (var message in _context.Messages
@@ -143,7 +147,7 @@ namespace VueCoreFramework.Controllers
                         Content = message.Content,
                         IsSystemMessage = false,
                         IsUserAdmin = roles.Contains(CustomRoles.Admin),
-                        IsUserManager = message.Sender == manager,
+                        IsUserManager = manager != null && message.Sender == manager,
                         IsUserSiteAdmin = roles.Contains(CustomRoles.SiteAdmin),
                         Username = message.SenderUsername,
                         Timestamp = message.Timestamp

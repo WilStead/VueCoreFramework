@@ -34,7 +34,7 @@
     "vue-property-decorator": "^5.0.1",
     "vue-router": "^2.6.0",
     "vue-template-compiler": "^2.3.4",
-    "vuetify": "^0.12.7",
+    "vuetify": "^0.13.0",
     "vuex": "^2.3.1",
     "webpack": "^2.6.1",
     "webpack-hot-middleware": "^2.18.0"

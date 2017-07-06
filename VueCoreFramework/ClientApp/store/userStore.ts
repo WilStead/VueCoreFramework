@@ -51,6 +51,11 @@ export const permissionIncludesTarget = function (permission: string, targetPerm
 
 export const userState = {
     /**
+     * Indicates the current culture selected by the user.
+     */
+    culture: 'en-US',
+
+    /**
      * The email address of the current user (if any).
      */
     email: 'user@example.com',

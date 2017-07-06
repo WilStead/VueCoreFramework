@@ -17,38 +17,34 @@
                                         :parentType="model.dataType"
                                         :selected.sync="selected"
                                         @onError="onSelectError"></dynamic-data-table>
-                    <v-card-row v-if="selectActivity" class="activity-row">
+                    <v-card-text v-if="selectActivity" class="activity-row">
                         <v-progress-circular indeterminate class="primary--text"></v-progress-circular>
-                    </v-card-row>
-                    <v-card-row v-else class="submit-row condensed">
-                        <v-btn dark default @click.native="selectDialogShown = false">Cancel</v-btn>
-                        <v-btn dark primary @click.native.stop="onSelect">Submit</v-btn>
-                    </v-card-row>
+                    </v-card-text>
+                    <v-card-actions v-else>
+                        <v-btn default @click.native="selectDialogShown = false">Cancel</v-btn>
+                        <v-btn primary @click.native.stop="onSelect">Submit</v-btn>
+                    </v-card-actions>
                 </v-card>
             </v-dialog>
             <v-btn v-if="model[schema.model] !== '[None]'" icon v-tooltip:top="{ html: 'view/edit' }" @click.native="onView"><v-icon class="info--text">edit</v-icon></v-btn>
             <v-dialog v-if="!schema.disabled && schema.navigationType !== 'objectReference' && (!schema.required && model[schema.model] !== '[None]')" v-model="deleteDialogShown">
                 <v-btn icon slot="activator" v-tooltip:top="{ html: 'delete' }"><v-icon class="error--text">remove_circle</v-icon></v-btn>
                 <v-card>
-                    <v-card-row>
-                        <v-card-title>Are you sure you want to delete this item?</v-card-title>
-                    </v-card-row>
-                    <v-card-row actions>
+                    <v-card-title primary-title class="headline">Are you sure you want to delete this item?</v-card-title>
+                    <v-card-actions>
                         <v-btn class="success--text" flat @click.native="deleteDialogShown = false">Cancel</v-btn>
                         <v-btn class="error--text" flat @click.native="onDelete">Delete</v-btn>
-                    </v-card-row>
+                    </v-card-actions>
                 </v-card>
             </v-dialog>
         </div>
         <v-dialog v-model="replaceDialogShown">
             <v-card>
-                <v-card-row>
-                    <v-card-title>Are you sure you want to replace the current item? This action cannot be undone.</v-card-title>
-                </v-card-row>
-                <v-card-row actions>
+                <v-card-title primary-title class="headline">Are you sure you want to replace the current item? This action cannot be undone.</v-card-title>
+                <v-card-actions>
                     <v-btn class="success--text" flat @click.native="replaceDialogShown = false">Cancel</v-btn>
                     <v-btn class="error--text" flat @click.native="onReplace">Replace</v-btn>
-                </v-card-row>
+                </v-card-actions>
             </v-card>
         </v-dialog>
     </div>

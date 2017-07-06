@@ -1,4 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System.ComponentModel.DataAnnotations;
+using VueCoreFramework.Data.Attributes;
 
 namespace VueCoreFramework.Models
 {
@@ -6,25 +9,45 @@ namespace VueCoreFramework.Models
     /// A convenience subclass of <see cref="DataItem"/> which defines a name property and overrides
     /// ToString to display that name.
     /// </summary>
-    public class NamedDataItem : DataItem
+    public class NamedDataItem : DataItem, ICulturalDataItem
     {
         /// <summary>
         /// The name of the item.
         /// </summary>
-        /// <remarks>
-        /// Properties with the custom DataType 'Name' are treated specially by the SPA framework in
-        /// a few ways: they are pulled to the left and left-aligned in data tables, and pulled to
-        /// the top of forms, making them into a sort of automatic header; they also get ' (Copy)'
-        /// appended during a duplication (wheras other properties are copied as-is).
-        /// </remarks>
         [Required]
         [Range(3, 25)]
-        [DataType("Name")]
+        [Name]
+        [Cultural]
         public string Name { get; set; }
 
         /// <summary>
-        /// Displays the item's name.
+        /// Returns the item's name for the default culture, as a <see cref="string"/>.
         /// </summary>
-        public override string ToString() => Name;
+        public override string ToString()
+        {
+            if (string.IsNullOrEmpty(Name))
+            {
+                return null;
+            }
+            JObject name = JObject.Parse(Name);
+            var def = (string)name.SelectToken("default");
+            return string.IsNullOrEmpty(def) ? null : (string)name.SelectToken(def);
+        }
+
+        /// <summary>
+        /// Returns the item's name for the given culture, as a <see cref="string"/>.
+        /// </summary>
+        /// <param name="culture">A culture name.</param>
+        /// <returns>The item's name for the given culture, as a <see cref="string"/>.</returns>
+        public string ToString(string culture)
+        {
+            if (string.IsNullOrEmpty(Name))
+            {
+                return null;
+            }
+            JObject name = JObject.Parse(Name);
+            var value = (string)name.SelectToken(culture);
+            return string.IsNullOrEmpty(value) ? ToString() : value;
+        }
     }
 }

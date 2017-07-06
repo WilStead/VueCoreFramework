@@ -3,7 +3,7 @@
         <v-subheader>{{ schema.label }}</v-subheader>
         <div class="field-vuetify-time-wrapper">
             <div v-if="!schema.required" style="margin-right: 12px;">
-                <v-checkbox dark v-model="nullCheck" :disabled="disabled"></v-checkbox>
+                <v-checkbox v-model="nullCheck" :disabled="disabled"></v-checkbox>
             </div>
             <v-text-field v-if="showYear"
                           type="number"

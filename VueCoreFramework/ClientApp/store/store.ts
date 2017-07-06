@@ -144,6 +144,13 @@ export const store = new Vuex.Store({
         },
 
         /**
+         * Sets the current user culture.
+         */
+        setCulture(state, culture: string) {
+            state.userState.culture = culture;
+        },
+
+        /**
          * Sets the current user email.
          */
         setEmail(state, email: string) {

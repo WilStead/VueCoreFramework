@@ -98,12 +98,12 @@ namespace VueCoreFramework.Data
                 {
                     new Country
                     {
-                        Name = "Switzerland",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Switzerland\"}",
                         EpiIndex = 87.67,
                         FlagPrimaryColor = "#ff0000",
                         Leader = new Leader
                         {
-                            Name = "Doris Leuthard",
+                            Name = "{\"default\":\"en-US\",\"en-US\":\"Doris Leuthard\"}",
                             Birthdate = new DateTime(1963, 4, 10),
                             TimeInOfficeTicks = 138240000000000,
                             Age = 54
@@ -111,12 +111,12 @@ namespace VueCoreFramework.Data
                     },
                     new Country
                     {
-                        Name = "Luxembourg",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Luxembourg\"}",
                         EpiIndex = 83.29,
                         FlagPrimaryColor = "#ff0000",
                         Leader = new Leader
                         {
-                            Name = "Xavier Bettel",
+                            Name = "{\"default\":\"en-US\",\"en-US\":\"Xavier Bettel\"}",
                             Birthdate = new DateTime(1973, 3, 3),
                             TimeInOfficeTicks = 1416960000000000,
                             Age = 44
@@ -124,12 +124,12 @@ namespace VueCoreFramework.Data
                     },
                     new Country
                     {
-                        Name = "Australia",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Australia\"}",
                         EpiIndex = 82.4,
                         FlagPrimaryColor = "#0000ff",
                         Leader = new Leader
                         {
-                            Name = "Malcolm Turnbull",
+                            Name = "{\"default\":\"en-US\",\"en-US\":\"Malcolm Turnbull\"}",
                             Birthdate = new DateTime(1954, 10, 24),
                             TimeInOfficeTicks = 716256000000000,
                             Age = 62
@@ -137,12 +137,12 @@ namespace VueCoreFramework.Data
                     },
                     new Country
                     {
-                        Name = "Singapore",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Singapore\"}",
                         EpiIndex = 81.78,
                         FlagPrimaryColor = "#ff0000",
                         Leader = new Leader
                         {
-                            Name = "Lee Hsien Loong",
+                            Name = "{\"default\":\"en-US\",\"en-US\":\"Lee Hsien Loong\"}",
                             Birthdate = new DateTime(1952, 2, 10),
                             TimeInOfficeTicks = 4158432000000000,
                             Age = 65
@@ -150,12 +150,12 @@ namespace VueCoreFramework.Data
                     },
                     new Country
                     {
-                        Name = "Czech Republic",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Czech Republic\"}",
                         EpiIndex = 81.47,
                         FlagPrimaryColor = "#0000ff",
                         Leader = new Leader
                         {
-                            Name = "Bohuslav Sobotka",
+                            Name = "{\"default\":\"en-US\",\"en-US\":\"Bohuslav Sobotka\"}",
                             Birthdate = new DateTime(1971, 10, 23),
                             TimeInOfficeTicks = 755136000000000,
                             Age = 45
@@ -163,12 +163,12 @@ namespace VueCoreFramework.Data
                     },
                     new Country
                     {
-                        Name = "Germany",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Germany\"}",
                         EpiIndex = 80.47,
                         FlagPrimaryColor = "#000000",
                         Leader = new Leader
                         {
-                            Name = "Angela Merkel",
+                            Name = "{\"default\":\"en-US\",\"en-US\":\"Angela Merkel\"}",
                             Birthdate = new DateTime(1954, 7, 17),
                             TimeInOfficeTicks = 3930336000000000,
                             Age = 62
@@ -176,12 +176,12 @@ namespace VueCoreFramework.Data
                     },
                     new Country
                     {
-                        Name = "Spain",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Spain\"}",
                         EpiIndex = 79.09,
                         FlagPrimaryColor = "#ff0000",
                         Leader = new Leader
                         {
-                            Name = "Mariano Rajoy",
+                            Name = "{\"default\":\"en-US\",\"en-US\":\"Mariano Rajoy\"}",
                             Birthdate = new DateTime(1955, 3, 27),
                             TimeInOfficeTicks = 2062368000000000,
                             Age = 62
@@ -189,12 +189,12 @@ namespace VueCoreFramework.Data
                     },
                     new Country
                     {
-                        Name = "Austria",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Austria\"}",
                         EpiIndex = 78.32,
                         FlagPrimaryColor = "#ff0000",
                         Leader = new Leader
                         {
-                            Name = "Christian Kern",
+                            Name = "{\"default\":\"en-US\",\"en-US\":\"Christian Kern\"}",
                             Birthdate = new DateTime(1966, 1, 4),
                             TimeInOfficeTicks = 349920000000000,
                             Age = 51
@@ -202,12 +202,12 @@ namespace VueCoreFramework.Data
                     },
                     new Country
                     {
-                        Name = "Sweden",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Sweden\"}",
                         EpiIndex = 78.09,
                         FlagPrimaryColor = "#0000ff",
                         Leader = new Leader
                         {
-                            Name = "Stefan Löfven",
+                            Name = "{\"default\":\"en-US\",\"en-US\":\"Stefan Löfven\"}",
                             Birthdate = new DateTime(1957, 7, 21),
                             TimeInOfficeTicks = 1047168000000000,
                             Age = 59
@@ -215,12 +215,12 @@ namespace VueCoreFramework.Data
                     },
                     new Country
                     {
-                        Name = "Norway",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Norway\"}",
                         EpiIndex = 78.04,
                         FlagPrimaryColor = "#ff0000",
                         Leader = new Leader
                         {
-                            Name = "Erna Solberg",
+                            Name = "{\"default\":\"en-US\",\"en-US\":\"Erna Solberg\"}",
                             Birthdate = new DateTime(1961, 2, 24),
                             TimeInOfficeTicks = 1374624000000000,
                             Age = 56
@@ -239,7 +239,7 @@ namespace VueCoreFramework.Data
                 {
                     new City
                     {
-                        Name = "Bern",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Bern\"}",
                         Population = 131554,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
@@ -248,7 +248,7 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        Name = "Zürich",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Zürich\"}",
                         Population = 396027,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
@@ -256,7 +256,7 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        Name = "Luxembourg City",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Luxembourg City\"}",
                         Population = 115227,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
@@ -265,7 +265,7 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        Name = "Canberra",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Canberra\"}",
                         Population = 422510,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 10, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
@@ -274,7 +274,7 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        Name = "Sydney",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Sydney\"}",
                         Population = 4840628,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 10, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
@@ -282,7 +282,7 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        Name = "Singapore",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Singapore\"}",
                         Population = 5607300,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 8, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
@@ -291,7 +291,7 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        Name = "Prague",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Prague\"}",
                         Population = 1259079,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
@@ -300,7 +300,7 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        Name = "Brno",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Brno\"}",
                         Population = 377440,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
@@ -308,7 +308,7 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        Name = "Berlin",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Berlin\"}",
                         Population = 3421829,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
@@ -317,7 +317,7 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        Name = "Hamburg",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Hamburg\"}",
                         Population = 1746342,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
@@ -325,7 +325,7 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        Name = "Madrid",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Madrid\"}",
                         Population = 3165235,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
@@ -334,7 +334,7 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        Name = "Barcelona",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Barcelona\"}",
                         Population = 1602386,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
@@ -342,7 +342,7 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        Name = "Vienna",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Vienna\"}",
                         Population = 1812605,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
@@ -351,7 +351,7 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        Name = "Graz",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Graz\"}",
                         Population = 269997,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
@@ -359,7 +359,7 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        Name = "Stockholm",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Stockholm\"}",
                         Population = 1515017,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
@@ -368,7 +368,7 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        Name = "Gothenburg",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Gothenburg\"}",
                         Population = 572799,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
@@ -376,7 +376,7 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        Name = "Oslo",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Oslo\"}",
                         Population = 975744,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
@@ -385,7 +385,7 @@ namespace VueCoreFramework.Data
                     },
                     new City
                     {
-                        Name = "Bergen",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Bergen\"}",
                         Population = 252772,
                         LocalTimeAtGMTMidnight = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0),
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
@@ -402,31 +402,31 @@ namespace VueCoreFramework.Data
                 {
                     new Airline
                     {
-                        Name = "Lufthansa",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Lufthansa\"}",
                         International = true
                     },
                     new Airline
                     {
-                        Name = "SAS",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"SAS\"}",
                         International = true
                     },
                     new Airline
                     {
-                        Name = "International Airlines",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"International Airlines\"}",
                         International = true
                     },
                     new Airline
                     {
-                        Name = "Air Europa"
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Air Europa\"}"
                     },
                     new Airline
                     {
-                        Name = "Travel Service",
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Travel Service\"}",
                         International = false
                     },
                     new Airline
                     {
-                        Name = "Luxair"
+                        Name = "{\"default\":\"en-US\",\"en-US\":\"Luxair\"}"
                     }
                 };
                 context.Airlines.AddRange(airlines);

@@ -61,8 +61,8 @@ namespace VueCoreFramework.Controllers
         /// <returns>
         /// An error if there is a problem; or a ViewModel representing the newly added item (as JSON).
         /// </returns>
-        [HttpPost("{childProp?}/{parentId?}")]
-        public async Task<IActionResult> Add(string dataType, string childProp, string parentId)
+        [HttpPost("{culture}/{childProp?}/{parentId?}")]
+        public async Task<IActionResult> Add(string dataType, string culture, string childProp, string parentId)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
@@ -98,7 +98,7 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                var newItem = await repository.AddAsync(pInfo, parentId);
+                var newItem = await repository.AddAsync(pInfo, parentId, culture);
                 var claimValue = $"{dataType}{{{newItem[newItem[repository.PrimaryKeyVMProperty] as string]}}}";
                 await _userManager.AddClaimsAsync(user, new Claim[] {
                     new Claim(CustomClaimTypes.PermissionDataOwner, claimValue),
@@ -186,8 +186,8 @@ namespace VueCoreFramework.Controllers
         /// <returns>
         /// An error if there is a problem; or a ViewModel representing the new item (as JSON).
         /// </returns>
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Duplicate(string dataType, string id)
+        [HttpGet("{culture}/{id}")]
+        public async Task<IActionResult> Duplicate(string dataType, string culture, string id)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -219,7 +219,7 @@ namespace VueCoreFramework.Controllers
             object newItem = null;
             try
             {
-                newItem = await repository.DuplicateAsync(id);
+                newItem = await repository.DuplicateAsync(id, culture);
             }
             catch
             {
@@ -242,8 +242,8 @@ namespace VueCoreFramework.Controllers
         /// An error if there is a problem; or a ViewModel representing the item found, or an empty
         /// ViewModel if none is found (as JSON).
         /// </returns>
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Find(string dataType, string id)
+        [HttpGet("{culture}/{id}")]
+        public async Task<IActionResult> Find(string dataType, string culture, string id)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -275,7 +275,7 @@ namespace VueCoreFramework.Controllers
             object item = null;
             try
             {
-                item = await repository.FindAsync(id);
+                item = await repository.FindAsync(id, culture);
             }
             catch
             {
@@ -295,8 +295,8 @@ namespace VueCoreFramework.Controllers
         /// <returns>
         /// An error in the event of a bad request; or ViewModels representing the items (as JSON).
         /// </returns>
-        [HttpGet]
-        public async Task<IActionResult> GetAll(string dataType)
+        [HttpGet("{culture}")]
+        public async Task<IActionResult> GetAll(string dataType, string culture)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
@@ -321,7 +321,7 @@ namespace VueCoreFramework.Controllers
             {
                 return Json(new { error = ErrorMessages.InvalidDataTypeError });
             }
-            return Json(await repository.GetAllAsync());
+            return Json(await repository.GetAllAsync(culture));
         }
 
         /// <summary>
@@ -475,9 +475,10 @@ namespace VueCoreFramework.Controllers
         /// An error if there is a problem; or the list of ViewModels representing the child objects
         /// on the requested page (as JSON).
         /// </returns>
-        [HttpGet("{id}/{childProp}")]
+        [HttpGet("{culture}/{id}/{childProp}")]
         public async Task<IActionResult> GetChildPage(
             string dataType,
+            string culture,
             string id,
             string childProp,
             string search,
@@ -533,7 +534,7 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                var results = await repository.GetChildPageAsync(id, pInfo, search, sortBy, descending, page, rowsPerPage, claims);
+                var results = await repository.GetChildPageAsync(id, pInfo, search, sortBy, descending, page, rowsPerPage, claims, culture);
                 return Json(results);
             }
             catch
@@ -711,9 +712,10 @@ namespace VueCoreFramework.Controllers
         /// An error if there is a problem; or the list of ViewModels representing the entities on
         /// the requested page (as JSON).
         /// </returns>
-        [HttpPost]
+        [HttpPost("{culture}")]
         public async Task<IActionResult> GetPage(
             string dataType,
+            string culture,
             string search,
             string sortBy,
             bool descending,
@@ -746,7 +748,7 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                return Json(await repository.GetPageAsync(search, sortBy, descending, page, rowsPerPage, except, claims));
+                return Json(await repository.GetPageAsync(search, sortBy, descending, page, rowsPerPage, except, claims, culture));
             }
             catch
             {
@@ -1245,8 +1247,8 @@ namespace VueCoreFramework.Controllers
         /// <returns>
         /// An error if there is a problem; or a response indicating success.
         /// </returns>
-        [HttpPost("{parentId}/{childProp}")]
-        public async Task<IActionResult> ReplaceChildWithNew(string dataType, string parentId, string childProp)
+        [HttpPost("{culture}/{parentId}/{childProp}")]
+        public async Task<IActionResult> ReplaceChildWithNew(string dataType, string culture, string parentId, string childProp)
         {
             if (string.IsNullOrEmpty(parentId))
             {
@@ -1290,7 +1292,7 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                var (newItem, replacedId) = await repository.ReplaceChildWithNewAsync(parentId, pInfo);
+                var (newItem, replacedId) = await repository.ReplaceChildWithNewAsync(parentId, pInfo, culture);
                 var claimValue = $"{dataType}{{{newItem[newItem[repository.PrimaryKeyVMProperty] as string]}}}";
                 await _userManager.AddClaimsAsync(user, new Claim[] {
                     new Claim(CustomClaimTypes.PermissionDataOwner, claimValue),
@@ -1368,8 +1370,8 @@ namespace VueCoreFramework.Controllers
         /// <returns>
         /// An error if there is a problem; or a ViewModel representing the updated item (as JSON).
         /// </returns>
-        [HttpPost]
-        public async Task<IActionResult> Update(string dataType, [FromBody]JObject item)
+        [HttpPost("{culture}")]
+        public async Task<IActionResult> Update(string dataType, string culture, [FromBody]JObject item)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
@@ -1398,7 +1400,7 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                var updatedItem = await repository.UpdateAsync(obj);
+                var updatedItem = await repository.UpdateAsync(obj, culture);
                 return Json(new { data = updatedItem });
             }
             catch

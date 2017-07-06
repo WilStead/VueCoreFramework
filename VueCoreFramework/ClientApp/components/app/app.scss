@@ -20,13 +20,12 @@ table.table tbody td:empty {
     padding-bottom: 0;
 }
 
-.btn.active.focus,
-.btn.active:focus,
-.btn.focus,
-.btn:active.focus,
-.btn:active:focus,
-.btn:focus {
-    outline-color: transparent;
+.btn {
+    flex-direction: column;
+}
+
+.btn--icon .btn__content {
+    height: auto;
 }
 
 .datatable {
@@ -85,12 +84,18 @@ a.list__tile {
     }
 }
 
+.activity-row {
+    display: flex;
+    justify-content: center;
+    padding: 0 1rem 1rem 1rem;
+}
+
 .chat-row {
     flex-basis: 0;
     overflow: auto;
     position: relative;
 
-    .card__text {
+    .chat-container {
         position: absolute;
         top: 0;
     }
