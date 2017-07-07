@@ -46,9 +46,6 @@
     <None Remove="yarn.lock" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="wwwroot\dist\validate.js" />
-  </ItemGroup>
-  <ItemGroup>
     <WCFMetadata Include="Connected Services" />
   </ItemGroup>
   <ItemGroup>

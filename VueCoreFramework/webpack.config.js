@@ -1,8 +1,9 @@
 const path = require('path');
 const webpack = require('webpack');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
-const CheckerPlugin = require('awesome-typescript-loader').CheckerPlugin;
 const bundleOutputDir = './wwwroot/dist';
+const CheckerPlugin = require('awesome-typescript-loader').CheckerPlugin;
+const CopyPlugin = require('copy-webpack-plugin');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 module.exports = (env) => {
     const isDevBuild = !(env && env.prod);
@@ -71,6 +72,10 @@ module.exports = (env) => {
         plugins: [
             new ExtractTextPlugin('style.css'),
             new CheckerPlugin(),
+            new CopyPlugin([{
+                from: path.join('ClientApp', 'globalization', 'messages'),
+                to: path.join('globalization', 'messages')
+            }]),
             new webpack.DefinePlugin({
                 'process.env': {
                     NODE_ENV: JSON.stringify(isDevBuild ? 'development' : 'production')

@@ -4,6 +4,7 @@ import * as Store from '../../store/store';
 import { authenticate } from '../../authorization';
 import { checkResponse, ApiResponseViewModel } from '../../router';
 import { OperationReply } from '../../store/repository';
+import { defaultCulture, setCulture } from '../../globalization/globalization';
 import VueFormGenerator from 'vue-form-generator';
 import { Schema, VFGOptions } from '../../vfg/vfg';
 import * as VFG_Custom from '../../vfg/vfg-custom-validators';
@@ -293,6 +294,13 @@ export default class ManageUserComponent extends Vue {
         this.success = false;
         this.submitting = true;
         this.model.errors = [];
+
+        if (this.$store.state.userState.culture === value
+            || (value === "<default>"
+                && this.$store.state.userState.culture === defaultCulture)) {
+            return;
+        }
+
         fetch(`/api/Manage/SetCulture/${value}`,
             {
                 method: 'POST',
@@ -307,6 +315,7 @@ export default class ManageUserComponent extends Vue {
                 if (data.error) {
                     this.model.errors = [data.error];
                 } else {
+                    setCulture(value);
                     this.successMessage = "Your preferred culture has been updated.";
                     this.success = true;
                 }

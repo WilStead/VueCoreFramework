@@ -1,7 +1,7 @@
 <template>
     <v-layout row wrap>
         <v-flex xs10 offset-xs1>
-            <h1>Hello, world!</h1>
+            <h1>{{ "Hello, world!" | t }}</h1>
             <p>Welcome to your new auto-bound single-page application, built with:</p>
             <ul>
                 <li><a href="https://get.asp.net/">ASP.NET Core</a> and <a href="https://msdn.microsoft.com/en-us/library/67ef8sbd.aspx">C#</a> for cross-platform server-side code</li>
@@ -21,3 +21,5 @@
         </v-flex>
     </v-layout>
 </template>
+
+<script src="./home.ts"></script>
