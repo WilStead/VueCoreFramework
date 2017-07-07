@@ -9,6 +9,11 @@ namespace VueCoreFramework.Models
     public class ApplicationUser : IdentityUser
     {
         /// <summary>
+        /// The user's selected culture.
+        /// </summary>
+        public string Culture { get; set; } = "en-US";
+
+        /// <summary>
         /// The new email requested during an email change.
         /// </summary>
         public string NewEmail { get; set; }

@@ -21,6 +21,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Globalization;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.Extensions.Options;
 
 namespace VueCoreFramework
 {
@@ -68,6 +70,16 @@ namespace VueCoreFramework
                 .AddDefaultTokenProviders();
 
             services.AddLocalization(options => options.ResourcesPath = "Resources");
+            var supportedCultures = new[]
+            {
+                new CultureInfo("en-US")
+            };
+            services.Configure<RequestLocalizationOptions>(options =>
+            {
+                options.DefaultRequestCulture = new RequestCulture("en-US");
+                options.SupportedCultures = supportedCultures;
+                options.SupportedUICultures = supportedCultures;
+            });
 
             services.AddMvc(options =>
             {
@@ -88,7 +100,7 @@ namespace VueCoreFramework
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, ApplicationDbContext context)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, ApplicationDbContext context, IOptions<RequestLocalizationOptions> localization)
         {
             loggerFactory.AddNLog();
             app.AddNLogWeb();
@@ -142,12 +154,7 @@ namespace VueCoreFramework
             var options = new RewriteOptions().AddRedirectToHttps();
             app.UseRewriter(options);
 
-            app.UseRequestLocalization(new RequestLocalizationOptions
-            {
-                DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture(CultureInfo.CurrentCulture),
-                SupportedCultures = { CultureInfo.CurrentCulture },
-                SupportedUICultures = { CultureInfo.CurrentUICulture }
-            });
+            app.UseRequestLocalization(localization.Value);
 
             app.UseStaticFiles();
 

@@ -84,6 +84,7 @@ export default class ManageUserComponent extends Vue {
     changingEmail = false;
     changingPassword = false;
     changingUsername = false;
+    cultures: string[] = ["<default>"];
     deleteAccountDialog = false;
     formOptions: VFGOptions = {
         validateAfterChanged: true
@@ -148,6 +149,7 @@ export default class ManageUserComponent extends Vue {
             }
         ]
     };
+    selectedCulture = "<default>";
     selectedXferUsername = '';
     settingPassword = false;
     successMessage = "Success!";
@@ -189,6 +191,7 @@ export default class ManageUserComponent extends Vue {
         fetch('/api/Account/GetUserAuthProviders',
             {
                 headers: {
+                    'Accept': 'application/json',
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })
@@ -209,6 +212,20 @@ export default class ManageUserComponent extends Vue {
                         this.authProviderMicrosoftUser = data.providers.indexOf('Microsoft') !== -1;
                     }
                 }
+            })
+            .catch(error => {
+                ErrorMsg.logError("user/manage.mounted", new Error(error));
+            });
+        fetch('/api/Manage/GetCultures',
+            {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json() as Promise<string[]>)
+            .then(data => {
+                this.cultures = data;
+                this.cultures.unshift("<default>");
             })
             .catch(error => {
                 ErrorMsg.logError("user/manage.mounted", new Error(error));
@@ -269,6 +286,36 @@ export default class ManageUserComponent extends Vue {
             })
             .catch(error => {
                 this.xferLoading = false;
+            });
+    }
+
+    onCultureChange(value: string) {
+        this.success = false;
+        this.submitting = true;
+        this.model.errors = [];
+        fetch(`/api/Manage/SetCulture/${value}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `bearer ${this.$store.state.userState.token}`
+                }
+            })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(data => {
+                if (data.error) {
+                    this.model.errors = [data.error];
+                } else {
+                    this.successMessage = "Your preferred culture has been updated.";
+                    this.success = true;
+                }
+                this.submitting = false;
+            })
+            .catch(error => {
+                this.model.errors = ["A problem occurred."];
+                ErrorMsg.logError("user/manage.onCultureChange", new Error(error));
+                this.submitting = false;
             });
     }
 
@@ -334,7 +381,8 @@ export default class ManageUserComponent extends Vue {
                 this.submitting = false;
             })
             .catch(error => {
-                ErrorMsg.showErrorMsgAndLog("user/manage.onSignInProviderAdd", "A problem occurred. Login failed.", new Error(error));
+                this.model.errors = ["A problem occurred. Login failed."];
+                ErrorMsg.logError("user/manage.onSignInProviderAdd", new Error(error));
                 this.submitting = false;
             });
     }
@@ -365,7 +413,8 @@ export default class ManageUserComponent extends Vue {
                 this.submitting = false;
             })
             .catch(error => {
-                ErrorMsg.showErrorMsgAndLog("user/manage.onSignInProviderRemove", "A problem occurred. Login failed.", new Error(error));
+                this.model.errors = ["A problem occurred. Login failed."];
+                ErrorMsg.logError("user/manage.onSignInProviderRemove", new Error(error));
                 this.submitting = false;
             });
     }

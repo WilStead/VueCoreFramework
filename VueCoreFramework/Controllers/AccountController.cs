@@ -14,6 +14,8 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Localization;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Http;
 
 namespace VueCoreFramework.Controllers
 {
@@ -177,6 +179,12 @@ namespace VueCoreFramework.Controllers
                 _logger.LogInformation(LogEvent.LOGIN_EXTERNAL, "User {USER} logged in with {PROVIDER}.", info.Principal.FindFirstValue(ClaimTypes.Email), info.LoginProvider);
                 model.Redirect = true;
                 model.Token = GetLoginToken(user, _userManager, _tokenOptions);
+
+                Response.Cookies.Append(
+                    CookieRequestCultureProvider.DefaultCookieName,
+                    CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(user.Culture)),
+                    new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) });
+
                 return model;
             }
             else
@@ -356,6 +364,11 @@ namespace VueCoreFramework.Controllers
             }
 
             model.Token = GetLoginToken(user, _userManager, _tokenOptions);
+
+            Response.Cookies.Append(
+                CookieRequestCultureProvider.DefaultCookieName,
+                CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(user.Culture)),
+                new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) });
 
             _logger.LogInformation(LogEvent.LOGIN, "User {USER} logged in.", user.Email);
             model.Redirect = true;

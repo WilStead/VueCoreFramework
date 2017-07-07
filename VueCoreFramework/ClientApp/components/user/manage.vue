@@ -49,6 +49,12 @@
                         <a v-if="!hasPassword" href="#" @click.stop.prevent="setPassword">Add a local password</a>
                     </dd>
                 </dl>
+                <v-select :items="cultures"
+                          v-model="selectedCulture"
+                          @input="onCultureChange"
+                          label="Culture"
+                          prepend-icon="language"
+                          single-line></v-select>
             </v-card-text>
             <v-card-text v-if="!submitting && !changingUsername && !changingEmail && !changingPassword && !settingPassword">
                 <v-dialog v-model="deleteAccountDialog" fullscreen :overlay="false">

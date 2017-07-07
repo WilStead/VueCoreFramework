@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -10,6 +9,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Http;
+using System;
 
 namespace VueCoreFramework.Controllers
 {
@@ -80,6 +82,11 @@ namespace VueCoreFramework.Controllers
             }
             vm.IsAdmin = roles.Any(r => r == CustomRoles.Admin);
             vm.IsSiteAdmin = vm.IsAdmin && roles.Any(r => r == CustomRoles.SiteAdmin);
+
+            Response.Cookies.Append(
+                CookieRequestCultureProvider.DefaultCookieName,
+                CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(user.Culture)),
+                new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) });
 
             return Json(vm);
         }

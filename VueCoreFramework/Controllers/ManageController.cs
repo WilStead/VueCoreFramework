@@ -15,6 +15,9 @@ using VueCoreFramework.Data;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Builder;
 
 namespace VueCoreFramework.Controllers
 {
@@ -22,12 +25,14 @@ namespace VueCoreFramework.Controllers
     /// An MVC controller for handling user management tasks.
     /// </summary>
     [Authorize]
+    [Route("api/[controller]/[action]")]
     public class ManageController : Controller
     {
         private readonly AdminOptions _adminOptions;
         private readonly ApplicationDbContext _context;
         private readonly IEmailSender _emailSender;
         private readonly IStringLocalizer<ErrorMessages> _errorLocalizer;
+        private readonly RequestLocalizationOptions _localizationOptions;
         private readonly ILogger<ManageController> _logger;
         private readonly IStringLocalizer<ResponseMessages> _responseLocalizer;
         private readonly RoleManager<IdentityRole> _roleManager;
@@ -41,7 +46,8 @@ namespace VueCoreFramework.Controllers
             IOptions<AdminOptions> adminOptions,
             ApplicationDbContext context,
             IEmailSender emailSender,
-            IStringLocalizer<ErrorMessages> localizer,
+            IStringLocalizer<ErrorMessages> errorLocalizer,
+            IOptions<RequestLocalizationOptions> localizationOptions,
             ILogger<ManageController> logger,
             IStringLocalizer<ResponseMessages> responseLocalizer,
             RoleManager<IdentityRole> roleManager,
@@ -51,7 +57,8 @@ namespace VueCoreFramework.Controllers
             _adminOptions = adminOptions.Value;
             _context = context;
             _emailSender = emailSender;
-            _errorLocalizer = localizer;
+            _errorLocalizer = errorLocalizer;
+            _localizationOptions = localizationOptions.Value;
             _logger = logger;
             _responseLocalizer = responseLocalizer;
             _roleManager = roleManager;
@@ -64,7 +71,7 @@ namespace VueCoreFramework.Controllers
         /// </summary>
         /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
         /// <returns>A <see cref="ManageUserViewModel"/> used to transfer task data.</returns>
-        [HttpPost("api/[controller]/[action]")]
+        [HttpPost]
         public async Task<ManageUserViewModel> ChangeEmail([FromBody]ManageUserViewModel model)
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
@@ -119,7 +126,7 @@ namespace VueCoreFramework.Controllers
         /// </summary>
         /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
         /// <returns>A <see cref="ManageUserViewModel"/> used to transfer task data.</returns>
-        [HttpPost("api/[controller]/[action]")]
+        [HttpPost]
         public async Task<ManageUserViewModel> ChangePassword([FromBody]ManageUserViewModel model)
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
@@ -149,7 +156,7 @@ namespace VueCoreFramework.Controllers
         /// </summary>
         /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
         /// <returns>A <see cref="ManageUserViewModel"/> used to transfer task data.</returns>
-        [HttpPost("api/[controller]/[action]")]
+        [HttpPost]
         public async Task<ManageUserViewModel> ChangeUsername([FromBody]ManageUserViewModel model)
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
@@ -184,7 +191,7 @@ namespace VueCoreFramework.Controllers
         /// <returns>
         /// An error if there is a problem; or redirects to the SPA page for account deletion.
         /// </returns>
-        [HttpPost("api/[controller]/[action]")]
+        [HttpPost]
         public async Task<IActionResult> DeleteAccount(string xferUsername)
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
@@ -361,6 +368,15 @@ namespace VueCoreFramework.Controllers
         }
 
         /// <summary>
+        /// Called to retrieve a list of the supported cultures.
+        /// </summary>
+        /// <returns>A list of the supported cultures.</returns>
+        [HttpGet]
+        [AllowAnonymous]
+        public JsonResult GetCultures()
+            => Json(_localizationOptions.SupportedCultures.Select(c => c.Name));
+
+        /// <summary>
         /// Called to link a user's external authentication provider account with their site account.
         /// </summary>
         /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
@@ -425,7 +441,7 @@ namespace VueCoreFramework.Controllers
         /// </summary>
         /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
         /// <returns>An error if there is a problem; or the list (as JSON).</returns>
-        [HttpGet("api/[controller]/[action]")]
+        [HttpGet]
         public async Task<IActionResult> LoadXferUsernames()
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
@@ -454,7 +470,7 @@ namespace VueCoreFramework.Controllers
         /// </summary>
         /// <param name="username">The username of the account to lock.</param>
         /// <returns>An error if a problem occurs, or a response indicating success.</returns>
-        [HttpPost("api/[controller]/[action]/{username}")]
+        [HttpPost("{username}")]
         public async Task<IActionResult> LockAccount(string username)
         {
             if (string.IsNullOrEmpty(username))
@@ -536,13 +552,48 @@ namespace VueCoreFramework.Controllers
             return model;
         }
 
+        [HttpPost("{culture}")]
+        public async Task<IActionResult> SetCulture(string culture)
+        {
+            if (string.IsNullOrEmpty(culture))
+            {
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
+            }
+            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            if (user == null)
+            {
+                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+            }
+            if (user.AdminLocked)
+            {
+                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+            }
+
+            if (culture == "<default>")
+            {
+                user.Culture = _localizationOptions.DefaultRequestCulture.Culture.Name;
+            }
+            else
+            {
+                user.Culture = culture;
+            }
+            await _userManager.UpdateAsync(user);
+
+            Response.Cookies.Append(
+                CookieRequestCultureProvider.DefaultCookieName,
+                CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture)),
+                new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) });
+
+            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+        }
+
         /// <summary>
         /// Called to set a password for a user (for users who intiially registered with an external
         /// authentication provider, rather than a local site account).
         /// </summary>
         /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
         /// <returns>A <see cref="ManageUserViewModel"/> used to transfer task data.</returns>
-        [HttpPost("api/[controller]/[action]")]
+        [HttpPost]
         public async Task<ManageUserViewModel> SetPassword([FromBody]ManageUserViewModel model)
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
@@ -572,7 +623,7 @@ namespace VueCoreFramework.Controllers
         /// </summary>
         /// <param name="username">The username of the account to unlock.</param>
         /// <returns>An error if a problem occurs, or a response indicating success.</returns>
-        [HttpPost("api/[controller]/[action]/{username}")]
+        [HttpPost("{username}")]
         public async Task<IActionResult> UnlockAccount(string username)
         {
             if (string.IsNullOrEmpty(username))

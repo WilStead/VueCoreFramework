@@ -139,7 +139,7 @@ namespace VueCoreFramework.Controllers
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
@@ -171,7 +171,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
             }
             try
             {
@@ -350,7 +350,7 @@ namespace VueCoreFramework.Controllers
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
@@ -382,7 +382,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
             }
             try
             {
@@ -414,7 +414,7 @@ namespace VueCoreFramework.Controllers
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
@@ -446,7 +446,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
             }
             try
             {
@@ -500,7 +500,7 @@ namespace VueCoreFramework.Controllers
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
@@ -532,7 +532,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
             }
             var childType = repository.EntityType.FindNavigation(pInfo).GetTargetType().ClrType;
             if (AuthorizationController.GetAuthorization(claims, childType.Name, CustomClaimTypes.PermissionDataView) == AuthorizationViewModel.Unauthorized)
@@ -568,7 +568,7 @@ namespace VueCoreFramework.Controllers
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
@@ -600,7 +600,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
             }
             try
             {
@@ -922,7 +922,7 @@ namespace VueCoreFramework.Controllers
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
@@ -954,7 +954,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
             }
             try
             {
@@ -987,7 +987,7 @@ namespace VueCoreFramework.Controllers
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
@@ -1019,7 +1019,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
             }
             try
             {
@@ -1115,7 +1115,7 @@ namespace VueCoreFramework.Controllers
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
@@ -1151,7 +1151,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
             }
             try
             {
@@ -1191,7 +1191,7 @@ namespace VueCoreFramework.Controllers
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
@@ -1210,7 +1210,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -1263,7 +1263,7 @@ namespace VueCoreFramework.Controllers
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
@@ -1282,7 +1282,7 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingPropError] });
+                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
