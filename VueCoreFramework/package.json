@@ -1,6 +1,6 @@
 {
   "name": "vuecoreframework",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "ASP.NET Core API with Vue SPA",
   "license": "MIT",
   "private": true,
