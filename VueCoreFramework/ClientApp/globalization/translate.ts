@@ -91,7 +91,7 @@ function getTranslator(): Translator {
         return xlate as string;
     };
 
-    // I want it available explicity as well as via the object
+    // Available explicity as well as via the object
     translate.translate = translate;
 
     translate.setFormatter = function (newFormatter) {
