@@ -639,26 +639,31 @@ namespace VueCoreFramework.Data
                         fd.NavigationType = "objectCollection";
                     }
                 }
-                // Reverse-navigation properties only allow view/edit. No adding/deleting, since the
-                // child object shouldn't add/delete a parent.
-                else if (nav.IsDependentToPrincipal())
-                {
-                    fd.NavigationType = "objectReference";
-                }
-                // Children in a many-to-one relationship (i.e. which can have more than one
-                // parent) can be selected from a list, as well as added/edited/deleted.
-                else if (inverse.IsCollection())
-                {
-                    fd.NavigationType = "objectSelect";
-                }
-                // Children in a one-to-one relationship are treated as purely nested objects, and
-                // can only be added, edited, and deleted, to prevent any child from being referenced
-                // by more than one parent inappropriately. In fact the child may have other
-                // relationships which result in it not being purely nested, or even be a MenuClass
-                // item in its own right, but for this relationship the controls make no assumptions.
                 else
                 {
-                    fd.NavigationType = "object";
+                    var customNav = pInfo.GetCustomAttribute<NavigationAttribute>()?.NavigationType;
+
+                    // Reverse-navigation properties only allow view/edit. No adding/deleting, since the
+                    // child object shouldn't add/delete a parent.
+                    if (nav.IsDependentToPrincipal() || customNav == "reference")
+                    {
+                        fd.NavigationType = "objectReference";
+                    }
+                    // Children in a one-to-one relationship are treated as purely nested objects, and
+                    // can only be added, edited, and deleted, to prevent any child from being referenced
+                    // by more than one parent inappropriately. In fact the child may have other
+                    // relationships which result in it not being purely nested, or even be a MenuClass
+                    // item in its own right, but for this relationship the controls make no assumptions.
+                    else if (!inverse.IsCollection() || customNav == "single")
+                    {
+                        fd.NavigationType = "objectSingle";
+                    }
+                    // Children in a many-to-one relationship (i.e. which can have more than one
+                    // parent) can be selected from a list, as well as added/edited/deleted.
+                    else
+                    {
+                        fd.NavigationType = "objectSelect";
+                    }
                 }
             }
             else if (isCultural)

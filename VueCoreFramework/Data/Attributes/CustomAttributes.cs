@@ -155,6 +155,27 @@ namespace VueCoreFramework.Data.Attributes
     internal class NameAttribute : Attribute { }
 
     /// <summary>
+    /// Allows control over the controls shown on the field used to display non-collection navigation properties.
+    /// </summary>
+    /// <remarks>
+    /// This property has no effect for collection navigation properties.
+    /// Setting <see cref="NavigationType"/> to "reference" restricts the field to displaying only
+    /// view/edit controls (no add, select, or delete controls, even if the relationship would
+    /// normally allow these).
+    /// Setting <see cref="NavigationType"/> to "single" restricts the field to displaying only
+    /// add, delete, and view/edit controls (no select control even for many-to-one relationships).
+    /// </remarks>
+    internal class NavigationAttribute : Attribute
+    {
+        public string NavigationType { get; set; }
+
+        public NavigationAttribute(string type = "reference")
+        {
+            NavigationType = type;
+        }
+    }
+
+    /// <summary>
     /// Allows setting the step value of a numeric field. Ignored for other field types.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
