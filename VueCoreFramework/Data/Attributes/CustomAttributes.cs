@@ -155,7 +155,7 @@ namespace VueCoreFramework.Data.Attributes
     internal class NameAttribute : Attribute { }
 
     /// <summary>
-    /// Allows control over the controls shown on the field used to display non-collection navigation properties.
+    /// Allow you to manage the controls shown on the field used to display non-collection navigation properties.
     /// </summary>
     /// <remarks>
     /// This property has no effect for collection navigation properties.
