@@ -34,6 +34,7 @@ VueCoreFramework was built with the essential help of libraries and technologies
 * [Entity Framework Core](https://docs.microsoft.com/en-us/ef/core/)
 * [jQuery](https://jquery.com/)
 * [JSNLog](http://nodejs.jsnlog.com/)
+* [LocalePlanet](http://www.localeplanet.com/)
 * [Moment.js](http://momentjs.com/)
 * [NLog](http://nlog-project.org/)
 * [Typescript](http://www.typescriptlang.org/)
