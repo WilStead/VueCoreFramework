@@ -104,8 +104,8 @@ export default class ResetComponent extends Vue {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Content-Type': `application/json;v=${this.$store.state.apiVer}`
                 },
                 body: JSON.stringify(this.model)
             })

@@ -23,6 +23,7 @@ using System.Text;
 using System.Globalization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Mvc.Versioning;
 
 namespace VueCoreFramework
 {
@@ -87,6 +88,13 @@ namespace VueCoreFramework
                 options.Filters.Add(new RequireHttpsAttribute());
             })
             .AddDataAnnotationsLocalization();
+
+            services.AddApiVersioning(options =>
+            {
+                options.ApiVersionReader = new MediaTypeApiVersionReader();
+                options.AssumeDefaultVersionWhenUnspecified = true;
+                options.ApiVersionSelector = new CurrentImplementationApiVersionSelector(options);
+            });
 
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();

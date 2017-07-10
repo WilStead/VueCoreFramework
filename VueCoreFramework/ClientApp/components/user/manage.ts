@@ -172,6 +172,7 @@ export default class ManageUserComponent extends Vue {
         fetch('/api/Account/HasPassword',
             {
                 headers: {
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })
@@ -192,7 +193,7 @@ export default class ManageUserComponent extends Vue {
         fetch('/api/Account/GetUserAuthProviders',
             {
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })
@@ -220,7 +221,7 @@ export default class ManageUserComponent extends Vue {
         fetch('/api/Manage/GetCultures',
             {
                 headers: {
-                    'Accept': 'application/json'
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`
                 }
             })
             .then(response => response.json() as Promise<string[]>)
@@ -271,7 +272,7 @@ export default class ManageUserComponent extends Vue {
             {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })
@@ -305,7 +306,7 @@ export default class ManageUserComponent extends Vue {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })
@@ -339,8 +340,8 @@ export default class ManageUserComponent extends Vue {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Content-Type': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })
@@ -372,8 +373,8 @@ export default class ManageUserComponent extends Vue {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Content-Type': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 },
                 body: JSON.stringify(this.model)
@@ -405,8 +406,8 @@ export default class ManageUserComponent extends Vue {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Content-Type': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 },
                 body: JSON.stringify(this.model)
@@ -445,8 +446,8 @@ export default class ManageUserComponent extends Vue {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Content-Type': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 },
                 body: JSON.stringify(this.model)

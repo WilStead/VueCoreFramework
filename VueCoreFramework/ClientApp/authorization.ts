@@ -15,6 +15,7 @@ export function authenticate(full?: boolean): Promise<string> {
     return fetch(url,
         {
             headers: {
+                'Accept': `application/json;v=${Store.store.state.apiVer}`,
                 'Authorization': `bearer ${Store.store.state.userState.token}`
             }
         })
@@ -115,6 +116,7 @@ export function checkAuthorization(dataType: string, operation = '', id = ''): P
     return fetch(url,
         {
             headers: {
+                'Accept': `application/json;v=${Store.store.state.apiVer}`,
                 'Authorization': `bearer ${Store.store.state.userState.token}`
             }
         })

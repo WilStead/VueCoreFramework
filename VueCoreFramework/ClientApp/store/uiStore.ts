@@ -269,9 +269,16 @@ function addMenuItem(menu: MenuItem, router: VueRouter, data: any, dataClass: st
 /**
  * Retrieves the child data types (non-MenuClass types) from the API and generates routes for each.
  * @param {VueRouter} router The SPA framework's VueRouter instance.
+ * @param {string} apiVer The current API version.
  */
-export function getChildItems(router: VueRouter): Promise<void> {
-    return fetch('/api/Data/GetChildTypes')
+export function getChildItems(router: VueRouter, apiVer: string): Promise<void> {
+    return fetch('/api/Data/GetChildTypes',
+        {
+            method: 'GET',
+            headers: {
+                'Accept': `application/json;v=${apiVer}`
+            }
+        })
         .then(response => {
             if (!response.ok) {
                 throw Error(response.statusText);
@@ -329,10 +336,17 @@ export function getChildItems(router: VueRouter): Promise<void> {
 /**
  * Retrieves the MenuClass data types from the API and generates routes and MenuItems for each.
  * @param {VueRouter} router The SPA framework's VueRouter instance.
+ * @param {string} apiVer The current API version.
  * @param {MenuItem} menu The top-level MenuItem under which all data types will be added.
  */
-export function getMenuItems(router: VueRouter, menu: MenuItem): Promise<void> {
-    return fetch('/api/Data/GetTypes')
+export function getMenuItems(router: VueRouter, apiVer: string, menu: MenuItem): Promise<void> {
+    return fetch('/api/Data/GetTypes',
+        {
+            method: 'GET',
+            headers: {
+                'Accept': `application/json;v=${apiVer}`
+            }
+        })
         .then(response => {
             if (!response.ok) {
                 throw Error(response.statusText);

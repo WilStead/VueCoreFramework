@@ -125,7 +125,13 @@ export default class LoginComponent extends Vue {
     submitting = false;
 
     mounted() {
-        fetch('/api/Account/GetAuthProviders')
+        fetch('/api/Account/GetAuthProviders',
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`
+                }
+            })
             .then(response => response.json() as Promise<AuthProviders>)
             .then(data => {
                 if (data.providers) {
@@ -155,8 +161,8 @@ export default class LoginComponent extends Vue {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Content-Type': `application/json;v=${this.$store.state.apiVer}`
                 },
                 body: JSON.stringify(this.model)
             })
@@ -185,8 +191,8 @@ export default class LoginComponent extends Vue {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Content-Type': `application/json;v=${this.$store.state.apiVer}`
                 },
                 body: JSON.stringify(this.model)
             })
@@ -221,8 +227,8 @@ export default class LoginComponent extends Vue {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Content-Type': `application/json;v=${this.$store.state.apiVer}`
                 },
                 body: JSON.stringify(this.model)
             })

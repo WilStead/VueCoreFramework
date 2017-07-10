@@ -15,6 +15,11 @@ import * as ErrorLog from '../error-msg';
 export const store = new Vuex.Store({
     state: {
         /**
+         * The current API version used by the client.
+         */
+        apiVer: '1.0',
+
+        /**
          * Info used to display a model error dialog.
          */
         error: {
@@ -109,7 +114,7 @@ export const store = new Vuex.Store({
          */
         addTypeRoutes(state, router) {
             let dataItemIndex = state.uiState.menuItems.findIndex(v => v.dataHook);
-            getMenuItems(router, state.uiState.menuItems[dataItemIndex])
+            getMenuItems(router, state.apiVer, state.uiState.menuItems[dataItemIndex])
                 .then(data => {
                     if (!state.uiState.menuItems[dataItemIndex].submenu
                         || !state.uiState.menuItems[dataItemIndex].submenu.length) {
@@ -117,7 +122,7 @@ export const store = new Vuex.Store({
                     }
                 })
                 .catch(error => ErrorLog.logError("store.addTypeRoutes.getMenuItems", error));
-            getChildItems(router)
+            getChildItems(router, state.apiVer)
                 .catch(error => ErrorLog.logError("store.addTypeRoutes.getChildItems", error));
 
             // must be added after dynamic routes to avoid matching before them.
@@ -131,6 +136,9 @@ export const store = new Vuex.Store({
             state.uiState.messaging.chatShown = false;
         },
 
+        /**
+         * Signs the current user out.
+         */
         logout(state) {
             state.uiState.messaging.groupChat = '';
             state.uiState.messaging.proxySender = '';
@@ -250,10 +258,16 @@ export const store = new Vuex.Store({
             state.uiState.messaging.messagingShown = !state.uiState.messaging.messagingShown;
         },
 
+        /**
+         * Sets the user's conversations.
+         */
         updateConversations(state, conversations: ConversationViewModel[]) {
             state.uiState.messaging.conversations = conversations;
         },
 
+        /**
+         * Sets the user's messages.
+         */
         updateMessages(state, messages: MessageViewModel[]) {
             state.uiState.messaging.messages = messages;
         },
@@ -281,6 +295,9 @@ export const store = new Vuex.Store({
             }
         },
 
+        /**
+         * Sets the user's system messages.
+         */
         updateSystemMessages(state, messages: MessageViewModel[]) {
             state.uiState.messaging.systemMessages = messages;
         }
@@ -376,12 +393,15 @@ export const store = new Vuex.Store({
                 });
         },
 
+        /**
+         * Updates the user's group memberships from the API.
+         */
         refreshGroups({ commit, state }, returnPath) {
             return fetch('/api/Group/GetGroupMemberships/',
                 {
                     method: 'GET',
                     headers: {
-                        'Accept': 'application/json',
+                        'Accept': `application/json;v=${state.apiVer}`,
                         'Authorization': `bearer ${state.userState.token}`
                     }
                 })
@@ -415,6 +435,9 @@ export const store = new Vuex.Store({
                 });
         },
 
+        /**
+         * Updates the user's system messages.
+         */
         refreshSystemMessages({ commit }, returnPath) {
             return messaging.getSystemMessages(returnPath)
                 .then(data => {

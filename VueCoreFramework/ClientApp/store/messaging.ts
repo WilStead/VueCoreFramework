@@ -67,7 +67,7 @@ export const messaging = {
             {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -89,7 +89,7 @@ export const messaging = {
             {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -112,7 +112,7 @@ export const messaging = {
             {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -135,7 +135,7 @@ export const messaging = {
             {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -157,7 +157,7 @@ export const messaging = {
             {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -180,7 +180,7 @@ export const messaging = {
             {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -202,7 +202,7 @@ export const messaging = {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -224,7 +224,7 @@ export const messaging = {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -245,7 +245,7 @@ export const messaging = {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -268,7 +268,7 @@ export const messaging = {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -291,7 +291,7 @@ export const messaging = {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })

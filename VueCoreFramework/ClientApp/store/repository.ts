@@ -82,7 +82,7 @@ export class Repository {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -107,8 +107,8 @@ export class Repository {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
+                    'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Content-Type': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 },
                 body: JSON.stringify(ids)
@@ -134,7 +134,7 @@ export class Repository {
             {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -159,7 +159,7 @@ export class Repository {
             {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -181,7 +181,7 @@ export class Repository {
             {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -204,7 +204,7 @@ export class Repository {
             {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -233,7 +233,7 @@ export class Repository {
             {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -295,7 +295,7 @@ export class Repository {
             {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -306,7 +306,7 @@ export class Repository {
                     {
                         method: 'GET',
                         headers: {
-                            'Accept': 'application/json',
+                            'Accept': `application/json;v=${store.state.apiVer}`,
                             'Authorization': `bearer ${store.state.userState.token}`
                         }
                     })
@@ -342,7 +342,7 @@ export class Repository {
                 {
                     method: 'GET',
                     headers: {
-                        'Accept': 'application/json',
+                        'Accept': `application/json;v=${store.state.apiVer}`,
                         'Authorization': `bearer ${store.state.userState.token}`
                     }
                 })
@@ -422,7 +422,7 @@ export class Repository {
             {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -433,8 +433,8 @@ export class Repository {
                     {
                         method: 'POST',
                         headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
+                            'Accept': `application/json;v=${store.state.apiVer}`,
+                            'Content-Type': `application/json;v=${store.state.apiVer}`,
                             'Authorization': `bearer ${store.state.userState.token}`
                         },
                         body: JSON.stringify(except)
@@ -474,7 +474,7 @@ export class Repository {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
+                    'Accept': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -499,8 +499,8 @@ export class Repository {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
+                    'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Content-Type': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 },
                 body: JSON.stringify(childIds)
@@ -526,8 +526,8 @@ export class Repository {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
+                    'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Content-Type': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -552,8 +552,8 @@ export class Repository {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
+                    'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Content-Type': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 },
                 body: JSON.stringify(ids)
@@ -579,8 +579,8 @@ export class Repository {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
+                    'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Content-Type': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 },
                 body: JSON.stringify(ids)
@@ -607,8 +607,8 @@ export class Repository {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
+                    'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Content-Type': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -633,8 +633,8 @@ export class Repository {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
+                    'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Content-Type': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -656,8 +656,8 @@ export class Repository {
             {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
+                    'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Content-Type': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 },
                 body: JSON.stringify(vm)
