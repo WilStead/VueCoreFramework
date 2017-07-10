@@ -6,7 +6,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <UserSecretsId>aspnet-NetCoreAuth-233a3dae-f544-4f6d-826e-fea40609598a</UserSecretsId>
-    <Version>0.3.0</Version>
+    <Version>0.4.0</Version>
     <Description>ASP.NET Core API with Vue SPA</Description>
     <Authors>Wil Stead</Authors>
     <Company>Wil Stead</Company>
