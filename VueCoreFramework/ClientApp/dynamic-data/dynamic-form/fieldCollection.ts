@@ -1,5 +1,4 @@
 ﻿import { abstractField } from 'vue-form-generator';
-import { DataItem, Repository } from '../../store/repository';
 import * as ErrorMsg from '../../error-msg';
 
 export default {
@@ -10,9 +9,9 @@ export default {
             editDialogShown: false,
             editErrorMessage: '',
             errorMessage: '',
-            repository: this.$store.getters.getRepository(this.schema.parentType) as Repository,
-            selected: [] as DataItem[],
-            selectedChildren: [] as DataItem[]
+            repository: this.$store.getters.getRepository(this.schema.parentType),
+            selected: [],
+            selectedChildren: []
         };
     },
     methods: {
@@ -24,18 +23,16 @@ export default {
                 this.schema.model,
                 this.selected.map(c => c[c.primaryKeyProperty]))
                 .then(data => {
-                    if (data.error) {
-                        this.editErrorMessage = data.error;
-                    }
-                    else {
-                        this.selected.splice(0);
-                        this.refresh();
-                    }
+                    this.selected.splice(0);
+                    this.refresh();
                     this.activity = false;
                 })
                 .catch(error => {
                     this.activity = false;
                     this.editErrorMessage = "A problem occurred. The item could not be removed.";
+                    if (error && error.message && error.message.startsWith("CODE:")) {
+                        this.editErrorMessage += error.message.replace('CODE:', '');
+                    }
                     ErrorMsg.logError("fieldCollection.onAddSelect", new Error(error));
                 });
         },
@@ -48,18 +45,16 @@ export default {
                 this.schema.model,
                 this.selectedChildren.map(c => c[c.primaryKeyProperty]))
                 .then(data => {
-                    if (data.error) {
-                        this.editErrorMessage = data.error;
-                    }
-                    else {
-                        this.selectedChildren.splice(0);
-                        this.refresh();
-                    }
+                    this.selectedChildren.splice(0);
+                    this.refresh();
                     this.activity = false;
                 })
                 .catch(error => {
                     this.activity = false;
                     this.editErrorMessage = "A problem occurred. The item could not be removed.";
+                    if (error && error.message && error.message.startsWith("CODE:")) {
+                        this.editErrorMessage += error.message.replace('CODE:', '');
+                    }
                     ErrorMsg.logError("fieldCollection.onRemoveSelect", new Error(error));
                 });
         },

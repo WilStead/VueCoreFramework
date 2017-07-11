@@ -2,9 +2,9 @@
     <v-layout row wrap justify-center>
         <v-card>
             <v-card-title primary-title class="headline">Reset your password</v-card-title>
-            <v-alert error :value="model.errors.length > 0">
+            <v-alert error :value="errors.length > 0">
                 <ul>
-                    <li v-for="error in model.errors" class="error--text">{{ error }}</li>
+                    <li v-for="error in errors" class="error--text">{{ error }}</li>
                 </ul>
             </v-alert>
             <v-alert success v-model="changeSuccess">

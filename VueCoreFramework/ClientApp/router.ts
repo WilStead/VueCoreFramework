@@ -114,17 +114,14 @@ export function authorize(to: VueRouter.Route): Promise<string> {
 }
 
 /**
- * Verifies that the response of an API call was an OK response. If not, redirects to the login
- * page on 401, and throws an error otherwise.
- * @param response
+ * When the response of an API call is a 401 status code, redirects to the login
+ * page.
+ * @param {Response} response The result of a fetch to the API.
  * @param {string} returnPath The page to redirect to after a successful login, if required.
  */
 export function checkResponse(response: Response, returnPath: string) {
-    if (!response.ok) {
-        if (response.status === 401) {
-            router.push({ path: '/login', query: { returnUrl: returnPath } });
-        }
-        throw Error(response.statusText);
+    if (!response.ok && response.status === 401) {
+        router.push({ path: '/login', query: { returnUrl: returnPath } });
     }
     return response;
 }

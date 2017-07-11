@@ -195,16 +195,24 @@ export default class AppComponent extends Vue {
                 }
             })
             .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
-            .then(data => {
-                if (data.error) {
-                    throw new Error(data.error);
-                } else {
-                    this.foundUser.isLocked = true;
+            .then(response => {
+                if (!response.ok) {
+                    if (response.statusText) {
+                        ErrorMsg.showErrorMsg(response.statusText);
+                    } else {
+                        ErrorMsg.showErrorMsg("A problem occurred.");
+                    }
+                    throw new Error("CODE");
                 }
+                return response;
+            })
+            .then(response => {
+                this.foundUser.isLocked = true;
             })
             .catch(error => {
-                ErrorMsg.showErrorMsgAndLog('app.onLockAccount', "A problem occurred. The account was not locked.", error);
+                if (error !== "CODE") {
+                    ErrorMsg.showErrorMsgAndLog('app.onLockAccount', "A problem occurred. The account was not locked.", error);
+                }
             });
     }
 
@@ -269,6 +277,7 @@ export default class AppComponent extends Vue {
     }
 
     onUsernameSearch() {
+        this.chatErrorMessage = '';
         this.foundUser = null;
         if (this.searchUsername) {
             fetch(`/api/Account/VerifyUser/${this.searchUsername}`,
@@ -281,24 +290,33 @@ export default class AppComponent extends Vue {
                     }
                 })
                 .then(response => checkResponse(response, this.$route.fullPath))
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.statusText) {
+                            this.chatErrorMessage = response.statusText;
+                        } else if (response.status !== 404) {
+                            this.chatErrorMessage = "A problem occurred.";
+                        }
+                        throw new Error("CODE");
+                    }
+                    return response;
+                })
                 .then(response => response.json() as Promise<UserViewModel>)
                 .then(data => {
-                    if (data['error']) {
-                        throw new Error(data['error']);
-                    } else if (data['response'] !== false) {
-                        this.foundUser = data;
-                        messaging.getProxyConversations(this.$route.fullPath, this.foundUser.username)
-                            .then(data => {
-                                if (data['error']) {
-                                    throw new Error(data['error']);
-                                } else {
-                                    this.foundUserConversations = data;
-                                }
-                            });
-                    }
+                    this.foundUser = data;
+                    messaging.getProxyConversations(this.$route.fullPath, this.foundUser.username)
+                        .then(data => {
+                            if (data['error']) {
+                                throw new Error(data['error']);
+                            } else {
+                                this.foundUserConversations = data;
+                            }
+                        });
                 })
                 .catch(error => {
-                    ErrorMsg.logError('app.onUsernameSearch', error);
+                    if (error !== "CODE") {
+                        ErrorMsg.logError('app.onUsernameSearch', error);
+                    }
                 });
         }
     }

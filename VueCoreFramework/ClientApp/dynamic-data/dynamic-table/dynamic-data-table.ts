@@ -423,15 +423,15 @@ export default class DynamicDataTable extends Vue {
             this.tableType === 'collection' ? this.parentId : undefined)
             .then(data => {
                 this.loading = false;
-                if (data.error) {
-                    this.$emit("onError", data.error);
-                } else {
-                    this.$router.push({ name: this.dataType, params: { operation: 'add', id: data.data[data.data.primaryKeyProperty] } });
-                }
+                this.$router.push({ name: this.dataType, params: { operation: 'add', id: data[data.primaryKeyProperty] } });
             })
             .catch(error => {
                 this.loading = false;
-                this.$emit("onError", "A problem occurred. The new item could not be added.");
+                let msg = 'A problem occurred. The new item could not be added. ';
+                if (error && error.message && error.message.startsWith("CODE:")) {
+                    msg += error.message.replace('CODE:', '');
+                }
+                this.$emit("onError", msg);
                 ErrorMsg.logError("dynamic-data-table.onNew", new Error(error));
             });
     }

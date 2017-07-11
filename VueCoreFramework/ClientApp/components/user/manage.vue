@@ -5,9 +5,9 @@
                 <span>Welcome, {{ $store.state.userState.username }}</span>
                 <v-subheader>Manage your account</v-subheader>
             </v-card-title>
-            <v-alert error :value="model.errors.length > 0">
+            <v-alert error :value="errors.length > 0">
                 <ul>
-                    <li v-for="error in model.errors" class="white--text">{{ error }}</li>
+                    <li v-for="error in errors" class="white--text">{{ error }}</li>
                 </ul>
             </v-alert>
             <v-alert success v-model="success">{{ successMessage }}</v-alert>

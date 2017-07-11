@@ -2,9 +2,9 @@
     <v-layout row wrap justify-center>
         <v-card>
             <v-card-title primary-title class="primary--text headline">Register for a New Account</v-card-title>
-            <v-alert error :value="model.errors.length > 0">
+            <v-alert error :value="errors.length > 0">
                 <ul>
-                    <li v-for="error in model.errors" class="white--text">{{ error }}</li>
+                    <li v-for="error in errors" class="white--text">{{ error }}</li>
                 </ul>
             </v-alert>
             <v-alert success v-model="success">Success! Check your email for a confirmation message and a link that will allow you to access your new account.</v-alert>

@@ -18,6 +18,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
 
 namespace VueCoreFramework.Controllers
 {
@@ -28,6 +29,7 @@ namespace VueCoreFramework.Controllers
     [Route("api/[controller]/{dataType}/[action]")]
     public class DataController : Controller
     {
+        private readonly AdminOptions _adminOptions;
         private readonly ApplicationDbContext _context;
         private readonly IStringLocalizer<ErrorMessages> _errorLocalizer;
         private readonly ILogger<AccountController> _logger;
@@ -39,6 +41,7 @@ namespace VueCoreFramework.Controllers
         /// Initializes a new instance of <see cref="DataController"/>.
         /// </summary>
         public DataController(
+            IOptions<AdminOptions> adminOptions,
             ApplicationDbContext context,
             IStringLocalizer<ErrorMessages> localizer,
             ILogger<AccountController> logger,
@@ -46,6 +49,7 @@ namespace VueCoreFramework.Controllers
             RoleManager<IdentityRole> roleManager,
             UserManager<ApplicationUser> userManager)
         {
+            _adminOptions = adminOptions.Value;
             _context = context;
             _errorLocalizer = localizer;
             _logger = logger;
@@ -55,7 +59,7 @@ namespace VueCoreFramework.Controllers
         }
 
         /// <summary>
-        /// Called to create a new instance of <see cref="T"/> and add it to the <see
+        /// Called to create a new instance of <paramref name="dataType"/> and add it to the <see
         /// cref="ApplicationDbContext"/> instance.
         /// </summary>
         /// <param name="dataType">The type of entity to add.</param>
@@ -65,17 +69,24 @@ namespace VueCoreFramework.Controllers
         /// <param name="parentId">
         /// The primary key of the entity which will be set on the <paramref name="childProp"/> property.
         /// </param>
-        /// <returns>
-        /// An error if there is a problem; or a ViewModel representing the newly added item (as JSON).
-        /// </returns>
+        /// <response code="400">Invalid login attempt.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">A ViewModel representing the newly added item.</response>
         [HttpPost("{childProp?}/{parentId?}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
         public async Task<IActionResult> Add(string dataType, string childProp, string parentId, string culture)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
+            }
+            if (user.AdminLocked)
+            {
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -88,11 +99,11 @@ namespace VueCoreFramework.Controllers
             }
             if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataAdd) == AuthorizationViewModel.Unauthorized)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_AddNew]] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_AddNew]]);
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidDataTypeError]);
             }
             PropertyInfo pInfo = null;
             if (!string.IsNullOrEmpty(parentId) && !string.IsNullOrEmpty(childProp))
@@ -111,11 +122,11 @@ namespace VueCoreFramework.Controllers
                     new Claim(CustomClaimTypes.PermissionDataOwner, claimValue),
                     new Claim(CustomClaimTypes.PermissionDataAll, claimValue)
                 });
-                return Json(new { data = newItem });
+                return Json(newItem);
             }
             catch
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.SaveItemError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.SaveItemError]);
             }
         }
 
@@ -127,29 +138,36 @@ namespace VueCoreFramework.Controllers
         /// <param name="id">The primary key of the parent entity.</param>
         /// <param name="childProp">The navigation property to which the children will be added.</param>
         /// <param name="childIds">The primary keys of the child entities which will be added.</param>
-        /// <returns>
-        /// An error if there is a problem; or a response indicating success.
-        /// </returns>
+        /// <response code="400">Invalid login attempt.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{id}/{childProp}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> AddChildrenToCollection(string dataType, string id, string childProp, [FromBody]string[] childIds)
         {
             if (string.IsNullOrEmpty(id))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingIdError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.MissingIdError]);
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.MissingDataError]);
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
+            }
+            if (user.AdminLocked)
+            {
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidDataTypeError]);
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -162,7 +180,7 @@ namespace VueCoreFramework.Controllers
             }
             if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataEdit, id) == AuthorizationViewModel.Unauthorized)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_EditItem]] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_EditItem]]);
             }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
@@ -171,16 +189,16 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.MissingDataError]);
             }
             try
             {
                 await repository.AddChildrenToCollectionAsync(id, pInfo, childIds);
-                return Json(new { response = _errorLocalizer[ResponseMessages.Success] });
+                return Ok();
             }
             catch
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.DataError]);
             }
         }
 
@@ -205,6 +223,10 @@ namespace VueCoreFramework.Controllers
             if (user == null)
             {
                 return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+            }
+            if (user.AdminLocked)
+            {
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
@@ -262,6 +284,10 @@ namespace VueCoreFramework.Controllers
             {
                 return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
+            if (user.AdminLocked)
+            {
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
+            }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
@@ -311,6 +337,10 @@ namespace VueCoreFramework.Controllers
             {
                 return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
+            if (user.AdminLocked)
+            {
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
+            }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
             var claims = await _userManager.GetClaimsAsync(user);
@@ -357,6 +387,10 @@ namespace VueCoreFramework.Controllers
             if (user == null)
             {
                 return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+            }
+            if (user.AdminLocked)
+            {
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -421,6 +455,10 @@ namespace VueCoreFramework.Controllers
             if (user == null)
             {
                 return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+            }
+            if (user.AdminLocked)
+            {
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
@@ -508,6 +546,10 @@ namespace VueCoreFramework.Controllers
             {
                 return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
+            if (user.AdminLocked)
+            {
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
+            }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
@@ -575,6 +617,10 @@ namespace VueCoreFramework.Controllers
             if (user == null)
             {
                 return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+            }
+            if (user.AdminLocked)
+            {
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
@@ -736,6 +782,10 @@ namespace VueCoreFramework.Controllers
             {
                 return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
+            if (user.AdminLocked)
+            {
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
+            }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
             var claims = await _userManager.GetClaimsAsync(user);
@@ -779,6 +829,10 @@ namespace VueCoreFramework.Controllers
             if (user == null)
             {
                 return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+            }
+            if (user.AdminLocked)
+            {
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -871,6 +925,10 @@ namespace VueCoreFramework.Controllers
             {
                 return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
+            if (user.AdminLocked)
+            {
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
+            }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
@@ -910,29 +968,36 @@ namespace VueCoreFramework.Controllers
         /// <param name="id">The primary key of the parent entity.</param>
         /// <param name="childProp">The navigation property from which the children will be removed.</param>
         /// <param name="childIds">The primary keys of the child entities which will be removed.</param>
-        /// <returns>
-        /// An error if there is a problem; or a response indicating success.
-        /// </returns>
+        /// <response code="400">Invalid login attempt.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{id}/{childProp}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> RemoveChildrenFromCollection(string dataType, string id, string childProp, [FromBody]string[] childIds)
         {
             if (string.IsNullOrEmpty(id))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingIdError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.MissingIdError]);
             }
             if (string.IsNullOrEmpty(childProp))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.MissingDataError]);
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
+            }
+            if (user.AdminLocked)
+            {
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidDataTypeError]);
             }
             var roles = await _userManager.GetRolesAsync(user);
             roles.Add(CustomRoles.AllUsers);
@@ -945,7 +1010,7 @@ namespace VueCoreFramework.Controllers
             }
             if (AuthorizationController.GetAuthorization(claims, dataType, CustomClaimTypes.PermissionDataEdit, id) == AuthorizationViewModel.Unauthorized)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_EditItem]] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.NoPermission, _errorLocalizer[ErrorMessages.PermissionAction_EditItem]]);
             }
             var pInfo = repository.GetType()
                 .GenericTypeArguments
@@ -954,21 +1019,21 @@ namespace VueCoreFramework.Controllers
                 .GetProperty(childProp.ToInitialCaps());
             if (pInfo == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.MissingDataError]);
             }
             try
             {
                 await repository.RemoveChildrenFromCollectionAsync(id, pInfo, childIds);
-                return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+                return Ok();
             }
             catch
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.DataError]);
             }
         }
 
         /// <summary>
-        /// Called to terminate a relationship bewteen two entities. If the child entity is made an
+        /// Called to terminate a relationship between two entities. If the child entity is made an
         /// orphan by the removal and is not a MenuClass object, it is then removed from the <see
         /// cref="ApplicationDbContext"/> entirely.
         /// </summary>
@@ -994,6 +1059,10 @@ namespace VueCoreFramework.Controllers
             if (user == null)
             {
                 return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+            }
+            if (user.AdminLocked)
+            {
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
@@ -1059,6 +1128,10 @@ namespace VueCoreFramework.Controllers
             {
                 return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
+            if (user.AdminLocked)
+            {
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
+            }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
@@ -1122,6 +1195,10 @@ namespace VueCoreFramework.Controllers
             if (user == null)
             {
                 return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+            }
+            if (user.AdminLocked)
+            {
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
@@ -1199,6 +1276,10 @@ namespace VueCoreFramework.Controllers
             {
                 return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
+            if (user.AdminLocked)
+            {
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
+            }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
                 return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
@@ -1270,6 +1351,10 @@ namespace VueCoreFramework.Controllers
             if (user == null)
             {
                 return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+            }
+            if (user.AdminLocked)
+            {
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             if (!TryGetRepository(_context, dataType, out IRepository repository))
             {
@@ -1385,6 +1470,10 @@ namespace VueCoreFramework.Controllers
             if (user == null)
             {
                 return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+            }
+            if (user.AdminLocked)
+            {
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             if (!TryResolveObject(dataType, item, out object obj, out Type type))
             {

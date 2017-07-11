@@ -43,22 +43,12 @@ interface ManageUserViewModel {
      * The name of a third-party authorization provider.
      */
     authProvider: string;
-
-    /**
-     * A list of errors generated during the operation.
-     */
-    errors: Array<String>;
 }
 
 /**
  * Contains lists of external authentication providers supported by the SPA framework.
  */
 interface AuthProviders {
-    /**
-     * An error message.
-     */
-    error?: string;
-
     /**
      * A list of all external authentication providers supported by the SPA framework.
      */
@@ -87,6 +77,7 @@ export default class ManageUserComponent extends Vue {
     changingUsername = false;
     cultures: string[] = ["<default>"];
     deleteAccountDialog = false;
+    errors: string[] = [];
     formOptions: VFGOptions = {
         validateAfterChanged: true
     };
@@ -98,8 +89,7 @@ export default class ManageUserComponent extends Vue {
         oldPassword: '',
         newPassword: '',
         confirmPassword: '',
-        authProvider: '',
-        errors: []
+        authProvider: ''
     };
     schema: Schema = {
         fields: [
@@ -178,16 +168,28 @@ export default class ManageUserComponent extends Vue {
                 }
             })
             .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => {
+                if (!response.ok) {
+                    if (response.statusText) {
+                        this.errors.push(response.statusText);
+                    } else {
+                        this.errors.push("A problem occurred.");
+                    }
+                    throw new Error(response.statusText);
+                }
+                return response;
+            })
             .then(response => response.json() as Promise<ApiResponseViewModel>)
             .then(data => {
-                if (data.error) {
-                    ErrorMsg.showErrorMsgAndLog('user/manage.created', data.error, new Error(`Error in manage.created: ${data.error}`));
-                }
-                else if (data.response === "yes") {
+                if (data.response === "yes") {
                     this.hasPassword = true;
                 }
             })
-            .catch(error => ErrorMsg.logError("user/manage.created.fetchPW", new Error(error)));
+            .catch(error => {
+                if (this.errors.length === 0) {
+                    ErrorMsg.logError("user/manage.created.fetchPW", new Error(error));
+                }
+            });
     }
 
     mounted() {
@@ -199,26 +201,36 @@ export default class ManageUserComponent extends Vue {
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })
+            .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => {
+                if (!response.ok) {
+                    if (response.statusText) {
+                        this.errors.push(response.statusText);
+                    } else {
+                        this.errors.push("A problem occurred.");
+                    }
+                    throw new Error("CODE");
+                }
+                return response;
+            })
             .then(response => response.json() as Promise<AuthProviders>)
             .then(data => {
-                if (data.error) {
-                    ErrorMsg.showErrorMsgAndLog('user/manage.mounted', data.error, new Error(`Error in manage.mounted: ${data.error}`));
+                if (data.providers) {
+                    this.authProviderFacebook = data.providers.indexOf('Facebook') !== -1;
+                    this.authProviderGoogle = data.providers.indexOf('Google') !== -1;
+                    this.authProviderMicrosoft = data.providers.indexOf('Microsoft') !== -1;
                 }
-                else {
-                    if (data.providers) {
-                        this.authProviderFacebook = data.providers.indexOf('Facebook') !== -1;
-                        this.authProviderGoogle = data.providers.indexOf('Google') !== -1;
-                        this.authProviderMicrosoft = data.providers.indexOf('Microsoft') !== -1;
-                    }
-                    if (data.userProviders) {
-                        this.authProviderFacebookUser = data.providers.indexOf('Facebook') !== -1;
-                        this.authProviderGoogleUser = data.providers.indexOf('Google') !== -1;
-                        this.authProviderMicrosoftUser = data.providers.indexOf('Microsoft') !== -1;
-                    }
+                if (data.userProviders) {
+                    this.authProviderFacebookUser = data.providers.indexOf('Facebook') !== -1;
+                    this.authProviderGoogleUser = data.providers.indexOf('Google') !== -1;
+                    this.authProviderMicrosoftUser = data.providers.indexOf('Microsoft') !== -1;
                 }
             })
             .catch(error => {
-                ErrorMsg.logError("user/manage.mounted", new Error(error));
+                if (error !== "CODE") {
+                    this.errors.push("A problem occurred.");
+                    ErrorMsg.logError("user/manage.mounted", new Error(error));
+                }
             });
         fetch('/api/Manage/GetCultures',
             {
@@ -281,16 +293,20 @@ export default class ManageUserComponent extends Vue {
                 }
             })
             .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("CODE");
+                }
+                return response;
+            })
             .then(response => response.json() as Promise<Array<string>>)
             .then(data => {
-                // Errors are ignored; the list simply doesn't populate, requiring manual entry.
-                if (!data['error']) {
-                    this.xferUsernames = data;
-                }
+                this.xferUsernames = data;
                 this.xferLoading = false;
                 this.xferData = true;
             })
             .catch(error => {
+                // Errors are ignored; the list simply doesn't populate, requiring manual entry.
                 this.xferLoading = false;
             });
     }
@@ -298,7 +314,7 @@ export default class ManageUserComponent extends Vue {
     onCultureChange(value: string) {
         this.success = false;
         this.submitting = true;
-        this.model.errors = [];
+        this.errors = [];
 
         if (this.$store.state.userState.culture === value
             || (value === "<default>"
@@ -316,26 +332,35 @@ export default class ManageUserComponent extends Vue {
                 }
             })
             .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
-            .then(data => {
-                if (data.error) {
-                    this.model.errors = [data.error];
-                } else {
-                    setCulture(value);
-                    this.successMessage = "Your preferred culture has been updated.";
-                    this.success = true;
+            .then(response => {
+                if (!response.ok) {
+                    if (response.statusText) {
+                        this.errors = response.statusText.split(';');
+                    } else {
+                        this.errors.push("A problem occurred.");
+                    }
+                    throw new Error("CODE");
                 }
+                return response;
+            })
+            .then(response => {
+                setCulture(value);
+                this.successMessage = "Your preferred culture has been updated.";
+                this.success = true;
                 this.submitting = false;
             })
             .catch(error => {
-                this.model.errors = ["A problem occurred."];
-                ErrorMsg.logError("user/manage.onCultureChange", new Error(error));
+                if (error !== "CODE") {
+                    this.errors.push("A problem occurred.");
+                    ErrorMsg.logError("user/manage.onCultureChange", new Error(error));
+                }
                 this.submitting = false;
             });
     }
 
     onDeleteAccount() {
         this.success = false;
+        this.errors = [];
         this.submitting = true;
         let url = '/api/Manage/DeleteAccount';
         if (this.selectedXferUsername) {
@@ -352,20 +377,28 @@ export default class ManageUserComponent extends Vue {
                 }
             })
             .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
-            .then(data => {
-                this.submitting = false;
-                if (data.error) {
-                    this.model.errors = [data.error];
-                } else {
-                    this.deleteAccountDialog = false;
-                    this.successMessage = "Your request to delete your account has been received. An email has just been sent to the address on your account. Please click on the link in this email to confirm the deletion of your account.";
-                    this.success = true;
+            .then(response => {
+                if (!response.ok) {
+                    if (response.statusText) {
+                        this.errors = response.statusText.split(';');
+                    } else {
+                        this.errors.push("A problem occurred.");
+                    }
+                    throw new Error("CODE");
                 }
+                return response;
+            })
+            .then(data => {
+                this.deleteAccountDialog = false;
+                this.successMessage = "Your request to delete your account has been received. An email has just been sent to the address on your account. Please click on the link in this email to confirm the deletion of your account.";
+                this.success = true;
+                this.submitting = false;
             })
             .catch(error => {
-                this.model.errors = ["A problem occurred. Your account has not been deleted."];
-                ErrorMsg.logError("user/manage.onDeleteAccount", new Error(error));
+                if (error !== "CODE") {
+                    this.errors.push("A problem occurred. Your account has not been deleted.");
+                    ErrorMsg.logError("user/manage.onDeleteAccount", new Error(error));
+                }
                 this.submitting = false;
             });
     }
@@ -373,7 +406,7 @@ export default class ManageUserComponent extends Vue {
     onSignInProviderAdd(provider: string) {
         this.success = false;
         this.submitting = true;
-        this.model.errors = [];
+        this.errors = [];
         this.model.authProvider = provider;
         fetch('/api/Manage/LinkLogin',
             {
@@ -387,19 +420,27 @@ export default class ManageUserComponent extends Vue {
                 body: JSON.stringify(this.model)
             })
             .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<ManageUserViewModel>)
-            .then(data => {
-                if (data.errors) {
-                    this.model.errors = data.errors;
-                } else {
-                    this.successMessage = "Your accounts have been successfully linked.";
-                    this.success = true;
+            .then(response => {
+                if (!response.ok) {
+                    if (response.statusText) {
+                        this.errors = response.statusText.split(';');
+                    } else {
+                        this.errors.push("A problem occurred.");
+                    }
+                    throw new Error("CODE");
                 }
+                return response;
+            })
+            .then(response => {
+                this.successMessage = "Your accounts have been successfully linked.";
+                this.success = true;
                 this.submitting = false;
             })
             .catch(error => {
-                this.model.errors = ["A problem occurred. Login failed."];
-                ErrorMsg.logError("user/manage.onSignInProviderAdd", new Error(error));
+                if (error !== "CODE") {
+                    this.errors.push("A problem occurred. Login failed.");
+                    ErrorMsg.logError("user/manage.onSignInProviderAdd", new Error(error));
+                }
                 this.submitting = false;
             });
     }
@@ -407,7 +448,7 @@ export default class ManageUserComponent extends Vue {
     onSignInProviderRemove(provider: string) {
         this.success = false;
         this.submitting = true;
-        this.model.errors = [];
+        this.errors = [];
         this.model.authProvider = provider;
         fetch('/api/Manage/RemoveLogin',
             {
@@ -421,24 +462,33 @@ export default class ManageUserComponent extends Vue {
                 body: JSON.stringify(this.model)
             })
             .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<ManageUserViewModel>)
-            .then(data => {
-                if (data.errors) {
-                    this.model.errors = data.errors;
-                } else {
-                    this.success = true;
+            .then(response => {
+                if (!response.ok) {
+                    if (response.statusText) {
+                        this.errors = response.statusText.split(';');
+                    } else {
+                        this.errors.push("A problem occurred.");
+                    }
+                    throw new Error("CODE");
                 }
+                return response;
+            })
+            .then(response => {
+                this.success = true;
                 this.submitting = false;
             })
             .catch(error => {
-                this.model.errors = ["A problem occurred. Login failed."];
-                ErrorMsg.logError("user/manage.onSignInProviderRemove", new Error(error));
+                if (error !== "CODE") {
+                    this.errors.push("A problem occurred. Login failed.");
+                    ErrorMsg.logError("user/manage.onSignInProviderRemove", new Error(error));
+                }
                 this.submitting = false;
             });
     }
 
     onSubmit() {
         this.success = false;
+        this.errors = [];
         if (!this.isValid) return;
         let url: string;
         if (this.changingEmail) {
@@ -462,21 +512,28 @@ export default class ManageUserComponent extends Vue {
                 body: JSON.stringify(this.model)
             })
             .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<ManageUserViewModel>)
-            .then(data => {
-                if (Object.keys(data.errors).length === 0) {
-                    this.success = true;
-                    this.successMessage = "Success!";
-                    authenticate(true);
-                    this.cancelChange();
-                } else {
-                    this.success = false;
-                    this.model.errors = data.errors;
+            .then(response => {
+                if (!response.ok) {
+                    if (response.statusText) {
+                        this.errors = response.statusText.split(';');
+                    } else {
+                        this.errors.push("A problem occurred.");
+                    }
+                    throw new Error("CODE");
                 }
+                return response;
+            })
+            .then(response => {
+                this.success = true;
+                this.successMessage = "Success!";
+                authenticate(true);
+                this.cancelChange();
             })
             .catch(error => {
-                this.model.errors = ["A problem occurred. Your request was not received."];
-                ErrorMsg.logError("user/manage.onSubmit", new Error(error));
+                if (error != "CODE") {
+                    this.errors.push("A problem occurred. Your request was not received.");
+                    ErrorMsg.logError("user/manage.onSubmit", new Error(error));
+                }
                 this.success = false;
             });
     }

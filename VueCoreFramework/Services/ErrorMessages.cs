@@ -5,11 +5,11 @@
         public const string AddItemError = "Item could not be added.";
         public const string AdminNoManagerError = "The administrator group does not have a manager.";
         public const string AdminOnlyError = "Only an administrator may perform that action.";
-        public const string AdminRequiredError = "The administratos group cannot be removed.";
+        public const string AdminRequiredError = "The administrators group cannot be removed.";
         public const string AllUsersRequiredError = "Membership in the All Users group is automatic.";
         public const string AlreadyLockedError = "The account you specified is already locked.";
         public const string AlreadyUnlockedError = "The account you specified is not locked.";
-        public const string AuthProviderError = "There was a problem authorizing with that provider.";
+        public const string AuthProviderError = "There was a problem authenticating with that provider.";
         public const string CannotBeSystemError = "Names may not appear to imitate the system.";
         public const string ChangeEmailLimitError = "You may not change the email on your account more than once per day.";
         public const string ConfirmEmailLoginError = "You must have a confirmed email to log in. Please check your email for your confirmation link. If you've lost the email, please register again.";
@@ -52,8 +52,8 @@
         public const string PermissionAction_RemoveItem = "remove this item";
         public const string PermissionAction_RemoveItems = "remove one or more of these items";
 
-        public static string NoPermission = "You don't have permission to {0}.";
+        public const string NoPermission = "You don't have permission to {0}.";
 
-        public static string LockedAccount = "Your account has been locked. Please contact an administrator at {0} for assistance.";
+        public const string LockedAccount = "Your account has been locked. Please contact an administrator at {0} for assistance.";
     }
 }

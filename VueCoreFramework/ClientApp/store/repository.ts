@@ -28,12 +28,12 @@ export interface OperationReply<T> {
     /**
      * The data received from the API.
      */
-    data: T;
+    data?: T;
 
     /**
      * Any error message received from the API.
      */
-    error: string;
+    error?: string;
 }
 
 /**
@@ -72,7 +72,7 @@ export class Repository {
      * @param {string} parentId The primary key of the entity which will be set on the childProp property.
      * @returns {OperationReply<DataItem>} A response object containing any error which occurred, or the newly added item.
      */
-    add(returnPath: string, childProp: string, parentId: string): Promise<OperationReply<DataItem>> {
+    add(returnPath: string, childProp: string, parentId: string): Promise<DataItem> {
         let url = `/api/Data/${this.dataType}/Add`;
         if (childProp && parentId) {
             url += `/${childProp}/${parentId}`;
@@ -88,9 +88,15 @@ export class Repository {
                 }
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<OperationReply<DataItem>>)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
+            .then(response => response.json() as Promise<DataItem>)
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     }
 
@@ -103,7 +109,7 @@ export class Repository {
      * @param {Array<string>} ids The primary keys of the child entities which will be added.
      * @returns {ApiResponseViewModel} A response object containing any error which occurred.
      */
-    addChildrenToCollection(returnPath: string, id: string, childProp: string, ids: Array<string>): Promise<ApiResponseViewModel> {
+    addChildrenToCollection(returnPath: string, id: string, childProp: string, ids: Array<string>): Promise<Response> {
         return fetch(`/api/Data/${this.dataType}/AddChildrenToCollection/${id}/${childProp}`,
             {
                 method: 'POST',
@@ -116,9 +122,14 @@ export class Repository {
                 body: JSON.stringify(ids)
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     }
 
@@ -507,7 +518,7 @@ export class Repository {
      * @param {Array<string>} childIds The primary keys of the child entities which will be removed.
      * @returns {ApiResponseViewModel} A response object containing any error which occurred.
      */
-    removeChildrenFromCollection(returnPath: string, id: string, childProp: string, childIds: Array<string>): Promise<ApiResponseViewModel> {
+    removeChildrenFromCollection(returnPath: string, id: string, childProp: string, childIds: Array<string>): Promise<Response> {
         return fetch(`/api/Data/${this.dataType}/RemoveChildrenFromCollection/${id}/${childProp}`,
             {
                 method: 'POST',
@@ -520,9 +531,14 @@ export class Repository {
                 body: JSON.stringify(childIds)
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     }
 

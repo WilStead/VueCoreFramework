@@ -41,21 +41,22 @@ namespace VueCoreFramework.Controllers
         /// <summary>
         /// Called to authenticate the user.
         /// </summary>
-        /// <returns>
+        /// <response code="200">
         /// An <see cref="AuthorizationViewModel"/> indicating whether the current user is authenticated.
-        /// </returns>
+        /// </response>
         [HttpGet]
-        public async Task<IActionResult> Authenticate(string full = null)
+        [ProducesResponseType(typeof(AuthorizationViewModel), 200)]
+        public async Task<AuthorizationViewModel> Authenticate(string full = null)
         {
             var email = HttpContext.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(email))
             {
-                return Json(new AuthorizationViewModel { Authorization = AuthorizationViewModel.Login });
+                return new AuthorizationViewModel { Authorization = AuthorizationViewModel.Login };
             }
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null || user.AdminLocked)
             {
-                return Json(new AuthorizationViewModel { Authorization = AuthorizationViewModel.Login });
+                return new AuthorizationViewModel { Authorization = AuthorizationViewModel.Login };
             }
 
             var vm = new AuthorizationViewModel
@@ -65,7 +66,7 @@ namespace VueCoreFramework.Controllers
             };
             if (full != "true")
             {
-                return Json(vm);
+                return vm;
             }
 
             vm.Email = user.Email;
@@ -88,7 +89,7 @@ namespace VueCoreFramework.Controllers
                 CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(user.Culture)),
                 new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) });
 
-            return Json(vm);
+            return vm;
         }
 
         /// <summary>
@@ -99,21 +100,22 @@ namespace VueCoreFramework.Controllers
         /// </param>
         /// <param name="operation">An optional operation being performed.</param>
         /// <param name="id">An optional primary key for the item involved in the current operation.</param>
-        /// <returns>
+        /// <response code="200">
         /// An <see cref="AuthorizationViewModel"/> indicating whether the current user is authorized.
-        /// </returns>
+        /// </response>
         [HttpGet("{dataType}")]
-        public async Task<IActionResult> Authorize(string dataType, string operation = "view", string id = null)
+        [ProducesResponseType(typeof(AuthorizationViewModel), 200)]
+        public async Task<AuthorizationViewModel> Authorize(string dataType, string operation = "view", string id = null)
         {
             var email = HttpContext.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(email))
             {
-                return Json(new AuthorizationViewModel { Authorization = AuthorizationViewModel.Login });
+                return new AuthorizationViewModel { Authorization = AuthorizationViewModel.Login };
             }
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null || user.AdminLocked)
             {
-                return Json(new AuthorizationViewModel { Authorization = AuthorizationViewModel.Login });
+                return new AuthorizationViewModel { Authorization = AuthorizationViewModel.Login };
             }
             var token = AccountController.GetLoginToken(user, _userManager, _tokenOptions);
             var vm = new AuthorizationViewModel
@@ -154,7 +156,7 @@ namespace VueCoreFramework.Controllers
                 }
             }
 
-            return Json(vm);
+            return vm;
         }
 
         internal static string GetAuthorization(IList<Claim> claims, string dataType, string claimType = CustomClaimTypes.PermissionDataView, string id = null)

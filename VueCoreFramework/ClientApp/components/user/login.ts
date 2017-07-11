@@ -168,19 +168,27 @@ export default class LoginComponent extends Vue {
                 },
                 body: JSON.stringify(this.model)
             })
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
-            .then(data => {
-                if (data.error) {
-                    this.model.errors.push(data.error);
-                } else {
-                    this.passwordReset = true;
-                    this.forgottenPassword = false;
-                    this.submitting = false;
+            .then(response => {
+                if (!response.ok) {
+                    if (response.statusText) {
+                        this.model.errors.push(response.statusText);
+                    } else {
+                        this.model.errors.push("A problem occurred.");
+                    }
+                    throw new Error(response.statusText);
                 }
+                return response;
+            })
+            .then(response => {
+                this.passwordReset = true;
+                this.forgottenPassword = false;
+                this.submitting = false;
             })
             .catch(error => {
-                this.model.errors.push("A problem occurred. Your request was not received.");
-                ErrorMsg.logError("login.resetPassword", new Error(error));
+                if (this.model.errors.length === 0) {
+                    this.model.errors.push("A problem occurred. Your request was not received.");
+                    ErrorMsg.logError("login.resetPassword", new Error(error));
+                }
                 this.submitting = false;
             });
     }
@@ -200,24 +208,39 @@ export default class LoginComponent extends Vue {
                 body: JSON.stringify(this.model)
             })
             .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => {
+                if (!response.ok) {
+                    if (response.statusText) {
+                        this.model.errors.push(response.statusText);
+                    } else {
+                        this.model.errors.push("A problem occurred.");
+                    }
+                    throw new Error(response.statusText);
+                }
+                return response;
+            })
             .then(response => response.json() as Promise<LoginViewModel>)
             .then(data => {
-                if (data.token) {
-                    this.$store.commit(Store.setToken, data.token);
-                    if (this.model.rememberUser) {
-                        localStorage.setItem('token', data.token);
-                    }
-                }
-                if (data.redirect) {
-                    this.$router.push(data.returnUrl);
-                } else {
+                if (data.errors) {
                     this.model.errors = data.errors;
+                } else {
+                    if (data.token) {
+                        this.$store.commit(Store.setToken, data.token);
+                        if (this.model.rememberUser) {
+                            localStorage.setItem('token', data.token);
+                        }
+                    }
+                    if (data.redirect) {
+                        this.$router.push(data.returnUrl);
+                    }
                 }
                 this.submitting = false;
             })
             .catch(error => {
-                this.model.errors.push("A problem occurred. Login failed.");
-                ErrorMsg.logError("login.onSubmit", new Error(error));
+                if (this.model.errors.length === 0) {
+                    this.model.errors.push("A problem occurred.");
+                    ErrorMsg.logError("login.onSignInProvider", new Error(error));
+                }
                 this.submitting = false;
             });
     }
@@ -236,6 +259,17 @@ export default class LoginComponent extends Vue {
                 },
                 body: JSON.stringify(this.model)
             })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.statusText) {
+                        this.model.errors.push(response.statusText);
+                    } else {
+                        this.model.errors.push("A problem occurred.");
+                    }
+                    throw new Error(response.statusText);
+                }
+                return response;
+            })
             .then(response => response.json() as Promise<LoginViewModel>)
             .then(data => {
                 if (data.token) {
@@ -246,14 +280,14 @@ export default class LoginComponent extends Vue {
                 }
                 if (data.redirect) {
                     this.$router.push(data.returnUrl);
-                } else {
-                    this.model.errors = data.errors;
                 }
                 this.submitting = false;
             })
             .catch(error => {
-                this.model.errors.push("A problem occurred. Login failed.");
-                ErrorMsg.logError("login.onSubmit", new Error(error));
+                if (this.model.errors.length === 0) {
+                    this.model.errors.push("A problem occurred. Login failed.");
+                    ErrorMsg.logError("login.onSubmit", new Error(error));
+                }
                 this.submitting = false;
             });
     }

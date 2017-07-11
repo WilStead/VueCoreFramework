@@ -123,15 +123,18 @@ namespace VueCoreFramework.Controllers
         /// A <see cref="LoginViewModel"/> used to transfer task data in the event of a problem,
         /// or a <see cref="ChallengeResult"/> for the authentication provider.
         /// </returns>
+        /// <response code="400">There was a problem authenticating with that provider.</response>
+        /// <response code="302">Redirect to external authentication provider.</response>
         [HttpPost]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(302)]
         public IActionResult ExternalLogin([FromBody]LoginViewModel model)
         {
             var provider = _signInManager.GetExternalAuthenticationSchemes().SingleOrDefault(a => a.DisplayName == model.AuthProvider);
             if (provider == null)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.AuthProviderError]);
                 _logger.LogWarning(LogEvent.EXTERNAL_PROVIDER_NOTFOUND, "Could not find provider {PROVIDER}.", model.AuthProvider);
-                return new JsonResult(model);
+                return BadRequest(_errorLocalizer[ErrorMessages.AuthProviderError]);
             }
             // Request a redirect to the external login provider.
             var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Account", new { ReturnUrl = model.ReturnUrl, RememberUser = model.RememberUser });
@@ -144,34 +147,35 @@ namespace VueCoreFramework.Controllers
         /// attempting to sign in with that account.
         /// </summary>
         /// <returns>A <see cref="LoginViewModel"/> used to transfer task data.</returns>
+        /// <response code="400">Invalid login attempt.</response>
+        /// <response code="200">External login response data.</response>
         [HttpGet]
-        public async Task<LoginViewModel> ExternalLoginCallback(string returnUrl = null, bool rememberUser = false, string remoteError = null)
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(LoginViewModel), 200)]
+        public async Task<IActionResult> ExternalLoginCallback(string returnUrl = null, bool rememberUser = false, string remoteError = null)
         {
-            var model = new LoginViewModel
-            {
-                ReturnUrl = returnUrl,
-                RememberUser = rememberUser
-            };
             if (remoteError != null)
             {
-                model.Errors.Add($"{_errorLocalizer[ErrorMessages.AuthProviderError]} {remoteError}");
-                return model;
+                return BadRequest($"{_errorLocalizer[ErrorMessages.AuthProviderError]} {remoteError}");
             }
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.AuthProviderError]);
-                return model;
+                return BadRequest(_errorLocalizer[ErrorMessages.AuthProviderError]);
             }
 
             var email = info.Principal.FindFirstValue(ClaimTypes.Email);
             var user = await _userManager.FindByEmailAsync(email);
             if (user.AdminLocked)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
-                return model;
+                return BadRequest(_errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
+            var model = new LoginViewModel
+            {
+                ReturnUrl = returnUrl,
+                RememberUser = rememberUser
+            };
             // Sign in the user with this external login provider if the user already has a login.
             var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, rememberUser);
             if (result.Succeeded)
@@ -185,7 +189,7 @@ namespace VueCoreFramework.Controllers
                     CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(user.Culture)),
                     new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) });
 
-                return model;
+                return Json(model);
             }
             else
             {
@@ -203,11 +207,11 @@ namespace VueCoreFramework.Controllers
                         await _signInManager.SignInAsync(user, rememberUser);
                         _logger.LogInformation(LogEvent.NEW_ACCOUNT_EXTERNAL, "New account created for {USER} with {PROVIDER}.", user.Email, info.LoginProvider);
                         model.Redirect = true;
-                        return model;
+                        return Json(model);
                     }
                 }
                 model.Errors.AddRange(newResult.Errors.Select(e => e.Description));
-                return model;
+                return Json(model);
             }
         }
 
@@ -215,8 +219,11 @@ namespace VueCoreFramework.Controllers
         /// Called to initiate a password reset for a user.
         /// </summary>
         /// <param name="model">A <see cref="LoginViewModel"/> used to transfer task data.</param>
-        /// <returns>A JSON object containing an error in the event of a problem; or an OK result.</returns>
+        /// <response code="200">Success.</response>
+        /// <response code="403">Locked account.</response>
         [HttpPost]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> ForgotPassword([FromBody]LoginViewModel model)
         {
             var user = await _userManager.FindByNameAsync(model.Username);
@@ -231,24 +238,25 @@ namespace VueCoreFramework.Controllers
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
             // For more information on how to enable account confirmation and password reset please visit https://go.microsoft.com/fwlink/?LinkID=532713
             // Send an email with this link
             var code = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var callbackUrl = Url.Action(nameof(ResetPassword), "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
+            var callbackUrl = Url.Action(nameof(ResetPassword), "Account", new { code = code }, protocol: HttpContext.Request.Scheme);
             await _emailSender.SendEmailAsync(model.Username, _responseLocalizer[ResponseMessages.PasswordResetEmailSubject],
                 $"{_responseLocalizer[ResponseMessages.PasswordResetEmailBody]}: <a href='{callbackUrl}'>{callbackUrl}</a>");
             _logger.LogInformation(LogEvent.RESET_PW_REQUEST, "Password reset request received for {USER}.", user.Email);
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
 
         /// <summary>
         /// Called to retrieve a list of accepted external authentication providers.
         /// </summary>
-        /// <returns>A list of accepted external authentication providers (as JSON).</returns>
+        /// <response code="200">A list of accepted external authentication providers.</returns>
         [HttpGet]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 200)]
         public JsonResult GetAuthProviders()
         {
             return Json(new { providers = _signInManager.GetExternalAuthenticationSchemes().Select(s => s.DisplayName).ToArray() });
@@ -281,15 +289,18 @@ namespace VueCoreFramework.Controllers
         /// Called to retrieve a list of external authentication providers presently associated with
         /// the current user's account.
         /// </summary>
-        /// <returns>A list of external authentication providers (as JSON).</returns>
+        /// <response="400">Invalid user.</returns>
+        /// <response="200">A list of external authentication providers.</returns>
         [Authorize]
         [HttpGet]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 200)]
         public async Task<IActionResult> GetUserAuthProviders()
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             var userLogins = await _userManager.GetLoginsAsync(user);
             return Json(new
@@ -303,18 +314,18 @@ namespace VueCoreFramework.Controllers
         /// Called to determine if the current user account has a local password (may be false if the
         /// user registered with an external authentication provider).
         /// </summary>
-        /// <returns>
-        /// Redirect to an error page in the event of a bad request; or a JSON object with 'reponse'
-        /// set to etiher 'yes' or 'no'.
-        /// </returns>
+        /// <response="400">Invalid user.</returns>
+        /// <response="200">A 'yes' or 'no' response.</returns>
         [Authorize]
         [HttpGet]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 200)]
         public async Task<IActionResult> HasPassword()
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (await _userManager.HasPasswordAsync(user)) return Json(new { response = "yes" });
             else return Json(new { response = "no" });
@@ -324,11 +335,16 @@ namespace VueCoreFramework.Controllers
         /// Called to log in with the provided credentials.
         /// </summary>
         /// <param name="model">A <see cref="LoginViewModel"/> used to transfer task data.</param>
-        /// <returns>A <see cref="LoginViewModel"/> used to transfer task data.</returns>
+        /// <response code="400">Invalid login attempt.</response>
+        /// <response code="403">Locked account.</response>
+        /// <response code="200">Login response data.</response>
         [HttpPost]
-        public async Task<LoginViewModel> Login([FromBody]LoginViewModel model)
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(typeof(LoginViewModel), 200)]
+        public async Task<IActionResult> Login([FromBody]LoginViewModel model)
         {
-            // Users can sign is with a username or email address.
+            // Users can sign in with a username or email address.
             var user = await _userManager.FindByNameAsync(model.Username);
             if (user == null)
             {
@@ -336,21 +352,18 @@ namespace VueCoreFramework.Controllers
             }
             if (user == null)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.InvalidLogin]);
-                return model;
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidLogin]);
             }
             else
             {
                 if (user.AdminLocked)
                 {
-                    model.Errors.Add(_errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
-                    return model;
+                    return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
                 }
                 // Require the user to have a confirmed email before they can log in.
                 if (!await _userManager.IsEmailConfirmedAsync(user))
                 {
-                    model.Errors.Add(_errorLocalizer[ErrorMessages.ConfirmEmailLoginError]);
-                    return model;
+                    return BadRequest(_errorLocalizer[ErrorMessages.ConfirmEmailLoginError]);
                 }
             }
 
@@ -359,8 +372,7 @@ namespace VueCoreFramework.Controllers
             var result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, model.RememberUser, lockoutOnFailure: false);
             if (!result.Succeeded)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.InvalidLogin]);
-                return model;
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidLogin]);
             }
 
             model.Token = GetLoginToken(user, _userManager, _tokenOptions);
@@ -372,7 +384,7 @@ namespace VueCoreFramework.Controllers
 
             _logger.LogInformation(LogEvent.LOGIN, "User {USER} logged in.", user.Email);
             model.Redirect = true;
-            return model;
+            return Json(model);
         }
 
         /// <summary>
@@ -381,49 +393,49 @@ namespace VueCoreFramework.Controllers
         /// included must be followed to confirm the address.
         /// </summary>
         /// <param name="model">A <see cref="RegisterViewModel"/> used to transfer task data.</param>
-        /// <returns>A <see cref="RegisterViewModel"/> used to transfer task data.</returns>
+        /// <response code="400">Invalid login attempt.</response>
+        /// <response code="403">Locked account.</response>
+        /// <response code="200">Success.</response>
         [HttpPost]
-        public async Task<RegisterViewModel> Register([FromBody]RegisterViewModel model)
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
+        public async Task<IActionResult> Register([FromBody]RegisterViewModel model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user != null)
             {
                 if (user.AdminLocked)
                 {
-                    model.Errors.Add(_errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
+                    return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
                 }
                 else if (!user.EmailConfirmed)
                 {
                     await SendConfirmationEmail(model, user);
-                    model.Errors.Add(_errorLocalizer[ErrorMessages.ConfirmEmailRegisterError]);
+                    return BadRequest(_errorLocalizer[ErrorMessages.ConfirmEmailRegisterError]);
                 }
                 else
                 {
-                    model.Errors.Add(_errorLocalizer[ErrorMessages.DuplicateEmailError]);
+                    return BadRequest(_errorLocalizer[ErrorMessages.DuplicateEmailError]);
                 }
-                return model;
             }
             var existingUser = await _userManager.FindByNameAsync(model.Username);
             if (existingUser != null)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.DuplicateUsernameError]);
-                return model;
+                return BadRequest(_errorLocalizer[ErrorMessages.DuplicateUsernameError]);
             }
             var lowerName = model.Username.ToLower();
             if (lowerName.StartsWith("admin") || lowerName.EndsWith("admin") || lowerName.Contains("administrator"))
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.OnlyAdminCanBeAdminError]);
-                return model;
+                return BadRequest(_errorLocalizer[ErrorMessages.OnlyAdminCanBeAdminError]);
             }
             if (lowerName == "system")
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.CannotBeSystemError]);
-                return model;
+                return BadRequest(_errorLocalizer[ErrorMessages.CannotBeSystemError]);
             }
             if (lowerName == "true" || lowerName == "false")
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.InvalidNameError]);
-                return model;
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidNameError]);
             }
             user = new ApplicationUser { UserName = model.Username, Email = model.Email };
             var result = await _userManager.CreateAsync(user, model.Password);
@@ -432,13 +444,13 @@ namespace VueCoreFramework.Controllers
                 await SendConfirmationEmail(model, user);
 
                 _logger.LogInformation(LogEvent.NEW_ACCOUNT, "New account created for {USER} with username {USERNAME}.", user.Email, user.UserName);
+
+                return Ok();
             }
             else
             {
-                model.Errors.AddRange(result.Errors.Select(e => e.Description));
+                return BadRequest(string.Join(";", result.Errors.Select(e => e.Description)));
             }
-
-            return model;
         }
 
         /// <summary>
@@ -457,29 +469,35 @@ namespace VueCoreFramework.Controllers
         /// Called to initiate a password reset for a user after following an email link verifying the user.
         /// </summary>
         /// <param name="model">A <see cref="ResetPasswordViewModel"/> used to transfer task data.</param>
-        /// <returns>A <see cref="ResetPasswordViewModel"/> used to transfer task data.</returns>
+        /// <response code="403">Locked account.</response>
+        /// <response code="400">Invalid reset attempt.</response>
+        /// <response code="200">Success.</response>
         [HttpPost]
-        public async Task<ResetPasswordViewModel> ResetPassword([FromBody]ResetPasswordViewModel model)
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(200)]
+        public async Task<IActionResult> ResetPassword([FromBody]ResetPasswordViewModel model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user != null)
             {
                 if (user.AdminLocked)
                 {
-                    model.Errors.Add(_errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
-                    return model;
+                    return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
                 }
                 var result = await _userManager.ResetPasswordAsync(user, model.Code, model.NewPassword);
                 if (result.Succeeded)
                 {
                     _logger.LogInformation(LogEvent.RESET_PW_CONFIRM, "Password reset for {USER}.", user.Email);
-                    return model;
+                    return Ok();
                 }
-                model.Errors.AddRange(result.Errors.Select(e => e.Description));
+                else
+                {
+                    return BadRequest(string.Join(";", result.Errors.Select(e => e.Description)));
+                }
             }
             // Don't reveal that the user doesn't exist; their login attempt will simply fail.
-            model.Code = null;
-            return model;
+            return Ok();
         }
 
         /// <summary>
@@ -538,35 +556,37 @@ namespace VueCoreFramework.Controllers
         /// Called to get information about the user with the given username. Admin only.
         /// </summary>
         /// <param name="username">The username to verify.</param>
-        /// <returns>
-        /// An error message if there is a problem; a false response to indicate that no such user
-        /// exists; or a <see cref="UserViewModel"/>.
-        /// </returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="404">No such user.</response>
+        /// <response code="200">User data.</response>
         [Authorize]
         [HttpPost("{username}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(typeof(UserViewModel), 200)]
         public async Task<IActionResult> VerifyUser(string username)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return BadRequest(_errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             // Only Admins may get information about a user.
             var roles = await _userManager.GetRolesAsync(user);
             if (!roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.AdminOnlyError]);
             }
 
             var targetUser = await _userManager.FindByNameAsync(username);
             if (targetUser == null)
             {
-                return Json(new { response = false });
+                return NotFound();
             }
             return Json(new UserViewModel
             {

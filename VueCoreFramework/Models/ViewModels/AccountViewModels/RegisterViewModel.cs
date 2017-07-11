@@ -40,10 +40,5 @@ namespace VueCoreFramework.Models.ViewModels.AccountViewModels
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; }
-
-        /// <summary>
-        /// A list of errors generated during the operation.
-        /// </summary>
-        public List<string> Errors { get; set; }
     }
 }

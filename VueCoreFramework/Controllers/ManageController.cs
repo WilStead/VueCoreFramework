@@ -70,31 +70,32 @@ namespace VueCoreFramework.Controllers
         /// Called to initiate an email address change for a user.
         /// </summary>
         /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
-        /// <returns>A <see cref="ManageUserViewModel"/> used to transfer task data.</returns>
+        /// <response code="403">Locked account.</response>
+        /// <response code="400">Bad request.</response>
+        /// <response code="200">Success.</response>
         [HttpPost]
-        public async Task<ManageUserViewModel> ChangeEmail([FromBody]ManageUserViewModel model)
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(200)]
+        public async Task<IActionResult> ChangeEmail([FromBody]ManageUserViewModel model)
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.InvalidUserError]);
-                return model;
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
-                return model;
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
             if (existingUser != null)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.DuplicateEmailError]);
-                return model;
+                return BadRequest(_errorLocalizer[ErrorMessages.DuplicateEmailError]);
             }
             if (user.LastEmailChange > DateTime.Now.Subtract(TimeSpan.FromDays(1)))
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.ChangeEmailLimitError]);
-                return model;
+                return BadRequest(_errorLocalizer[ErrorMessages.ChangeEmailLimitError]);
             }
 
             user.NewEmail = model.Email;
@@ -118,63 +119,70 @@ namespace VueCoreFramework.Controllers
 
             _logger.LogInformation(LogEvent.EMAIL_CHANGE_REQUEST, "Email change request received, from {OLDEMAIL} to {NEWEMAIL}.", user.Email, user.NewEmail);
 
-            return model;
+            return Ok();
         }
 
         /// <summary>
         /// Called to initiate a password change for a user.
         /// </summary>
         /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
-        /// <returns>A <see cref="ManageUserViewModel"/> used to transfer task data.</returns>
+        /// <response code="403">Locked account.</response>
+        /// <response code="400">Bad request.</response>
+        /// <response code="200">Success.</response>
         [HttpPost]
-        public async Task<ManageUserViewModel> ChangePassword([FromBody]ManageUserViewModel model)
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(200)]
+        public async Task<IActionResult> ChangePassword([FromBody]ManageUserViewModel model)
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.InvalidUserError]);
-                return model;
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
-                return model;
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
             if (result.Succeeded)
             {
                 await _signInManager.SignInAsync(user, isPersistent: false);
                 _logger.LogInformation(LogEvent.CHANGE_PW, "User {USER} changed their password.", user.Email);
-                return model;
+                return Ok();
             }
-            model.Errors.AddRange(result.Errors.Select(e => e.Description));
-            return model;
+            else
+            {
+                return BadRequest(string.Join(";", result.Errors.Select(e => e.Description)));
+            }
         }
 
         /// <summary>
         /// Called to initiate a username change for a user.
         /// </summary>
         /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
-        /// <returns>A <see cref="ManageUserViewModel"/> used to transfer task data.</returns>
+        /// <response code="403">Locked account.</response>
+        /// <response code="400">Bad request.</response>
+        /// <response code="200">Success.</response>
         [HttpPost]
-        public async Task<ManageUserViewModel> ChangeUsername([FromBody]ManageUserViewModel model)
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(200)]
+        public async Task<IActionResult> ChangeUsername([FromBody]ManageUserViewModel model)
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.InvalidUserError]);
-                return model;
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
-                return model;
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var existingUser = await _userManager.FindByNameAsync(model.Username);
             if (existingUser != null)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.DuplicateUsernameError]);
-                return model;
+                return BadRequest(_errorLocalizer[ErrorMessages.DuplicateUsernameError]);
             }
 
             var old = user.UserName;
@@ -182,32 +190,35 @@ namespace VueCoreFramework.Controllers
 
             _logger.LogInformation(LogEvent.USERNAME_CHANGE, "Username changed for {USER}, from {OLDUSERNAME} to {NEWUSERNAME}.", user.Email, old, user.UserName);
 
-            return model;
+            return Ok();
         }
 
         /// <summary>
         /// Called to initiate an account deletion for a user.
         /// </summary>
-        /// <returns>
-        /// An error if there is a problem; or redirects to the SPA page for account deletion.
-        /// </returns>
+        /// <response code="403">Locked account.</response>
+        /// <response code="400">Bad request.</response>
+        /// <response code="200">Request received.</response>
         [HttpPost]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> DeleteAccount(string xferUsername)
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             if (user.LastEmailChange > DateTime.Now.Subtract(TimeSpan.FromDays(1)))
             {
                 // Deletion within a day of changing the email is prevented to allow time for a user
                 // to recover from an unauthorized email change.
-                return Json(new { error = _errorLocalizer[ErrorMessages.DeleteLimitError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.DeleteLimitError]);
             }
 
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -219,7 +230,7 @@ namespace VueCoreFramework.Controllers
             var loginLink = Url.Action(nameof(HomeController.Index), "Home", new { forwardUrl = "/login" });
             await _emailSender.SendEmailAsync(user.Email, _responseLocalizer[ResponseMessages.ConfirmAccountDeletionSubject],
                 $"{_responseLocalizer[ResponseMessages.ConfirmAccountDeletionBody]}: <a href='{restoreCallbackUrl}'>link</a>. {_responseLocalizer[ResponseMessages.ConfirmAccountDeletionBody2]}: <a href='{loginLink}'>login</a>.");
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
 
         /// <summary>
@@ -380,19 +391,18 @@ namespace VueCoreFramework.Controllers
         /// Called to link a user's external authentication provider account with their site account.
         /// </summary>
         /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
-        /// <returns>
-        /// A <see cref="ManageUserViewModel"/> used to transfer task data in the event of a problem,
-        /// or a <see cref="ChallengeResult"/> for the authentication provider.
-        /// </returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="302">Redirect to external authentication provider.</response>
         [HttpPost]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(302)]
         public IActionResult LinkLogin([FromBody]ManageUserViewModel model)
         {
             var provider = _signInManager.GetExternalAuthenticationSchemes().SingleOrDefault(a => a.DisplayName == model.AuthProvider);
             if (provider == null)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.AuthProviderError]);
                 _logger.LogWarning(LogEvent.EXTERNAL_PROVIDER_NOTFOUND, "Could not find provider {PROVIDER}.", model.AuthProvider);
-                return new JsonResult(model);
+                return BadRequest(_errorLocalizer[ErrorMessages.AuthProviderError]);
             }
             // Request a redirect to the external login provider to link a login for the current user
             var redirectUrl = Url.Action(nameof(LinkLoginCallback), "Manage");
@@ -404,54 +414,57 @@ namespace VueCoreFramework.Controllers
         /// The endpoint reached when a user returns from an external authentication provider when
         /// attempting to link that account with their site account.
         /// </summary>
-        /// <returns>A <see cref="ManageUserViewModel"/> used to transfer task data.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="200">Success.</response>
         [HttpGet]
-        public async Task<ManageUserViewModel> LinkLoginCallback()
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        public async Task<IActionResult> LinkLoginCallback()
         {
             var model = new ManageUserViewModel();
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.AuthProviderError]);
-                return model;
+                return BadRequest(_errorLocalizer[ErrorMessages.AuthProviderError]);
             }
             if (user.AdminLocked)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
-                return model;
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var info = await _signInManager.GetExternalLoginInfoAsync(await _userManager.GetUserIdAsync(user));
             if (info == null)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.AuthProviderError]);
-                return model;
+                return BadRequest(_errorLocalizer[ErrorMessages.AuthProviderError]);
             }
             var result = await _userManager.AddLoginAsync(user, info);
             if (result.Succeeded)
             {
                 _logger.LogInformation(LogEvent.ADD_EXTERNAL_LOGIN, "Added {PROVIDER} login for {USER}.", info.LoginProvider, user.Email);
-                return model;
+                return Ok();
             }
-            model.Errors.AddRange(result.Errors.Select(e => e.Description));
-            return model;
+            else
+            {
+                return BadRequest(string.Join(";", result.Errors.Select(e => e.Description)));
+            }
         }
 
         /// <summary>
         /// Gets a list of the usernames of members who are in groups with the current user.
         /// </summary>
-        /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
-        /// <returns>An error if there is a problem; or the list (as JSON).</returns>
+        /// <response code="403">Locked account.</response>
+        /// <response code="200">The list of usernames.</response>
         [HttpGet]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 200)]
         public async Task<IActionResult> LoadXferUsernames()
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -469,104 +482,123 @@ namespace VueCoreFramework.Controllers
         /// Called to lock a user's account. Admin only.
         /// </summary>
         /// <param name="username">The username of the account to lock.</param>
-        /// <returns>An error if a problem occurs, or a response indicating success.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{username}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> LockAccount(string username)
         {
             if (string.IsNullOrEmpty(username))
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetUserError]);
             }
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/400" });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
             var admins = await _userManager.GetUsersInRoleAsync(CustomRoles.Admin);
             if (!admins.Contains(user))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.AdminOnlyError]);
             }
 
             var lockUser = await _userManager.FindByNameAsync(username);
             if (lockUser == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetUserError]);
             }
             if (admins.Contains(lockUser))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.NotForAdminsError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.NotForAdminsError]);
             }
             if (lockUser.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.AlreadyLockedError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.AlreadyLockedError]);
             }
             lockUser.AdminLocked = true;
             await _userManager.UpdateAsync(lockUser);
 
             _logger.LogInformation(LogEvent.LOCK_ACCOUNT, "The account belonging to User {USER} has been locked by Admin {ADMIN}.", lockUser.Email, user.Email);
 
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
 
         /// <summary>
         /// Called to remove a user's external authentication provider account from their site account.
         /// </summary>
         /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
-        /// <returns>A <see cref="ManageUserViewModel"/> used to transfer task data.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Locked account.</response>
+        /// <response code="200">Success.</response>
         [HttpPost]
-        public async Task<ManageUserViewModel> RemoveLogin([FromBody]ManageUserViewModel model)
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
+        public async Task<IActionResult> RemoveLogin([FromBody]ManageUserViewModel model)
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.InvalidUserError]);
-                return model;
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
-                return model;
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var userLogins = await _userManager.GetLoginsAsync(user);
             var provider = userLogins.SingleOrDefault(a => a.ProviderDisplayName == model.AuthProvider);
             if (provider == null)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.AuthProviderError]);
                 _logger.LogWarning(LogEvent.EXTERNAL_PROVIDER_NOTFOUND, "Could not find provider {PROVIDER}.", model.AuthProvider);
-                return model;
+                return BadRequest(_errorLocalizer[ErrorMessages.AuthProviderError]);
             }
             var result = await _userManager.RemoveLoginAsync(user, provider.LoginProvider, provider.ProviderKey);
             if (result.Succeeded)
             {
                 await _signInManager.SignInAsync(user, isPersistent: false);
                 _logger.LogInformation(LogEvent.REMOVE_EXTERNAL_LOGIN, "Removed {PROVIDER} login for {USER}.", provider.LoginProvider, user.Email);
-                return model;
+                return Ok();
             }
-            model.Errors.AddRange(result.Errors.Select(e => e.Description));
-            return model;
+            else
+            {
+                return BadRequest(string.Join(";", result.Errors.Select(e => e.Description)));
+            }
         }
 
+        /// <summary>
+        /// Called to set the current user's preferred culture.
+        /// </summary>
+        /// <param name="culture">The culture code to set for the current user.</param>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Locked account.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{culture}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> SetCulture(string culture)
         {
             if (string.IsNullOrEmpty(culture))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MissingDataError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.MissingDataError]);
             }
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
             if (culture == "<default>")
@@ -584,83 +616,93 @@ namespace VueCoreFramework.Controllers
                 CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture)),
                 new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) });
 
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
 
         /// <summary>
-        /// Called to set a password for a user (for users who intiially registered with an external
+        /// Called to set a password for a user (for users who initially registered with an external
         /// authentication provider, rather than a local site account).
         /// </summary>
         /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
-        /// <returns>A <see cref="ManageUserViewModel"/> used to transfer task data.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Locked account.</response>
+        /// <response code="200">Success.</response>
         [HttpPost]
-        public async Task<ManageUserViewModel> SetPassword([FromBody]ManageUserViewModel model)
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
+        public async Task<IActionResult> SetPassword([FromBody]ManageUserViewModel model)
         {
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.InvalidUserError]);
-                return model;
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                model.Errors.Add(_errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
-                return model;
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var result = await _userManager.AddPasswordAsync(user, model.NewPassword);
             if (result.Succeeded)
             {
                 await _signInManager.SignInAsync(user, isPersistent: false);
                 _logger.LogInformation(LogEvent.SET_PW, "User {USER} set a password.", user.Email);
-                return model;
+                return Ok();
             }
-            model.Errors.AddRange(result.Errors.Select(e => e.Description));
-            return model;
+            else
+            {
+                return BadRequest(string.Join(";", result.Errors.Select(e => e.Description)));
+            }
         }
 
         /// <summary>
         /// Called to unlock a user's account. Admin only.
         /// </summary>
         /// <param name="username">The username of the account to unlock.</param>
-        /// <returns>An error if a problem occurs, or a response indicating success.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{username}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> UnlockAccount(string username)
         {
             if (string.IsNullOrEmpty(username))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetUserError]);
             }
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
             var roles = await _userManager.GetRolesAsync(user);
             if (!roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.AdminOnlyError]);
             }
 
             var lockUser = await _userManager.FindByNameAsync(username);
             if (lockUser == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetUserError]);
             }
             if (!lockUser.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.AlreadyUnlockedError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.AlreadyUnlockedError]);
             }
             lockUser.AdminLocked = false;
             await _userManager.UpdateAsync(lockUser);
 
             _logger.LogInformation(LogEvent.UNLOCK_ACCOUNT, "The account belonging to User {USER} has been unlocked by Admin {ADMIN}.", lockUser.Email, user.Email);
 
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
     }
 }
