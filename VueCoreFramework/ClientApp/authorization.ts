@@ -16,6 +16,7 @@ export function authenticate(full?: boolean): Promise<string> {
         {
             headers: {
                 'Accept': `application/json;v=${Store.store.state.apiVer}`,
+                'Accept-Language': Store.store.state.userState.culture,
                 'Authorization': `bearer ${Store.store.state.userState.token}`
             }
         })
@@ -117,6 +118,7 @@ export function checkAuthorization(dataType: string, operation = '', id = ''): P
         {
             headers: {
                 'Accept': `application/json;v=${Store.store.state.apiVer}`,
+                'Accept-Language': Store.store.state.userState.culture,
                 'Authorization': `bearer ${Store.store.state.userState.token}`
             }
         })

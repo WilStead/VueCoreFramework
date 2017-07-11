@@ -129,7 +129,8 @@ export default class LoginComponent extends Vue {
             {
                 method: 'GET',
                 headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Accept-Language': this.$store.state.userState.culture
                 }
             })
             .then(response => response.json() as Promise<AuthProviders>)
@@ -162,6 +163,7 @@ export default class LoginComponent extends Vue {
                 method: 'POST',
                 headers: {
                     'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Accept-Language': this.$store.state.userState.culture,
                     'Content-Type': `application/json;v=${this.$store.state.apiVer}`
                 },
                 body: JSON.stringify(this.model)
@@ -192,6 +194,7 @@ export default class LoginComponent extends Vue {
                 method: 'POST',
                 headers: {
                     'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Accept-Language': this.$store.state.userState.culture,
                     'Content-Type': `application/json;v=${this.$store.state.apiVer}`
                 },
                 body: JSON.stringify(this.model)
@@ -228,6 +231,7 @@ export default class LoginComponent extends Vue {
                 method: 'POST',
                 headers: {
                     'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Accept-Language': this.$store.state.userState.culture,
                     'Content-Type': `application/json;v=${this.$store.state.apiVer}`
                 },
                 body: JSON.stringify(this.model)

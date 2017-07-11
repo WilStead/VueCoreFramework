@@ -114,7 +114,7 @@ export const store = new Vuex.Store({
          */
         addTypeRoutes(state, router) {
             let dataItemIndex = state.uiState.menuItems.findIndex(v => v.dataHook);
-            getMenuItems(router, state.apiVer, state.uiState.menuItems[dataItemIndex])
+            getMenuItems(router, state.apiVer, state.userState.culture, state.uiState.menuItems[dataItemIndex])
                 .then(data => {
                     if (!state.uiState.menuItems[dataItemIndex].submenu
                         || !state.uiState.menuItems[dataItemIndex].submenu.length) {
@@ -122,7 +122,7 @@ export const store = new Vuex.Store({
                     }
                 })
                 .catch(error => ErrorLog.logError("store.addTypeRoutes.getMenuItems", error));
-            getChildItems(router, state.apiVer)
+            getChildItems(router, state.apiVer, state.userState.culture)
                 .catch(error => ErrorLog.logError("store.addTypeRoutes.getChildItems", error));
 
             // must be added after dynamic routes to avoid matching before them.
@@ -402,6 +402,7 @@ export const store = new Vuex.Store({
                     method: 'GET',
                     headers: {
                         'Accept': `application/json;v=${state.apiVer}`,
+                        'Accept-Language': state.userState.culture,
                         'Authorization': `bearer ${state.userState.token}`
                     }
                 })

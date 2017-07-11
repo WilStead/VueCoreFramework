@@ -83,6 +83,7 @@ export class Repository {
                 method: 'POST',
                 headers: {
                     'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Accept-Language': store.state.userState.culture,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -108,6 +109,7 @@ export class Repository {
                 method: 'POST',
                 headers: {
                     'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Accept-Language': store.state.userState.culture,
                     'Content-Type': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 },
@@ -135,6 +137,7 @@ export class Repository {
                 method: 'GET',
                 headers: {
                     'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Accept-Language': store.state.userState.culture,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -160,6 +163,7 @@ export class Repository {
                 method: 'GET',
                 headers: {
                     'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Accept-Language': store.state.userState.culture,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -182,6 +186,7 @@ export class Repository {
                 method: 'GET',
                 headers: {
                     'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Accept-Language': store.state.userState.culture,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -205,6 +210,7 @@ export class Repository {
                 method: 'GET',
                 headers: {
                     'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Accept-Language': store.state.userState.culture,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -234,6 +240,7 @@ export class Repository {
                 method: 'GET',
                 headers: {
                     'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Accept-Language': store.state.userState.culture,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -296,6 +303,7 @@ export class Repository {
                 method: 'GET',
                 headers: {
                     'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Accept-Language': store.state.userState.culture,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -307,6 +315,7 @@ export class Repository {
                         method: 'GET',
                         headers: {
                             'Accept': `application/json;v=${store.state.apiVer}`,
+                            'Accept-Language': store.state.userState.culture,
                             'Authorization': `bearer ${store.state.userState.token}`
                         }
                     })
@@ -343,6 +352,7 @@ export class Repository {
                     method: 'GET',
                     headers: {
                         'Accept': `application/json;v=${store.state.apiVer}`,
+                        'Accept-Language': store.state.userState.culture,
                         'Authorization': `bearer ${store.state.userState.token}`
                     }
                 })
@@ -423,6 +433,7 @@ export class Repository {
                 method: 'GET',
                 headers: {
                     'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Accept-Language': store.state.userState.culture,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -434,6 +445,7 @@ export class Repository {
                         method: 'POST',
                         headers: {
                             'Accept': `application/json;v=${store.state.apiVer}`,
+                            'Accept-Language': store.state.userState.culture,
                             'Content-Type': `application/json;v=${store.state.apiVer}`,
                             'Authorization': `bearer ${store.state.userState.token}`
                         },
@@ -475,6 +487,7 @@ export class Repository {
                 method: 'POST',
                 headers: {
                     'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Accept-Language': store.state.userState.culture,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
             })
@@ -500,6 +513,7 @@ export class Repository {
                 method: 'POST',
                 headers: {
                     'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Accept-Language': store.state.userState.culture,
                     'Content-Type': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 },
@@ -513,7 +527,7 @@ export class Repository {
     }
 
     /**
-     * Called to terminate a relationship bewteen two entities. If the child entity is made an
+     * Called to terminate a relationship between two entities. If the child entity is made an
      * orphan by the removal and is not a MenuClass object, it is then removed from the database
      * entirely.
      * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
@@ -527,6 +541,7 @@ export class Repository {
                 method: 'POST',
                 headers: {
                     'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Accept-Language': store.state.userState.culture,
                     'Content-Type': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
@@ -553,6 +568,7 @@ export class Repository {
                 method: 'POST',
                 headers: {
                     'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Accept-Language': store.state.userState.culture,
                     'Content-Type': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 },
@@ -580,6 +596,7 @@ export class Repository {
                 method: 'POST',
                 headers: {
                     'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Accept-Language': store.state.userState.culture,
                     'Content-Type': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 },
@@ -608,6 +625,7 @@ export class Repository {
                 method: 'POST',
                 headers: {
                     'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Accept-Language': store.state.userState.culture,
                     'Content-Type': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
@@ -634,6 +652,7 @@ export class Repository {
                 method: 'POST',
                 headers: {
                     'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Accept-Language': store.state.userState.culture,
                     'Content-Type': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 }
@@ -657,6 +676,7 @@ export class Repository {
                 method: 'POST',
                 headers: {
                     'Accept': `application/json;v=${store.state.apiVer}`,
+                    'Accept-Language': store.state.userState.culture,
                     'Content-Type': `application/json;v=${store.state.apiVer}`,
                     'Authorization': `bearer ${store.state.userState.token}`
                 },

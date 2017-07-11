@@ -121,6 +121,7 @@ export default class RegisterComponent extends Vue {
                 method: 'POST',
                 headers: {
                     'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Accept-Language': this.$store.state.userState.culture,
                     'Content-Type': `application/json;v=${this.$store.state.apiVer}`
                 },
                 body: JSON.stringify(this.model)

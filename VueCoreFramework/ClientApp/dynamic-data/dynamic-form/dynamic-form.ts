@@ -162,6 +162,7 @@ export default class DynamicFormComponent extends Vue {
                 method: 'POST',
                 headers: {
                     'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Accept-Language': this.$store.state.userState.culture,
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })
@@ -260,6 +261,7 @@ export default class DynamicFormComponent extends Vue {
                 method: 'POST',
                 headers: {
                     'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Accept-Language': this.$store.state.userState.culture,
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })
@@ -289,6 +291,7 @@ export default class DynamicFormComponent extends Vue {
                     method: 'GET',
                     headers: {
                         'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                        'Accept-Language': this.$store.state.userState.culture,
                         'Authorization': `bearer ${this.$store.state.userState.token}`
                     }
                 })
@@ -315,6 +318,7 @@ export default class DynamicFormComponent extends Vue {
                     method: 'GET',
                     headers: {
                         'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                        'Accept-Language': this.$store.state.userState.culture,
                         'Authorization': `bearer ${this.$store.state.userState.token}`
                     }
                 })
@@ -411,6 +415,7 @@ export default class DynamicFormComponent extends Vue {
                 method: 'GET',
                 headers: {
                     'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Accept-Language': this.$store.state.userState.culture,
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })
@@ -435,6 +440,7 @@ export default class DynamicFormComponent extends Vue {
                 method: 'GET',
                 headers: {
                     'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Accept-Language': this.$store.state.userState.culture,
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })
@@ -455,6 +461,7 @@ export default class DynamicFormComponent extends Vue {
                 method: 'GET',
                 headers: {
                     'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Accept-Language': this.$store.state.userState.culture,
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })

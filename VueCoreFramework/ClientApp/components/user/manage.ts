@@ -173,6 +173,7 @@ export default class ManageUserComponent extends Vue {
             {
                 headers: {
                     'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Accept-Language': this.$store.state.userState.culture,
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })
@@ -194,6 +195,7 @@ export default class ManageUserComponent extends Vue {
             {
                 headers: {
                     'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Accept-Language': this.$store.state.userState.culture,
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })
@@ -221,7 +223,8 @@ export default class ManageUserComponent extends Vue {
         fetch('/api/Manage/GetCultures',
             {
                 headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`
+                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Accept-Language': this.$store.state.userState.culture
                 }
             })
             .then(response => response.json() as Promise<string[]>)
@@ -273,6 +276,7 @@ export default class ManageUserComponent extends Vue {
                 method: 'GET',
                 headers: {
                     'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Accept-Language': this.$store.state.userState.culture,
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })
@@ -307,6 +311,7 @@ export default class ManageUserComponent extends Vue {
                 method: 'POST',
                 headers: {
                     'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Accept-Language': this.$store.state.userState.culture,
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
             })
@@ -341,6 +346,7 @@ export default class ManageUserComponent extends Vue {
                 method: 'POST',
                 headers: {
                     'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Accept-Language': this.$store.state.userState.culture,
                     'Content-Type': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 }
@@ -374,6 +380,7 @@ export default class ManageUserComponent extends Vue {
                 method: 'POST',
                 headers: {
                     'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Accept-Language': this.$store.state.userState.culture,
                     'Content-Type': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 },
@@ -407,6 +414,7 @@ export default class ManageUserComponent extends Vue {
                 method: 'POST',
                 headers: {
                     'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Accept-Language': this.$store.state.userState.culture,
                     'Content-Type': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 },
@@ -447,6 +455,7 @@ export default class ManageUserComponent extends Vue {
                 method: 'POST',
                 headers: {
                     'Accept': `application/json;v=${this.$store.state.apiVer}`,
+                    'Accept-Language': this.$store.state.userState.culture,
                     'Content-Type': `application/json;v=${this.$store.state.apiVer}`,
                     'Authorization': `bearer ${this.$store.state.userState.token}`
                 },

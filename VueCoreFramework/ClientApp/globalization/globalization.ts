@@ -9,7 +9,8 @@ export function setCulture(culture: string) {
         {
             method: 'GET',
             headers: {
-                'Accept': `application/json;v=${store.state.apiVer}`
+                'Accept': `application/json;v=${store.state.apiVer}`,
+                'Accept-Language': culture
             }
         })
         .then(response => response.json())

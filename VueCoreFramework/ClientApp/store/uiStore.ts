@@ -271,12 +271,13 @@ function addMenuItem(menu: MenuItem, router: VueRouter, data: any, dataClass: st
  * @param {VueRouter} router The SPA framework's VueRouter instance.
  * @param {string} apiVer The current API version.
  */
-export function getChildItems(router: VueRouter, apiVer: string): Promise<void> {
+export function getChildItems(router: VueRouter, apiVer: string, culture: string): Promise<void> {
     return fetch('/api/Data/GetChildTypes',
         {
             method: 'GET',
             headers: {
-                'Accept': `application/json;v=${apiVer}`
+                'Accept': `application/json;v=${apiVer}`,
+                'Accept-Language': culture
             }
         })
         .then(response => {
@@ -339,12 +340,13 @@ export function getChildItems(router: VueRouter, apiVer: string): Promise<void> 
  * @param {string} apiVer The current API version.
  * @param {MenuItem} menu The top-level MenuItem under which all data types will be added.
  */
-export function getMenuItems(router: VueRouter, apiVer: string, menu: MenuItem): Promise<void> {
+export function getMenuItems(router: VueRouter, apiVer: string, culture: string, menu: MenuItem): Promise<void> {
     return fetch('/api/Data/GetTypes',
         {
             method: 'GET',
             headers: {
-                'Accept': `application/json;v=${apiVer}`
+                'Accept': `application/json;v=${apiVer}`,
+                'Accept-Language': culture
             }
         })
         .then(response => {
