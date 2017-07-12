@@ -363,47 +363,39 @@ export default class DynamicFormComponent extends Vue {
             .then(data => {
                 this.model = { dataType: this.$route.name };
                 this.schema = { fields: [] };
-                if (data.error) {
-                    this.errorMessage = data.error;
-                    this.activity = false;
-                } else {
-                    this.repository.getFieldDefinitions(this.$route.fullPath)
-                        .then(defData => {
-                            this.vmDefinition = defData;
-                            let groups = this.vmDefinition.filter(v => v.groupName !== undefined && v.groupName !== null).map(v => v.groupName);
-                            if (groups.length) {
-                                this.schema.groups = [];
-                                for (var i = 0; i < groups.length; i++) {
-                                    this.schema.groups[i] = {
-                                        legend: groups[i],
-                                        fields: []
-                                    };
-                                }
+                this.repository.getFieldDefinitions(this.$route.fullPath)
+                    .then(defData => {
+                        this.vmDefinition = defData;
+                        let groups = this.vmDefinition.filter(v => v.groupName !== undefined && v.groupName !== null).map(v => v.groupName);
+                        if (groups.length) {
+                            this.schema.groups = [];
+                            for (var i = 0; i < groups.length; i++) {
+                                this.schema.groups[i] = {
+                                    legend: groups[i],
+                                    fields: []
+                                };
                             }
-                            this.vmDefinition.forEach(field => {
-                                this.model[field.model] = field.default || null;
-                            });
-                            for (var prop in data.data) {
-                                this.model[prop] = data.data[prop];
-                            }
-                            this.vmDefinition.forEach(field => {
-                                this.addFieldToSchema(field);
-                            });
-                            if (this.operation === 'view') {
-                                this.schema.fields.forEach(f => f.disabled = true);
-                            }
-                            this.errorMessage = '';
-                            this.activity = false;
-                        })
-                        .catch(error => {
-                            this.errorMessage = "A problem occurred while updating the data.";
-                            this.activity = false;
-                            ErrorMsg.logError("dynamic-form.updateForm", new Error(error));
+                        }
+                        this.vmDefinition.forEach(field => {
+                            this.model[field.model] = field.default || null;
                         });
-                }
+                        for (var prop in data) {
+                            this.model[prop] = data[prop];
+                        }
+                        this.vmDefinition.forEach(field => {
+                            this.addFieldToSchema(field);
+                        });
+                        if (this.operation === 'view') {
+                            this.schema.fields.forEach(f => f.disabled = true);
+                        }
+                        this.activity = false;
+                    });
             })
             .catch(error => {
-                this.errorMessage = "A problem occurred while updating the data.";
+                this.errorMessage = "A problem occurred while updating the data. ";
+                if (error && error.message && error.message.startsWith("CODE:")) {
+                    this.errorMessage += error.message.replace('CODE:', '');
+                }
                 this.activity = false;
                 ErrorMsg.logError("dynamic-form.updateForm", new Error(error));
             });

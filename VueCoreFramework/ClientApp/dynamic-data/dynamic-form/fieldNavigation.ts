@@ -50,17 +50,15 @@ export default {
                 this.childRepository.add(this.$route.fullPath, this.schema.inverseType, this.model[this.model.primaryKeyProperty])
                     .then(data => {
                         this.activity = false;
-                        if (data.error) {
-                            this.activity = false;
-                            this.errors.push(data.error);
-                            this.$emit("validated", this.errors.length === 0, this.errors, this);
-                        } else {
-                            this.$router.push({ name: this.schema.inputType, params: { operation: 'add', id: data.data[data.data.primaryKeyProperty] } });
-                        }
+                        this.$router.push({ name: this.schema.inputType, params: { operation: 'add', id: data[data.primaryKeyProperty] } });
                     })
                     .catch(error => {
                         this.activity = false;
-                        this.errors.push("A problem occurred. The new item could not be added.");
+                        let msg = 'A problem occurred. The new item could not be added. ';
+                        if (error && error.message && error.message.startsWith("CODE:")) {
+                            msg += error.message.replace('CODE:', '');
+                        }
+                        this.errors.push(msg);
                         this.$emit("validated", this.errors.length === 0, this.errors, this);
                         ErrorMsg.logError("fieldNavigation.onNew", new Error(error));
                     });

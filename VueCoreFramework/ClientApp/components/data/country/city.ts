@@ -37,22 +37,21 @@ export default class DynamicFormComponent extends Vue {
         this.errorMessage = '';
         this.repository.find(this.$route.fullPath, this.id)
             .then(data => {
-                if (data.error) {
-                    this.errorMessage = data.error;
-                } else {
-                    if (data.data['isCapitol'] !== this.isCapitol) {
-                        data.data['isCapitol'] = this.isCapitol;
-                        this.repository.update(this.$route.fullPath, data.data)
-                            .then(data => {
-                                if (data.error) {
-                                    this.errorMessage = data.error;
-                                }
-                            });
-                    }
+                if (data['isCapitol'] !== this.isCapitol) {
+                    data['isCapitol'] = this.isCapitol;
+                    this.repository.update(this.$route.fullPath, data)
+                        .then(data => {
+                            if (data.error) {
+                                this.errorMessage = data.error;
+                            }
+                        });
                 }
             })
             .catch(error => {
                 this.errorMessage = "A problem has occurred.";
+                if (error && error.message && error.message.startsWith("CODE:")) {
+                    this.errorMessage += error.message.replace('CODE:', '');
+                }
                 ErrorMsg.logError("city.onSetCapitol", new Error(error));
             });
     }
@@ -77,17 +76,16 @@ export default class DynamicFormComponent extends Vue {
         this.updateTimeout = 0;
         this.repository.getAll(this.$route.fullPath)
             .then(data => {
-                if (data['error']) {
-                    this.errorMessage = data['error'];
-                } else {
-                    let capitol = data.find(v => v['isCapitol']);
-                    this.isCapitol = capitol && capitol[capitol.primaryKeyProperty] === this.id;
-                    this.otherCapitol = capitol !== undefined && !this.isCapitol;
-                }
+                let capitol = data.find(v => v['isCapitol']);
+                this.isCapitol = capitol && capitol[capitol.primaryKeyProperty] === this.id;
+                this.otherCapitol = capitol !== undefined && !this.isCapitol;
             })
             .catch(error => {
                 this.otherCapitol = true; // Without reliable information, prevent setting a new capitol.
                 this.errorMessage = "A problem has occurred.";
+                if (error && error.message && error.message.startsWith("CODE:")) {
+                    this.errorMessage += error.message.replace('CODE:', '');
+                }
                 ErrorMsg.logError("city.updateForm", new Error(error));
             });
     }

@@ -341,21 +341,25 @@ namespace VueCoreFramework.Data
 
         /// <summary>
         /// Finds an entity with the given primary key value and returns a ViewModel for that entity.
-        /// If no entity is found, an empty ViewModel is returned (not null).
+        /// If no entity is found, null is returned.
         /// </summary>
         /// <param name="id">The primary key of the entity to be found, as a string.</param>
         /// <param name="culture">A string indicating the current culture.</param>
-        /// <returns>A ViewModel representing the item found, or an empty ViewModel if none is found.</returns>
+        /// <returns>A ViewModel representing the item found, or null if none is found.</returns>
         public async Task<IDictionary<string, object>> FindAsync(string id, string culture)
         {
             var key = GetPrimaryKeyFromString(id);
             var item = await items.FindAsync(key);
+            if (item == null)
+            {
+                return null;
+            }
             return await GetViewModelAsync(item, culture);
         }
 
         /// <summary>
         /// Finds an entity with the given primary key value and returns a ViewModel for that entity.
-        /// If no entity is found, an empty ViewModel is returned (not null).
+        /// If no entity is found, null is returned.
         /// </summary>
         /// <param name="id">The primary key of the entity to be found, as a string.</param>
         /// <returns>A ViewModel representing the item found, or an empty ViewModel if none is found.</returns>

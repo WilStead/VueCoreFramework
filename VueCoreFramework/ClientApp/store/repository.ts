@@ -139,7 +139,7 @@ export class Repository {
      * @param {string} id The primary key of the entity to be copied.
      * @returns {OperationReply<DataItem>} A response object containing any error which occurred, or the new copy.
      */
-    duplicate(returnPath: string, id: string): Promise<OperationReply<DataItem>> {
+    duplicate(returnPath: string, id: string): Promise<DataItem> {
         if (id === undefined || id === null || id === '') {
             return Promise.reject("The item id was missing from your request.");
         }
@@ -153,19 +153,25 @@ export class Repository {
                 }
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<OperationReply<DataItem>>)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
+            .then(response => response.json() as Promise<DataItem>)
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     }
 
     /**
-     * Called to find an entity with the given primary key value, or an empty ViewModel (not null).
+     * Called to find an entity with the given primary key value, or null.
      * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
      * @param {string} id The primary key of the entity to be found.
      * @returns {OperationReply<DataItem>} A response object containing any error which occurred, or the item.
      */
-    find(returnPath: string, id: string): Promise<OperationReply<DataItem>> {
+    find(returnPath: string, id: string): Promise<DataItem> {
         if (id === undefined || id === null || id === '') {
             return Promise.reject("The item id was missing from your request.");
         }
@@ -179,9 +185,19 @@ export class Repository {
                 }
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<OperationReply<DataItem>>)
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error('CODE:No item with this ID was found.');
+                    } else {
+                        throw new Error(`CODE:${response.statusText}`);
+                    }
+                }
+                return response;
+            })
+            .then(response => response.json() as Promise<DataItem>)
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     }
 
@@ -202,9 +218,15 @@ export class Repository {
                 }
             })
             .then(response => checkResponse(response, returnPath))
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
             .then(response => response.json() as Promise<Array<DataItem>>)
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     }
 
@@ -226,15 +248,15 @@ export class Repository {
                 }
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<Array<string>>)
-            .then(data => {
-                if (data['error']) {
-                    throw new Error(data['error']);
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
                 }
-                return data;
+                return response;
             })
+            .then(response => response.json() as Promise<Array<string>>)
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     }
 
