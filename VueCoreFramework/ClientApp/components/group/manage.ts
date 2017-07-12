@@ -155,19 +155,30 @@ export default class ManageGroupComponent extends Vue {
                 }
             })
             .then(response => checkResponse(response, this.$route.fullPath))
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error('404');
+                    } else {
+                        throw new Error(`CODE:${response.statusText}`);
+                    }
+                }
+                return response;
+            })
             .then(response => response.json() as Promise<Group>)
             .then(data => {
-                if (data['error']) {
-                    this.errorMessage = data['error'];
-                } else if (data['response']) {
-                    this.errorMessage = data['response'];
-                } else {
-                    this.foundGroup = data;
-                }
+                this.foundGroup = data;
                 this.activity = false;
             })
             .catch(error => {
-                this.errorMessage = 'A problem occurred.';
+                if (error && error.message && error.message === '404') {
+                    this.errorMessage = 'No results.';
+                } else {
+                    this.errorMessage = 'A problem occurred. ';
+                    if (error && error.message && error.message.startsWith("CODE:")) {
+                        this.errorMessage += error.message.replace('CODE:', '');
+                    }
+                }
                 this.activity = false;
                 ErrorMsg.logError('group/manage.onGroupSearch', error);
             });

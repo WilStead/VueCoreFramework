@@ -92,56 +92,60 @@ namespace VueCoreFramework.Controllers
         /// Called to get information about the given group.
         /// </summary>
         /// <param name="group">The name of the group to retrieve.</param>
-        /// <returns>
-        /// An error if there is a problem; a message indicating no results if there is no match; or
-        /// a <see cref="GroupViewModel"/>.
-        /// </returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="404">Not found.</response>
+        /// <response code="200">A GroupViewModel representing the found item.</response>
         [HttpPost("{group}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
         public async Task<IActionResult> GetGroup(string group)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var roles = await _userManager.GetRolesAsync(user);
             if (group == CustomRoles.SiteAdmin)
             {
                 if (roles.Contains(CustomRoles.SiteAdmin))
                 {
-                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminSingularError] });
+                    return BadRequest(_errorLocalizer[ErrorMessages.SiteAdminSingularError]);
                 }
                 else
                 {
-                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminOnlyError] });
+                    return StatusCode(403, _errorLocalizer[ErrorMessages.SiteAdminOnlyError]);
                 }
             }
             else if (group == CustomRoles.Admin)
             {
                 if (!roles.Contains(CustomRoles.SiteAdmin))
                 {
-                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminOnlyError] });
+                    return StatusCode(403, _errorLocalizer[ErrorMessages.SiteAdminOnlyError]);
                 }
             }
             else if (group == CustomRoles.AllUsers)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.AllUsersRequiredError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.AllUsersRequiredError]);
             }
             // Only Admins can retrieve information about a group by name.
             else if (!roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.AdminOnlyError]);
             }
 
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return Json(new { response = _responseLocalizer[ResponseMessages.NoResults] });
+                return NotFound();
             }
             var managerId = _context.UserClaims.FirstOrDefault(c =>
                 c.ClaimType == CustomClaimTypes.PermissionGroupManager && c.ClaimValue == groupRole.Name)?
@@ -240,14 +244,14 @@ namespace VueCoreFramework.Controllers
                 }
                 else
                 {
-                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminOnlyError] });
+                    return StatusCode(403, _errorLocalizer[ErrorMessages.SiteAdminOnlyError]);
                 }
             }
             else if (group == CustomRoles.Admin)
             {
                 if (!roles.Contains(CustomRoles.SiteAdmin))
                 {
-                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminOnlyError] });
+                    return StatusCode(403, _errorLocalizer[ErrorMessages.SiteAdminOnlyError]);
                 }
             }
             else if (group == CustomRoles.AllUsers)
@@ -363,7 +367,7 @@ namespace VueCoreFramework.Controllers
                 }
                 else
                 {
-                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminOnlyError] });
+                    return StatusCode(403, _errorLocalizer[ErrorMessages.SiteAdminOnlyError]);
                 }
             }
             else if (group == CustomRoles.Admin)
@@ -425,14 +429,14 @@ namespace VueCoreFramework.Controllers
                 }
                 else
                 {
-                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminOnlyError] });
+                    return StatusCode(403, _errorLocalizer[ErrorMessages.SiteAdminOnlyError]);
                 }
             }
             else if (group == CustomRoles.Admin)
             {
                 if (!roles.Contains(CustomRoles.SiteAdmin))
                 {
-                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminOnlyError] });
+                    return StatusCode(403, _errorLocalizer[ErrorMessages.SiteAdminOnlyError]);
                 }
             }
             else if (group == CustomRoles.AllUsers)
@@ -602,7 +606,7 @@ namespace VueCoreFramework.Controllers
             var roles = await _userManager.GetRolesAsync(user);
             if (!roles.Contains(CustomRoles.SiteAdmin))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminOnlyError] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.SiteAdminOnlyError]);
             }
 
             var targetUser = await _userManager.FindByNameAsync(username);

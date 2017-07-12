@@ -311,42 +311,42 @@ export default class DynamicDataTable extends Vue {
         this.loading = true;
         if (this.tableType === 'collection') {
             this.repository.removeRangeFromParent(this.$route.fullPath, this.childProp, this.selected.map(i => i[i.primaryKeyProperty]))
-                .then(data => {
-                    if (data.error) {
-                        this.$emit("onError", data.error);
-                    } else {
-                        for (var i = 0; i < this.selected.length; i++) {
-                            this.items.splice(this.items.findIndex(d =>
-                                d[d.primaryKeyProperty] == this.selected[i][this.selected[i].primaryKeyProperty]),
-                                1);
-                        }
-                        this.selected = [];
+                .then(response => {
+                    for (var i = 0; i < this.selected.length; i++) {
+                        this.items.splice(this.items.findIndex(d =>
+                            d[d.primaryKeyProperty] == this.selected[i][this.selected[i].primaryKeyProperty]),
+                            1);
                     }
+                    this.selected = [];
                     this.loading = false;
                 })
                 .catch(error => {
                     this.loading = false;
-                    this.$emit("onError", "A problem occurred. The item(s) could not be removed.");
+                    let msg = 'A problem occurred. The item(s) could not be removed. ';
+                    if (error && error.message && error.message.startsWith("CODE:")) {
+                        msg += error.message.replace('CODE:', '');
+                    }
+                    this.$emit("onError", msg);
                     ErrorMsg.logError("dynamic-data-table.onDelete", new Error(error));
                 });
         } else {
             this.repository.removeRange(this.$route.fullPath, this.selected.map(i => i[i.primaryKeyProperty]))
-                .then(data => {
-                    if (data.error) {
-                        this.$emit("onError", data.error);
-                    } else {
-                        for (var i = 0; i < this.selected.length; i++) {
-                            this.items.splice(this.items.findIndex(d =>
-                                d[d.primaryKeyProperty] == this.selected[i][this.selected[i].primaryKeyProperty]),
-                                1);
-                        }
-                        this.selected = [];
+                .then(response => {
+                    for (var i = 0; i < this.selected.length; i++) {
+                        this.items.splice(this.items.findIndex(d =>
+                            d[d.primaryKeyProperty] == this.selected[i][this.selected[i].primaryKeyProperty]),
+                            1);
                     }
+                    this.selected = [];
                     this.loading = false;
                 })
                 .catch(error => {
                     this.loading = false;
-                    this.$emit("onError", "A problem occurred. The item(s) could not be removed.");
+                    let msg = 'A problem occurred. The item(s) could not be removed. ';
+                    if (error && error.message && error.message.startsWith("CODE:")) {
+                        msg += error.message.replace('CODE:', '');
+                    }
+                    this.$emit("onError", msg);
                     ErrorMsg.logError("dynamic-data-table.onDelete", new Error(error));
                 });
         }

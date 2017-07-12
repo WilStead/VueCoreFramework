@@ -39,12 +39,7 @@ export default class DynamicFormComponent extends Vue {
             .then(data => {
                 if (data['isCapitol'] !== this.isCapitol) {
                     data['isCapitol'] = this.isCapitol;
-                    this.repository.update(this.$route.fullPath, data)
-                        .then(data => {
-                            if (data.error) {
-                                this.errorMessage = data.error;
-                            }
-                        });
+                    this.repository.update(this.$route.fullPath, data);
                 }
             })
             .catch(error => {

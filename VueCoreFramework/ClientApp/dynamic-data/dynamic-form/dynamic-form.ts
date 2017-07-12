@@ -197,15 +197,14 @@ export default class DynamicFormComponent extends Vue {
         }
         this.repository.update(this.$route.fullPath, d)
             .then(data => {
-                if (data.error) {
-                    this.errorMessage = data.error;
-                } else {
-                    this.$router.go(-1);
-                }
+                this.$router.go(-1);
                 this.activity = false;
             })
             .catch(error => {
                 this.errorMessage = "A problem occurred. The item could not be updated.";
+                if (error && error.message && error.message.startsWith("CODE:")) {
+                    this.errorMessage += error.message.replace('CODE:', '');
+                }
                 this.activity = false;
                 ErrorMsg.logError("dynamic-form.onSave", new Error(error));
             });

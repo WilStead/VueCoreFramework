@@ -73,17 +73,15 @@ export default {
             this.activity = true;
             this.repository.replaceChildWithNew(this.$route.fullPath, this.model[this.model.primaryKeyProperty], this.schema.model)
                 .then(data => {
-                    if (data.error) {
-                        this.activity = false;
-                        this.errors.push(data.error);
-                        this.$emit("validated", this.errors.length === 0, this.errors, this);
-                    } else {
-                        this.$router.push({ name: this.schema.inputType, params: { operation: 'add', id: data.data[data.data.primaryKeyProperty] } });
-                    }
+                    this.$router.push({ name: this.schema.inputType, params: { operation: 'add', id: data[data.primaryKeyProperty] } });
                 })
                 .catch(error => {
                     this.activity = false;
-                    this.errors.push("A problem occurred. The item could not be added.");
+                    let msg = 'A problem occurred. The item could not be added. ';
+                    if (error && error.message && error.message.startsWith("CODE:")) {
+                        msg += error.message.replace('CODE:', '');
+                    }
+                    this.errors.push(msg);
                     this.$emit("validated", this.errors.length === 0, this.errors, this);
                     ErrorMsg.logError("fieldNavigation.onReplace", new Error(error));
                 });
@@ -103,18 +101,17 @@ export default {
                     this.model[this.model.primaryKeyProperty],
                     this.selected[0][this.selected[0].primaryKeyProperty],
                     this.schema.inverseType)
-                    .then(data => {
-                        if (data.error) {
-                            this.selectErrorMessage = data.error;
-                        } else {
-                            this.selectErrorMessage = '';
-                            this.selectDialogShown = false;
-                        }
+                    .then(response => {
+                        this.selectErrorMessage = '';
+                        this.selectDialogShown = false;
                         this.selectActivity = false;
                     })
                     .catch(error => {
                         this.selectActivity = false;
-                        this.selectErrorMessage = "A problem occurred. The item could not be updated.";
+                        this.selectErrorMessage = "A problem occurred. The item could not be updated. ";
+                        if (error && error.message && error.message.startsWith("CODE:")) {
+                            this.selectErrorMessage += error.message.replace('CODE:', '');
+                        }
                         ErrorMsg.logError("fieldNavigation.onSelect", new Error(error));
                     });
             } else {

@@ -637,10 +637,10 @@ export class Repository {
     /**
      * Called to remove a collection of entities from the database.
      * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
-     * @param {Array<string>} ids The primary keys of the entities to remove.
-     * @returns {ApiResponseViewModel} A response object containing any error which occurred.
+     * @param {string[]} ids The primary keys of the entities to remove.
+     * @returns {Response} The response.
      */
-    removeRange(returnPath: string, ids: Array<string>): Promise<ApiResponseViewModel> {
+    removeRange(returnPath: string, ids: string[]): Promise<Response> {
         if (ids === undefined || ids === null || !ids.length) {
             throw new Error("The item ids were missing from your request.");
         }
@@ -656,9 +656,14 @@ export class Repository {
                 body: JSON.stringify(ids)
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     }
 
@@ -668,10 +673,10 @@ export class Repository {
      * entirely.
      * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
      * @param {string} childProp The navigation property of the relationship being severed.
-     * @param {Array<string>} ids The primary keys of child entities whose relationships are being severed.
-     * @returns {ApiResponseViewModel} A response object containing any error which occurred.
+     * @param {string[]} ids The primary keys of child entities whose relationships are being severed.
+     * @returns {Response} The response.
      */
-    removeRangeFromParent(returnPath: string, childProp: string, ids: Array<string>): Promise<ApiResponseViewModel> {
+    removeRangeFromParent(returnPath: string, childProp: string, ids: string[]): Promise<Response> {
         return fetch(`/api/Data/${this.dataType}/RemoveRangeFromParent/${childProp}`,
             {
                 method: 'POST',
@@ -684,9 +689,14 @@ export class Repository {
                 body: JSON.stringify(ids)
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     }
 
@@ -698,9 +708,9 @@ export class Repository {
      * @param {string} parentId The primary key of the parent entity in the relationship.
      * @param {string} newChildId The primary key of the new child entity entering into the relationship.
      * @param {string} childProp The navigation property of the relationship on the child entity.
-     * @returns {ApiResponseViewModel} A response object containing any error which occurred.
+     * @returns {Response} The response.
      */
-    replaceChild(returnPath: string, parentId: string, newChildId: string, childProp: string): Promise<ApiResponseViewModel> {
+    replaceChild(returnPath: string, parentId: string, newChildId: string, childProp: string): Promise<Response> {
         return fetch(`/api/Data/${this.dataType}/ReplaceChild/${parentId}/${newChildId}/${childProp}`,
             {
                 method: 'POST',
@@ -712,9 +722,14 @@ export class Repository {
                 }
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     }
 
@@ -725,9 +740,9 @@ export class Repository {
      * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
      * @param {string} parentId The primary key of the parent entity in the relationship.
      * @param {string} childProp The navigation property of the relationship on the child entity.
-     * @returns {ApiResponseViewModel} A response object containing any error which occurred.
+     * @returns {DataItem} The new item.
      */
-    replaceChildWithNew(returnPath: string, parentId: string, childProp: string): Promise<OperationReply<DataItem>> {
+    replaceChildWithNew(returnPath: string, parentId: string, childProp: string): Promise<DataItem> {
         return fetch(`/api/Data/${this.dataType}/ReplaceChildWithNew/${parentId}/${childProp}?culture=${store.state.userState.culture}`,
             {
                 method: 'POST',
@@ -739,9 +754,15 @@ export class Repository {
                 }
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<OperationReply<DataItem>>)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
+            .then(response => response.json() as Promise<DataItem>)
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     }
 
@@ -749,9 +770,9 @@ export class Repository {
      * Called to update an entity in the database.
      * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
      * @param {DataItem} vm The item to update.
-     * @returns {OperationReply<DataItem>} A response object containing any error which occurred, or the updated item.
+     * @returns {DataItem} A response object containing any error which occurred, or the updated item.
      */
-    update(returnPath: string, vm: DataItem): Promise<OperationReply<DataItem>> {
+    update(returnPath: string, vm: DataItem): Promise<DataItem> {
         return fetch(`/api/Data/${this.dataType}/Update?culture=${store.state.userState.culture}`,
             {
                 method: 'POST',
@@ -764,9 +785,15 @@ export class Repository {
                 body: JSON.stringify(vm)
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<OperationReply<DataItem>>)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
+            .then(response => response.json() as Promise<DataItem>)
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     }
 }
