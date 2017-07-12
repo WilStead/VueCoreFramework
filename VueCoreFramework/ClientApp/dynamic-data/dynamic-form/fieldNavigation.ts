@@ -26,18 +26,18 @@ export default {
             this.errors.splice(0);
             this.activity = true;
             this.repository.removeFromParent(this.$route.fullPath, this.model[this.model.primaryKeyProperty], this.schema.model)
-                .then(data => {
-                    if (data.error) {
-                        this.errors.push(data.error);
-                    } else {
-                        this.errors.push("navigation success");
-                    }
+                .then(response => {
+                    this.errors.push("navigation success");
                     this.activity = false;
                     this.$emit("validated", this.errors.length === 0, this.errors, this);
                 })
                 .catch(error => {
                     this.activity = false;
-                    this.errors.push("A problem occurred. The item could not be removed.");
+                    let msg = 'A problem occurred. The item could not be removed. ';
+                    if (error && error.message && error.message.startsWith("CODE:")) {
+                        msg += error.message.replace('CODE:', '');
+                    }
+                    this.errors.push(msg);
                     this.$emit("validated", this.errors.length === 0, this.errors, this);
                     ErrorMsg.logError("fieldNavigation.onDelete", new Error(error));
                 });
@@ -133,16 +133,15 @@ export default {
             this.repository.getChildId(this.$route.fullPath, this.model[this.model.primaryKeyProperty], this.schema.model)
                 .then(data => {
                     this.activity = false;
-                    if (data.error) {
-                        this.errors.push(data.error);
-                        this.$emit("validated", this.errors.length === 0, this.errors, this);
-                    } else {
-                        this.$router.push({ name: this.schema.inputType, params: { operation: 'view', id: data.response } });
-                    }
+                    this.$router.push({ name: this.schema.inputType, params: { operation: 'view', id: data } });
                 })
                 .catch(error => {
                     this.activity = false;
-                    this.errors.push("A problem occurred. The item could not be accessed.");
+                    let msg = 'A problem occurred. The item could not be accessed. ';
+                    if (error && error.message && error.message.startsWith("CODE:")) {
+                        msg += error.message.replace('CODE:', '');
+                    }
+                    this.errors.push(msg);
                     this.$emit("validated", this.errors.length === 0, this.errors, this);
                     ErrorMsg.logError("fieldNavigation.onView", new Error(error));
                 });

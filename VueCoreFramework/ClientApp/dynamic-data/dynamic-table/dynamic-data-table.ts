@@ -227,14 +227,15 @@ export default class DynamicDataTable extends Vue {
                             this.repository.getPage(this.$route.fullPath, this.internalSearch, sortBy, descending, page, rowsPerPage, childIds)
                                 .then(data => {
                                     this.loading = false;
-                                    resolve({
-                                        pageItems: data.pageItems,
-                                        totalItems: data.totalItems
-                                    });
+                                    resolve(data);
                                 });
                         })
                         .catch(error => {
                             this.loading = false;
+                            let msg = error;
+                            if (error && error.message && error.message.startsWith("CODE:")) {
+                                msg = error.message.replace('CODE:', '');
+                            }
                             ErrorMsg.logError("dynamic-data-table.getData", new Error(error));
                             reject("A problem occurred while loading the data.");
                         });
@@ -242,13 +243,14 @@ export default class DynamicDataTable extends Vue {
                     this.parentRepository.getChildPage(this.$route.fullPath, this.parentId, this.parentProp, this.internalSearch, sortBy, descending, page, rowsPerPage)
                         .then(data => {
                             this.loading = false;
-                            resolve({
-                                pageItems: data.pageItems,
-                                totalItems: data.totalItems
-                            });
+                            resolve(data);
                         })
                         .catch(error => {
                             this.loading = false;
+                            let msg = error;
+                            if (error && error.message && error.message.startsWith("CODE:")) {
+                                msg = error.message.replace('CODE:', '');
+                            }
                             ErrorMsg.logError("dynamic-data-table.getData", new Error(error));
                             reject("A problem occurred while loading the data.");
                         });
@@ -257,13 +259,14 @@ export default class DynamicDataTable extends Vue {
                 this.repository.getPage(this.$route.fullPath, this.internalSearch, sortBy, descending, page, rowsPerPage)
                     .then(data => {
                         this.loading = false;
-                        resolve({
-                            pageItems: data.pageItems,
-                            totalItems: data.totalItems
-                        });
+                        resolve(data);
                     })
                     .catch(error => {
                         this.loading = false;
+                        let msg = error;
+                        if (error && error.message && error.message.startsWith("CODE:")) {
+                            msg = error.message.replace('CODE:', '');
+                        }
                         ErrorMsg.logError("dynamic-data-table.getData", new Error(error));
                         reject("A problem occurred while loading the data.");
                     });
@@ -355,42 +358,40 @@ export default class DynamicDataTable extends Vue {
         this.cancelDelete(id); // removes from asking
         if (this.tableType === 'collection') {
             this.repository.removeFromParent(this.$route.fullPath, id, this.childProp)
-                .then(data => {
-                    if (data.error) {
-                        this.$emit("onError", data.error);
-                    }
-                    else {
-                        this.items.splice(this.items.findIndex(d => d[d.primaryKeyProperty] == id), 1);
-                        let index = this.deletePendingItems.indexOf(id);
-                        if (index !== -1) {
-                            this.deletePendingItems.splice(index, 1);
-                        }
+                .then(response => {
+                    this.items.splice(this.items.findIndex(d => d[d.primaryKeyProperty] == id), 1);
+                    let index = this.deletePendingItems.indexOf(id);
+                    if (index !== -1) {
+                        this.deletePendingItems.splice(index, 1);
                     }
                     this.loading = false;
                 })
                 .catch(error => {
                     this.loading = false;
-                    this.$emit("onError", "A problem occurred. The item could not be removed.");
+                    let msg = 'A problem occurred. The item could not be removed. ';
+                    if (error && error.message && error.message.startsWith("CODE:")) {
+                        msg += error.message.replace('CODE:', '');
+                    }
+                    this.$emit("onError", msg);
                     ErrorMsg.logError("dynamic-data-table.onDeleteItem", new Error(error));
                 });
         } else {
             this.repository.remove(this.$route.fullPath, id)
-                .then(data => {
-                    if (data.error) {
-                        this.$emit("onError", data.error);
-                    }
-                    else {
-                        this.items.splice(this.items.findIndex(d => d[d.primaryKeyProperty] == id), 1);
-                        let index = this.deletePendingItems.indexOf(id);
-                        if (index !== -1) {
-                            this.deletePendingItems.splice(index, 1);
-                        }
+                .then(response => {
+                    this.items.splice(this.items.findIndex(d => d[d.primaryKeyProperty] == id), 1);
+                    let index = this.deletePendingItems.indexOf(id);
+                    if (index !== -1) {
+                        this.deletePendingItems.splice(index, 1);
                     }
                     this.loading = false;
                 })
                 .catch(error => {
                     this.loading = false;
-                    this.$emit("onError", "A problem occurred. The item could not be removed.");
+                    let msg = 'A problem occurred. The item could not be removed. ';
+                    if (error && error.message && error.message.startsWith("CODE:")) {
+                        msg += error.message.replace('CODE:', '');
+                    }
+                    this.$emit("onError", msg);
                     ErrorMsg.logError("dynamic-data-table.onDeleteItem", new Error(error));
                 });
         }
@@ -535,7 +536,11 @@ export default class DynamicDataTable extends Vue {
             })
             .catch(error => {
                 this.loading = false;
-                this.$emit("onError", "A problem occurred while updating the data.");
+                let msg = 'A problem occurred while updating the data. ';
+                if (error && error.message && error.message.startsWith("CODE:")) {
+                    msg += error.message.replace('CODE:', '');
+                }
+                this.$emit("onError", msg);
                 ErrorMsg.logError("dynamic-data-table.updateTable", error);
             });
     }

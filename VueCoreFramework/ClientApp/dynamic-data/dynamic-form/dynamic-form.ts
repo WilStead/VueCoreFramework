@@ -121,19 +121,17 @@ export default class DynamicFormComponent extends Vue {
         this.errorMessage = '';
         if (this.operation === 'add') {
             this.repository.remove(this.$route.fullPath, this.id)
-                .then(data => {
+                .then(response => {
                     this.activity = false;
-                    if (data.error) {
-                        this.errorMessage = data.error;
-                    }
-                    else {
-                        this.$router.go(-1);
-                    }
+                    this.$router.go(-1);
                 })
                 .catch(error => {
-                    this.errorMessage = "A problem occurred. The item could not be removed.";
-                    this.activity = false;
+                    this.errorMessage = "A problem occurred. The item could not be removed. ";
+                    if (error && error.message && error.message.startsWith("CODE:")) {
+                        this.errorMessage += error.message.replace('CODE:', '');
+                    }
                     ErrorMsg.logError("dynamic-form.onCancel", new Error(error));
+                    this.activity = false;
                 });
         } else {
             this.$router.go(-1);
