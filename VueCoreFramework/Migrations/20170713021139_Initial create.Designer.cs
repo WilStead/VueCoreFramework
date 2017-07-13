@@ -9,7 +9,7 @@ using VueCoreFramework.Models;
 namespace VueCoreFramework.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20170705131515_Initial create")]
+    [Migration("20170713021139_Initial create")]
     partial class Initialcreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -164,6 +164,8 @@ namespace VueCoreFramework.Migrations
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken();
+
+                    b.Property<string>("Culture");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256);

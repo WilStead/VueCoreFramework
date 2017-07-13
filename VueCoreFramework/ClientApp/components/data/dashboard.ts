@@ -87,10 +87,9 @@ export default class DashboardComponent extends Vue {
                 }
             })
             .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
-            .then(data => {
-                if (data.error) {
-                    this.shareErrorMessage = data.error;
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
                 } else {
                     this.updateShares();
                     this.shareSuccessMessage = 'Success';
@@ -99,6 +98,9 @@ export default class DashboardComponent extends Vue {
             })
             .catch(error => {
                 this.shareErrorMessage = 'A problem occurred.';
+                if (error && error.message && error.message.startsWith('CODE:')) {
+                    this.shareErrorMessage += error.message.replace('CODE:', '');
+                }
                 ErrorMsg.logError('dynamic-table.onHide', error);
             });
     }
@@ -159,10 +161,9 @@ export default class DashboardComponent extends Vue {
                 }
             })
             .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
-            .then(data => {
-                if (data.error) {
-                    this.shareErrorMessage = data.error;
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
                 } else {
                     this.updateShares();
                     this.shareSuccessMessage = 'Success';
@@ -171,6 +172,9 @@ export default class DashboardComponent extends Vue {
             })
             .catch(error => {
                 this.shareErrorMessage = 'A problem occurred.';
+                if (error && error.message && error.message.startsWith('CODE:')) {
+                    this.shareErrorMessage += error.message.replace('CODE:', '');
+                }
                 this.shareActivity = false;
                 ErrorMsg.logError('dynamic-table.share', error);
             });
@@ -189,12 +193,15 @@ export default class DashboardComponent extends Vue {
                     }
                 })
                 .then(response => checkResponse(response, this.$route.fullPath))
-                .then(response => response.json() as Promise<ApiResponseViewModel>)
-                .then(data => {
-                    if (data['error']) {
-                        throw new Error(`There was a problem retrieving a share group suggestion: ${data['error']}`);
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            this.shareGroupSuggestion = '';
+                        } else {
+                            throw new Error(`CODE:${response.statusText}`);
+                        }
                     } else {
-                        this.shareGroupSuggestion = data.response;
+                        this.shareGroupSuggestion = response.statusText;
                     }
                 })
                 .catch(error => {
@@ -216,12 +223,15 @@ export default class DashboardComponent extends Vue {
                     }
                 })
                 .then(response => checkResponse(response, this.$route.fullPath))
-                .then(response => response.json() as Promise<ApiResponseViewModel>)
-                .then(data => {
-                    if (data['error']) {
-                        throw new Error(`There was a problem retrieving a share group suggestion: ${data['error']}`);
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            this.shareUsernameSuggestion = '';
+                        } else {
+                            throw new Error(`CODE:${response.statusText}`);
+                        }
                     } else {
-                        this.shareUsernameSuggestion = data.response;
+                        this.shareUsernameSuggestion = response.statusText;
                     }
                 })
                 .catch(error => {
@@ -241,16 +251,18 @@ export default class DashboardComponent extends Vue {
                 }
             })
             .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<Array<ShareData>>)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
+            .then(response => response.json() as Promise<ShareData[]>)
             .then(data => {
-                if (data['error']) {
-                    throw new Error(`There was a problem retrieving current shares: ${data['error']}`);
-                } else {
-                    this.shares = [];
-                    for (var i = 0; i < data.length; i++) {
-                        this.shares[i] = data[i];
-                        this.shares[i].id = i;
-                    }
+                this.shares = [];
+                for (var i = 0; i < data.length; i++) {
+                    this.shares[i] = data[i];
+                    this.shares[i].id = i;
                 }
             })
             .catch(error => {
@@ -266,13 +278,15 @@ export default class DashboardComponent extends Vue {
                 }
             })
             .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<Array<string>>)
-            .then(data => {
-                if (data['error']) {
-                    throw new Error(`There was a problem retrieving sharable group members: ${data['error']}`);
-                } else {
-                    this.groupMembers = data;
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
                 }
+                return response;
+            })
+            .then(response => response.json() as Promise<string[]>)
+            .then(data => {
+                this.groupMembers = data;
             })
             .catch(error => {
                 ErrorMsg.logError('dynamic-table.updateShares', error);
@@ -287,16 +301,18 @@ export default class DashboardComponent extends Vue {
                 }
             })
             .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<Array<string>>)
-            .then(data => {
-                if (data['error']) {
-                    this.shareGroups = [];
-                    throw new Error(`There was a problem retrieving sharable groups: ${data['error']}`);
-                } else {
-                    this.shareGroups = data;
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
                 }
+                return response;
+            })
+            .then(response => response.json() as Promise<string[]>)
+            .then(data => {
+                this.shareGroups = data;
             })
             .catch(error => {
+                this.shareGroups = [];
                 ErrorMsg.logError('dynamic-table.updateShares', error);
             });
     }

@@ -164,6 +164,8 @@ namespace VueCoreFramework.Migrations
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken();
 
+                    b.Property<string>("Culture");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256);
 

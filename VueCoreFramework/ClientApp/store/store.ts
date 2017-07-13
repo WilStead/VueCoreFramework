@@ -310,11 +310,7 @@ export const store = new Vuex.Store({
             if (state.uiState.messaging.groupChat) {
                 return messaging.getGroupMessages(returnPath, state.uiState.messaging.groupChat)
                     .then(data => {
-                        if (data['error']) {
-                            throw new Error(data['error']);
-                        } else {
-                            commit(updateMessages, data);
-                        }
+                        commit(updateMessages, data);
                     })
                     .catch(error => {
                         commit(updateMessages, []);
@@ -323,11 +319,7 @@ export const store = new Vuex.Store({
             } else if (state.uiState.messaging.proxySender) {
                 return messaging.getProxyUserMessages(returnPath, state.uiState.messaging.proxySender, state.uiState.messaging.interlocutor)
                     .then(data => {
-                        if (data['error']) {
-                            throw new Error(data['error']);
-                        } else {
-                            commit(updateMessages, data);
-                        }
+                        commit(updateMessages, data);
                     })
                     .catch(error => {
                         commit(updateMessages, []);
@@ -336,17 +328,8 @@ export const store = new Vuex.Store({
             } else if (state.uiState.messaging.interlocutor) {
                 return messaging.getUserMessages(returnPath, state.uiState.messaging.interlocutor)
                     .then(data => {
-                        if (data['error']) {
-                            throw new Error(data['error']);
-                        } else {
-                            commit(updateMessages, data);
-                            messaging.markConversationRead(returnPath, state.uiState.messaging.interlocutor)
-                                .then(data => {
-                                    if (data['error']) {
-                                        throw new Error(data['error']);
-                                    }
-                                });
-                        }
+                        commit(updateMessages, data);
+                        messaging.markConversationRead(returnPath, state.uiState.messaging.interlocutor);
                     })
                     .catch(error => {
                         commit(updateMessages, []);
@@ -355,18 +338,9 @@ export const store = new Vuex.Store({
             } else {
                 return messaging.getSystemMessages(returnPath)
                     .then(data => {
-                        if (data['error']) {
-                            throw new Error(data['error']);
-                        } else {
-                            commit(updateMessages, data);
-                            commit(updateSystemMessages, data);
-                            messaging.markSystemMessagesRead(returnPath)
-                                .then(data => {
-                                    if (data['error']) {
-                                        throw new Error(data['error']);
-                                    }
-                                });
-                        }
+                        commit(updateMessages, data);
+                        commit(updateSystemMessages, data);
+                        messaging.markSystemMessagesRead(returnPath);
                     })
                     .catch(error => {
                         commit(updateMessages, []);
@@ -382,11 +356,7 @@ export const store = new Vuex.Store({
         refreshConversations({ commit }, returnPath) {
             return messaging.getConversations(returnPath)
                 .then(data => {
-                    if (data['error']) {
-                        throw new Error(data['error']);
-                    } else {
-                        commit(updateConversations, data);
-                    }
+                    commit(updateConversations, data);
                 })
                 .catch(error => {
                     ErrorLog.logError('store.refreshConversations', error);
@@ -414,22 +384,18 @@ export const store = new Vuex.Store({
                 })
                 .then(response => response.json() as Promise<Group[]>)
                 .then(data => {
-                    if (data['error']) {
-                        throw new Error(data['error']);
-                    } else {
-                        let managedGroups = [];
-                        let joinedGroups = [];
-                        for (var i = 0; i < data.length; i++) {
-                            if (data[i].manager === state.userState.username
-                                || data[i].name === 'Admin' && state.userState.isSiteAdmin) {
-                                managedGroups.push(data[i]);
-                            } else {
-                                joinedGroups.push(data[i]);
-                            }
+                    let managedGroups = [];
+                    let joinedGroups = [];
+                    for (var i = 0; i < data.length; i++) {
+                        if (data[i].manager === state.userState.username
+                            || data[i].name === 'Admin' && state.userState.isSiteAdmin) {
+                            managedGroups.push(data[i]);
+                        } else {
+                            joinedGroups.push(data[i]);
                         }
-                        commit(setManagedGroups, managedGroups);
-                        commit(setJoinedGroups, joinedGroups);
                     }
+                    commit(setManagedGroups, managedGroups);
+                    commit(setJoinedGroups, joinedGroups);
                 })
                 .catch(error => {
                     ErrorLog.logError('store.refreshGroups', error);
@@ -442,11 +408,7 @@ export const store = new Vuex.Store({
         refreshSystemMessages({ commit }, returnPath) {
             return messaging.getSystemMessages(returnPath)
                 .then(data => {
-                    if (data['error']) {
-                        throw new Error(data['error']);
-                    } else {
-                        commit(updateSystemMessages, data);
-                    }
+                    commit(updateSystemMessages, data);
                 })
                 .catch(error => {
                     ErrorLog.logError('store.refreshSystemMessages', error);
@@ -462,6 +424,7 @@ export const refreshChat = 'refreshChat';
 export const refreshConversations = 'refreshConversations';
 export const refreshGroups = 'refreshGroups';
 export const refreshSystemMessages = 'refreshSystemMessages';
+export const setCulture = 'setCulture';
 export const setEmail = 'setEmail';
 export const setIsAdmin = 'setIsAdmin';
 export const setIsSiteAdmin = 'setIsSiteAdmin';

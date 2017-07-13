@@ -81,10 +81,9 @@ export default class ManageGroupComponent extends Vue {
                         }
                     })
                     .then(response => checkResponse(response, this.$route.fullPath))
-                    .then(response => response.json() as Promise<ApiResponseViewModel>)
-                    .then(data => {
-                        if (data.error) {
-                            this.createErrorMessage = data.error;
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`CODE:${response.statusText}`);
                         } else {
                             this.refreshGroups();
                         }
@@ -93,6 +92,9 @@ export default class ManageGroupComponent extends Vue {
                     })
                     .catch(error => {
                         this.createErrorMessage = 'A problem occurred.';
+                        if (error && error.message && error.message.startsWith("CODE:")) {
+                            this.errorMessage += error.message.replace('CODE:', '');
+                        }
                         this.activity = false;
                         ErrorMsg.logError('group/manage.onCreateGroup', error);
                     });
@@ -115,10 +117,9 @@ export default class ManageGroupComponent extends Vue {
                 }
             })
             .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
-            .then(data => {
-                if (data.error) {
-                    this.errorMessage = data.error;
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
                 } else {
                     this.refreshGroups();
                 }
@@ -126,6 +127,9 @@ export default class ManageGroupComponent extends Vue {
             })
             .catch(error => {
                 this.errorMessage = 'A problem occurred.';
+                if (error && error.message && error.message.startsWith("CODE:")) {
+                    this.errorMessage += error.message.replace('CODE:', '');
+                }
                 this.activity = false;
                 ErrorMsg.logError('group/manage.onDeleteGroup', error);
             });
@@ -196,10 +200,9 @@ export default class ManageGroupComponent extends Vue {
                 }
             })
             .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
-            .then(data => {
-                if (data.error) {
-                    this.errorMessage = data.error;
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
                 } else {
                     this.successMessage = 'Invitation sent!';
                 }
@@ -207,6 +210,9 @@ export default class ManageGroupComponent extends Vue {
             })
             .catch(error => {
                 this.errorMessage = 'A problem occurred.';
+                if (error && error.message && error.message.startsWith("CODE:")) {
+                    this.errorMessage += error.message.replace('CODE:', '');
+                }
                 this.activity = false;
                 ErrorMsg.logError('group/manage.onInvite', error);
             });
@@ -232,10 +238,9 @@ export default class ManageGroupComponent extends Vue {
                 }
             })
             .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
-            .then(data => {
-                if (data.error) {
-                    this.errorMessage = data.error;
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
                 } else {
                     this.refreshGroups();
                 }
@@ -243,6 +248,9 @@ export default class ManageGroupComponent extends Vue {
             })
             .catch(error => {
                 this.errorMessage = 'A problem occurred.';
+                if (error && error.message && error.message.startsWith("CODE:")) {
+                    this.errorMessage += error.message.replace('CODE:', '');
+                }
                 this.activity = false;
                 ErrorMsg.logError('group/manage.onLeaveGroup', error);
             });
@@ -267,10 +275,9 @@ export default class ManageGroupComponent extends Vue {
                 }
             })
             .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
-            .then(data => {
-                if (data.error) {
-                    this.errorMessage = data.error;
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
                 } else {
                     this.refreshGroups();
                 }
@@ -278,6 +285,9 @@ export default class ManageGroupComponent extends Vue {
             })
             .catch(error => {
                 this.errorMessage = 'A problem occurred.';
+                if (error && error.message && error.message.startsWith("CODE:")) {
+                    this.errorMessage += error.message.replace('CODE:', '');
+                }
                 this.activity = false;
                 ErrorMsg.logError('group/manage.onRemoveGroupMember', error);
             });
@@ -317,10 +327,9 @@ export default class ManageGroupComponent extends Vue {
                     }
                 })
                 .then(response => checkResponse(response, this.$route.fullPath))
-                .then(response => response.json() as Promise<ApiResponseViewModel>)
-                .then(data => {
-                    if (data.error) {
-                        this.errorMessage = data.error;
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`CODE:${response.statusText}`);
                     } else {
                         this.$store.state.userState.isSiteAdmin = false;
                         this.refreshGroups();
@@ -329,6 +338,9 @@ export default class ManageGroupComponent extends Vue {
                 })
                 .catch(error => {
                     this.errorMessage = 'A problem occurred.';
+                    if (error && error.message && error.message.startsWith("CODE:")) {
+                        this.errorMessage += error.message.replace('CODE:', '');
+                    }
                     this.activity = false;
                     ErrorMsg.logError('group/manage.onXferGroup', error);
                 });
@@ -343,10 +355,9 @@ export default class ManageGroupComponent extends Vue {
                     }
                 })
                 .then(response => checkResponse(response, this.$route.fullPath))
-                .then(response => response.json() as Promise<ApiResponseViewModel>)
-                .then(data => {
-                    if (data.error) {
-                        this.errorMessage = data.error;
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`CODE:${response.statusText}`);
                     } else {
                         this.refreshGroups();
                     }
@@ -354,6 +365,9 @@ export default class ManageGroupComponent extends Vue {
                 })
                 .catch(error => {
                     this.errorMessage = 'A problem occurred.';
+                    if (error && error.message && error.message.startsWith("CODE:")) {
+                        this.errorMessage += error.message.replace('CODE:', '');
+                    }
                     this.activity = false;
                     ErrorMsg.logError('group/manage.onXferGroup', error);
                 });
@@ -382,13 +396,13 @@ export default class ManageGroupComponent extends Vue {
                     }
                 })
                 .then(response => checkResponse(response, this.$route.fullPath))
-                .then(response => response.json() as Promise<ApiResponseViewModel>)
-                .then(data => {
-                    if (data['error']) {
-                        throw new Error(`There was a problem retrieving a group suggestion: ${data['error']}`);
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`CODE:${response.statusText}`);
                     } else {
-                        this.searchGroupSuggestion = data.response;
+                        this.searchGroupSuggestion = response.statusText;
                     }
+                    this.activity = false;
                 })
                 .catch(error => {
                     ErrorMsg.logError('group/manage.suggestSearchGroup', error);
@@ -409,13 +423,13 @@ export default class ManageGroupComponent extends Vue {
                     }
                 })
                 .then(response => checkResponse(response, this.$route.fullPath))
-                .then(response => response.json() as Promise<ApiResponseViewModel>)
-                .then(data => {
-                    if (data['error']) {
-                        throw new Error(`There was a problem retrieving a username suggestion: ${data['error']}`);
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`CODE:${response.statusText}`);
                     } else {
-                        this.searchUsernameSuggestion = data.response;
+                        this.searchUsernameSuggestion = response.statusText;
                     }
+                    this.activity = false;
                 })
                 .catch(error => {
                     ErrorMsg.logError('group/manage.suggestSearchUsername', error);

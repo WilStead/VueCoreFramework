@@ -246,7 +246,7 @@ namespace VueCoreFramework.Controllers
             var code = await _userManager.GeneratePasswordResetTokenAsync(user);
             var callbackUrl = Url.Action(nameof(ResetPassword), "Account", new { code = code }, protocol: HttpContext.Request.Scheme);
             await _emailSender.SendEmailAsync(model.Username, _responseLocalizer[ResponseMessages.PasswordResetEmailSubject],
-                $"{_responseLocalizer[ResponseMessages.PasswordResetEmailBody]}: <a href='{callbackUrl}'>{callbackUrl}</a>");
+                $"{_responseLocalizer[ResponseMessages.PasswordResetEmailBody]} <a href='{callbackUrl}'>{callbackUrl}</a>");
             _logger.LogInformation(LogEvent.RESET_PW_REQUEST, "Password reset request received for {USER}.", user.Email);
             return Ok();
         }
@@ -549,7 +549,7 @@ namespace VueCoreFramework.Controllers
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var callbackUrl = Url.Action(nameof(ConfirmEmail), "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
             await _emailSender.SendEmailAsync(model.Email, _responseLocalizer[ResponseMessages.ConfirmAccountEmailSubject],
-                $"{_responseLocalizer[ResponseMessages.ConfirmAccountEmailBody]}: <a href='{callbackUrl}'>link</a>");
+                $"{_responseLocalizer[ResponseMessages.ConfirmAccountEmailBody]} <a href='{callbackUrl}'>link</a>");
         }
 
         /// <summary>

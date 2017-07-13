@@ -163,19 +163,24 @@ namespace VueCoreFramework.Controllers
         /// <summary>
         /// Called to find all groups to which the current user belongs.
         /// </summary>
-        /// <returns>An error if there is a problem; or a list of <see cref="GroupViewModel"/>s.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">A list of <see cref="GroupViewModel"/>s.</response>
         [HttpGet]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
         public async Task<IActionResult> GetGroupMemberships()
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
             var groups = await _userManager.GetRolesAsync(user);
@@ -217,30 +222,35 @@ namespace VueCoreFramework.Controllers
         /// The username of the user to invite to the group.
         /// </param>
         /// <param name="group">The name of the group to which the user will be invited.</param>
-        /// <returns>An error if there is a problem; or a response indicating success.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{username}/{group}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> InviteUserToGroup(string username, string group)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             if (username == user.UserName)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.SelfGroupAddError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.SelfGroupAddError]);
             }
             var roles = await _userManager.GetRolesAsync(user);
             if (group == CustomRoles.SiteAdmin)
             {
                 if (roles.Contains(CustomRoles.SiteAdmin))
                 {
-                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminSingularError] });
+                    return BadRequest(_errorLocalizer[ErrorMessages.SiteAdminSingularError]);
                 }
                 else
                 {
@@ -256,7 +266,7 @@ namespace VueCoreFramework.Controllers
             }
             else if (group == CustomRoles.AllUsers)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.AllUsersRequiredError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.AllUsersRequiredError]);
             }
             // Admins can invite users to any non-admin group, regardless of their own membership.
             else if (!roles.Contains(CustomRoles.Admin))
@@ -264,7 +274,7 @@ namespace VueCoreFramework.Controllers
                 var claims = await _userManager.GetClaimsAsync(user);
                 if (!claims.Any(c => c.Type == CustomClaimTypes.PermissionGroupManager && c.Value == group))
                 {
-                    return Json(new { error = _errorLocalizer[ErrorMessages.ManagerOnlyError] });
+                    return StatusCode(403, _errorLocalizer[ErrorMessages.ManagerOnlyError]);
                 }
             }
 
@@ -278,92 +288,102 @@ namespace VueCoreFramework.Controllers
             {
                 if (roles.Contains(CustomRoles.Admin))
                 {
-                    return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetUserError] });
+                    return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetUserError]);
                 }
                 // Non-admins are not permitted to know the identities of other users who are not
                 // members of common groups. Therefore, indicate success despite there being no such
                 // member, to avoid exposing a way to determine valid usernames.
                 else
                 {
-                    return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+                    return Ok();
                 }
             }
 
             // Generate an email with a callback URL pointing to the 'AddUserToGroup' action.
             var confirmCode = await _userManager.GenerateEmailConfirmationTokenAsync(targetUser);
             var acceptCallbackUrl = Url.Action(nameof(GroupController.AddUserToGroup), "Group", new { userId = targetUser.Id, groupId = groupRole.Id, code = confirmCode }, protocol: HttpContext.Request.Scheme);
-            await _emailSender.SendEmailAsync(targetUser.Email, "You've been invited to join a group",
-                $"You've been invited to join the {group} group. If you would like to accept the invitation, please click this link to become a group member: <a href='{acceptCallbackUrl}'>link</a>");
+            await _emailSender.SendEmailAsync(targetUser.Email, _responseLocalizer[ResponseMessages.GroupInviteSubject],
+                $"{_responseLocalizer[ResponseMessages.GroupInviteBody, group]} <a href='{acceptCallbackUrl}'>link</a>");
 
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
 
         /// <summary>
         /// Called to remove the current user from the given group.
         /// </summary>
         /// <param name="group">The name of the group to leave.</param>
-        /// <returns>An error if there is a problem; or a response indicating success.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{group}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> LeaveGroup(string group)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             if (group == CustomRoles.SiteAdmin)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminSingularError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.SiteAdminSingularError]);
             }
             else if (group == CustomRoles.AllUsers)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.AllUsersRequiredError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.AllUsersRequiredError]);
             }
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetGroupError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetGroupError]);
             }
             var managerId = _context.UserClaims.FirstOrDefault(c =>
                 c.ClaimType == CustomClaimTypes.PermissionGroupManager && c.ClaimValue == group)?
                 .UserId;
             if (managerId == user.Id)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MustHaveManagerError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.MustHaveManagerError]);
             }
             await _userManager.RemoveFromRoleAsync(user, group);
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
 
         /// <summary>
         /// Called to remove the given group.
         /// </summary>
         /// <param name="group">The name of the group to remove.</param>
-        /// <returns>An error if there is a problem; or a response indicating success.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{group}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> RemoveGroup(string group)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var roles = await _userManager.GetRolesAsync(user);
             if (group == CustomRoles.SiteAdmin)
             {
                 if (roles.Contains(CustomRoles.SiteAdmin))
                 {
-                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminSingularError] });
+                    return BadRequest(_errorLocalizer[ErrorMessages.SiteAdminSingularError]);
                 }
                 else
                 {
@@ -372,11 +392,11 @@ namespace VueCoreFramework.Controllers
             }
             else if (group == CustomRoles.Admin)
             {
-                return Json(new { error = ErrorMessages.AdminRequiredError });
+                return BadRequest(_errorLocalizer[ErrorMessages.AdminRequiredError]);
             }
             else if (group == CustomRoles.AllUsers)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.AllUsersRequiredError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.AllUsersRequiredError]);
             }
             // Admins can delete any non-admin group, regardless of their own membership.
             else if (!roles.Contains(CustomRoles.Admin))
@@ -384,21 +404,21 @@ namespace VueCoreFramework.Controllers
                 var claims = await _userManager.GetClaimsAsync(user);
                 if (!claims.Any(c => c.Type == CustomClaimTypes.PermissionGroupManager && c.Value == group))
                 {
-                    return Json(new { error = _errorLocalizer[ErrorMessages.ManagerOnlyError] });
+                    return BadRequest(_errorLocalizer[ErrorMessages.ManagerOnlyError]);
                 }
             }
 
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetGroupError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetGroupError]);
             }
             // Delete group messages
             var groupMessages = _context.Messages.Where(m => m.GroupRecipient == groupRole);
             _context.RemoveRange(groupMessages);
             await _context.SaveChangesAsync();
             await _roleManager.DeleteAsync(groupRole);
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
 
         /// <summary>
@@ -406,26 +426,31 @@ namespace VueCoreFramework.Controllers
         /// </summary>
         /// <param name="username">The name of the user to remove from the group.</param>
         /// <param name="group">The group from which to remove the user.</param>
-        /// <returns>An error if there is a problem; or a response indicating success.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{username}/{group}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> RemoveUserFromGroup(string username, string group)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var roles = await _userManager.GetRolesAsync(user);
             if (group == CustomRoles.SiteAdmin)
             {
                 if (roles.Contains(CustomRoles.SiteAdmin))
                 {
-                    return Json(new { error = _errorLocalizer[ErrorMessages.SiteAdminSingularError] });
+                    return BadRequest(_errorLocalizer[ErrorMessages.SiteAdminSingularError]);
                 }
                 else
                 {
@@ -441,7 +466,7 @@ namespace VueCoreFramework.Controllers
             }
             else if (group == CustomRoles.AllUsers)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.AllUsersRequiredError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.AllUsersRequiredError]);
             }
             // Admins can remove users from any non-admin group, regardless of their own membership.
             else if (!roles.Contains(CustomRoles.Admin))
@@ -449,65 +474,70 @@ namespace VueCoreFramework.Controllers
                 var claims = await _userManager.GetClaimsAsync(user);
                 if (!claims.Any(c => c.Type == CustomClaimTypes.PermissionGroupManager && c.Value == group))
                 {
-                    return Json(new { error = _errorLocalizer[ErrorMessages.ManagerOnlyError] });
+                    return StatusCode(403, _errorLocalizer[ErrorMessages.ManagerOnlyError]);
                 }
             }
 
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetGroupError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetGroupError]);
             }
             var targetUser = await _userManager.FindByNameAsync(username);
             if (targetUser == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetUserError]);
             }
             await _userManager.RemoveFromRoleAsync(targetUser, groupRole.Name);
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
 
         /// <summary>
         /// Called to create a new group with the given name, with the current user as its manager.
         /// </summary>
         /// <param name="group">The name of the group to create.</param>
-        /// <returns>An error if there is a problem; or a response indicating success.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{group}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> StartNewGroup(string group)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var lowerGroup = group.ToLower();
             if (lowerGroup.StartsWith("admin") || lowerGroup.EndsWith("admin") || lowerGroup.Contains("administrator"))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.OnlyAdminCanBeAdminError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.OnlyAdminCanBeAdminError]);
             }
             if (lowerGroup == "system")
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.CannotBeSystemError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.CannotBeSystemError]);
             }
             if (lowerGroup == "true" || lowerGroup == "false")
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidNameError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidNameError]);
             }
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole != null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.DuplicateGroupNameError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.DuplicateGroupNameError]);
             }
             var role = new IdentityRole(group);
             await _roleManager.CreateAsync(role);
             await _userManager.AddToRoleAsync(user, group);
             await _userManager.AddClaimAsync(user, new Claim(CustomClaimTypes.PermissionGroupManager, group));
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
 
         /// <summary>
@@ -515,24 +545,29 @@ namespace VueCoreFramework.Controllers
         /// </summary>
         /// <param name="username">The name of the user who is to be the new manager.</param>
         /// <param name="group">The name of the group whose manager is to change.</param>
-        /// <returns>An error if there is a problem; or a response indicating success.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{username}/{group}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> TransferManagerToUser(string username, string group)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var roles = await _userManager.GetRolesAsync(user);
             if (group == CustomRoles.SiteAdmin || group == CustomRoles.Admin)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.AdminNoManagerError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.AdminNoManagerError]);
             }
             // Admins can transfer the manager role of any non-admin group, regardless of membership.
             else if (!roles.Contains(CustomRoles.Admin))
@@ -540,19 +575,19 @@ namespace VueCoreFramework.Controllers
                 var claims = await _userManager.GetClaimsAsync(user);
                 if (!claims.Any(c => c.Type == CustomClaimTypes.PermissionGroupManager && c.Value == group))
                 {
-                    return Json(new { error = _errorLocalizer[ErrorMessages.ManagerOnlyError] });
+                    return StatusCode(403, _errorLocalizer[ErrorMessages.ManagerOnlyError]);
                 }
             }
 
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetGroupError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetGroupError]);
             }
             var targetUser = await _userManager.FindByNameAsync(username);
             if (targetUser == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetUserError]);
             }
             var member = await _userManager.IsInRoleAsync(targetUser, group);
             if (!member)
@@ -567,7 +602,7 @@ namespace VueCoreFramework.Controllers
                 // The manager may only transfer the membership role to an existing member of the group.
                 else
                 {
-                    return Json(new { error = _errorLocalizer[ErrorMessages.GroupMemberOnlyError] });
+                    return BadRequest(_errorLocalizer[ErrorMessages.GroupMemberOnlyError]);
                 }
             }
             _context.UserClaims.Remove(_context.UserClaims.FirstOrDefault(c => c.ClaimType == CustomClaimTypes.PermissionGroupManager && c.ClaimValue == group));
@@ -582,26 +617,31 @@ namespace VueCoreFramework.Controllers
             });
             await _context.SaveChangesAsync();
 
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
 
         /// <summary>
         /// Called to transfer the site admin role to the given user.
         /// </summary>
         /// <param name="username">The name of the user who is to be the new site admin.</param>
-        /// <returns>An error if there is a problem; or a response indicating success.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{username}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> TransferSiteAdminToUser(string username)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var roles = await _userManager.GetRolesAsync(user);
             if (!roles.Contains(CustomRoles.SiteAdmin))
@@ -612,7 +652,7 @@ namespace VueCoreFramework.Controllers
             var targetUser = await _userManager.FindByNameAsync(username);
             if (targetUser == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetUserError]);
             }
             await _userManager.AddToRoleAsync(targetUser, CustomRoles.SiteAdmin);
             await _userManager.RemoveFromRoleAsync(user, CustomRoles.SiteAdmin);
@@ -626,7 +666,7 @@ namespace VueCoreFramework.Controllers
             });
             await _context.SaveChangesAsync();
 
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
     }
 }

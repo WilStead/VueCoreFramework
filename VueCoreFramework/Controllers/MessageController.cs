@@ -53,21 +53,24 @@ namespace VueCoreFramework.Controllers
         /// Called to get a list of users involved in individual conversations in which the current
         /// user is a sender or recipient, with an unread message count.
         /// </summary>
-        /// <returns>
-        /// An error if there is a problem; or a list of <see cref="ConversationViewModel"/>s.
-        /// </returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">A list of <see cref="ConversationViewModel"/>s.</response>
         [HttpGet]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
         public async Task<IActionResult> GetConversations()
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
             List<ConversationViewModel> vms = new List<ConversationViewModel>();
@@ -98,27 +101,30 @@ namespace VueCoreFramework.Controllers
         /// Called to get the messages exchanged within the given group.
         /// </summary>
         /// <param name="group">The name of the group whose conversation will be retrieved.</param>
-        /// <returns>
-        /// An error if there is a problem; or the ordered list of <see cref="MessageViewModel"/>s.
-        /// </returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">The ordered list of <see cref="MessageViewModel"/>s.</response>
         [HttpGet("{group}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
         public async Task<IActionResult> GetGroupMessages(string group)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetGroupError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetGroupError]);
             }
             var managerId = _context.UserClaims.FirstOrDefault(c =>
                 c.ClaimType == CustomClaimTypes.PermissionGroupManager && c.ClaimValue == group)?
@@ -169,26 +175,29 @@ namespace VueCoreFramework.Controllers
         /// user is a sender or recipient. For use by admins to review chat logs.
         /// </summary>
         /// <param name="proxy">The name of the user whose conversation will be retrieved.</param>
-        /// <returns>
-        /// An error if there is a problem; or a list of <see cref="ConversationViewModel"/>s.
-        /// </returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">A list of <see cref="ConversationViewModel"/>s.</response>
         [HttpGet("{proxy}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
         public async Task<IActionResult> GetProxyConversations(string proxy)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var roles = await _userManager.GetRolesAsync(user);
             if (!roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.AdminOnlyError]);
             }
 
             List<ConversationViewModel> vms = new List<ConversationViewModel>();
@@ -217,26 +226,29 @@ namespace VueCoreFramework.Controllers
         /// <param name="username">
         /// The name of the user whose conversation with the proxy user will be retrieved.
         /// </param>
-        /// <returns>
-        /// An error if there is a problem; or the ordered list of <see cref="MessageViewModel"/>s.
-        /// </returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">The ordered list of <see cref="MessageViewModel"/>s.</response>
         [HttpGet("{proxy}/{username}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
         public async Task<IActionResult> GetProxyUserMessages(string proxy, string username)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var roles = await _userManager.GetRolesAsync(user);
             if (!roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.AdminOnlyError]);
             }
 
             var vms = new List<MessageViewModel>();
@@ -266,21 +278,24 @@ namespace VueCoreFramework.Controllers
         /// Called to get the system messages sent to the current user which have not been marked
         /// deleted by the current user.
         /// </summary>
-        /// <returns>
-        /// An error if there is a problem; or the ordered list of <see cref="MessageViewModel"/>s.
-        /// </returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">The ordered list of <see cref="MessageViewModel"/>s.</response>
         [HttpGet]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
         public async Task<IActionResult> GetSystemMessages()
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
             return Json(_context.Messages.Where(m =>
@@ -302,21 +317,24 @@ namespace VueCoreFramework.Controllers
         /// <param name="username">
         /// The name of the user whose conversation with the current user will be retrieved.
         /// </param>
-        /// <returns>
-        /// An error if there is a problem; or the ordered list of <see cref="MessageViewModel"/>s.
-        /// </returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">The ordered list of <see cref="MessageViewModel"/>s.</response>
         [HttpGet("{username}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
         public async Task<IActionResult> GetUserMessages(string username)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
             var vms = new List<MessageViewModel>();
@@ -348,19 +366,24 @@ namespace VueCoreFramework.Controllers
         /// <param name="username">
         /// The name of the user whose conversation with the current user will be marked deleted.
         /// </param>
-        /// <returns>An error if there is a problem; or a response indicating success.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{username}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> MarkConversationDeleted(string username)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
             foreach (var message in _context.Messages.Where(m =>
@@ -392,19 +415,24 @@ namespace VueCoreFramework.Controllers
         /// <param name="username">
         /// The name of the user whose conversation with the current user will be marked read.
         /// </param>
-        /// <returns>An error if there is a problem; or a response indicating success.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{username}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> MarkConversationRead(string username)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
             foreach (var message in _context.Messages.Where(m => m.SingleRecipient == user
@@ -420,19 +448,24 @@ namespace VueCoreFramework.Controllers
         /// <summary>
         /// Called to mark all system messages sent to the current user read.
         /// </summary>
-        /// <returns>An error if there is a problem; or a response indicating success.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> MarkSystemMessagesRead()
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
             foreach (var message in _context.Messages.Where(m => m.SingleRecipient == user && m.IsSystemMessage))
@@ -449,29 +482,34 @@ namespace VueCoreFramework.Controllers
         /// </summary>
         /// <param name="group">The name of the group to which the message will be sent.</param>
         /// <param name="message">The message to send.</param>
-        /// <returns>An error if there is a problem; or a response indicating success.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{group}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> SendMessageToGroup(string group, string message)
         {
             if (string.IsNullOrEmpty(message) || message.Length > 125)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MessageInvalidLengthError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.MessageInvalidLengthError]);
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetGroupError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetGroupError]);
             }
 
             var messages = _context.Messages.Where(m => m.GroupRecipient == groupRole);
@@ -496,29 +534,34 @@ namespace VueCoreFramework.Controllers
         /// </summary>
         /// <param name="username">The name of the user to whom the message will be sent.</param>
         /// <param name="message">The message to send.</param>
-        /// <returns>An error if there is a problem; or a response indicating success.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{username}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> SendMessageToUser(string username, string message)
         {
             if (string.IsNullOrEmpty(message) || message.Length > 125)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.MessageInvalidLengthError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.MessageInvalidLengthError]);
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
             var targetUser = await _userManager.FindByNameAsync(username);
             if (targetUser == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetUserError]);
             }
 
             var messages = _context.Messages.Where(m =>

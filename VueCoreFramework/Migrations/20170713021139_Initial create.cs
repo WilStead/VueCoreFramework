@@ -58,6 +58,7 @@ namespace VueCoreFramework.Migrations
                     AccessFailedCount = table.Column<int>(nullable: false),
                     AdminLocked = table.Column<bool>(nullable: false),
                     ConcurrencyStamp = table.Column<string>(nullable: true),
+                    Culture = table.Column<string>(nullable: true),
                     Email = table.Column<string>(maxLength: 256, nullable: true),
                     EmailConfirmed = table.Column<bool>(nullable: false),
                     LastEmailChange = table.Column<DateTime>(nullable: false),

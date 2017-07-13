@@ -21,4 +21,3 @@ export function setCulture(culture: string) {
             ErrorMsg.logError('globalization.setCulture', error);
         });
 }
-setCulture(defaultCulture);

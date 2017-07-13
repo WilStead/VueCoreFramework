@@ -73,9 +73,15 @@ export const messaging = {
                 }
             })
             .then(response => checkResponse(response, returnPath))
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
             .then(response => response.json() as Promise<ConversationViewModel[]>)
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     },
 
@@ -96,9 +102,15 @@ export const messaging = {
                 }
             })
             .then(response => checkResponse(response, returnPath))
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
             .then(response => response.json() as Promise<MessageViewModel[]>)
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     },
 
@@ -120,9 +132,15 @@ export const messaging = {
                 }
             })
             .then(response => checkResponse(response, returnPath))
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
             .then(response => response.json() as Promise<ConversationViewModel[]>)
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     },
 
@@ -144,9 +162,15 @@ export const messaging = {
                 }
             })
             .then(response => checkResponse(response, returnPath))
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
             .then(response => response.json() as Promise<MessageViewModel[]>)
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     },
 
@@ -167,9 +191,15 @@ export const messaging = {
                 }
             })
             .then(response => checkResponse(response, returnPath))
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
             .then(response => response.json() as Promise<MessageViewModel[]>)
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     },
 
@@ -191,9 +221,15 @@ export const messaging = {
                 }
             })
             .then(response => checkResponse(response, returnPath))
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
             .then(response => response.json() as Promise<MessageViewModel[]>)
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     },
 
@@ -201,9 +237,9 @@ export const messaging = {
      * Called to mark a conversation with a given user deleted.
      * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
      * @param {string} username The name of the user whose conversation with the current user will be marked deleted.
-     * @returns {ApiResponseViewModel} A response object containing any error which occurred.
+     * @returns {Response} A response object containing any error which occurred.
      */
-    markConversationDeleted(returnPath: string, username: string): Promise<ApiResponseViewModel> {
+    markConversationDeleted(returnPath: string, username: string): Promise<Response> {
         return fetch(`/api/Message/MarkConversationDeleted/${username}`,
             {
                 method: 'POST',
@@ -214,9 +250,14 @@ export const messaging = {
                 }
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     },
 
@@ -224,9 +265,9 @@ export const messaging = {
      * Called to mark a conversation with a given user read, from the perspective of the current user.
      * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
      * @param {string} username The name of the user whose conversation with the current user will be marked read.
-     * @returns {ApiResponseViewModel} A response object containing any error which occurred.
+     * @returns {Response} A response object containing any error which occurred.
      */
-    markConversationRead(returnPath: string, username: string): Promise<ApiResponseViewModel> {
+    markConversationRead(returnPath: string, username: string): Promise<Response> {
         return fetch(`/api/Message/MarkConversationRead/${username}`,
             {
                 method: 'POST',
@@ -237,18 +278,23 @@ export const messaging = {
                 }
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     },
 
     /**
      * Called to mark all system messages sent to the current user read.
      * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
-     * @returns {ApiResponseViewModel} A response object containing any error which occurred.
+     * @returns {Response} A response object containing any error which occurred.
      */
-    markSystemMessagesRead(returnPath: string): Promise<ApiResponseViewModel> {
+    markSystemMessagesRead(returnPath: string): Promise<Response> {
         return fetch('/api/Message/MarkSystemMessagesRead',
             {
                 method: 'POST',
@@ -259,9 +305,14 @@ export const messaging = {
                 }
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     },
 
@@ -270,9 +321,9 @@ export const messaging = {
      * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
      * @param {string} group The name of the group to which the message will be sent.
      * @param {string} message The message to send.
-     * @returns {ApiResponseViewModel} A response object containing any error which occurred.
+     * @returns {Response} A response object containing any error which occurred.
      */
-    sendMessageToGroup(returnPath: string, group: string, message: string): Promise<ApiResponseViewModel> {
+    sendMessageToGroup(returnPath: string, group: string, message: string): Promise<Response> {
         return fetch(`/api/Message/SendMessageToGroup/${group}?message=${encodeURIComponent(message)}`,
             {
                 method: 'POST',
@@ -283,9 +334,14 @@ export const messaging = {
                 }
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     },
 
@@ -294,9 +350,9 @@ export const messaging = {
      * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
      * @param {string} username The name of the user to whom the message will be sent.
      * @param {string} message The message to send.
-     * @returns {ApiResponseViewModel} A response object containing any error which occurred.
+     * @returns {Response} A response object containing any error which occurred.
      */
-    sendMessageToUser(returnPath: string, username: string, message: string): Promise<ApiResponseViewModel> {
+    sendMessageToUser(returnPath: string, username: string, message: string): Promise<Response> {
         return fetch(`/api/Message/SendMessageToUser/${username}?message=${encodeURIComponent(message)}`,
             {
                 method: 'POST',
@@ -307,9 +363,14 @@ export const messaging = {
                 }
             })
             .then(response => checkResponse(response, returnPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+                return response;
+            })
             .catch(error => {
-                throw new Error(`There was a problem with your request. ${error}`);
+                throw new Error(error);
             });
     }
 };

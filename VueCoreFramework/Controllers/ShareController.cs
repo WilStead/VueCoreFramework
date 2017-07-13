@@ -54,23 +54,28 @@ namespace VueCoreFramework.Controllers
         /// </summary>
         /// <param name="dataType">The type of data being shared.</param>
         /// <param name="id">Optionally, the primary key of a specific item being shared.</param>
-        /// <returns>An error if there is a problem; or a response indicating success.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">A list of <see cref="ShareViewModel"/>s.</response>
         [HttpGet("{dataType}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
         public async Task<IActionResult> GetCurrentShares(string dataType, string id = null)
         {
             if (string.IsNullOrEmpty(dataType))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidDataTypeError]);
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -170,24 +175,31 @@ namespace VueCoreFramework.Controllers
         /// user has access to will be returned.
         /// </summary>
         /// <param name="input">A search string.</param>
-        /// <returns>An error if there is a problem; or the first matched name.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="404">Not found.</response>
+        /// <response code="200">The first matched name.</response>
         [HttpGet("{input}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 200)]
         public async Task<IActionResult> GetShareableGroupCompletion(string input)
         {
             if (string.IsNullOrEmpty(input))
             {
-                return Json(new { response = "" });
+                return NotFound();
             }
 
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -205,7 +217,7 @@ namespace VueCoreFramework.Controllers
                 c.Type == CustomClaimTypes.PermissionGroupManager && c.Value.StartsWith(input));
             if (potentialClaim != null)
             {
-                return Json(new { response = potentialClaim.Value });
+                return Ok(potentialClaim.Value);
             }
 
             // Next try groups to which the user belongs.
@@ -215,7 +227,7 @@ namespace VueCoreFramework.Controllers
 
             if (!string.IsNullOrEmpty(potentialValue))
             {
-                return Json(new { response = potentialValue });
+                return Ok(potentialValue);
             }
 
             // Admins can share with any group, so finally try everything.
@@ -224,11 +236,11 @@ namespace VueCoreFramework.Controllers
                 var potentialRole = _context.Roles.FirstOrDefault(r => r.Name.StartsWith(input));
                 if (potentialRole != null)
                 {
-                    return Json(new { response = potentialRole.Name });
+                    return Ok(potentialRole.Name);
                 }
             }
 
-            return Json(new { response = "" });
+            return NotFound();
         }
 
         /// <summary>
@@ -236,24 +248,31 @@ namespace VueCoreFramework.Controllers
         /// current user has access to will be returned.
         /// </summary>
         /// <param name="input">A search string.</param>
-        /// <returns>An error if there is a problem; or the first matched name.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="404">Not found.</response>
+        /// <response code="200">The first matched name.</response>
         [HttpGet("{input}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 200)]
         public async Task<IActionResult> GetShareableUsernameCompletion(string input)
         {
             if (string.IsNullOrEmpty(input))
             {
-                return Json(new { response = "" });
+                return NotFound();
             }
 
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -273,7 +292,7 @@ namespace VueCoreFramework.Controllers
                 var potentialMember = members.FirstOrDefault(u => u != user && u.UserName.StartsWith(input));
                 if (potentialMember != null)
                 {
-                    return Json(new { response = potentialMember.UserName });
+                    return Ok(potentialMember.UserName);
                 }
             }
 
@@ -284,7 +303,7 @@ namespace VueCoreFramework.Controllers
                 var potentialMember = members.FirstOrDefault(u => u != user && u.UserName.StartsWith(input));
                 if (potentialMember != null)
                 {
-                    return Json(new { response = potentialMember.UserName });
+                    return Ok(potentialMember.UserName);
                 }
             }
 
@@ -294,29 +313,34 @@ namespace VueCoreFramework.Controllers
                 var potentialUser = _context.Users.FirstOrDefault(u => u.UserName.StartsWith(input));
                 if (potentialUser != null)
                 {
-                    return Json(new { response = potentialUser.UserName });
+                    return Ok(potentialUser.UserName);
                 }
             }
 
-            return Json(new { response = "" });
+            return NotFound();
         }
 
         /// <summary>
         /// Called to retrieve the list of users with whom the current user may share.
         /// </summary>
-        /// <returns>An error if there is a problem; or the list of users.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">The list of users.</response>
         [HttpGet]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 200)]
         public async Task<IActionResult> GetShareableGroupMembers()
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -345,19 +369,24 @@ namespace VueCoreFramework.Controllers
         /// <summary>
         /// Called to retrieve a subset of the list of groups with whom the current user may share.
         /// </summary>
-        /// <returns>An error if there is a problem; or the list of group names.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">The list of group names.</response>
         [HttpGet]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 200)]
         public async Task<IActionResult> GetShareableGroupSubset()
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -401,29 +430,34 @@ namespace VueCoreFramework.Controllers
         /// <param name="dataType">The type of data being shared.</param>
         /// <param name="operation">Optionally, an operation whose permission is being removed.</param>
         /// <param name="id">Optionally, the primary key of a specific item being shared.</param>
-        /// <returns>An error if there is a problem; or a response indicating success.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{dataType}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> HideDataFromAll(string dataType, string operation, string id)
         {
             if (string.IsNullOrEmpty(dataType))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidDataTypeError]);
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var roles = await _userManager.GetRolesAsync(user);
             // Only Admins can hide data from all.
             if (!roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.AdminOnlyError]);
             }
 
             dataType = dataType.ToInitialCaps();
@@ -431,7 +465,7 @@ namespace VueCoreFramework.Controllers
             var entity = _context.Model.GetEntityTypes().FirstOrDefault(e => e.Name.Substring(e.Name.LastIndexOf('.') + 1) == dataType);
             if (entity == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidDataTypeError]);
             }
             var allRole = await _roleManager.FindByNameAsync(CustomRoles.AllUsers);
             Claim claim = null;
@@ -448,7 +482,7 @@ namespace VueCoreFramework.Controllers
             {
                 await _roleManager.RemoveClaimAsync(allRole, impliedClaim);
             }
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
 
         /// <summary>
@@ -458,25 +492,30 @@ namespace VueCoreFramework.Controllers
         /// <param name="dataType">The type of data being shared.</param>
         /// <param name="operation">Optionally, an operation whose permission is being removed.</param>
         /// <param name="id">Optionally, the primary key of a specific item being shared.</param>
-        /// <returns>An error if there is a problem; or a response indicating success.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{group}/{dataType}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> HideDataFromGroup(string group, string dataType, string operation, string id)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var roles = await _userManager.GetRolesAsync(user);
             // Only admins can hide a data type, rather than a particular item
             if (string.IsNullOrEmpty(id) && !roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.AdminOnlyError]);
             }
             // Admins can hide data from any group, regardless of their own membership.
             if (!roles.Contains(CustomRoles.Admin))
@@ -485,24 +524,24 @@ namespace VueCoreFramework.Controllers
                 if (!claims.Any(c => c.Type == CustomClaimTypes.PermissionGroupManager && c.Value == group)
                     && !claims.Any(c => c.Type == CustomClaimTypes.PermissionDataOwner && c.Value == $"{dataType}{{{id}}}"))
                 {
-                    return Json(new { error = _errorLocalizer[ErrorMessages.ManagerOrOwnerOnlyError] });
+                    return StatusCode(403, _errorLocalizer[ErrorMessages.ManagerOrOwnerOnlyError]);
                 }
             }
 
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetGroupError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetGroupError]);
             }
             if (!TryGetClaim(dataType, operation, id, out Claim claim))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.DataError]);
             }
             foreach (var impliedClaim in GetImpliedClaimsForRemove(claim))
             {
                 await _roleManager.RemoveClaimAsync(groupRole, impliedClaim);
             }
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
 
         /// <summary>
@@ -512,44 +551,49 @@ namespace VueCoreFramework.Controllers
         /// <param name="dataType">The type of data being shared.</param>
         /// <param name="operation">Optionally, an operation whose permission is being removed.</param>
         /// <param name="id">Optionally, the primary key of a specific item being shared.</param>
-        /// <returns>An error if there is a problem; or a response indicating success.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{username}/{dataType}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> HideDataFromUser(string username, string dataType, string operation, string id)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var roles = await _userManager.GetRolesAsync(user);
             var claims = await _userManager.GetClaimsAsync(user);
             // Only admins can hide a data type, rather than a particular item
             if (string.IsNullOrEmpty(id) && !roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.AdminOnlyError]);
             }
             if (!roles.Contains(CustomRoles.Admin)
                 && !claims.Any(c => c.Type == CustomClaimTypes.PermissionDataOwner && c.Value == $"{dataType}{{{id}}}"))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.OwnerOnlyError] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.OwnerOnlyError]);
             }
 
             var targetUser = await _userManager.FindByNameAsync(username);
             if (targetUser == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetUserError]);
             }
             if (!TryGetClaim(dataType, operation, id, out Claim claim))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.DataError]);
             }
             await _userManager.RemoveClaimsAsync(targetUser, GetImpliedClaimsForRemove(claim));
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
 
         /// <summary>
@@ -558,34 +602,39 @@ namespace VueCoreFramework.Controllers
         /// <param name="dataType">The type of data to be shared.</param>
         /// <param name="operation">Optionally, an operation for which to grant permission.</param>
         /// <param name="id">Optionally, the primary key of a specific item to be shared.</param>
-        /// <returns>An error if there is a problem; or a response indicating success.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{dataType}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> ShareDataWithAll(string dataType, string operation, string id)
         {
             if (string.IsNullOrEmpty(dataType))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidDataTypeError]);
             }
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var roles = await _userManager.GetRolesAsync(user);
             // Only Admins can share data with all.
             if (!roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.AdminOnlyError]);
             }
             if (operation != CustomClaimTypes.PermissionDataView
                 && operation != CustomClaimTypes.PermissionDataEdit)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.ViewEditOnlyError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.ViewEditOnlyError]);
             }
 
             dataType = dataType.ToInitialCaps();
@@ -593,7 +642,7 @@ namespace VueCoreFramework.Controllers
             var entity = _context.Model.GetEntityTypes().FirstOrDefault(e => e.Name.Substring(e.Name.LastIndexOf('.') + 1) == dataType);
             if (entity == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidDataTypeError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidDataTypeError]);
             }
             var allRole = await _roleManager.FindByNameAsync(CustomRoles.AllUsers);
             var roleClaims = await _roleManager.GetClaimsAsync(allRole);
@@ -608,7 +657,7 @@ namespace VueCoreFramework.Controllers
                 claim = new Claim(operation, $"{dataType}{{{id}}}");
             }
             await _roleManager.AddClaimAsync(allRole, claim);
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
 
         /// <summary>
@@ -618,28 +667,33 @@ namespace VueCoreFramework.Controllers
         /// <param name="dataType">The type of data to be shared.</param>
         /// <param name="operation">Optionally, an operation for which to grant permission.</param>
         /// <param name="id">Optionally, the primary key of a specific item to be shared.</param>
-        /// <returns>An error if there is a problem; or a response indicating success.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{group}/{dataType}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> ShareDataWithGroup(string group, string dataType, string operation, string id)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
             var groupRole = await _roleManager.FindByNameAsync(group);
             if (groupRole == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetGroupError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetGroupError]);
             }
             if (!TryGetClaim(dataType, operation, id, out Claim claim))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.DataError]);
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -647,7 +701,7 @@ namespace VueCoreFramework.Controllers
             // Only admins can share a data type, rather than a particular item
             if (string.IsNullOrEmpty(id) && !roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.AdminOnlyError]);
             }
             // Admins can share data with any group as if they owned that data, regardless of their own membership.
             if (roles.Contains(CustomRoles.Admin)
@@ -658,7 +712,7 @@ namespace VueCoreFramework.Controllers
                     && operation != CustomClaimTypes.PermissionDataView
                     && operation != CustomClaimTypes.PermissionDataEdit)
                 {
-                    return Json(new { error = _errorLocalizer[ErrorMessages.ViewEditOnlyError] });
+                    return BadRequest(_errorLocalizer[ErrorMessages.ViewEditOnlyError]);
                 }
             }
             else
@@ -670,17 +724,17 @@ namespace VueCoreFramework.Controllers
                         AuthorizationController.GetAuthorization(claims, dataType, claim.Type, id),
                         claim.Type))
                     {
-                        return Json(new { error = _errorLocalizer[ErrorMessages.ManagerOnlySharedError] });
+                        return StatusCode(403, _errorLocalizer[ErrorMessages.ManagerOnlySharedError]);
                     }
                 }
                 else
                 {
-                    return Json(new { error = _errorLocalizer[ErrorMessages.ManagerOrOwnerOnlyError] });
+                    return StatusCode(403, _errorLocalizer[ErrorMessages.ManagerOrOwnerOnlyError]);
                 }
             }
 
             await _roleManager.AddClaimAsync(groupRole, claim);
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
 
         /// <summary>
@@ -690,19 +744,24 @@ namespace VueCoreFramework.Controllers
         /// <param name="dataType">The type of data to be shared.</param>
         /// <param name="operation">Optionally, an operation for which to grant permission.</param>
         /// <param name="id">Optionally, the primary key of a specific item to be shared.</param>
-        /// <returns>An error if there is a problem; or a response indicating success.</returns>
+        /// <response code="400">Bad request.</response>
+        /// <response code="403">Forbidden.</response>
+        /// <response code="200">Success.</response>
         [HttpPost("{username}/{dataType}")]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> ShareDataWithUser(string username, string dataType, string operation, string id)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
             if (user.AdminLocked)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -710,7 +769,7 @@ namespace VueCoreFramework.Controllers
             // Only admins can share a data type, rather than a particular item
             if (string.IsNullOrEmpty(id) && !roles.Contains(CustomRoles.Admin))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.AdminOnlyError] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.AdminOnlyError]);
             }
             // Admins can share data with any user as if they owned that data.
             if (roles.Contains(CustomRoles.Admin)
@@ -721,25 +780,25 @@ namespace VueCoreFramework.Controllers
                     && operation != CustomClaimTypes.PermissionDataView
                     && operation != CustomClaimTypes.PermissionDataEdit)
                 {
-                    return Json(new { error = _errorLocalizer[ErrorMessages.ViewEditOnlyError] });
+                    return BadRequest(_errorLocalizer[ErrorMessages.ViewEditOnlyError]);
                 }
             }
             else
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.OwnerOnlyError] });
+                return StatusCode(403, _errorLocalizer[ErrorMessages.OwnerOnlyError]);
             }
 
             var targetUser = await _userManager.FindByNameAsync(username);
             if (targetUser == null)
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.InvalidTargetUserError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetUserError]);
             }
             if (!TryGetClaim(dataType, operation, id, out Claim claim))
             {
-                return Json(new { error = _errorLocalizer[ErrorMessages.DataError] });
+                return BadRequest(_errorLocalizer[ErrorMessages.DataError]);
             }
             await _userManager.AddClaimAsync(targetUser, claim);
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
 
         private bool TryGetClaim(string dataType, string operation, string id, out Claim claim)

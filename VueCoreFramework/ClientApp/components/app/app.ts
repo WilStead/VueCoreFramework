@@ -2,6 +2,7 @@ import Vue from 'vue';
 import { Component } from 'vue-property-decorator';
 import * as Store from '../../store/store';
 import { ConversationViewModel, MessageViewModel, messaging } from '../../store/messaging';
+import { defaultCulture } from '../../globalization/globalization';
 import { checkResponse, ApiResponseViewModel } from '../../router';
 import { Group } from '../group/manage';
 import * as ErrorMsg from '../../error-msg';
@@ -59,6 +60,7 @@ export default class AppComponent extends Vue {
             this.$router.push(forwardUrl);
         }
 
+        this.$store.commit(Store.setCulture, defaultCulture);
         this.$store.commit(Store.addTypeRoutes, this.$router);
 
         if (this.groupRefreshTimeout === 0) {
@@ -159,12 +161,8 @@ export default class AppComponent extends Vue {
 
     onDeleteChat(interlocutor: string) {
         messaging.markConversationDeleted(this.$route.fullPath, interlocutor)
-            .then(data => {
-                if (data['error']) {
-                    throw new Error(data['error']);
-                } else {
-                    this.refreshConversations();
-                }
+            .then(response => {
+                this.refreshConversations();
             })
             .catch(error => {
                 ErrorMsg.logError('app.onDeleteChat', error);
@@ -203,11 +201,9 @@ export default class AppComponent extends Vue {
                         ErrorMsg.showErrorMsg("A problem occurred.");
                     }
                     throw new Error("CODE");
+                } else {
+                    this.foundUser.isLocked = true;
                 }
-                return response;
-            })
-            .then(response => {
-                this.foundUser.isLocked = true;
             })
             .catch(error => {
                 if (error !== "CODE") {
@@ -254,16 +250,22 @@ export default class AppComponent extends Vue {
                 }
             })
             .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
-            .then(data => {
-                if (data.error) {
-                    throw new Error(data.error);
+            .then(response => {
+                if (!response.ok) {
+                    if (response.statusText) {
+                        ErrorMsg.showErrorMsg(response.statusText);
+                    } else {
+                        ErrorMsg.showErrorMsg("A problem occurred.");
+                    }
+                    throw new Error("CODE");
                 } else {
                     this.foundUser.isLocked = false;
                 }
             })
             .catch(error => {
-                ErrorMsg.showErrorMsgAndLog('app.onUnlockAccount', "A problem occurred. The account was not unlocked.", error);
+                if (error !== "CODE") {
+                    ErrorMsg.showErrorMsgAndLog('app.onUnlockAccount', "A problem occurred. The account was not unlocked.", error);
+                }
             });
     }
 
@@ -389,34 +391,34 @@ export default class AppComponent extends Vue {
                 this.$store.state.uiState.messaging.groupChat,
                 this.messageText)
                 .then(data => {
-                    if (data.error) {
-                        this.chatErrorMessage = data.error;
-                    } else {
-                        this.refreshChat();
-                    }
+                    this.refreshChat();
                     this.messageText = '';
                     let chat = document.getElementById('chat-row');
                     chat.scrollTop = chat.scrollHeight;
                 })
                 .catch(error => {
-                    ErrorMsg.logError('app.sendMessage', error);
+                    if (error && error.message && error.message.startsWith('CODE')) {
+                        this.chatErrorMessage = error.message.replace('CODE:', '');
+                    } else {
+                        ErrorMsg.logError('app.sendMessage', error);
+                    }
                 });
         } else {
             messaging.sendMessageToUser(this.$route.fullPath,
                 this.$store.state.uiState.messaging.interlocutor,
                 this.messageText)
                 .then(data => {
-                    if (data.error) {
-                        this.chatErrorMessage = data.error;
-                    } else {
-                        this.refreshChat();
-                    }
+                    this.refreshChat();
                     this.messageText = '';
                     let chat = document.getElementById('chat-row');
                     chat.scrollTop = chat.scrollHeight;
                 })
                 .catch(error => {
-                    ErrorMsg.logError('app.sendMessage', error);
+                    if (error && error.message && error.message.startsWith('CODE')) {
+                        this.chatErrorMessage = error.message.replace('CODE:', '');
+                    } else {
+                        ErrorMsg.logError('app.sendMessage', error);
+                    }
                 });
         }
     }
@@ -434,12 +436,11 @@ export default class AppComponent extends Vue {
                     }
                 })
                 .then(response => checkResponse(response, this.$route.fullPath))
-                .then(response => response.json() as Promise<ApiResponseViewModel>)
-                .then(data => {
-                    if (data['error']) {
-                        throw new Error(`There was a problem retrieving a username suggestion: ${data['error']}`);
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`CODE:${response.statusText}`);
                     } else {
-                        this.searchUsernameSuggestion = data.response;
+                        this.searchUsernameSuggestion = response.statusText;
                     }
                 })
                 .catch(error => {
