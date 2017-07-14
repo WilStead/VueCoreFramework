@@ -27,8 +27,15 @@ using Microsoft.AspNetCore.Mvc.Versioning;
 
 namespace VueCoreFramework
 {
+    /// <summary>
+    /// Configures services and the application's request pipeline.
+    /// </summary>
     public class Startup
     {
+        /// <summary>
+        /// Initializes a new instance of <see cref="Startup"/>.
+        /// </summary>
+        /// <param name="env">An <see cref="IHostingEnvironment"/> used to set up configuration sources.</param>
         public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
@@ -48,9 +55,15 @@ namespace VueCoreFramework
             env.ConfigureNLog("nlog.config");
         }
 
+        /// <summary>
+        /// The root of the configuration hierarchy.
+        /// </summary>
         public IConfigurationRoot Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
+        /// <summary>
+        /// This method gets called by the runtime, and is used to add services to the container.
+        /// </summary>
+        /// <param name="services">A collection of service descriptors.</param>
         public void ConfigureServices(IServiceCollection services)
         {
             // Add framework services.
@@ -107,8 +120,20 @@ namespace VueCoreFramework
             });
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, ApplicationDbContext context, IOptions<RequestLocalizationOptions> localization)
+        /// <summary>
+        /// This method gets called by the runtime, and is used to configure the HTTP request pipeline.
+        /// </summary>
+        /// <param name="app">Provides the mechanisms to configure the application's request pipeline.</param>
+        /// <param name="env">An <see cref="IHostingEnvironment"/> used to set up configuration sources.</param>
+        /// <param name="loggerFactory">Used to configure the logging system.</param>
+        /// <param name="context">The application's Entity Framework database context.</param>
+        /// <param name="localization">Specifies options for the <see cref="RequestLocalizationMiddleware"/>.</param>
+        public void Configure(
+            IApplicationBuilder app,
+            IHostingEnvironment env,
+            ILoggerFactory loggerFactory,
+            ApplicationDbContext context,
+            IOptions<RequestLocalizationOptions> localization)
         {
             loggerFactory.AddNLog();
             app.AddNLogWeb();

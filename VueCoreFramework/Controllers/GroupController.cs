@@ -26,7 +26,7 @@ namespace VueCoreFramework.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IEmailSender _emailSender;
         private readonly IStringLocalizer<ErrorMessages> _errorLocalizer;
-        private readonly IStringLocalizer<ResponseMessages> _responseLocalizer;
+        private readonly IStringLocalizer<EmailMessages> _responseLocalizer;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly UserManager<ApplicationUser> _userManager;
 
@@ -38,7 +38,7 @@ namespace VueCoreFramework.Controllers
             ApplicationDbContext context,
             IEmailSender emailSender,
             IStringLocalizer<ErrorMessages> localizer,
-            IStringLocalizer<ResponseMessages> responseLocalizer,
+            IStringLocalizer<EmailMessages> responseLocalizer,
             RoleManager<IdentityRole> roleManager,
             UserManager<ApplicationUser> userManager)
         {
@@ -58,6 +58,7 @@ namespace VueCoreFramework.Controllers
         /// The ID of the user to add to the group.
         /// </param>
         /// <param name="groupId">The ID of the group to which the user will be added.</param>
+        /// <param name="code">A verification code. Auto-generated.</param>
         /// <returns>
         /// Redirect to an error page in the event of a bad request; or to the group management page if successful.
         /// </returns>
@@ -302,8 +303,8 @@ namespace VueCoreFramework.Controllers
             // Generate an email with a callback URL pointing to the 'AddUserToGroup' action.
             var confirmCode = await _userManager.GenerateEmailConfirmationTokenAsync(targetUser);
             var acceptCallbackUrl = Url.Action(nameof(GroupController.AddUserToGroup), "Group", new { userId = targetUser.Id, groupId = groupRole.Id, code = confirmCode }, protocol: HttpContext.Request.Scheme);
-            await _emailSender.SendEmailAsync(targetUser.Email, _responseLocalizer[ResponseMessages.GroupInviteSubject],
-                $"{_responseLocalizer[ResponseMessages.GroupInviteBody, group]} <a href='{acceptCallbackUrl}'>link</a>");
+            await _emailSender.SendEmailAsync(targetUser.Email, _responseLocalizer[EmailMessages.GroupInviteSubject],
+                $"{_responseLocalizer[EmailMessages.GroupInviteBody, group]} <a href='{acceptCallbackUrl}'>link</a>");
 
             return Ok();
         }

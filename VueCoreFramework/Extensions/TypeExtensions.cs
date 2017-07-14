@@ -5,6 +5,9 @@ using System.Reflection;
 
 namespace VueCoreFramework.Extensions
 {
+    /// <summary>
+    /// Custom extensions for <see cref="Type"/>.
+    /// </summary>
     public static class TypeExtensions
     {
         /// <summary>
@@ -32,11 +35,12 @@ namespace VueCoreFramework.Extensions
         };
 
         /// <summary>
-        /// Determines if the Type is an interger-type numeric type.
+        /// Determines if the <see cref="Type"/> is an integer-type numeric type.
         /// </summary>
         /// <remarks>
-        /// Integer-type numeric types are considered to include byte, sbyte, short, ushort, int,
-        /// uint, long, and ulong.
+        /// Integer-type numeric types are considered to include <see cref="byte"/>, <see
+        /// cref="sbyte"/>, <see cref="short"/>, <see cref="ushort"/>, <see cref="int"/>, <see
+        /// cref="uint"/>, <see cref="long"/>, and <see cref="ulong"/>.
         /// </remarks>
         public static bool IsIntegralNumeric(this Type type)
             => integralTypes.Contains(type)
@@ -50,10 +54,11 @@ namespace VueCoreFramework.Extensions
             || IsRealNumeric(type);
 
         /// <summary>
-        /// Determines if the Type is a real-type numeric type.
+        /// Determines if the <see cref="Type"/> is a real-type numeric type.
         /// </summary>
         /// <remarks>
-        /// Real-type numeric types are considered to include float, double, and decimal.
+        /// Real-type numeric types are considered to include <see cref="float"/>, <see
+        /// cref="double"/>, and <see cref="decimal"/>.
         /// </remarks>
         public static bool IsRealNumeric(this Type type)
             => realTypes.Contains(type)

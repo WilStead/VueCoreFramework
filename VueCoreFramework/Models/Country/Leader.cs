@@ -21,8 +21,10 @@ namespace VueCoreFramework.Models
     /// </remarks>
     public enum MaritalStatus
     {
+#pragma warning disable CS1591
         Married,
         Single
+#pragma warning restore CS1591
     }
 
     /// <summary>

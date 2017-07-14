@@ -34,27 +34,29 @@ namespace VueCoreFramework.Data
         string PrimaryKeyVMProperty { get; }
 
         /// <summary>
-        /// Asynchronously creates a new instance of <see cref="T"/> and adds it to the <see
+        /// Asynchronously creates a new instance of the repository's type and adds it to the <see
         /// cref="ApplicationDbContext"/> instance.
         /// </summary>
         /// <param name="childProp">
         /// An optional navigation property which will be set on the new object.
         /// </param>
         /// <param name="parentId">
-        /// The primary key of the entity which will be set on the <paramref name="childProp"/> property, as a string.
+        /// The primary key of the entity which will be set on the <paramref name="childProp"/>
+        /// property, as a string.
         /// </param>
         /// <returns>A ViewModel instance representing the newly added entity.</returns>
         Task<IDictionary<string, object>> AddAsync(PropertyInfo childProp, string parentId);
 
         /// <summary>
-        /// Asynchronously creates a new instance of <see cref="T"/> and adds it to the <see
+        /// Asynchronously creates a new instance of the repository's type and adds it to the <see
         /// cref="ApplicationDbContext"/> instance.
         /// </summary>
         /// <param name="childProp">
         /// An optional navigation property which will be set on the new object.
         /// </param>
         /// <param name="parentId">
-        /// The primary key of the entity which will be set on the <paramref name="childProp"/> property, as a string.
+        /// The primary key of the entity which will be set on the <paramref name="childProp"/>
+        /// property, as a string.
         /// </param>
         /// <param name="culture">A string indicating the current culture.</param>
         /// <returns>A ViewModel instance representing the newly added entity.</returns>
@@ -66,7 +68,7 @@ namespace VueCoreFramework.Data
         /// </summary>
         /// <param name="id">The primary key of the parent entity, as a string.</param>
         /// <param name="childProp">The navigation property to which the children will be added.</param>
-        /// <param name="childIds">The primary keys of the child entities which will be added, as strings.</param>
+        /// <param name="children">The primary keys of the child entities which will be added, as strings.</param>
         Task AddChildrenToCollectionAsync(string id, PropertyInfo childProp, IEnumerable<string> children);
 
         /// <summary>
@@ -125,7 +127,7 @@ namespace VueCoreFramework.Data
         /// <summary>
         /// Finds an entity with the given primary key value. If no entity is found, then null is returned.
         /// </summary>
-        /// <param name="id">The primary key of the entity to be found.</param>
+        /// <param name="key">The primary key of the entity to be found.</param>
         /// <returns>
         /// The item found, or null if none is found.
         /// </returns>
@@ -164,7 +166,6 @@ namespace VueCoreFramework.Data
         /// Calculates and enumerates the set of child entities in a given relationship with the
         /// given paging parameters, as ViewModels.
         /// </summary>
-        /// <param name="dataType">The type of the parent entity.</param>
         /// <param name="id">The primary key of the parent entity, as a string.</param>
         /// <param name="childProp">The navigation property of the relationship on the parent entity.</param>
         /// <param name="search">
@@ -180,6 +181,7 @@ namespace VueCoreFramework.Data
         /// </param>
         /// <param name="page">The page number requested.</param>
         /// <param name="rowsPerPage">The number of items per page.</param>
+        /// <param name="claims">The collection of claims held by the current user.</param>
         Task<IList<IDictionary<string, object>>> GetChildPageAsync(
             string id,
             PropertyInfo childProp,
@@ -194,7 +196,6 @@ namespace VueCoreFramework.Data
         /// Calculates and enumerates the set of child entities in a given relationship with the
         /// given paging parameters, as ViewModels.
         /// </summary>
-        /// <param name="dataType">The type of the parent entity.</param>
         /// <param name="id">The primary key of the parent entity, as a string.</param>
         /// <param name="childProp">The navigation property of the relationship on the parent entity.</param>
         /// <param name="search">
@@ -210,6 +211,7 @@ namespace VueCoreFramework.Data
         /// </param>
         /// <param name="page">The page number requested.</param>
         /// <param name="rowsPerPage">The number of items per page.</param>
+        /// <param name="claims">The collection of claims held by the current user.</param>
         /// <param name="culture">A string indicating the current culture.</param>
         Task<IList<IDictionary<string, object>>> GetChildPageAsync(
             string id,
@@ -250,8 +252,9 @@ namespace VueCoreFramework.Data
         /// <param name="rowsPerPage">The number of items per page.</param>
         /// <param name="except">
         /// An enumeration of primary keys of items which should be excluded from the results before
-        /// caluclating the page contents, as strings.
+        /// calculating the page contents, as strings.
         /// </param>
+        /// <param name="claims">The collection of claims held by the current user.</param>
         Task<IList<IDictionary<string, object>>> GetPageAsync(
             string search,
             string sortBy,
@@ -279,8 +282,9 @@ namespace VueCoreFramework.Data
         /// <param name="rowsPerPage">The number of items per page.</param>
         /// <param name="except">
         /// An enumeration of primary keys of items which should be excluded from the results before
-        /// caluclating the page contents, as strings.
+        /// calculating the page contents, as strings.
         /// </param>
+        /// <param name="claims">The collection of claims held by the current user.</param>
         /// <param name="culture">A string indicating the current culture.</param>
         Task<IList<IDictionary<string, object>>> GetPageAsync(
             string search,
@@ -309,10 +313,7 @@ namespace VueCoreFramework.Data
         /// </param>
         /// <param name="page">The page number requested.</param>
         /// <param name="rowsPerPage">The number of items per page.</param>
-        /// <param name="except">
-        /// An enumeration of primary keys of items which should be excluded from the results before
-        /// caluclating the page contents.
-        /// </param>
+        /// <param name="claims">The collection of claims held by the current user.</param>
         /// <param name="culture">A string indicating the current culture.</param>
         Task<IList<IDictionary<string, object>>> GetPageItemsAsync(
             IQueryable<object> items,

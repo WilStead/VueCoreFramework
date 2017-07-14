@@ -14,6 +14,9 @@
     <PackageProjectUrl>https://github.com/WilStead/VueCoreFramework</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/WilStead/VueCoreFramework/blob/master/LICENSE.txt</PackageLicenseUrl>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>VueCoreFramework.xml</DocumentationFile>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="JSNLog.AspNetCore" Version="2.24.0" />
     <PackageReference Include="MailKit" Version="1.16.2" />

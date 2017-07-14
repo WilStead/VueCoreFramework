@@ -29,7 +29,7 @@ namespace VueCoreFramework.Controllers
         private readonly IEmailSender _emailSender;
         private readonly IStringLocalizer<ErrorMessages> _errorLocalizer;
         private readonly ILogger<AccountController> _logger;
-        private readonly IStringLocalizer<ResponseMessages> _responseLocalizer;
+        private readonly IStringLocalizer<EmailMessages> _responseLocalizer;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly TokenProviderOptions _tokenOptions;
         private readonly UserManager<ApplicationUser> _userManager;
@@ -42,7 +42,7 @@ namespace VueCoreFramework.Controllers
             IEmailSender emailSender,
             IStringLocalizer<ErrorMessages> localizer,
             ILogger<AccountController> logger,
-            IStringLocalizer<ResponseMessages> responseLocalizer,
+            IStringLocalizer<EmailMessages> responseLocalizer,
             SignInManager<ApplicationUser> signInManager,
             IOptions<TokenProviderOptions> tokenOptions,
             UserManager<ApplicationUser> userManager)
@@ -245,8 +245,8 @@ namespace VueCoreFramework.Controllers
             // Send an email with this link
             var code = await _userManager.GeneratePasswordResetTokenAsync(user);
             var callbackUrl = Url.Action(nameof(ResetPassword), "Account", new { code = code }, protocol: HttpContext.Request.Scheme);
-            await _emailSender.SendEmailAsync(model.Username, _responseLocalizer[ResponseMessages.PasswordResetEmailSubject],
-                $"{_responseLocalizer[ResponseMessages.PasswordResetEmailBody]} <a href='{callbackUrl}'>{callbackUrl}</a>");
+            await _emailSender.SendEmailAsync(model.Username, _responseLocalizer[EmailMessages.PasswordResetEmailSubject],
+                $"{_responseLocalizer[EmailMessages.PasswordResetEmailBody]} <a href='{callbackUrl}'>{callbackUrl}</a>");
             _logger.LogInformation(LogEvent.RESET_PW_REQUEST, "Password reset request received for {USER}.", user.Email);
             return Ok();
         }
@@ -254,7 +254,7 @@ namespace VueCoreFramework.Controllers
         /// <summary>
         /// Called to retrieve a list of accepted external authentication providers.
         /// </summary>
-        /// <response code="200">A list of accepted external authentication providers.</returns>
+        /// <response code="200">A list of accepted external authentication providers.</response>
         [HttpGet]
         [ProducesResponseType(typeof(IDictionary<string, string>), 200)]
         public JsonResult GetAuthProviders()
@@ -289,8 +289,8 @@ namespace VueCoreFramework.Controllers
         /// Called to retrieve a list of external authentication providers presently associated with
         /// the current user's account.
         /// </summary>
-        /// <response="400">Invalid user.</returns>
-        /// <response="200">A list of external authentication providers.</returns>
+        /// <response code="400">Invalid user.</response>
+        /// <response code="200">A list of external authentication providers.</response>
         [Authorize]
         [HttpGet]
         [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
@@ -314,8 +314,8 @@ namespace VueCoreFramework.Controllers
         /// Called to determine if the current user account has a local password (may be false if the
         /// user registered with an external authentication provider).
         /// </summary>
-        /// <response="400">Invalid user.</returns>
-        /// <response="200">A 'yes' or 'no' response.</returns>
+        /// <response code="400">Invalid user.</response>
+        /// <response code="200">A 'yes' or 'no' response.</response>
         [Authorize]
         [HttpGet]
         [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
@@ -548,8 +548,8 @@ namespace VueCoreFramework.Controllers
             // Send an email with this link
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var callbackUrl = Url.Action(nameof(ConfirmEmail), "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
-            await _emailSender.SendEmailAsync(model.Email, _responseLocalizer[ResponseMessages.ConfirmAccountEmailSubject],
-                $"{_responseLocalizer[ResponseMessages.ConfirmAccountEmailBody]} <a href='{callbackUrl}'>link</a>");
+            await _emailSender.SendEmailAsync(model.Email, _responseLocalizer[EmailMessages.ConfirmAccountEmailSubject],
+                $"{_responseLocalizer[EmailMessages.ConfirmAccountEmailBody]} <a href='{callbackUrl}'>link</a>");
         }
 
         /// <summary>

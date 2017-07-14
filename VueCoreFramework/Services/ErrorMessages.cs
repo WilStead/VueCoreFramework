@@ -1,7 +1,11 @@
 ﻿namespace VueCoreFramework.Services
 {
+    /// <summary>
+    /// A collection of string constants used for error messages.
+    /// </summary>
     public class ErrorMessages
     {
+#pragma warning disable CS1591
         public const string AddItemError = "Item could not be added.";
         public const string AdminNoManagerError = "The administrator group does not have a manager.";
         public const string AdminOnlyError = "Only an administrator may perform that action.";
@@ -55,5 +59,6 @@
         public const string NoPermission = "You don't have permission to {0}.";
 
         public const string LockedAccount = "Your account has been locked. Please contact an administrator at {0} for assistance.";
+#pragma warning restore CS1591
     }
 }

@@ -34,7 +34,7 @@ namespace VueCoreFramework.Controllers
         private readonly IStringLocalizer<ErrorMessages> _errorLocalizer;
         private readonly RequestLocalizationOptions _localizationOptions;
         private readonly ILogger<ManageController> _logger;
-        private readonly IStringLocalizer<ResponseMessages> _responseLocalizer;
+        private readonly IStringLocalizer<EmailMessages> _responseLocalizer;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
@@ -49,7 +49,7 @@ namespace VueCoreFramework.Controllers
             IStringLocalizer<ErrorMessages> errorLocalizer,
             IOptions<RequestLocalizationOptions> localizationOptions,
             ILogger<ManageController> logger,
-            IStringLocalizer<ResponseMessages> responseLocalizer,
+            IStringLocalizer<EmailMessages> responseLocalizer,
             RoleManager<IdentityRole> roleManager,
             SignInManager<ApplicationUser> signInManager,
             UserManager<ApplicationUser> userManager)
@@ -106,16 +106,16 @@ namespace VueCoreFramework.Controllers
             // or from an unauthorized source.
             var confirmCode = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var restoreCallbackUrl = Url.Action(nameof(AccountController.RestoreEmail), "Account", new { userId = user.Id, code = confirmCode }, protocol: HttpContext.Request.Scheme);
-            await _emailSender.SendEmailAsync(user.Email, _responseLocalizer[ResponseMessages.ConfirmEmailChangeSubject],
-                $"{_responseLocalizer[ResponseMessages.ConfirmEmailChangeCancelBody]} <a href='{restoreCallbackUrl}'>link</a>");
+            await _emailSender.SendEmailAsync(user.Email, _responseLocalizer[EmailMessages.ConfirmEmailChangeSubject],
+                $"{_responseLocalizer[EmailMessages.ConfirmEmailChangeCancelBody]} <a href='{restoreCallbackUrl}'>link</a>");
 
             // Generate an email with a callback URL pointing to the 'ChangeEmail' action in the
             // 'Account' controller, which will confirm the change by validating that the newly
             // requested email belongs to the user.
             var changeCode = await _userManager.GenerateChangeEmailTokenAsync(user, user.NewEmail);
             var changeCallbackUrl = Url.Action(nameof(AccountController.ChangeEmail), "Account", new { userId = user.Id, code = changeCode }, protocol: HttpContext.Request.Scheme);
-            await _emailSender.SendEmailAsync(user.NewEmail, _responseLocalizer[ResponseMessages.ConfirmEmailChangeSubject],
-                $"{_responseLocalizer[ResponseMessages.ConfirmEmailChangeSubject]} <a href='{changeCallbackUrl}'>link</a>");
+            await _emailSender.SendEmailAsync(user.NewEmail, _responseLocalizer[EmailMessages.ConfirmEmailChangeSubject],
+                $"{_responseLocalizer[EmailMessages.ConfirmEmailChangeSubject]} <a href='{changeCallbackUrl}'>link</a>");
 
             _logger.LogInformation(LogEvent.EMAIL_CHANGE_REQUEST, "Email change request received, from {OLDEMAIL} to {NEWEMAIL}.", user.Email, user.NewEmail);
 
@@ -228,8 +228,8 @@ namespace VueCoreFramework.Controllers
                 new { userId = user.Id, code = code, xferUsername = xferUsername },
                 protocol: HttpContext.Request.Scheme);
             var loginLink = Url.Action(nameof(HomeController.Index), "Home", new { forwardUrl = "/login" });
-            await _emailSender.SendEmailAsync(user.Email, _responseLocalizer[ResponseMessages.ConfirmAccountDeletionSubject],
-                $"{_responseLocalizer[ResponseMessages.ConfirmAccountDeletionBody]} <a href='{restoreCallbackUrl}'>link</a>. {_responseLocalizer[ResponseMessages.ConfirmAccountDeletionBody2]} <a href='{loginLink}'>login</a>.");
+            await _emailSender.SendEmailAsync(user.Email, _responseLocalizer[EmailMessages.ConfirmAccountDeletionSubject],
+                $"{_responseLocalizer[EmailMessages.ConfirmAccountDeletionBody]} <a href='{restoreCallbackUrl}'>link</a>. {_responseLocalizer[EmailMessages.ConfirmAccountDeletionBody2]} <a href='{loginLink}'>login</a>.");
             return Ok();
         }
 

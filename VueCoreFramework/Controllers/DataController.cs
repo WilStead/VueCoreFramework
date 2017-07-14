@@ -33,7 +33,7 @@ namespace VueCoreFramework.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IStringLocalizer<ErrorMessages> _errorLocalizer;
         private readonly ILogger<AccountController> _logger;
-        private readonly IStringLocalizer<ResponseMessages> _responseLocalizer;
+        private readonly IStringLocalizer<EmailMessages> _responseLocalizer;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly UserManager<ApplicationUser> _userManager;
 
@@ -45,7 +45,7 @@ namespace VueCoreFramework.Controllers
             ApplicationDbContext context,
             IStringLocalizer<ErrorMessages> localizer,
             ILogger<AccountController> logger,
-            IStringLocalizer<ResponseMessages> responseLocalizer,
+            IStringLocalizer<EmailMessages> responseLocalizer,
             RoleManager<IdentityRole> roleManager,
             UserManager<ApplicationUser> userManager)
         {
@@ -69,6 +69,7 @@ namespace VueCoreFramework.Controllers
         /// <param name="parentId">
         /// The primary key of the entity which will be set on the <paramref name="childProp"/> property.
         /// </param>
+        /// <param name="culture">The name of the requested culture. Taken from the Accept-Language header.</param>
         /// <response code="400">Bad request.</response>
         /// <response code="403">Forbidden.</response>
         /// <response code="200">A ViewModel representing the newly added item.</response>
@@ -76,7 +77,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
         [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
         [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
-        public async Task<IActionResult> Add(string dataType, string childProp, string parentId, string culture)
+        public async Task<IActionResult> Add(string dataType, string childProp, string parentId, [FromHeader(Name = "Accept-Language")]string culture)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
@@ -208,6 +209,7 @@ namespace VueCoreFramework.Controllers
         /// </summary>
         /// <param name="dataType">The type of entity to find.</param>
         /// <param name="id">The primary key of the entity to be found.</param>
+        /// <param name="culture">The name of the requested culture. Taken from the Accept-Language header.</param>
         /// <response code="400">Bad request.</response>
         /// <response code="403">Forbidden.</response>
         /// <response code="200">A ViewModel representing the newly added item.</response>
@@ -215,7 +217,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
         [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
         [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
-        public async Task<IActionResult> Duplicate(string dataType, string id, string culture)
+        public async Task<IActionResult> Duplicate(string dataType, string id, [FromHeader(Name = "Accept-Language")]string culture)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -270,6 +272,7 @@ namespace VueCoreFramework.Controllers
         /// </summary>
         /// <param name="dataType">The type of entity to find.</param>
         /// <param name="id">The primary key of the entity to be found.</param>
+        /// <param name="culture">The name of the requested culture. Taken from the Accept-Language header.</param>
         /// <response code="400">Bad request.</response>
         /// <response code="403">Forbidden.</response>
         /// <response code="404">No such item.</response>
@@ -279,7 +282,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
         [ProducesResponseType(404)]
         [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
-        public async Task<IActionResult> Find(string dataType, string id, string culture)
+        public async Task<IActionResult> Find(string dataType, string id, [FromHeader(Name = "Accept-Language")]string culture)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -332,6 +335,8 @@ namespace VueCoreFramework.Controllers
         /// Called to retrieve ViewModels representing all the entities in the <see
         /// cref="ApplicationDbContext"/>'s set.
         /// </summary>
+        /// <param name="dataType">The type of entities to get.</param>
+        /// <param name="culture">The name of the requested culture. Taken from the Accept-Language header.</param>
         /// <response code="400">Bad request.</response>
         /// <response code="403">Forbidden.</response>
         /// <response code="200">A ViewModel representing the found item.</response>
@@ -339,7 +344,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
         [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
         [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
-        public async Task<IActionResult> GetAll(string dataType, string culture)
+        public async Task<IActionResult> GetAll(string dataType, [FromHeader(Name = "Accept-Language")]string culture)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
@@ -533,6 +538,7 @@ namespace VueCoreFramework.Controllers
         /// </param>
         /// <param name="page">The page number requested.</param>
         /// <param name="rowsPerPage">The number of items per page.</param>
+        /// <param name="culture">The name of the requested culture. Taken from the Accept-Language header.</param>
         /// <response code="400">Bad request.</response>
         /// <response code="403">Forbidden.</response>
         /// <response code="200">
@@ -551,7 +557,7 @@ namespace VueCoreFramework.Controllers
             bool descending,
             int page,
             int rowsPerPage,
-            string culture)
+            [FromHeader(Name = "Accept-Language")]string culture)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -744,6 +750,7 @@ namespace VueCoreFramework.Controllers
         /// <summary>
         /// Called to retrieve a list of <see cref="FieldDefinition"/>s for the given data type.
         /// </summary>
+        /// <param name="dataType">The type of the entity.</param>
         /// <response code="400">Bad request.</response>
         /// <response code="200">The list of <see cref="FieldDefinition"/>s.</response>
         [HttpGet]
@@ -786,6 +793,7 @@ namespace VueCoreFramework.Controllers
         /// The primary keys of items which should be excluded from the results before calculating
         /// the page contents.
         /// </param>
+        /// <param name="culture">The name of the requested culture. Taken from the Accept-Language header.</param>
         /// <response code="400">Bad request.</response>
         /// <response code="403">Forbidden.</response>
         /// <response code="200">
@@ -803,7 +811,7 @@ namespace VueCoreFramework.Controllers
             int page,
             int rowsPerPage,
             [FromBody]string[] except,
-            string culture)
+            [FromHeader(Name = "Accept-Language")]string culture)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);
@@ -1378,6 +1386,7 @@ namespace VueCoreFramework.Controllers
         /// <param name="dataType">The type of the parent entity.</param>
         /// <param name="parentId">The primary key of the parent entity in the relationship.</param>
         /// <param name="childProp">The navigation property of the relationship on the child entity.</param>
+        /// <param name="culture">The name of the requested culture. Taken from the Accept-Language header.</param>
         /// <response code="400">Bad request.</response>
         /// <response code="403">Forbidden.</response>
         /// <response code="200">A ViewModel representing the newly added item.</response>
@@ -1385,7 +1394,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
         [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
         [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
-        public async Task<IActionResult> ReplaceChildWithNew(string dataType, string parentId, string childProp, string culture)
+        public async Task<IActionResult> ReplaceChildWithNew(string dataType, string parentId, string childProp, [FromHeader(Name = "Accept-Language")]string culture)
         {
             if (string.IsNullOrEmpty(parentId))
             {
@@ -1508,6 +1517,7 @@ namespace VueCoreFramework.Controllers
         /// </summary>
         /// <param name="dataType">The type of entity to update.</param>
         /// <param name="item">The item to update.</param>
+        /// <param name="culture">The name of the requested culture. Taken from the Accept-Language header.</param>
         /// <response code="400">Bad request.</response>
         /// <response code="403">Forbidden.</response>
         /// <response code="200">A ViewModel representing the updated item.</response>
@@ -1515,7 +1525,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
         [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
         [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
-        public async Task<IActionResult> Update(string dataType, string culture, [FromBody]JObject item)
+        public async Task<IActionResult> Update(string dataType, [FromHeader(Name = "Accept-Language")]string culture, [FromBody]JObject item)
         {
             var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var user = await _userManager.FindByEmailAsync(email);

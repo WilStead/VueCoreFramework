@@ -18,18 +18,18 @@ namespace VueCoreFramework.Models
     [Flags]
     public enum CityTransit
     {
+#pragma warning disable CS1591
         None = 0,
         Airport = 1,
-
         /// <remarks>
         /// Description can be used to set the display value used in the dropdown. The name of the
         /// value is used otherwise.
         /// </remarks>
         [Description("Bus Station")]
         BusStation = 2,
-
         [Description("Train Depot")]
         TrainDepot = 4
+#pragma warning restore CS1591
     }
 
     /// <summary>

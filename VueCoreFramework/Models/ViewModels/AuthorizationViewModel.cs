@@ -1,16 +1,29 @@
-﻿using System.Collections.Generic;
-
-namespace VueCoreFramework.Models.ViewModels
+﻿namespace VueCoreFramework.Models.ViewModels
 {
     /// <summary>
     /// A ViewModel used to transfer information during user account authorization tasks.
     /// </summary>
     public class AuthorizationViewModel
     {
+        /// <summary>
+        /// Indicates that the user is authorized for the requested operation.
+        /// </summary>
         public const string Authorized = "authorized";
+        /// <summary>
+        /// Indicates that the user must sign in before performing the requested operation.
+        /// </summary>
         public const string Login = "login";
+        /// <summary>
+        /// Indicates that the user is authorized to share the requested data with anyone.
+        /// </summary>
         public const string ShareAny = "any";
+        /// <summary>
+        /// Indicates that the user is authorized to share the requested data with a group.
+        /// </summary>
         public const string ShareGroup = "group";
+        /// <summary>
+        /// Indicates that the user is not authorized for the requested operation.
+        /// </summary>
         public const string Unauthorized = "unauthorized";
 
         /// <summary>

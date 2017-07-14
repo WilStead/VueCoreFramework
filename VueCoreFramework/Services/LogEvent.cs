@@ -5,6 +5,7 @@
     /// </summary>
     public static class LogEvent
     {
+#pragma warning disable CS1591
         // User events
         public const int LOGIN = 1000;
         public const int LOGIN_EXTERNAL = 1001;
@@ -41,5 +42,6 @@
         // Internal errors
         public const int INTERNAL_ERROR = 9000;
         public const int SEND_EMAIL_ERROR = 9010;
+#pragma warning restore CS1591
     }
 }

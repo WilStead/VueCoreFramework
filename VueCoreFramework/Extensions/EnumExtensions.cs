@@ -3,13 +3,18 @@ using System.ComponentModel;
 
 namespace VueCoreFramework.Extensions
 {
+    /// <summary>
+    /// Custom extensions for enum.
+    /// </summary>
     public static class EnumExtensions
     {
         /// <summary>
-        /// Gets the description of the Enum value, or the Name of the value if no explicit description has been set.
+        /// Gets the description of the enum value, or the Name of the value if no
+        /// explicit description has been set.
         /// </summary>
         /// <returns>
-        /// The description, or null if the value is not named (e.g. a combined Flags value, or a value which is simply incorrect).
+        /// The description, or null if the value is not named (e.g. a combined Flags
+        /// value, or a value which is simply incorrect).
         /// </returns>
         public static string GetDescription(Type type, object item)
         {
@@ -27,7 +32,7 @@ namespace VueCoreFramework.Extensions
                 }
                 catch
                 {
-                    // An exception indicates the value is not defined in the Enum.
+                    // An exception indicates the value is not defined in the enum.
                     // This is not treated as an error here; a combined Flags value could be the cause.
                     // The original null value is returned.
                 }

@@ -8,6 +8,7 @@ using VueCoreFramework.Models;
 
 namespace VueCoreFramework.Migrations
 {
+#pragma warning disable CS1591
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20170713021139_Initial create")]
     partial class Initialcreate
@@ -433,4 +434,5 @@ namespace VueCoreFramework.Migrations
                 });
         }
     }
+#pragma warning restore CS1591
 }

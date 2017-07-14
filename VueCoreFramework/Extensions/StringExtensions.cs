@@ -2,6 +2,9 @@
 
 namespace VueCoreFramework.Extensions
 {
+    /// <summary>
+    /// Custom extensions for <see cref="string"/>.
+    /// </summary>
     public static class StringExtensions
     {
         /// <summary>

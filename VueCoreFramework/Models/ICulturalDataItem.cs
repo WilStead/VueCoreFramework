@@ -1,5 +1,9 @@
 ﻿namespace VueCoreFramework.Models
 {
+    /// <summary>
+    /// Types which implement this interface provide an overload of <see cref="ToString"/> which
+    /// accepts a culture.
+    /// </summary>
     public interface ICulturalDataItem
     {
         /// <summary>

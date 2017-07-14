@@ -1,10 +1,11 @@
 ﻿namespace VueCoreFramework.Services
 {
-    public class ResponseMessages
+    /// <summary>
+    /// A collection of string constants used to construct email messages.
+    /// </summary>
+    public class EmailMessages
     {
-        public const string Success = "Success";
-        public const string NoResults = "No results matching your request were found.";
-
+#pragma warning disable CS1591
         public const string PasswordResetEmailSubject = "Reset Password";
         public const string PasswordResetEmailBody = "Please reset your password by clicking here:";
 
@@ -21,5 +22,6 @@
 
         public const string GroupInviteSubject = "You've been invited to join a group";
         public const string GroupInviteBody = "You've been invited to join the {0} group. If you would like to accept the invitation, please click this link to become a group member:";
+#pragma warning restore CS1591
     }
 }

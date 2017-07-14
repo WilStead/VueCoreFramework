@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace VueCoreFramework.Migrations
 {
+#pragma warning disable CS1591
     public partial class Initialcreate : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -424,4 +425,5 @@ namespace VueCoreFramework.Migrations
                 name: "AspNetUsers");
         }
     }
+#pragma warning restore CS1591
 }

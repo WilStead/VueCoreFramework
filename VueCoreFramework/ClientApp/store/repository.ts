@@ -77,7 +77,6 @@ export class Repository {
         if (childProp && parentId) {
             url += `/${childProp}/${parentId}`;
         }
-        url += `?culture=${store.state.userState.culture}`;
         return fetch(url,
             {
                 method: 'POST',
@@ -143,7 +142,7 @@ export class Repository {
         if (id === undefined || id === null || id === '') {
             return Promise.reject("The item id was missing from your request.");
         }
-        return fetch(`/api/Data/${this.dataType}/Duplicate/${id}?culture=${store.state.userState.culture}`,
+        return fetch(`/api/Data/${this.dataType}/Duplicate/${id}`,
             {
                 method: 'GET',
                 headers: {
@@ -175,7 +174,7 @@ export class Repository {
         if (id === undefined || id === null || id === '') {
             return Promise.reject("The item id was missing from your request.");
         }
-        return fetch(`/api/Data/${this.dataType}/Find/${id}?culture=${store.state.userState.culture}`,
+        return fetch(`/api/Data/${this.dataType}/Find/${id}`,
             {
                 method: 'GET',
                 headers: {
@@ -208,7 +207,7 @@ export class Repository {
      * @returns {DataItem[]} All the items.
      */
     getAll(returnPath: string): Promise<DataItem[]> {
-        return fetch(`/api/Data/${this.dataType}/GetAll?culture=${store.state.userState.culture}`,
+        return fetch(`/api/Data/${this.dataType}/GetAll`,
             {
                 method: 'GET',
                 headers: {
@@ -313,7 +312,10 @@ export class Repository {
         descending: boolean,
         page: number,
         rowsPerPage: number): Promise<PageData<DataItem>> {
-        var url = `/api/Data/${this.dataType}/GetChildPage/${id}/${childProp}?`;
+        var url = `/api/Data/${this.dataType}/GetChildPage/${id}/${childProp}`;
+        if (search || sortBy || descending || page || rowsPerPage) {
+            url += '?';
+        }
         if (search) {
             url += `search=${encodeURIComponent(search)}`;
         }
@@ -341,10 +343,6 @@ export class Repository {
             }
             url += `rowsPerPage=${rowsPerPage}`;
         }
-        if (search || sortBy || descending || page || rowsPerPage) {
-            url += '&';
-        }
-        url += `culture=${store.state.userState.culture}`;
         return fetch(`/api/Data/${this.dataType}/GetChildTotal/${id}/${childProp}`,
             {
                 method: 'GET',
@@ -457,7 +455,10 @@ export class Repository {
         page: number,
         rowsPerPage: number,
         except: string[] = []): Promise<PageData<DataItem>> {
-        var url = `/api/Data/${this.dataType}/GetPage?`;
+        var url = `/api/Data/${this.dataType}/GetPage`;
+        if (search || sortBy || descending || page || rowsPerPage) {
+            url += '?';
+        }
         if (search) {
             url += `search=${encodeURIComponent(search)}`;
         }
@@ -743,7 +744,7 @@ export class Repository {
      * @returns {DataItem} The new item.
      */
     replaceChildWithNew(returnPath: string, parentId: string, childProp: string): Promise<DataItem> {
-        return fetch(`/api/Data/${this.dataType}/ReplaceChildWithNew/${parentId}/${childProp}?culture=${store.state.userState.culture}`,
+        return fetch(`/api/Data/${this.dataType}/ReplaceChildWithNew/${parentId}/${childProp}`,
             {
                 method: 'POST',
                 headers: {
@@ -773,7 +774,7 @@ export class Repository {
      * @returns {DataItem} A response object containing any error which occurred, or the updated item.
      */
     update(returnPath: string, vm: DataItem): Promise<DataItem> {
-        return fetch(`/api/Data/${this.dataType}/Update?culture=${store.state.userState.culture}`,
+        return fetch(`/api/Data/${this.dataType}/Update`,
             {
                 method: 'POST',
                 headers: {

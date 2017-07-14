@@ -26,7 +26,7 @@ namespace VueCoreFramework.Controllers
         private readonly AdminOptions _adminOptions;
         private readonly ApplicationDbContext _context;
         private readonly IStringLocalizer<ErrorMessages> _errorLocalizer;
-        private readonly IStringLocalizer<ResponseMessages> _responseLocalizer;
+        private readonly IStringLocalizer<EmailMessages> _responseLocalizer;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly UserManager<ApplicationUser> _userManager;
 
@@ -37,7 +37,7 @@ namespace VueCoreFramework.Controllers
             IOptions<AdminOptions> adminOptions,
             ApplicationDbContext context,
             IStringLocalizer<ErrorMessages> localizer,
-            IStringLocalizer<ResponseMessages> responseLocalizer,
+            IStringLocalizer<EmailMessages> responseLocalizer,
             RoleManager<IdentityRole> roleManager,
             UserManager<ApplicationUser> userManager)
         {

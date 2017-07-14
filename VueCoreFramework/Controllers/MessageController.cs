@@ -26,7 +26,7 @@ namespace VueCoreFramework.Controllers
         private readonly AdminOptions _adminOptions;
         private readonly ApplicationDbContext _context;
         private readonly IStringLocalizer<ErrorMessages> _errorLocalizer;
-        private readonly IStringLocalizer<ResponseMessages> _responseLocalizer;
+        private readonly IStringLocalizer<EmailMessages> _responseLocalizer;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly UserManager<ApplicationUser> _userManager;
 
@@ -37,7 +37,7 @@ namespace VueCoreFramework.Controllers
             IOptions<AdminOptions> adminOptions,
             ApplicationDbContext context,
             IStringLocalizer<ErrorMessages> localizer,
-            IStringLocalizer<ResponseMessages> responseLocalizer,
+            IStringLocalizer<EmailMessages> responseLocalizer,
             RoleManager<IdentityRole> roleManager,
             UserManager<ApplicationUser> userManager)
         {
@@ -406,7 +406,7 @@ namespace VueCoreFramework.Controllers
             }
             await _context.SaveChangesAsync();
 
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
 
         /// <summary>
@@ -442,7 +442,7 @@ namespace VueCoreFramework.Controllers
             }
             await _context.SaveChangesAsync();
 
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
 
         /// <summary>
@@ -474,7 +474,7 @@ namespace VueCoreFramework.Controllers
             }
             await _context.SaveChangesAsync();
 
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
 
         /// <summary>
@@ -526,7 +526,7 @@ namespace VueCoreFramework.Controllers
                 GroupRecipientName = groupRole.Name
             });
             await _context.SaveChangesAsync();
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
 
         /// <summary>
@@ -580,7 +580,7 @@ namespace VueCoreFramework.Controllers
                 SingleRecipientName = targetUser.UserName
             });
             await _context.SaveChangesAsync();
-            return Json(new { response = _responseLocalizer[ResponseMessages.Success] });
+            return Ok();
         }
     }
 }
