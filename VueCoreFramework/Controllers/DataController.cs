@@ -33,8 +33,9 @@ namespace VueCoreFramework.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IStringLocalizer<ErrorMessages> _errorLocalizer;
         private readonly ILogger<AccountController> _logger;
-        private readonly IStringLocalizer<EmailMessages> _responseLocalizer;
+        private readonly IStringLocalizer<EmailMessages> _emailLocalizer;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IStringLocalizer<Startup> _sharedLocalizer;
         private readonly UserManager<ApplicationUser> _userManager;
 
         /// <summary>
@@ -43,18 +44,20 @@ namespace VueCoreFramework.Controllers
         public DataController(
             IOptions<AdminOptions> adminOptions,
             ApplicationDbContext context,
-            IStringLocalizer<ErrorMessages> localizer,
+            IStringLocalizer<ErrorMessages> errorLocalizer,
             ILogger<AccountController> logger,
-            IStringLocalizer<EmailMessages> responseLocalizer,
+            IStringLocalizer<EmailMessages> emailLocalizer,
             RoleManager<IdentityRole> roleManager,
+            IStringLocalizer<Startup> sharedLocalizer,
             UserManager<ApplicationUser> userManager)
         {
             _adminOptions = adminOptions.Value;
             _context = context;
-            _errorLocalizer = localizer;
+            _errorLocalizer = errorLocalizer;
             _logger = logger;
-            _responseLocalizer = responseLocalizer;
+            _emailLocalizer = emailLocalizer;
             _roleManager = roleManager;
+            _sharedLocalizer = sharedLocalizer;
             _userManager = userManager;
         }
 
@@ -117,7 +120,7 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                var newItem = await repository.AddAsync(pInfo, parentId, culture);
+                var newItem = await repository.AddAsync(pInfo, parentId, culture, _sharedLocalizer);
                 var claimValue = $"{dataType}{{{newItem[newItem[repository.PrimaryKeyVMProperty] as string]}}}";
                 await _userManager.AddClaimsAsync(user, new Claim[] {
                     new Claim(CustomClaimTypes.PermissionDataOwner, claimValue),
@@ -253,7 +256,7 @@ namespace VueCoreFramework.Controllers
             object newItem = null;
             try
             {
-                newItem = await repository.DuplicateAsync(id, culture);
+                newItem = await repository.DuplicateAsync(id, culture, _sharedLocalizer);
             }
             catch
             {
@@ -318,7 +321,7 @@ namespace VueCoreFramework.Controllers
             object item = null;
             try
             {
-                item = await repository.FindAsync(id, culture);
+                item = await repository.FindAsync(id, culture, _sharedLocalizer);
             }
             catch
             {
@@ -373,7 +376,7 @@ namespace VueCoreFramework.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidDataTypeError]);
             }
-            return Json(await repository.GetAllAsync(culture));
+            return Json(await repository.GetAllAsync(culture, _sharedLocalizer));
         }
 
         /// <summary>
@@ -610,7 +613,7 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                var results = await repository.GetChildPageAsync(id, pInfo, search, sortBy, descending, page, rowsPerPage, claims, culture);
+                var results = await repository.GetChildPageAsync(id, pInfo, search, sortBy, descending, page, rowsPerPage, claims, culture, _sharedLocalizer);
                 return Json(results);
             }
             catch
@@ -764,7 +767,7 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                return Json(repository.FieldDefinitions);
+                return Json(repository.GetFieldDefinitions(_sharedLocalizer));
             }
             catch
             {
@@ -842,7 +845,7 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                return Json(await repository.GetPageAsync(search, sortBy, descending, page, rowsPerPage, except, claims, culture));
+                return Json(await repository.GetPageAsync(search, sortBy, descending, page, rowsPerPage, except, claims, culture, _sharedLocalizer));
             }
             catch
             {
@@ -1442,7 +1445,7 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                var (newItem, replacedId) = await repository.ReplaceChildWithNewAsync(parentId, pInfo, culture);
+                var (newItem, replacedId) = await repository.ReplaceChildWithNewAsync(parentId, pInfo, culture, _sharedLocalizer);
                 var claimValue = $"{dataType}{{{newItem[newItem[repository.PrimaryKeyVMProperty] as string]}}}";
                 await _userManager.AddClaimsAsync(user, new Claim[] {
                     new Claim(CustomClaimTypes.PermissionDataOwner, claimValue),
@@ -1558,7 +1561,7 @@ namespace VueCoreFramework.Controllers
             }
             try
             {
-                return base.Json(await repository.UpdateAsync(obj, culture));
+                return base.Json(await repository.UpdateAsync(obj, culture, _sharedLocalizer));
             }
             catch
             {

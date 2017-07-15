@@ -1,7 +1,6 @@
 ﻿using VueCoreFramework.Data.Attributes;
 using Newtonsoft.Json;
 using System;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -25,9 +24,9 @@ namespace VueCoreFramework.Models
         /// Description can be used to set the display value used in the dropdown. The name of the
         /// value is used otherwise.
         /// </remarks>
-        [Description("Bus Station")]
+        [Display(Name = "Bus Station")]
         BusStation = 2,
-        [Description("Train Depot")]
+        [Display(Name = "Train Depot")]
         TrainDepot = 4
 #pragma warning restore CS1591
     }

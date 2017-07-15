@@ -14,6 +14,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Metadata;
 using System.Globalization;
+using Microsoft.Extensions.Localization;
 
 namespace VueCoreFramework.Data
 {
@@ -27,6 +28,7 @@ namespace VueCoreFramework.Data
     public class Repository<T> : IRepository where T : class
     {
         private readonly ApplicationDbContext _context;
+        private List<FieldDefinition> _fieldDefinitions;
         private readonly bool _isMenuClass;
         private DbSet<T> items;
         private const string primaryKeyVMProperty = "primaryKeyProperty";
@@ -35,23 +37,6 @@ namespace VueCoreFramework.Data
         /// The <see cref="IEntityType"/> of this Repository. Read-only.
         /// </summary>
         public IEntityType EntityType { get; }
-
-        private List<FieldDefinition> _fieldDefinitions;
-        /// <summary>
-        /// The <see cref="FieldDefinition"/> s representing the properties of the repository's type. Read-only.
-        /// </summary>
-        /// <remarks>Calculates on demand and caches for future reference.</remarks>
-        public List<FieldDefinition> FieldDefinitions
-        {
-            get
-            {
-                if (_fieldDefinitions == null)
-                {
-                    _fieldDefinitions = GetFieldDefinitions().ToList();
-                }
-                return _fieldDefinitions;
-            }
-        }
 
         /// <summary>
         /// The primary key <see cref="IProperty"/> of this Repository's entity type. Read-only.
@@ -94,8 +79,9 @@ namespace VueCoreFramework.Data
         /// property, as a string.
         /// </param>
         /// <param name="culture">A string indicating the current culture.</param>
+        /// <param name="localizer">The current <see cref="IStringLocalizer"/> instance.</param>
         /// <returns>A ViewModel instance representing the newly added entity.</returns>
-        public async Task<IDictionary<string, object>> AddAsync(PropertyInfo childProp, string parentId, string culture)
+        public async Task<IDictionary<string, object>> AddAsync(PropertyInfo childProp, string parentId, string culture, IStringLocalizer localizer)
         {
             var item = typeof(T).GetConstructor(Type.EmptyTypes).Invoke(new object[] { });
 
@@ -142,23 +128,8 @@ namespace VueCoreFramework.Data
             items.Add(item as T);
             await _context.SaveChangesAsync();
 
-            return await GetViewModelAsync(item as T, culture);
+            return await GetViewModelAsync(item as T, culture, localizer);
         }
-
-        /// <summary>
-        /// Asynchronously creates a new instance of the repository's type and adds it to the <see
-        /// cref="ApplicationDbContext"/> instance.
-        /// </summary>
-        /// <param name="childProp">
-        /// An optional navigation property which will be set on the new object.
-        /// </param>
-        /// <param name="parentId">
-        /// The primary key of the entity which will be set on the <paramref name="childProp"/>
-        /// property, as a string.
-        /// </param>
-        /// <returns>A ViewModel instance representing the newly added entity.</returns>
-        public async Task<IDictionary<string, object>> AddAsync(PropertyInfo childProp, string parentId)
-            => await AddAsync(childProp, parentId, CultureInfo.CurrentCulture.Name);
 
         /// <summary>
         /// Asynchronously adds an assortment of child entities to a parent entity under the given
@@ -236,13 +207,14 @@ namespace VueCoreFramework.Data
         /// </summary>
         /// <param name="id">The primary key of the entity to be copied, as a string.</param>
         /// <param name="culture">A string indicating the current culture.</param>
+        /// <param name="localizer">The current <see cref="IStringLocalizer"/> instance.</param>
         /// <returns>A ViewModel representing the new item.</returns>
         /// <remarks>
         /// All non-navigation properties are copied. Navigation properties for one-to-many or
         /// many-to-many relationships are duplicated. Navigation properties for other
         /// relationships are left null (since the relationship forbids having more than one).
         /// </remarks>
-        public async Task<IDictionary<string, object>> DuplicateAsync(string id, string culture)
+        public async Task<IDictionary<string, object>> DuplicateAsync(string id, string culture, IStringLocalizer localizer)
         {
             var key = GetPrimaryKeyFromString(id);
             var oldItem = await items.FindAsync(key);
@@ -324,22 +296,8 @@ namespace VueCoreFramework.Data
                 await _context.SaveChangesAsync();
             }
 
-            return await GetViewModelAsync(newItem as T, culture);
+            return await GetViewModelAsync(newItem as T, culture, localizer);
         }
-
-        /// <summary>
-        /// Asynchronously duplicates an entity in the <see cref="ApplicationDbContext"/>. Returns a
-        /// ViewModel representing the new copy.
-        /// </summary>
-        /// <param name="id">The primary key of the entity to be copied, as a string.</param>
-        /// <returns>A ViewModel representing the new item.</returns>
-        /// <remarks>
-        /// All non-navigation properties are copied. Navigation properties for one-to-many or
-        /// many-to-many relationships are duplicated. Navigation properties for other
-        /// relationships are left null (since the relationship forbids having more than one).
-        /// </remarks>
-        public async Task<IDictionary<string, object>> DuplicateAsync(string id)
-            => await DuplicateAsync(id, CultureInfo.CurrentCulture.Name);
 
         /// <summary>
         /// Finds an entity with the given primary key value and returns a ViewModel for that entity.
@@ -347,8 +305,9 @@ namespace VueCoreFramework.Data
         /// </summary>
         /// <param name="id">The primary key of the entity to be found, as a string.</param>
         /// <param name="culture">A string indicating the current culture.</param>
+        /// <param name="localizer">The current <see cref="IStringLocalizer"/> instance.</param>
         /// <returns>A ViewModel representing the item found, or null if none is found.</returns>
-        public async Task<IDictionary<string, object>> FindAsync(string id, string culture)
+        public async Task<IDictionary<string, object>> FindAsync(string id, string culture, IStringLocalizer localizer)
         {
             var key = GetPrimaryKeyFromString(id);
             var item = await items.FindAsync(key);
@@ -356,17 +315,8 @@ namespace VueCoreFramework.Data
             {
                 return null;
             }
-            return await GetViewModelAsync(item, culture);
+            return await GetViewModelAsync(item, culture, localizer);
         }
-
-        /// <summary>
-        /// Finds an entity with the given primary key value and returns a ViewModel for that entity.
-        /// If no entity is found, null is returned.
-        /// </summary>
-        /// <param name="id">The primary key of the entity to be found, as a string.</param>
-        /// <returns>A ViewModel representing the item found, or an empty ViewModel if none is found.</returns>
-        public async Task<IDictionary<string, object>> FindAsync(string id)
-            => await FindAsync(id, CultureInfo.CurrentCulture.Name);
 
         /// <summary>
         /// Finds an entity with the given primary key value. If no entity is found, then null is returned.
@@ -406,24 +356,17 @@ namespace VueCoreFramework.Data
         /// ViewModel representing each.
         /// </summary>
         /// <param name="culture">A string indicating the current culture.</param>
+        /// <param name="localizer">The current <see cref="IStringLocalizer"/> instance.</param>
         /// <returns>ViewModels representing the items in the set.</returns>
-        public async Task<IList<IDictionary<string, object>>> GetAllAsync(string culture)
+        public async Task<IList<IDictionary<string, object>>> GetAllAsync(string culture, IStringLocalizer localizer)
         {
             IList<IDictionary<string, object>> all = new List<IDictionary<string, object>>();
             foreach (var item in items)
             {
-                all.Add(await GetViewModelAsync(item, culture));
+                all.Add(await GetViewModelAsync(item, culture, localizer));
             }
             return all;
         }
-
-        /// <summary>
-        /// Enumerates all the entities in the <see cref="ApplicationDbContext"/>'s set, returning a
-        /// ViewModel representing each.
-        /// </summary>
-        /// <returns>ViewModels representing the items in the set.</returns>
-        public async Task<IList<IDictionary<string, object>>> GetAllAsync()
-            => await GetAllAsync(CultureInfo.CurrentCulture.Name);
 
         /// <summary>
         /// Finds the primary keys of all child entities in the given relationship, as strings.
@@ -480,6 +423,7 @@ namespace VueCoreFramework.Data
         /// <param name="rowsPerPage">The number of items per page.</param>
         /// <param name="claims">The collection of claims held by the current user.</param>
         /// <param name="culture">A string indicating the current culture.</param>
+        /// <param name="localizer">The current <see cref="IStringLocalizer"/> instance.</param>
         public async Task<IList<IDictionary<string, object>>> GetChildPageAsync(
             string id,
             PropertyInfo childProp,
@@ -489,7 +433,8 @@ namespace VueCoreFramework.Data
             int page,
             int rowsPerPage,
             IList<Claim> claims,
-            string culture)
+            string culture,
+            IStringLocalizer localizer)
         {
             var item = await FindItemAsync(id);
             var coll = _context.Entry(item).Collection(childProp.Name);
@@ -507,46 +452,15 @@ namespace VueCoreFramework.Data
                     await _context.Entry(child).Navigation(mtmChildNav.Name).LoadAsync();
                 }
                 var childItems = coll.CurrentValue.Cast<object>().Select(c => mtmChildNav.PropertyInfo.GetValue(c)).AsQueryable();
-                return await childRepo.GetPageItemsAsync(childItems, search, sortBy, descending, page, rowsPerPage, claims, culture);
+                return await childRepo.GetPageItemsAsync(childItems, search, sortBy, descending, page, rowsPerPage, claims, culture, localizer);
             }
             else
             {
                 var childRepo = _context.GetRepositoryForType(childType.ClrType);
                 var childItems = coll.CurrentValue.Cast<object>().AsQueryable();
-                return await childRepo.GetPageItemsAsync(childItems, search, sortBy, descending, page, rowsPerPage, claims, culture);
+                return await childRepo.GetPageItemsAsync(childItems, search, sortBy, descending, page, rowsPerPage, claims, culture, localizer);
             }
         }
-
-        /// <summary>
-        /// Calculates and enumerates the set of child entities in a given relationship with the
-        /// given paging parameters, as ViewModels.
-        /// </summary>
-        /// <param name="id">The primary key of the parent entity, as a string.</param>
-        /// <param name="childProp">The navigation property of the relationship on the parent entity.</param>
-        /// <param name="search">
-        /// An optional search term which will filter the results. Any string or numeric property
-        /// with matching text will be included.
-        /// </param>
-        /// <param name="sortBy">
-        /// An optional property name which will be used to sort the items before calculating the
-        /// page contents.
-        /// </param>
-        /// <param name="descending">
-        /// Indicates whether the sort is descending; if false, the sort is ascending.
-        /// </param>
-        /// <param name="page">The page number requested.</param>
-        /// <param name="rowsPerPage">The number of items per page.</param>
-        /// <param name="claims">The collection of claims held by the current user.</param>
-        public async Task<IList<IDictionary<string, object>>> GetChildPageAsync(
-            string id,
-            PropertyInfo childProp,
-            string search,
-            string sortBy,
-            bool descending,
-            int page,
-            int rowsPerPage,
-            IList<Claim> claims)
-            => await GetChildPageAsync(id, childProp, search, sortBy, descending, page, rowsPerPage, claims, CultureInfo.CurrentCulture.Name);
 
         /// <summary>
         /// Retrieves the total number of child entities in the given relationship.
@@ -567,7 +481,7 @@ namespace VueCoreFramework.Data
         private static IEntityType GetEntityType(ApplicationDbContext context, Type type)
             => context.Model.FindEntityType(type.FullName);
 
-        private FieldDefinition GetFieldDefinition(PropertyInfo pInfo)
+        private FieldDefinition GetFieldDefinition(PropertyInfo pInfo, IStringLocalizer localizer)
         {
             var fd = new FieldDefinition
             {
@@ -857,7 +771,7 @@ namespace VueCoreFramework.Data
                         {
                             // The display text for each option is set to the enum value's description
                             // (name if one isn't explicitly specified).
-                            Text = EnumExtensions.GetDescription(pInfo.PropertyType, value),
+                            Text = EnumExtensions.GetDescription(pInfo.PropertyType, value, localizer),
                             Value = (int)value
                         });
                     }
@@ -990,12 +904,26 @@ namespace VueCoreFramework.Data
             return fd;
         }
 
-        private IEnumerable<FieldDefinition> GetFieldDefinitions()
+        /// <summary>
+        /// Retrieves the <see cref="FieldDefinition"/> s associated with this <see
+        /// cref="Repository{T}"/>'s data type. The list is cached for future retrieval.
+        /// </summary>
+        /// <param name="localizer">The current <see cref="IStringLocalizer"/> instance.</param>
+        /// <returns>
+        /// A <see cref="List{T}"/> of <see cref="FieldDefinition"/> s for this <see
+        /// cref="Repository{T}"/>'s data type.
+        /// </returns>
+        public IList<FieldDefinition> GetFieldDefinitions(IStringLocalizer localizer)
         {
-            foreach (var pInfo in typeof(T).GetProperties())
+            if (_fieldDefinitions == null)
             {
-                yield return GetFieldDefinition(pInfo);
+                _fieldDefinitions = new List<FieldDefinition>();
+                foreach (var pInfo in typeof(T).GetProperties())
+                {
+                    _fieldDefinitions.Add(GetFieldDefinition(pInfo, localizer));
+                }
             }
+            return _fieldDefinitions;
         }
 
         /// <summary>
@@ -1020,6 +948,7 @@ namespace VueCoreFramework.Data
         /// </param>
         /// <param name="claims">The collection of claims held by the current user.</param>
         /// <param name="culture">A string indicating the current culture.</param>
+        /// <param name="localizer">The current <see cref="IStringLocalizer"/> instance.</param>
         public async Task<IList<IDictionary<string, object>>> GetPageAsync(
             string search,
             string sortBy,
@@ -1028,40 +957,10 @@ namespace VueCoreFramework.Data
             int rowsPerPage,
             IEnumerable<string> except,
             IList<Claim> claims,
-            string culture)
+            string culture,
+            IStringLocalizer localizer)
             => await GetPageItemsAsync(items.Where(i => !except.Contains(PrimaryKey.PropertyInfo.GetValue(i).ToString())),
-                search, sortBy, descending, page, rowsPerPage, claims, culture);
-
-        /// <summary>
-        /// Calculates and enumerates the set of entities with the given paging parameters, as ViewModels.
-        /// </summary>
-        /// <param name="search">
-        /// An optional search term which will filter the results. Any string or numeric property
-        /// with matching text will be included.
-        /// </param>
-        /// <param name="sortBy">
-        /// An optional property name which will be used to sort the items before calculating the
-        /// page contents.
-        /// </param>
-        /// <param name="descending">
-        /// Indicates whether the sort is descending; if false, the sort is ascending.
-        /// </param>
-        /// <param name="page">The page number requested.</param>
-        /// <param name="rowsPerPage">The number of items per page.</param>
-        /// <param name="except">
-        /// An enumeration of primary keys of items which should be excluded from the results before
-        /// calculating the page contents, as strings.
-        /// </param>
-        /// <param name="claims">The collection of claims held by the current user.</param>
-        public async Task<IList<IDictionary<string, object>>> GetPageAsync(
-            string search,
-            string sortBy,
-            bool descending,
-            int page,
-            int rowsPerPage,
-            IEnumerable<string> except,
-            IList<Claim> claims)
-            => await GetPageAsync(search, sortBy, descending, page, rowsPerPage, except, claims, CultureInfo.CurrentCulture.Name);
+                search, sortBy, descending, page, rowsPerPage, claims, culture, localizer);
 
         /// <summary>
         /// Calculates and enumerates the given items with the given paging parameters, as ViewModels.
@@ -1082,6 +981,7 @@ namespace VueCoreFramework.Data
         /// <param name="rowsPerPage">The number of items per page.</param>
         /// <param name="claims">The collection of claims held by the current user.</param>
         /// <param name="culture">A string indicating the current culture.</param>
+        /// <param name="localizer">The current <see cref="IStringLocalizer"/> instance.</param>
         public async Task<IList<IDictionary<string, object>>> GetPageItemsAsync(
             IQueryable<object> items,
             string search,
@@ -1090,7 +990,8 @@ namespace VueCoreFramework.Data
             int page,
             int rowsPerPage,
             IList<Claim> claims,
-            string culture)
+            string culture,
+            IStringLocalizer localizer)
         {
             var dataType = typeof(T).Name;
 
@@ -1132,7 +1033,7 @@ namespace VueCoreFramework.Data
             IList<IDictionary<string, object>> vms = new List<IDictionary<string, object>>();
             foreach (var item in filteredItems)
             {
-                vms.Add(await GetViewModelAsync(item, culture));
+                vms.Add(await GetViewModelAsync(item, culture, localizer));
             }
             return vms;
         }
@@ -1214,7 +1115,7 @@ namespace VueCoreFramework.Data
         /// </summary>
         public async Task<long> GetTotalAsync() => await items.LongCountAsync();
 
-        private async Task<IDictionary<string, object>> GetViewModelAsync(T item, string culture)
+        private async Task<IDictionary<string, object>> GetViewModelAsync(T item, string culture, IStringLocalizer localizer)
         {
             IDictionary<string, object> vm = new Dictionary<string, object>();
 
@@ -1297,7 +1198,7 @@ namespace VueCoreFramework.Data
                     var name = pInfo.Name.ToInitialLower();
                     vm[name] = (int)value;
 
-                    var desc = EnumExtensions.GetDescription(pInfo.PropertyType, value);
+                    var desc = EnumExtensions.GetDescription(pInfo.PropertyType, value, localizer);
                     vm[name + "Formatted"] = string.IsNullOrEmpty(desc) ? "[...]" : desc;
                 }
                 // DateTime properties are given their actual value, but are also given a 'Formatted'
@@ -1615,7 +1516,8 @@ namespace VueCoreFramework.Data
         /// <param name="parentId">The primary key of the parent entity in the relationship, as a string.</param>
         /// <param name="childProp">The navigation property of the relationship on the child entity.</param>
         /// <param name="culture">A string indicating the current culture.</param>
-        public async Task<(IDictionary<string, object>, string)> ReplaceChildWithNewAsync(string parentId, PropertyInfo childProp, string culture)
+        /// <param name="localizer">The current <see cref="IStringLocalizer"/> instance.</param>
+        public async Task<(IDictionary<string, object>, string)> ReplaceChildWithNewAsync(string parentId, PropertyInfo childProp, string culture, IStringLocalizer localizer)
         {
             var parentRepo = _context.GetRepositoryForType(childProp.PropertyType);
             var parent = await parentRepo.FindItemAsync(parentId);
@@ -1623,7 +1525,7 @@ namespace VueCoreFramework.Data
             var nav = EntityType.FindNavigation(childProp.Name);
             var oldChildId = PrimaryKey.PropertyInfo.GetValue(nav.FindInverse().PropertyInfo.GetValue(parent)).ToString();
 
-            var newItem = await AddAsync(childProp, parentId, culture);
+            var newItem = await AddAsync(childProp, parentId, culture, localizer);
 
             var removed = await RemoveFromParentAsync(oldChildId, childProp);
 
@@ -1631,24 +1533,14 @@ namespace VueCoreFramework.Data
         }
 
         /// <summary>
-        /// Asynchronously creates a relationship between two entities, replacing another entity
-        /// which was previously in that relationship with a new entity. If the replaced entity is
-        /// made an orphan by the removal and is not a MenuClass object, it is then removed from the
-        /// <see cref="ApplicationDbContext"/> entirely.
-        /// </summary>
-        /// <param name="parentId">The primary key of the parent entity in the relationship, as a string.</param>
-        /// <param name="childProp">The navigation property of the relationship on the child entity.</param>
-        public async Task<(IDictionary<string, object>, string)> ReplaceChildWithNewAsync(string parentId, PropertyInfo childProp)
-            => await ReplaceChildWithNewAsync(parentId, childProp, CultureInfo.CurrentCulture.Name);
-
-        /// <summary>
         /// Asynchronously updates an entity in the <see cref="ApplicationDbContext"/>. Returns a
         /// ViewModel representing the updated item.
         /// </summary>
         /// <param name="item">The item to update.</param>
         /// <param name="culture">A string indicating the current culture.</param>
+        /// <param name="localizer">The current <see cref="IStringLocalizer"/> instance.</param>
         /// <returns>A ViewModel representing the updated item.</returns>
-        public async Task<IDictionary<string, object>> UpdateAsync(object item, string culture)
+        public async Task<IDictionary<string, object>> UpdateAsync(object item, string culture, IStringLocalizer localizer)
         {
             if (item == null)
             {
@@ -1656,16 +1548,7 @@ namespace VueCoreFramework.Data
             }
             items.Update(item as T);
             await _context.SaveChangesAsync();
-            return await GetViewModelAsync(item as T, culture);
+            return await GetViewModelAsync(item as T, culture, localizer);
         }
-
-        /// <summary>
-        /// Asynchronously updates an entity in the <see cref="ApplicationDbContext"/>. Returns a
-        /// ViewModel representing the updated item.
-        /// </summary>
-        /// <param name="item">The item to update.</param>
-        /// <returns>A ViewModel representing the updated item.</returns>
-        public async Task<IDictionary<string, object>> UpdateAsync(object item)
-            => await UpdateAsync(item, CultureInfo.CurrentCulture.Name);
     }
 }

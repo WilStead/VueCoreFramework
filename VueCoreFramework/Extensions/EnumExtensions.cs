@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Microsoft.Extensions.Localization;
+using System;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace VueCoreFramework.Extensions
 {
@@ -16,14 +18,14 @@ namespace VueCoreFramework.Extensions
         /// The description, or null if the value is not named (e.g. a combined Flags
         /// value, or a value which is simply incorrect).
         /// </returns>
-        public static string GetDescription(Type type, object item)
+        public static string GetDescription(Type type, object item, IStringLocalizer localizer)
         {
             string description = null;
             if (item == null)
             {
                 return description;
             }
-            var attr = item.GetAttribute<DescriptionAttribute>();
+            var attr = item.GetAttribute<DisplayAttribute>();
             if (attr == null)
             {
                 try
@@ -39,9 +41,9 @@ namespace VueCoreFramework.Extensions
             }
             else
             {
-                description = attr.Description;
+                description = attr.Name;
             }
-            return description;
+            return localizer[description];
         }
     }
 }

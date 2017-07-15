@@ -29,7 +29,7 @@ namespace VueCoreFramework.Controllers
         private readonly IEmailSender _emailSender;
         private readonly IStringLocalizer<ErrorMessages> _errorLocalizer;
         private readonly ILogger<AccountController> _logger;
-        private readonly IStringLocalizer<EmailMessages> _responseLocalizer;
+        private readonly IStringLocalizer<EmailMessages> _emailLocalizer;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly TokenProviderOptions _tokenOptions;
         private readonly UserManager<ApplicationUser> _userManager;
@@ -40,18 +40,18 @@ namespace VueCoreFramework.Controllers
         public AccountController(
             IOptions<AdminOptions> adminOptions,
             IEmailSender emailSender,
-            IStringLocalizer<ErrorMessages> localizer,
+            IStringLocalizer<ErrorMessages> errorLocalizer,
             ILogger<AccountController> logger,
-            IStringLocalizer<EmailMessages> responseLocalizer,
+            IStringLocalizer<EmailMessages> emailLocalizer,
             SignInManager<ApplicationUser> signInManager,
             IOptions<TokenProviderOptions> tokenOptions,
             UserManager<ApplicationUser> userManager)
         {
             _adminOptions = adminOptions.Value;
             _emailSender = emailSender;
-            _errorLocalizer = localizer;
+            _errorLocalizer = errorLocalizer;
             _logger = logger;
-            _responseLocalizer = responseLocalizer;
+            _emailLocalizer = emailLocalizer;
             _signInManager = signInManager;
             _tokenOptions = tokenOptions.Value;
             _userManager = userManager;
@@ -245,8 +245,8 @@ namespace VueCoreFramework.Controllers
             // Send an email with this link
             var code = await _userManager.GeneratePasswordResetTokenAsync(user);
             var callbackUrl = Url.Action(nameof(ResetPassword), "Account", new { code = code }, protocol: HttpContext.Request.Scheme);
-            await _emailSender.SendEmailAsync(model.Username, _responseLocalizer[EmailMessages.PasswordResetEmailSubject],
-                $"{_responseLocalizer[EmailMessages.PasswordResetEmailBody]} <a href='{callbackUrl}'>{callbackUrl}</a>");
+            await _emailSender.SendEmailAsync(model.Username, _emailLocalizer[EmailMessages.PasswordResetEmailSubject],
+                $"{_emailLocalizer[EmailMessages.PasswordResetEmailBody]} <a href='{callbackUrl}'>{callbackUrl}</a>");
             _logger.LogInformation(LogEvent.RESET_PW_REQUEST, "Password reset request received for {USER}.", user.Email);
             return Ok();
         }
@@ -548,8 +548,8 @@ namespace VueCoreFramework.Controllers
             // Send an email with this link
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var callbackUrl = Url.Action(nameof(ConfirmEmail), "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
-            await _emailSender.SendEmailAsync(model.Email, _responseLocalizer[EmailMessages.ConfirmAccountEmailSubject],
-                $"{_responseLocalizer[EmailMessages.ConfirmAccountEmailBody]} <a href='{callbackUrl}'>link</a>");
+            await _emailSender.SendEmailAsync(model.Email, _emailLocalizer[EmailMessages.ConfirmAccountEmailSubject],
+                $"{_emailLocalizer[EmailMessages.ConfirmAccountEmailBody]} <a href='{callbackUrl}'>link</a>");
         }
 
         /// <summary>
