@@ -1153,6 +1153,12 @@ namespace VueCoreFramework.Data
                 {
                     cValue = value as ICulturalDataItem;
                 }
+                var isLocalizable = pInfo.PropertyType.GetInterfaces().Any(i => i == typeof(ILocalizable));
+                ILocalizable lValue = null;
+                if (value != null && isLocalizable)
+                {
+                    lValue = value as ILocalizable;
+                }
 
                 if (nav != null)
                 {
@@ -1167,8 +1173,18 @@ namespace VueCoreFramework.Data
                     }
                     else
                     {
-                        vm[pInfo.Name.ToInitialLower()] =
-                            (item == null || value == null ? "[None]" : (isCultural ? cValue.ToString(culture) : value.ToString()));
+                        if (item == null)
+                        {
+                            vm[pInfo.Name.ToInitialLower()] = "[None]";
+                        }
+                        else if (isCultural)
+                        {
+                            vm[pInfo.Name.ToInitialLower()] = cValue.ToString(culture);
+                        }
+                        else if (isLocalizable)
+                        {
+                            vm[pInfo.Name.ToInitialLower()] = lValue.ToString(localizer);
+                        }
                     }
                 }
                 // Keys are always hidden in the SPA framework, but are still included in the
