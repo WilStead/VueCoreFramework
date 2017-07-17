@@ -30,26 +30,6 @@ interface LoginViewModel {
      * again during future sessions, rather than forgotten after navigating away from the site.
      */
     rememberUser: boolean;
-
-    /**
-     * An optional URL to which the user will be redirected.
-     */
-    returnUrl: string;
-
-    /**
-     * Indicates that the user is to be redirected to another page.
-     */
-    redirect: boolean;
-
-    /**
-     * A JWT bearer token.
-     */
-    token: string;
-
-    /**
-     * A list of errors generated during the operation.
-     */
-    errors: Array<string>;
 }
 
 /**
@@ -74,6 +54,7 @@ export default class LoginComponent extends Vue {
     authProviderFacebook = false;
     authProviderGoogle = false;
     authProviderMicrosoft = false;
+    errorMessage = '';
     forgottenPassword = false;
     formOptions: VFGOptions = {
         validateAfterChanged: true
@@ -83,11 +64,7 @@ export default class LoginComponent extends Vue {
         username: '',
         password: '',
         authProvider: '',
-        rememberUser: false,
-        returnUrl: this.returnUrl || '',
-        redirect: false,
-        token: '',
-        errors: []
+        rememberUser: false
     };
     passwordReset = false;
     schema: Schema = {
@@ -195,7 +172,7 @@ export default class LoginComponent extends Vue {
 
     onSignInProvider(provider: string) {
         this.submitting = true;
-        this.model.errors = [];
+        this.errorMessage = '';
         this.model.authProvider = provider;
         fetch('/api/Account/ExternalLogin',
             {
@@ -211,34 +188,26 @@ export default class LoginComponent extends Vue {
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {
-                        this.model.errors.push(response.statusText);
+                        this.errorMessage = response.statusText;
                     } else {
-                        this.model.errors.push("A problem occurred.");
+                        this.errorMessage = "A problem occurred.";
                     }
                     throw new Error(response.statusText);
                 }
                 return response;
             })
-            .then(response => response.json() as Promise<LoginViewModel>)
+            .then(response => response.json() as Promise<string>)
             .then(data => {
-                if (data.errors) {
-                    this.model.errors = data.errors;
-                } else {
-                    if (data.token) {
-                        this.$store.commit(Store.setToken, data.token);
-                        if (this.model.rememberUser) {
-                            localStorage.setItem('token', data.token);
-                        }
-                    }
-                    if (data.redirect) {
-                        this.$router.push(data.returnUrl);
-                    }
+                this.$store.commit(Store.setToken, data);
+                if (this.model.rememberUser) {
+                    localStorage.setItem('token', data);
                 }
+                this.$router.push(this.returnUrl || '/');
                 this.submitting = false;
             })
             .catch(error => {
-                if (this.model.errors.length === 0) {
-                    this.model.errors.push("A problem occurred.");
+                if (!this.errorMessage) {
+                    this.errorMessage = "A problem occurred.";
                     ErrorMsg.logError("login.onSignInProvider", new Error(error));
                 }
                 this.submitting = false;
@@ -248,7 +217,7 @@ export default class LoginComponent extends Vue {
     onSubmit() {
         if (!this.isValid) return;
         this.submitting = true;
-        this.model.errors = [];
+        this.errorMessage = '';
         fetch('/api/Account/Login',
             {
                 method: 'POST',
@@ -262,30 +231,26 @@ export default class LoginComponent extends Vue {
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {
-                        this.model.errors.push(response.statusText);
+                        this.errorMessage = response.statusText;
                     } else {
-                        this.model.errors.push("A problem occurred.");
+                        this.errorMessage = "A problem occurred.";
                     }
                     throw new Error(response.statusText);
                 }
                 return response;
             })
-            .then(response => response.json() as Promise<LoginViewModel>)
+            .then(response => response.json() as Promise<string>)
             .then(data => {
-                if (data.token) {
-                    this.$store.commit(Store.setToken, data.token);
-                    if (this.model.rememberUser) {
-                        localStorage.setItem('token', data.token);
-                    }
+                this.$store.commit(Store.setToken, data);
+                if (this.model.rememberUser) {
+                    localStorage.setItem('token', data);
                 }
-                if (data.redirect) {
-                    this.$router.push(data.returnUrl);
-                }
+                this.$router.push(this.returnUrl || '/');
                 this.submitting = false;
             })
             .catch(error => {
-                if (this.model.errors.length === 0) {
-                    this.model.errors.push("A problem occurred. Login failed.");
+                if (!this.errorMessage) {
+                    this.errorMessage = "A problem occurred. Login failed.";
                     ErrorMsg.logError("login.onSubmit", new Error(error));
                 }
                 this.submitting = false;

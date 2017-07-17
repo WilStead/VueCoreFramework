@@ -137,7 +137,7 @@ namespace VueCoreFramework.Controllers
                 return BadRequest(_errorLocalizer[ErrorMessages.AuthProviderError]);
             }
             // Request a redirect to the external login provider.
-            var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Account", new { ReturnUrl = model.ReturnUrl, RememberUser = model.RememberUser });
+            var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Account", new { RememberUser = model.RememberUser });
             var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider.AuthenticationScheme, redirectUrl);
             return Challenge(properties, provider.AuthenticationScheme);
         }
@@ -148,11 +148,11 @@ namespace VueCoreFramework.Controllers
         /// </summary>
         /// <returns>A <see cref="LoginViewModel"/> used to transfer task data.</returns>
         /// <response code="400">Invalid login attempt.</response>
-        /// <response code="200">External login response data.</response>
+        /// <response code="200">An access token.</response>
         [HttpGet]
         [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
-        [ProducesResponseType(typeof(LoginViewModel), 200)]
-        public async Task<IActionResult> ExternalLoginCallback(string returnUrl = null, bool rememberUser = false, string remoteError = null)
+        [ProducesResponseType(typeof(IDictionary<string, string>), 200)]
+        public async Task<IActionResult> ExternalLoginCallback(bool rememberUser = false, string remoteError = null)
         {
             if (remoteError != null)
             {
@@ -171,25 +171,18 @@ namespace VueCoreFramework.Controllers
                 return BadRequest(_errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
 
-            var model = new LoginViewModel
-            {
-                ReturnUrl = returnUrl,
-                RememberUser = rememberUser
-            };
             // Sign in the user with this external login provider if the user already has a login.
             var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, rememberUser);
             if (result.Succeeded)
             {
                 _logger.LogInformation(LogEvent.LOGIN_EXTERNAL, "User {USER} logged in with {PROVIDER}.", info.Principal.FindFirstValue(ClaimTypes.Email), info.LoginProvider);
-                model.Redirect = true;
-                model.Token = GetLoginToken(user, _userManager, _tokenOptions);
 
                 Response.Cookies.Append(
                     CookieRequestCultureProvider.DefaultCookieName,
                     CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(user.Culture)),
                     new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) });
 
-                return Json(model);
+                return Json(GetLoginToken(user, _userManager, _tokenOptions));
             }
             else
             {
@@ -206,12 +199,10 @@ namespace VueCoreFramework.Controllers
                     {
                         await _signInManager.SignInAsync(user, rememberUser);
                         _logger.LogInformation(LogEvent.NEW_ACCOUNT_EXTERNAL, "New account created for {USER} with {PROVIDER}.", user.Email, info.LoginProvider);
-                        model.Redirect = true;
-                        return Json(model);
+                        return Json(GetLoginToken(user, _userManager, _tokenOptions));
                     }
                 }
-                model.Errors.AddRange(newResult.Errors.Select(e => e.Description));
-                return Json(model);
+                return BadRequest(_errorLocalizer[ErrorMessages.InvalidLogin]);
             }
         }
 
@@ -337,11 +328,11 @@ namespace VueCoreFramework.Controllers
         /// <param name="model">A <see cref="LoginViewModel"/> used to transfer task data.</param>
         /// <response code="400">Invalid login attempt.</response>
         /// <response code="403">Locked account.</response>
-        /// <response code="200">Login response data.</response>
+        /// <response code="200">An access token.</response>
         [HttpPost]
         [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
         [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
-        [ProducesResponseType(typeof(LoginViewModel), 200)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 200)]
         public async Task<IActionResult> Login([FromBody]LoginViewModel model)
         {
             // Users can sign in with a username or email address.
@@ -375,16 +366,13 @@ namespace VueCoreFramework.Controllers
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidLogin]);
             }
 
-            model.Token = GetLoginToken(user, _userManager, _tokenOptions);
-
             Response.Cookies.Append(
                 CookieRequestCultureProvider.DefaultCookieName,
                 CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(user.Culture)),
                 new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) });
 
             _logger.LogInformation(LogEvent.LOGIN, "User {USER} logged in.", user.Email);
-            model.Redirect = true;
-            return Json(model);
+            return Json(GetLoginToken(user, _userManager, _tokenOptions));
         }
 
         /// <summary>

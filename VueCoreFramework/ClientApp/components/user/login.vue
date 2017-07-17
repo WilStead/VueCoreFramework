@@ -2,11 +2,7 @@
     <v-layout row wrap justify-center>
         <v-card>
             <v-card-title primary-title class="primary--text headline">Sign In</v-card-title>
-            <v-alert error :value="model.errors.length > 0">
-                <ul>
-                    <li v-for="error in model.errors">{{ error }}</li>
-                </ul>
-            </v-alert>
+            <v-alert error :value="shareErrorMessage">{{ errorMessage }}</v-alert>
             <v-card-text>
                 <vue-form-generator class="vfg-container" :schema="schema" :model="model" :options="formOptions" @validated="onValidated"></vue-form-generator>
             </v-card-text>
