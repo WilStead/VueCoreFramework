@@ -64,14 +64,5 @@ namespace VueCoreFramework.Test.Extensions
         {
             Assert.AreEqual(capitalizedTestLowercased, capitalizedTest.ToInitialLower());
         }
-
-        [TestMethod]
-        public void GetSingularFormsTest()
-        {
-            foreach (var word in singularizedWords)
-            {
-                Assert.IsTrue(singularizedWords[word.Key].GetSingularForms().Contains(word.Value));
-            }
-        }
     }
 }
