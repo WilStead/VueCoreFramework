@@ -1,0 +1,821 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>VueCoreFramework.API</name>
+    </assembly>
+    <members>
+        <member name="T:VueCoreFramework.API.Controllers.DataController">
+            <summary>
+            The API controller for handling data manipulation tasks.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.AdminOptions},VueCoreFramework.Core.Data.ApplicationDbContext,Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.ErrorMessages},Microsoft.Extensions.Logging.ILogger{VueCoreFramework.API.Controllers.DataController},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.EmailMessages},Microsoft.AspNetCore.Identity.RoleManager{Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.API.Startup},Microsoft.AspNetCore.Identity.UserManager{VueCoreFramework.Core.Models.ApplicationUser})">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.API.Controllers.DataController"/>.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.Add(System.String,System.String,System.String,System.String)">
+            <summary>
+            Called to create a new instance of <paramref name="dataType"/> and add it to the <see
+            cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> instance.
+            </summary>
+            <param name="dataType">The type of entity to add.</param>
+            <param name="childProp">
+            An optional navigation property which will be set on the new object.
+            </param>
+            <param name="parentId">
+            The primary key of the entity which will be set on the <paramref name="childProp"/> property.
+            </param>
+            <param name="culture">The name of the requested culture. Taken from the Accept-Language header.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">A ViewModel representing the newly added item.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.AddChildrenToCollection(System.String,System.String,System.String,System.String[])">
+            <summary>
+            Called to add an assortment of child entities to a parent entity under the given
+            navigation property.
+            </summary>
+            <param name="dataType">The type of entities to add.</param>
+            <param name="id">The primary key of the parent entity.</param>
+            <param name="childProp">The navigation property to which the children will be added.</param>
+            <param name="childIds">The primary keys of the child entities which will be added.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.Duplicate(System.String,System.String,System.String)">
+            <summary>
+            Called to duplicate an entity in the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>. Returns a
+            ViewModel representing the new copy.
+            </summary>
+            <param name="dataType">The type of entity to find.</param>
+            <param name="id">The primary key of the entity to be found.</param>
+            <param name="culture">The name of the requested culture. Taken from the Accept-Language header.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">A ViewModel representing the newly added item.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.Find(System.String,System.String,System.String)">
+            <summary>
+            Called to find an entity with the given primary key value and return a ViewModel for that
+            entity. If no entity is found, an empty ViewModel is returned (not null).
+            </summary>
+            <param name="dataType">The type of entity to find.</param>
+            <param name="id">The primary key of the entity to be found.</param>
+            <param name="culture">The name of the requested culture. Taken from the Accept-Language header.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="404">No such item.</response>
+            <response code="200">A ViewModel representing the found item.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.GetAll(System.String,System.String)">
+            <summary>
+            Called to retrieve ViewModels representing all the entities in the <see
+            cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>'s set.
+            </summary>
+            <param name="dataType">The type of entities to get.</param>
+            <param name="culture">The name of the requested culture. Taken from the Accept-Language header.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">A ViewModel representing the found item.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.GetAllChildIds(System.String,System.String,System.String)">
+            <summary>
+            Called to retrieve all the primary keys of the entities in a given relationship.
+            </summary>
+            <param name="dataType">The type of the parent entity.</param>
+            <param name="id">The primary key of the parent entity.</param>
+            <param name="childProp">The navigation property of the relationship on the parent entity.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">A list of child primary keys.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.GetChildId(System.String,System.String,System.String)">
+            <summary>
+            Called to retrieve the primary key of a child entity in the given relationship.
+            </summary>
+            <param name="dataType">The type of the parent entity.</param>
+            <param name="id">The primary key of the parent entity.</param>
+            <param name="childProp">The navigation property of the relationship.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">The child's primary key.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.GetChildPage(System.String,System.String,System.String,System.String,System.String,System.Boolean,System.Int32,System.Int32,System.String)">
+            <summary>
+            Called to retrieve a page of child entities in a given relationship.
+            </summary>
+            <param name="dataType">The type of the parent entity.</param>
+            <param name="id">The primary key of the parent entity.</param>
+            <param name="childProp">The navigation property of the relationship on the parent entity.</param>
+            <param name="search">
+            An optional search term which will filter the results. Any string or numeric property
+            with matching text will be included.
+            </param>
+            <param name="sortBy">
+            An optional property name which will be used to sort the items before calculating the
+            page contents.
+            </param>
+            <param name="descending">
+            Indicates whether the sort is descending; if false, the sort is ascending.
+            </param>
+            <param name="page">The page number requested.</param>
+            <param name="rowsPerPage">The number of items per page.</param>
+            <param name="culture">The name of the requested culture. Taken from the Accept-Language header.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">
+            A list of ViewModels representing the child objects on the requested page.
+            </response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.GetChildTotal(System.String,System.String,System.String)">
+            <summary>
+            Called to retrieve the total number of child entities in the given relationship.
+            </summary>
+            <param name="dataType">The type of the parent entity.</param>
+            <param name="id">The primary key of the parent entity.</param>
+            <param name="childProp">The navigation property of the relationship on the parent entity.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">The total.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.GetChildTypes">
+            <summary>
+            Called to retrieve a list of all entities which are not MenuClass types.
+            </summary>
+            <response code="400">Bad request.</response>
+            <response code="200">The list of type info.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.GetFieldDefinitions(System.String)">
+            <summary>
+            Called to retrieve a list of <see cref="T:VueCoreFramework.Core.Models.FieldDefinition"/>s for the given data type.
+            </summary>
+            <param name="dataType">The type of the entity.</param>
+            <response code="400">Bad request.</response>
+            <response code="200">The list of <see cref="T:VueCoreFramework.Core.Models.FieldDefinition"/>s.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.GetPage(System.String,System.String,System.String,System.Boolean,System.Int32,System.Int32,System.String[],System.String)">
+            <summary>
+            Called to retrieve the set of entities with the given paging parameters.
+            </summary>
+            <param name="dataType">The type of the entity.</param>
+            <param name="search">
+            An optional search term which will filter the results. Any string or numeric property
+            with matching text will be included.
+            </param>
+            <param name="sortBy">
+            An optional property name which will be used to sort the items before calculating the
+            page contents.
+            </param>
+            <param name="descending">
+            Indicates whether the sort is descending; if false, the sort is ascending.
+            </param>
+            <param name="page">The page number requested.</param>
+            <param name="rowsPerPage">The number of items per page.</param>
+            <param name="except">
+            The primary keys of items which should be excluded from the results before calculating
+            the page contents.
+            </param>
+            <param name="culture">The name of the requested culture. Taken from the Accept-Language header.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">
+            A list of ViewModels representing the entities on the requested page.
+            </response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.GetTotal(System.String)">
+            <summary>
+            Called to retrieve the total number of entities of the given data type.
+            </summary>
+            <param name="dataType">The type of the entity.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">The total.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.GetTypes">
+            <summary>
+            Called to retrieve a list of all entities which are MenuClass types.
+            </summary>
+            <response code="400">Bad request.</response>
+            <response code="200">The list of type info.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.Remove(System.String,System.String)">
+            <summary>
+            Called to remove an entity from the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
+            </summary>
+            <param name="dataType">The type of entity to remove.</param>
+            <param name="id">The primary key of the entity to remove.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.RemoveChildrenFromCollection(System.String,System.String,System.String,System.String[])">
+            <summary>
+            Called to remove an assortment of child entities from a parent entity under the given
+            navigation property.
+            </summary>
+            <param name="dataType">The type of the parent entity.</param>
+            <param name="id">The primary key of the parent entity.</param>
+            <param name="childProp">The navigation property from which the children will be removed.</param>
+            <param name="childIds">The primary keys of the child entities which will be removed.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.RemoveFromParent(System.String,System.String,System.String)">
+            <summary>
+            Called to terminate a relationship between two entities. If the child entity is made an
+            orphan by the removal and is not a MenuClass object, it is then removed from the <see
+            cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            </summary>
+            <param name="dataType">The type of the child entity.</param>
+            <param name="id">The primary key of the child entity whose relationship is being severed.</param>
+            <param name="childProp">The navigation property of the relationship being severed.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.RemoveRange(System.String,System.Collections.Generic.List{System.String})">
+            <summary>
+            Called to remove a collection of entities from the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
+            </summary>
+            <param name="dataType">The type of entity to remove.</param>
+            <param name="ids">The primary keys of the entities to remove.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.RemoveRangeFromParent(System.String,System.String,System.Collections.Generic.List{System.String})">
+            <summary>
+            Called to terminate a relationship for multiple entities. If any child entity is made an
+            orphan by the removal and is not a MenuClass object, it is then removed from the <see
+            cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            </summary>
+            <param name="dataType">The type of the child entity.</param>
+            <param name="childProp">The navigation property of the relationship being severed.</param>
+            <param name="ids">
+            The primary keys of child entities whose relationships are being severed.
+            </param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.ReplaceChild(System.String,System.String,System.String,System.String)">
+            <summary>
+            Called to create a relationship between two entities, replacing another entity which was
+            previously in that relationship with another one. If the replaced entity is made an
+            orphan by the removal and is not a MenuClass object, it is then removed from the <see
+            cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            </summary>
+            <param name="dataType">The type of the parent entity.</param>
+            <param name="parentId">The primary key of the parent entity in the relationship.</param>
+            <param name="newChildId">
+            The primary key of the new child entity entering into the relationship.
+            </param>
+            <param name="childProp">The navigation property of the relationship on the child entity.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.ReplaceChildWithNew(System.String,System.String,System.String,System.String)">
+            <summary>
+            Called to create a relationship between two entities, replacing another entity which was
+            previously in that relationship with a new entity. If the replaced entity is made an
+            orphan by the removal and is not a MenuClass object, it is then removed from the <see
+            cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            </summary>
+            <param name="dataType">The type of the parent entity.</param>
+            <param name="parentId">The primary key of the parent entity in the relationship.</param>
+            <param name="childProp">The navigation property of the relationship on the child entity.</param>
+            <param name="culture">The name of the requested culture. Taken from the Accept-Language header.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">A ViewModel representing the newly added item.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.DataController.Update(System.String,System.String,Newtonsoft.Json.Linq.JObject)">
+            <summary>
+            Called to update an entity in the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
+            </summary>
+            <param name="dataType">The type of entity to update.</param>
+            <param name="item">The item to update.</param>
+            <param name="culture">The name of the requested culture. Taken from the Accept-Language header.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">A ViewModel representing the updated item.</response>
+        </member>
+        <member name="T:VueCoreFramework.API.Controllers.ErrorController">
+            <summary>
+            Handles all API errors.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.ErrorController.#ctor(Microsoft.Extensions.Logging.ILogger{VueCoreFramework.API.Controllers.ErrorController})">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.API.Controllers.ErrorController"/>.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.ErrorController.Error(System.Int32)">
+            <summary>
+            Handles all uncaught API errors.
+            </summary>
+            <param name="code">The status code.</param>
+            <returns>The status code, and a default message.</returns>
+        </member>
+        <member name="T:VueCoreFramework.API.Controllers.GroupController">
+            <summary>
+            An API controller for handling group membership tasks.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.GroupController.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.AdminOptions},VueCoreFramework.Core.Data.ApplicationDbContext,VueCoreFramework.Core.Services.IEmailSender,Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.ErrorMessages},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.EmailMessages},Microsoft.AspNetCore.Identity.RoleManager{Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole},Microsoft.AspNetCore.Identity.UserManager{VueCoreFramework.Core.Models.ApplicationUser})">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.API.Controllers.GroupController"/>.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.GroupController.GetGroup(System.String)">
+            <summary>
+            Called to get information about the given group.
+            </summary>
+            <param name="group">The name of the group to retrieve.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="404">Not found.</response>
+            <response code="200">A GroupViewModel representing the found item.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.GroupController.GetGroupMemberships">
+            <summary>
+            Called to find all groups to which the current user belongs.
+            </summary>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">A list of <see cref="T:VueCoreFramework.API.ViewModels.GroupViewModel"/>s.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.GroupController.InviteUserToGroup(System.String,System.String)">
+            <summary>
+            Called to invite a user to a group.
+            </summary>
+            <param name="username">
+            The username of the user to invite to the group.
+            </param>
+            <param name="group">The name of the group to which the user will be invited.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.GroupController.LeaveGroup(System.String)">
+            <summary>
+            Called to remove the current user from the given group.
+            </summary>
+            <param name="group">The name of the group to leave.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.GroupController.RemoveGroup(System.String)">
+            <summary>
+            Called to remove the given group.
+            </summary>
+            <param name="group">The name of the group to remove.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.GroupController.RemoveUserFromGroup(System.String,System.String)">
+            <summary>
+            Called to remove the given user from the given group.
+            </summary>
+            <param name="username">The name of the user to remove from the group.</param>
+            <param name="group">The group from which to remove the user.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.GroupController.StartNewGroup(System.String)">
+            <summary>
+            Called to create a new group with the given name, with the current user as its manager.
+            </summary>
+            <param name="group">The name of the group to create.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.GroupController.TransferManagerToUser(System.String,System.String)">
+            <summary>
+            Called to transfer management of the given group to the given user.
+            </summary>
+            <param name="username">The name of the user who is to be the new manager.</param>
+            <param name="group">The name of the group whose manager is to change.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.API.Controllers.GroupController.TransferSiteAdminToUser(System.String)">
+            <summary>
+            Called to transfer the site admin role to the given user.
+            </summary>
+            <param name="username">The name of the user who is to be the new site admin.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="T:VueCoreFramework.API.Program">
+            <summary>
+            The main class of the application.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.API.Program.Main(System.String[])">
+            <summary>
+            The main entry point of the application.
+            </summary>
+            <param name="args">Any commandline arguments passed to the application on launch.</param>
+        </member>
+        <member name="T:VueCoreFramework.API.Startup">
+            <summary>
+            Configures services and the application's request pipeline.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.API.Startup.#ctor(Microsoft.AspNetCore.Hosting.IHostingEnvironment)">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.API.Startup"/>.
+            </summary>
+            <param name="env">An <see cref="T:Microsoft.AspNetCore.Hosting.IHostingEnvironment"/> used to set up configuration sources.</param>
+        </member>
+        <member name="P:VueCoreFramework.API.Startup.Configuration">
+            <summary>
+            The root of the configuration hierarchy.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.API.Startup.ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            This method gets called by the runtime, and is used to add services to the container.
+            </summary>
+            <param name="services">A collection of service descriptors.</param>
+        </member>
+        <member name="M:VueCoreFramework.API.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IHostingEnvironment,Microsoft.Extensions.Logging.ILoggerFactory,VueCoreFramework.Core.Data.ApplicationDbContext,Microsoft.Extensions.Options.IOptions{Microsoft.AspNetCore.Builder.RequestLocalizationOptions})">
+            <summary>
+            This method gets called by the runtime, and is used to configure the HTTP request pipeline.
+            </summary>
+            <param name="app">Provides the mechanisms to configure the application's request pipeline.</param>
+            <param name="env">An <see cref="T:Microsoft.AspNetCore.Hosting.IHostingEnvironment"/> used to set up configuration sources.</param>
+            <param name="loggerFactory">Used to configure the logging system.</param>
+            <param name="context">The application's Entity Framework database context.</param>
+            <param name="localization">Specifies options for the <see cref="T:Microsoft.AspNetCore.Localization.RequestLocalizationMiddleware"/>.</param>
+        </member>
+        <member name="T:VueCoreFramework.API.ViewModels.ConversationViewModel">
+            <summary>
+            Used to send information about a conversation.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.API.ViewModels.ConversationViewModel.Interlocutor">
+            <summary>
+            The username of the other party in the conversation.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.API.ViewModels.ConversationViewModel.UnreadCount">
+            <summary>
+            The number of messages the current user has not read in the conversation.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.API.ViewModels.GroupViewModel">
+            <summary>
+            Used to transfer information about a group (role).
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.API.ViewModels.GroupViewModel.Name">
+            <summary>
+            The name of the group.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.API.ViewModels.GroupViewModel.Manager">
+            <summary>
+            The username of the group's manager.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.API.ViewModels.GroupViewModel.Members">
+            <summary>
+            The members of the group (including the manager).
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.API.ViewModels.MessageViewModel">
+            <summary>
+            Used to transfer information about a message.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.API.ViewModels.MessageViewModel.Content">
+            <summary>
+            The content of the message. May have markdown-formatted text.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.API.ViewModels.MessageViewModel.IsSystemMessage">
+            <summary>
+            Indicates that the message is from the system, rather than from a user.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.API.ViewModels.MessageViewModel.IsUserAdmin">
+            <summary>
+            Indicates that the user who sent the message is an admin.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.API.ViewModels.MessageViewModel.IsUserManager">
+            <summary>
+            Indicates that the user who sent the message is the group manager.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.API.ViewModels.MessageViewModel.IsUserSiteAdmin">
+            <summary>
+            Indicates that the user who sent the message is the site admin.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.API.ViewModels.MessageViewModel.Received">
+            <summary>
+            Indicates that the single recipient has read the message.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.API.ViewModels.MessageViewModel.Username">
+            <summary>
+            The name of the user who sent the message.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.API.ViewModels.MessageViewModel.Timestamp">
+            <summary>
+            The date and time when the message was sent.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.API.ViewModels.ShareViewModel">
+            <summary>
+            Used to transfer information about data sharing.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.API.ViewModels.ShareViewModel.Level">
+            <summary>
+            Indicates the type of sharing (e.g. 'permission/data/view').
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.API.ViewModels.ShareViewModel.Name">
+            <summary>
+            The name of the user or group with whom the data is shared.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.API.ViewModels.ShareViewModel.ShortLevel">
+            <summary>
+            Indicates the short form of the sharing type (e.g. 'view').
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.API.ViewModels.ShareViewModel.Type">
+            <summary>
+            Indicates whether the data is shared with a user or group.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Controllers.MessageController">
+            <summary>
+            An API controller for handling messaging tasks.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.MessageController.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.AdminOptions},VueCoreFramework.Core.Data.ApplicationDbContext,Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.ErrorMessages},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.EmailMessages},Microsoft.AspNetCore.Identity.RoleManager{Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole},Microsoft.AspNetCore.Identity.UserManager{VueCoreFramework.Core.Models.ApplicationUser})">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.Controllers.MessageController"/>.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.MessageController.GetConversations">
+            <summary>
+            Called to get a list of users involved in individual conversations in which the current
+            user is a sender or recipient, with an unread message count.
+            </summary>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">A list of <see cref="T:VueCoreFramework.API.ViewModels.ConversationViewModel"/>s.</response>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.MessageController.GetGroupMessages(System.String)">
+            <summary>
+            Called to get the messages exchanged within the given group.
+            </summary>
+            <param name="group">The name of the group whose conversation will be retrieved.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">The ordered list of <see cref="T:VueCoreFramework.API.ViewModels.MessageViewModel"/>s.</response>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.MessageController.GetProxyConversations(System.String)">
+            <summary>
+            Called to get a list of users involved in individual conversations in which the given
+            user is a sender or recipient. For use by admins to review chat logs.
+            </summary>
+            <param name="proxy">The name of the user whose conversation will be retrieved.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">A list of <see cref="T:VueCoreFramework.API.ViewModels.ConversationViewModel"/>s.</response>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.MessageController.GetProxyUserMessages(System.String,System.String)">
+            <summary>
+            Called to get the messages between a proxy user and the given user. For use by admins to
+            review chat logs.
+            </summary>
+            <param name="proxy">
+            The name of the user whose conversation with the other user will be retrieved.
+            </param>
+            <param name="username">
+            The name of the user whose conversation with the proxy user will be retrieved.
+            </param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">The ordered list of <see cref="T:VueCoreFramework.API.ViewModels.MessageViewModel"/>s.</response>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.MessageController.GetSystemMessages">
+            <summary>
+            Called to get the system messages sent to the current user which have not been marked
+            deleted by the current user.
+            </summary>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">The ordered list of <see cref="T:VueCoreFramework.API.ViewModels.MessageViewModel"/>s.</response>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.MessageController.GetUserMessages(System.String)">
+            <summary>
+            Called to get the messages between the current user and the given user which have not
+            been marked deleted by the current user.
+            </summary>
+            <param name="username">
+            The name of the user whose conversation with the current user will be retrieved.
+            </param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">The ordered list of <see cref="T:VueCoreFramework.API.ViewModels.MessageViewModel"/>s.</response>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.MessageController.MarkConversationDeleted(System.String)">
+            <summary>
+            Called to mark a conversation with a given user deleted.
+            </summary>
+            <param name="username">
+            The name of the user whose conversation with the current user will be marked deleted.
+            </param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.MessageController.MarkConversationRead(System.String)">
+            <summary>
+            Called to mark a conversation with a given user read, from the perspective of the current user.
+            </summary>
+            <param name="username">
+            The name of the user whose conversation with the current user will be marked read.
+            </param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.MessageController.MarkSystemMessagesRead">
+            <summary>
+            Called to mark all system messages sent to the current user read.
+            </summary>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.MessageController.SendMessageToGroup(System.String,System.String)">
+            <summary>
+            Called to send a message to the given group.
+            </summary>
+            <param name="group">The name of the group to which the message will be sent.</param>
+            <param name="message">The message to send.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.MessageController.SendMessageToUser(System.String,System.String)">
+            <summary>
+            Called to send a message to the given user.
+            </summary>
+            <param name="username">The name of the user to whom the message will be sent.</param>
+            <param name="message">The message to send.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="T:VueCoreFramework.Controllers.ShareController">
+            <summary>
+            An API controller for handling sharing tasks.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.ShareController.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.AdminOptions},VueCoreFramework.Core.Data.ApplicationDbContext,Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.ErrorMessages},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.EmailMessages},Microsoft.AspNetCore.Identity.RoleManager{Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole},Microsoft.AspNetCore.Identity.UserManager{VueCoreFramework.Core.Models.ApplicationUser})">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.Controllers.ShareController"/>.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.ShareController.GetCurrentShares(System.String,System.String)">
+            <summary>
+            Called to retrieve the list of users and groups with whom the given data is current shared.
+            </summary>
+            <param name="dataType">The type of data being shared.</param>
+            <param name="id">Optionally, the primary key of a specific item being shared.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">A list of <see cref="T:VueCoreFramework.API.ViewModels.ShareViewModel"/>s.</response>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.ShareController.GetShareableGroupCompletion(System.String)">
+            <summary>
+            Called to find a group name which starts with the given input. Only groups the current
+            user has access to will be returned.
+            </summary>
+            <param name="input">A search string.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="404">Not found.</response>
+            <response code="200">The first matched name.</response>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.ShareController.GetShareableUsernameCompletion(System.String)">
+            <summary>
+            Called to find a username which starts with the given input. Only names of users the
+            current user has access to will be returned.
+            </summary>
+            <param name="input">A search string.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="404">Not found.</response>
+            <response code="200">The first matched name.</response>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.ShareController.GetShareableGroupMembers">
+            <summary>
+            Called to retrieve the list of users with whom the current user may share.
+            </summary>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">The list of users.</response>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.ShareController.GetShareableGroupSubset">
+            <summary>
+            Called to retrieve a subset of the list of groups with whom the current user may share.
+            </summary>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">The list of group names.</response>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.ShareController.HideDataFromAll(System.String,System.String,System.String)">
+            <summary>
+            Called to stop the given data from being shared with all users.
+            </summary>
+            <param name="dataType">The type of data being shared.</param>
+            <param name="operation">Optionally, an operation whose permission is being removed.</param>
+            <param name="id">Optionally, the primary key of a specific item being shared.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.ShareController.HideDataFromGroup(System.String,System.String,System.String,System.String)">
+            <summary>
+            Called to stop the given data from being shared with the given group.
+            </summary>
+            <param name="group">The name of the group with whom the data is being shared.</param>
+            <param name="dataType">The type of data being shared.</param>
+            <param name="operation">Optionally, an operation whose permission is being removed.</param>
+            <param name="id">Optionally, the primary key of a specific item being shared.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.ShareController.HideDataFromUser(System.String,System.String,System.String,System.String)">
+            <summary>
+            Called to stop the given data from being shared with the given user.
+            </summary>
+            <param name="username">The name of the user with whom the data is being shared.</param>
+            <param name="dataType">The type of data being shared.</param>
+            <param name="operation">Optionally, an operation whose permission is being removed.</param>
+            <param name="id">Optionally, the primary key of a specific item being shared.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.ShareController.ShareDataWithAll(System.String,System.String,System.String)">
+            <summary>
+            Called to share the given data with all users.
+            </summary>
+            <param name="dataType">The type of data to be shared.</param>
+            <param name="operation">Optionally, an operation for which to grant permission.</param>
+            <param name="id">Optionally, the primary key of a specific item to be shared.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.ShareController.ShareDataWithGroup(System.String,System.String,System.String,System.String)">
+            <summary>
+            Called to share the given data with the given group.
+            </summary>
+            <param name="group">The name of the group with whom to share the data.</param>
+            <param name="dataType">The type of data to be shared.</param>
+            <param name="operation">Optionally, an operation for which to grant permission.</param>
+            <param name="id">Optionally, the primary key of a specific item to be shared.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.ShareController.ShareDataWithUser(System.String,System.String,System.String,System.String)">
+            <summary>
+            Called to share the given data with the given user.
+            </summary>
+            <param name="username">The name of the user with whom to share the data.</param>
+            <param name="dataType">The type of data to be shared.</param>
+            <param name="operation">Optionally, an operation for which to grant permission.</param>
+            <param name="id">Optionally, the primary key of a specific item to be shared.</param>
+            <response code="400">Bad request.</response>
+            <response code="403">Forbidden.</response>
+            <response code="200">Success.</response>
+        </member>
+    </members>
+</doc>

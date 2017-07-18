@@ -1,0 +1,1994 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>VueCoreFramework.Core</name>
+    </assembly>
+    <members>
+        <member name="T:VueCoreFramework.Core.Configuration.AdminOptions">
+            <summary>
+            Options configuration object containing information about the default admin email account.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Configuration.AdminOptions.AdminEmailAddress">
+            <summary>
+            The default site admin email address.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Configuration.AdminOptions.AdminPassword">
+            <summary>
+            The default site admin email password.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Core.Configuration.URLs">
+            <summary>
+            Provides the URLs for the different hosts which form the application.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Configuration.URLs.ClientURL">
+            <summary>
+            The URL of the default Vue client.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.ApplicationDbContext">
+            <summary>
+            The application's Entity Framework database context.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.ApplicationDbContext.Logs">
+            <summary>
+            Gets or sets the <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1"/> of <see cref="T:VueCoreFramework.Core.Models.Log"/>s.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.ApplicationDbContext.Messages">
+            <summary>
+            Gets or sets the <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1"/> of <see cref="T:VueCoreFramework.Core.Models.Message"/>s.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.ApplicationDbContext.Airlines">
+            <summary>
+            Gets or sets the <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1"/> of <see cref="T:VueCoreFramework.Core.Models.Airline"/>s.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.ApplicationDbContext.Cities">
+            <summary>
+            Gets or sets the <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1"/> of <see cref="T:VueCoreFramework.Core.Models.City"/>s.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.ApplicationDbContext.Countries">
+            <summary>
+            Gets or sets the <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1"/> of <see cref="T:VueCoreFramework.Core.Models.Country"/>s.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.ApplicationDbContext.Leaders">
+            <summary>
+            Gets or sets the <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1"/> of <see cref="T:VueCoreFramework.Core.Models.Leader"/>s.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.ApplicationDbContext.RepositoryCache">
+            <summary>
+            Caches instances of <see cref="T:VueCoreFramework.Core.Data.IRepository"/> for the entity types tracked by this
+            <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.ApplicationDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{VueCoreFramework.Core.Data.ApplicationDbContext})">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
+            </summary>
+            <param name="options">The options to be used by a <see cref="T:Microsoft.EntityFrameworkCore.DbContext"/>.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.ApplicationDbContext.GetRepositoryForType(System.Type)">
+            <summary>
+            Gets a <see cref="T:VueCoreFramework.Core.Data.Repository`1"/> for the given type, using a cached reference, if one
+            already exists.
+            </summary>
+            <param name="type">The entity type of the repository.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.ApplicationDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <summary>
+            Configures the schema required for the framework.
+            </summary>
+            <param name="builder">The builder being used to construct the model for this context.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.ApplicationDbContext.TryGetRepository(System.String,VueCoreFramework.Core.Data.IRepository@)">
+            <summary>
+            Attempts to get a <see cref="T:VueCoreFramework.Core.Data.Repository`1"/> instance for the given data type.
+            </summary>
+            <param name="dataType">The data type requested.</param>
+            <param name="repository">If successful, the <see cref="T:VueCoreFramework.Core.Data.Repository`1"/> instance.</param>
+            <returns>true if a <see cref="T:VueCoreFramework.Core.Data.Repository`1"/> instance could be obtained; otherwise false.</returns>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.Attributes.CulturalAttribute">
+            <summary>
+            Indicates that this property provides culture-specific values.
+            </summary>
+            <remarks>
+            Only text properties are valid targets for this Attribute. The property type must be <see
+            cref="T:System.String"/>, as they are stored as JSON objects with culture codes (e.g. "en-US") as
+            keys, as well as a key called "default" whose value indicates the default culture of the
+            object. The entire JSON object is sent with the ViewModel for the object, but the SPA
+            framework will only display the value corresponding to the culture set for the current user.
+            If the current culture is not available in the JSON object, the value for the "default"
+            culture will be displayed. When setting a new value, the SPA framework will set the value for
+            the current culture. If no other values have been set, it will also set the "default" value
+            to the current culture.
+            </remarks>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.Attributes.DataClassAttribute">
+            <summary>
+            Sets data type-specific information for use in the SPA framework.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.Attributes.DataClassAttribute.IconClass">
+            <summary>
+            The name of a Material Icon, will appear as the class's icon in the dashboard.
+            </summary>
+            <remarks>Spaces should be replaced by underscores in icon names.</remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.Attributes.DataClassAttribute.FontAwesome">
+            <summary>
+            Indicates that the IconClass is a FontAwesome icon, rather than a Material Icon.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.Attributes.DataClassAttribute.DashboardTableContent">
+            <summary>
+            An optional path to a Vue component which is shown on the data class' dashboard above
+            data tables. Paths are relative to the components/data folder.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.Attributes.DataClassAttribute.DashboardFormContent">
+            <summary>
+            An optional path to a Vue component which is shown on the data class' dashboard above
+            forms. Paths are relative to the components/data folder. This component will receive the
+            operation being performed and the id of the item as props.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.Attributes.HelpAttribute">
+            <summary>
+            Allows setting help text for a property's field.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.Attributes.HelpAttribute.HelpText">
+            <summary>
+            The help text for the field.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Attributes.HelpAttribute.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.Core.Data.Attributes.HelpAttribute"/>.
+            </summary>
+            <param name="helpText">The help text for the field.</param>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.Attributes.HiddenAttribute">
+            <summary>
+            Allows marking a property as hidden in the user interface.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.Attributes.HiddenAttribute.Hidden">
+            <summary>
+            Indicates that the field is not displayed in the user interface at all.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.Attributes.HiddenAttribute.HideInTable">
+            <summary>
+            Indicates that the field is not displayed in data tables.
+            </summary>
+            <remarks>
+            If this property is true but <see cref="P:VueCoreFramework.Core.Data.Attributes.HiddenAttribute.Hidden"/> is false, the property will be
+            displayed (and is possibly editable) in forms, but is not listed in data tables only.
+            This can be useful for keeping table listings brief, or for hiding entries with rich edit
+            controls but ugly plain text formats (shown in data tables).
+            </remarks>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Attributes.HiddenAttribute.#ctor(System.Boolean)">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.Core.Data.Attributes.HiddenAttribute"/>.
+            </summary>
+            <param name="hidden">Indicates that the property is not displayed in the user interface at all.</param>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.Attributes.IconAttribute">
+            <summary>
+            Allows setting an icon for text, checkbox, and select fields. Other fields will ignore this attribute.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.Attributes.IconAttribute.Icon">
+            <summary>
+            The name of a Material Icon which will decorate the field.
+            </summary>
+            <remarks>Spaces should be replaced by underscores in icon names.</remarks>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Attributes.IconAttribute.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.Core.Data.Attributes.IconAttribute"/>.
+            </summary>
+            <param name="icon">The name of a Material Icon which will decorate the field.</param>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.Attributes.MenuClassAttribute">
+            <summary>
+            Classes with this attribute will appear in the site menu.
+            </summary>
+            <remarks>
+            Classes without this attribute will not appear on the site menu, and so will only be
+            accessible on the user interface as child objects within MenuClass objects.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.Attributes.MenuClassAttribute.Category">
+            <summary>
+            A string with the format "supertype/type/subtype"
+            </summary>
+            <remarks>
+            Used to generate menu and URL structure; doesn't need to reflect data relationships in
+            any way. Classes can be ordered in the framework's user interface according to a
+            conceptual scheme for ease of understanding or navigation, while the underlying data
+            structure is arranged according to business and/or programmatic needs, and the two
+            designs might be only loosely correlated.
+            </remarks>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.Attributes.NameAttribute">
+            <summary>
+            Indicates that the property is a Name. Name properties are treated specially by the SPA
+            framework in a few ways: they are pulled to the left and left-aligned in data tables, and
+            pulled to the top of forms, making them into a sort of automatic header; they also get '
+            (Copy)' appended during a duplication (whereas other properties are copied as-is).
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.Attributes.NavigationAttribute">
+            <summary>
+            Allow you to manage the controls shown on the field used to display non-collection navigation properties.
+            </summary>
+            <remarks>
+            This property has no effect for collection navigation properties.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.Attributes.NavigationAttribute.NavigationType">
+            <summary>
+            Setting this property to "reference" restricts the field to displaying only
+            view/edit controls (no add, select, or delete controls, even if the relationship would
+            normally allow these).
+            Setting this property to "single" restricts the field to displaying only
+            add, delete, and view/edit controls (no select control even for many-to-one relationships).
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Attributes.NavigationAttribute.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.Core.Data.Attributes.NavigationAttribute"/>.
+            </summary>
+            <param name="type">
+            Setting this property to "reference" restricts the field to displaying only view/edit
+            controls (no add, select, or delete controls, even if the relationship would normally
+            allow these). Setting this property to "single" restricts the field to displaying only
+            add, delete, and view/edit controls (no select control even for many-to-one relationships).
+            </param>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.Attributes.StepAttribute">
+            <summary>
+            Allows setting the step value of a numeric field. Ignored for other field types.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.Attributes.StepAttribute.Step">
+            <summary>
+            The step value of the field.
+            </summary>
+            <remarks>
+            Always treated as a positive value, even if a negative number is set.
+            </remarks>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Attributes.StepAttribute.#ctor(System.Double)">
+            <summary>
+            Default constructor.
+            </summary>
+            <param name="step">The step value of the field.</param>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.Attributes.TextAttribute">
+            <summary>
+            A general-purpose attribute for setting properties of a text field.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.Attributes.TextAttribute.Prefix">
+            <summary>
+            A suffix appended to the text field. The suffix is decorative only, not treated as part of the value.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.Attributes.TextAttribute.Suffix">
+            <summary>
+            A prefix appended to the text field. The prefix is decorative only, not treated as part of the value.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.Attributes.TextAttribute.Rows">
+            <summary>
+            The number of rows in a multi-line textarea.
+            </summary>
+            <remarks>
+            Setting this to a value greater than 1 will automatically generate a textarea field, even
+            if the DataType has not been set to MultilineText. Values less than 1 are ignored.
+            </remarks>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Attributes.TextAttribute.#ctor">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.Core.Data.Attributes.TextAttribute"/>.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.Attributes.ValidatorAttribute">
+            <summary>
+            Allows setting the validator to be used for this field.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.Attributes.ValidatorAttribute.Validator">
+            <summary>
+            The name of the validator to be used for this field. Must be a recognized name.
+            </summary>
+            <remarks>
+            The validators object in vfg/vfg-custom-validators.ts is a map of names to validators (or
+            known default validator names). The string set here must match a key in that object.
+            </remarks>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Attributes.ValidatorAttribute.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.Core.Data.Attributes.ValidatorAttribute"/>.
+            </summary>
+            <param name="validator">The name of the validator to be used for this field.</param>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.DbInitialize">
+            <summary>
+            Used to seed the application's database.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.DbInitialize.Initialize(System.IServiceProvider)">
+            <summary>
+            Seeds the application's database.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.DbInitialize.InitializeIdentitySever(Microsoft.AspNetCore.Builder.IApplicationBuilder,System.String)">
+            <summary>
+            Seeds the application's database with IdentityServer data.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.DbInitialize.InitializeSampleData(System.IServiceProvider)">
+            <summary>
+            Seeds the application's database with sample data.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.IdentityServerConfig">
+            <summary>
+            Provides configuration for IdentityServer.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.IdentityServerConfig.apiName">
+            <summary>
+            The API name for IdentityServer.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.IdentityServerConfig.mvcBaseAddress">
+            <summary>
+            The base URL for the MVC app.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.IdentityServerConfig.mvcClientName">
+            <summary>
+            The default MVC client name for IdentityServer.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.IdentityServerConfig.vueBaseAddress">
+            <summary>
+            The base URL for the Vue app.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.IdentityServerConfig.vueClientName">
+            <summary>
+            The default Vue client name for IdentityServer.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IdentityServerConfig.GetApiResources(System.String)">
+            <summary>
+            Obtains a list of <see cref="T:IdentityServer4.Models.ApiResource"/> objects for IdentityServer.
+            </summary>
+            <returns>A list of <see cref="T:IdentityServer4.Models.ApiResource"/> objects for IdentityServer.</returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IdentityServerConfig.GetClients(System.String)">
+            <summary>
+            Obtains a list of <see cref="T:IdentityServer4.Models.Client"/> objects for IdentityServer.
+            </summary>
+            <returns>A list of <see cref="T:IdentityServer4.Models.Client"/> objects for IdentityServer.</returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IdentityServerConfig.GetIdentityResources">
+            <summary>
+            Obtains a list of <see cref="T:IdentityServer4.Models.IdentityResource"/> objects for IdentityServer.
+            </summary>
+            <returns>A list of <see cref="T:IdentityServer4.Models.IdentityResource"/> objects for IdentityServer.</returns>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.Identity.Authorization">
+            <summary>
+            Provides static methods related to authorization.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.Identity.Authorization.authorized">
+            <summary>
+            Indicates that the user is authorized for the requested operation.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.Identity.Authorization.login">
+            <summary>
+            Indicates that the user must sign in before performing the requested operation.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.Identity.Authorization.shareAny">
+            <summary>
+            Indicates that the user is authorized to share the requested data with anyone.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.Identity.Authorization.shareGroup">
+            <summary>
+            Indicates that the user is authorized to share the requested data with a group.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.Identity.Authorization.unauthorized">
+            <summary>
+            Indicates that the user is not authorized for the requested operation.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Identity.Authorization.GetAuthorization(System.Collections.Generic.IList{System.Security.Claims.Claim},System.String,System.String,System.String)">
+            <summary>
+            Given a set of claims, determine if the user is authorized for the given operation on the
+            given data.
+            </summary>
+            <param name="claims">A set of user <see cref="T:System.Security.Claims.Claim"/> objects.</param>
+            <param name="dataType">The type of data.</param>
+            <param name="claimType">The type of claim requested.</param>
+            <param name="id">
+            The primary key of the specific data item requested (if any), as a string.
+            </param>
+            <returns>
+            A string representing the authorization level held by the user for the requested data.
+            </returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Identity.Authorization.PermissionIncludesTarget(System.String,System.String)">
+            <summary>
+            Determines whether the given claim type is a superset of the target claim type.
+            </summary>
+            <param name="permission">A claim type to test.</param>
+            <param name="targetPermission">A target claim type.</param>
+            <returns>true if the given claim type is a superset of the target claim type; false otherwise.</returns>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.Identity.CustomClaimTypes">
+            <summary>
+            The collection of custom Claim types used by the framework.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.Identity.CustomClaimTypes.PermissionGroupSiteAdmin">
+            <summary>
+            Indicates site admin level permissions.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.Identity.CustomClaimTypes.PermissionGroupAdmin">
+            <summary>
+            Indicates admin level permissions.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.Identity.CustomClaimTypes.PermissionGroupManager">
+            <summary>
+            Indicates group manager level permissions.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.Identity.CustomClaimTypes.PermissionDataAll">
+            <summary>
+            Indicates permission for all data operations.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.Identity.CustomClaimTypes.PermissionDataView">
+            <summary>
+            Indicates permission for viewing data.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.Identity.CustomClaimTypes.PermissionDataEdit">
+            <summary>
+            Indicates permission for editing data.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.Identity.CustomClaimTypes.PermissionDataAdd">
+            <summary>
+            Indicates permission for creating data.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.Identity.CustomClaimTypes.PermissionDataOwner">
+            <summary>
+            Indicates ownership permissions for a data item.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.Identity.CustomClaimTypes.PermissionAll">
+            <summary>
+            Indicates all permissions.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.Identity.CustomRoles">
+            <summary>
+            The collection of custom Roles used by the framework.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.Identity.CustomRoles.SiteAdmin">
+            <summary>
+            The site admin role.
+            </summary>
+            <remarks>
+            Always a member of the admin role as well.
+            Always only one member.
+            Can add/remove users to/from the admin group.
+            Can transfer the site-admin role to another admin user.
+            </remarks>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.Identity.CustomRoles.Admin">
+            <summary>
+            The admin role.
+            </summary>
+            <remarks>
+            Can share/hide data with all (removes the need for permission).
+            Can share/hide data with any group (even if the admin is not a member; but note that
+            nothing can be hidden from the admin or site admin roles).
+            Can lock/unlock user accounts (except admin accounts).
+            </remarks>
+        </member>
+        <member name="F:VueCoreFramework.Core.Data.Identity.CustomRoles.AllUsers">
+            <summary>
+            The default user role.
+            </summary>
+            <remarks>
+            Implemented as a role so that data permission claims may be added to all users as a
+            group. No individual users are expected to have this role added, and doing so will have
+            no effect. Rather, claims for this role are automatically included for every user.
+            </remarks>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.IRepository">
+            <summary>
+            Represents operations with an <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> for a particular class.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.IRepository.EntityType">
+            <summary>
+            The <see cref="T:Microsoft.EntityFrameworkCore.Metadata.IEntityType"/> of this Repository. Read-only.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.IRepository.PrimaryKey">
+            <summary>
+            The primary key <see cref="T:Microsoft.EntityFrameworkCore.Metadata.IProperty"/> of this Repository's entity type. Read-only.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.IRepository.PrimaryKeyVMProperty">
+            <summary>
+            The name of the ViewModel property which indicates the primary key. Read-only.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.AddAsync(System.Reflection.PropertyInfo,System.String,System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Asynchronously creates a new instance of the repository's type and adds it to the <see
+            cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> instance.
+            </summary>
+            <param name="childProp">
+            An optional navigation property which will be set on the new object.
+            </param>
+            <param name="parentId">
+            The primary key of the entity which will be set on the <paramref name="childProp"/>
+            property, as a string.
+            </param>
+            <param name="culture">A string indicating the current culture.</param>
+            <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+            <returns>A ViewModel instance representing the newly added entity.</returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.AddChildrenToCollectionAsync(System.String,System.Reflection.PropertyInfo,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Asynchronously adds an assortment of child entities to a parent entity under the given
+            navigation property.
+            </summary>
+            <param name="id">The primary key of the parent entity, as a string.</param>
+            <param name="childProp">The navigation property to which the children will be added.</param>
+            <param name="children">The primary keys of the child entities which will be added, as strings.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.DuplicateAsync(System.String,System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Asynchronously duplicates an entity in the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>. Returns a
+            ViewModel representing the new copy.
+            </summary>
+            <param name="id">The primary key of the entity to be copied, as a string.</param>
+            <param name="culture">A string indicating the current culture.</param>
+            <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+            <returns>A ViewModel representing the new item.</returns>
+            <remarks>
+            All non-navigation properties are copied. Navigation properties for one-to-many or
+            many-to-many relationships are duplicated. Navigation properties for other
+            relationships are left null (since the relationship forbids having more than one).
+            </remarks>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.FindAsync(System.String,System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Finds an entity with the given primary key value and returns a ViewModel for that entity.
+            If no entity is found, null is returned.
+            </summary>
+            <param name="id">The primary key of the entity to be found, as a string.</param>
+            <param name="culture">A string indicating the current culture.</param>
+            <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+            <returns>A ViewModel representing the item found, or an empty ViewModel if none is found.</returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.FindItemAsync(System.String)">
+            <summary>
+            Finds an entity with the given primary key value. If no entity is found, then null is returned.
+            </summary>
+            <param name="id">The primary key of the entity to be found, as a string.</param>
+            <returns>
+            The item found, or null if none is found.
+            </returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.FindItemWithPKAsync(System.Object)">
+            <summary>
+            Finds an entity with the given primary key value. If no entity is found, then null is returned.
+            </summary>
+            <param name="key">The primary key of the entity to be found.</param>
+            <returns>
+            The item found, or null if none is found.
+            </returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.GetAllAsync(System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Enumerates all the entities in the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>'s set, returning a
+            ViewModel representing each.
+            </summary>
+            <param name="culture">A string indicating the current culture.</param>
+            <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+            <returns>ViewModels representing the items in the set.</returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.GetAllChildIdsAsync(System.String,System.Reflection.PropertyInfo)">
+            <summary>
+            Finds the primary keys of all child entities in the given relationship, as strings.
+            </summary>
+            <param name="id">The primary key of the parent entity, as a string.</param>
+            <param name="childProp">The navigation property of the relationship.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.GetChildIdAsync(System.String,System.Reflection.PropertyInfo)">
+            <summary>
+            Finds the primary key of a child entity in the given relationship, as a string.
+            </summary>
+            <param name="id">The primary key of the parent entity, as a string.</param>
+            <param name="childProp">The navigation property of the relationship.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.GetChildPageAsync(System.String,System.Reflection.PropertyInfo,System.String,System.String,System.Boolean,System.Int32,System.Int32,System.Collections.Generic.IList{System.Security.Claims.Claim},System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Calculates and enumerates the set of child entities in a given relationship with the
+            given paging parameters, as ViewModels.
+            </summary>
+            <param name="id">The primary key of the parent entity, as a string.</param>
+            <param name="childProp">The navigation property of the relationship on the parent entity.</param>
+            <param name="search">
+            An optional search term which will filter the results. Any string or numeric property
+            with matching text will be included.
+            </param>
+            <param name="sortBy">
+            An optional property name which will be used to sort the items before calculating the
+            page contents.
+            </param>
+            <param name="descending">
+            Indicates whether the sort is descending; if false, the sort is ascending.
+            </param>
+            <param name="page">The page number requested.</param>
+            <param name="rowsPerPage">The number of items per page.</param>
+            <param name="claims">The collection of claims held by the current user.</param>
+            <param name="culture">A string indicating the current culture.</param>
+            <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.GetChildTotalAsync(System.String,System.Reflection.PropertyInfo)">
+            <summary>
+            Retrieves the total number of child entities in the given relationship.
+            </summary>
+            <param name="id">The primary key of the parent entity, as a string.</param>
+            <param name="childProp">The navigation property of the relationship on the parent entity.</param>
+            <returns>
+            A <see cref="T:System.Int64"/> that represents the total number of children in the relationship.
+            </returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.GetFieldDefinitions(Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Retrieves the <see cref="T:VueCoreFramework.Core.Models.FieldDefinition"/> s associated with this <see
+            cref="T:VueCoreFramework.Core.Data.Repository`1"/>'s data type. The list is cached for future retrieval.
+            </summary>
+            <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+            <returns>
+            A <see cref="T:System.Collections.Generic.List`1"/> of <see cref="T:VueCoreFramework.Core.Models.FieldDefinition"/> s for this <see
+            cref="T:VueCoreFramework.Core.Data.Repository`1"/>'s data type.
+            </returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.GetPageAsync(System.String,System.String,System.Boolean,System.Int32,System.Int32,System.Collections.Generic.IEnumerable{System.String},System.Collections.Generic.IList{System.Security.Claims.Claim},System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Calculates and enumerates the set of entities with the given paging parameters, as ViewModels.
+            </summary>
+            <param name="search">
+            An optional search term which will filter the results. Any string or numeric property
+            with matching text will be included.
+            </param>
+            <param name="sortBy">
+            An optional property name which will be used to sort the items before calculating the
+            page contents.
+            </param>
+            <param name="descending">
+            Indicates whether the sort is descending; if false, the sort is ascending.
+            </param>
+            <param name="page">The page number requested.</param>
+            <param name="rowsPerPage">The number of items per page.</param>
+            <param name="except">
+            An enumeration of primary keys of items which should be excluded from the results before
+            calculating the page contents, as strings.
+            </param>
+            <param name="claims">The collection of claims held by the current user.</param>
+            <param name="culture">A string indicating the current culture.</param>
+            <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.GetPageItemsAsync(System.Linq.IQueryable{System.Object},System.String,System.String,System.Boolean,System.Int32,System.Int32,System.Collections.Generic.IList{System.Security.Claims.Claim},System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Calculates and enumerates the given items with the given paging parameters, as ViewModels.
+            </summary>
+            <param name="items">The items to filter, sort, and page.</param>
+            <param name="search">
+            An optional search term which will filter the results. Any string or numeric property
+            with matching text will be included.
+            </param>
+            <param name="sortBy">
+            An optional property name which will be used to sort the items before calculating the
+            page contents.
+            </param>
+            <param name="descending">
+            Indicates whether the sort is descending; if false, the sort is ascending.
+            </param>
+            <param name="page">The page number requested.</param>
+            <param name="rowsPerPage">The number of items per page.</param>
+            <param name="claims">The collection of claims held by the current user.</param>
+            <param name="culture">A string indicating the current culture.</param>
+            <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.GetPrimaryKeyFromString(System.String)">
+            <summary>
+            Converts the given string into its equivalent primary key for this type.
+            </summary>
+            <param name="pk_string">The primary key to convert, as a string.</param>
+            <returns>The primary key, as whatever type is defined by the entity.</returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.GetTotalAsync">
+            <summary>
+            Asynchronously returns a <see cref="T:System.Int64"/> that represents the total number of entities
+            in the set.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.RemoveAsync(System.String)">
+            <summary>
+            Asynchronously removes an entity from the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
+            </summary>
+            <param name="id">The primary key of the entity to remove, as a string.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.RemoveChildrenFromCollectionAsync(System.String,System.Reflection.PropertyInfo,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Asynchronously removes an assortment of child entities from a parent entity under the
+            given navigation property.
+            </summary>
+            <param name="id">The primary key of the parent entity, as a string.</param>
+            <param name="childProp">The navigation property from which the children will be removed.</param>
+            <param name="childIds">The primary keys of the child entities which will be removed, as strings.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.RemoveFromParentAsync(System.String,System.Reflection.PropertyInfo)">
+            <summary>
+            Asynchronously terminates a relationship between two entities. If the child entity is
+            made an orphan by the removal and is not a MenuClass object, it is then removed from the
+            <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            </summary>
+            <param name="id">The primary key of the child entity whose relationship is being severed, as a string.</param>
+            <param name="childProp">The navigation property of the relationship being severed.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.RemoveRangeAsync(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Asynchronously removes a collection of entities from the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
+            </summary>
+            <param name="ids">An enumeration of the primary keys of the entities to remove, as strings.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.RemoveRangeFromParentAsync(System.Collections.Generic.IEnumerable{System.String},System.Reflection.PropertyInfo)">
+            <summary>
+            Asynchronously terminates a relationship for multiple entities. If any child entity is
+            made an orphan by the removal and is not a MenuClass object, it is then removed from the
+            <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            </summary>
+            <param name="ids">
+            An enumeration of primary keys of child entities whose relationships are being severed, as strings.
+            </param>
+            <param name="childProp">The navigation property of the relationship being severed.</param>
+            <returns>A list of the Ids of any items removed from the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>, as strings.</returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.ReplaceChildAsync(System.String,System.String,System.Reflection.PropertyInfo)">
+            <summary>
+            Asynchronously creates a relationship between two entities, replacing another entity
+            which was previously in that relationship with another one. If the replaced entity is
+            made an orphan by the removal and is not a MenuClass object, it is then removed from the
+            <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            </summary>
+            <param name="parentId">
+            The primary key of the parent entity in the relationship, as a string.
+            </param>
+            <param name="newChildId">
+            The primary key of the new child entity entering into the relationship, as a string.
+            </param>
+            <param name="childProp">The navigation property of the relationship on the child entity.</param>
+            <returns>
+            The Id of the removed child, if it is removed from the <see
+            cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>, as a string; null if it is not.
+            </returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.ReplaceChildWithNewAsync(System.String,System.Reflection.PropertyInfo,System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Asynchronously creates a relationship between two entities, replacing another entity
+            which was previously in that relationship with a new entity. If the replaced entity is
+            made an orphan by the removal and is not a MenuClass object, it is then removed from the
+            <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            </summary>
+            <param name="parentId">The primary key of the parent entity in the relationship, as a string.</param>
+            <param name="childProp">The navigation property of the relationship on the child entity.</param>
+            <param name="culture">A string indicating the current culture.</param>
+            <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.IRepository.UpdateAsync(System.Object,System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Asynchronously updates an entity in the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>. Returns a
+            ViewModel representing the updated item.
+            </summary>
+            <param name="item">The item to update.</param>
+            <param name="culture">A string indicating the current culture.</param>
+            <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+            <returns>A ViewModel representing the updated item.</returns>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.Repository`1">
+            <summary>
+            Handles operations with an <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> for a particular class.
+            </summary>
+            <typeparam name="T">
+            The class whose operations with the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> are handled by this
+            <see cref="T:VueCoreFramework.Core.Data.Repository`1"/>.
+            </typeparam>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.Repository`1.EntityType">
+            <summary>
+            The <see cref="T:Microsoft.EntityFrameworkCore.Metadata.IEntityType"/> of this Repository. Read-only.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.Repository`1.PrimaryKey">
+            <summary>
+            The primary key <see cref="T:Microsoft.EntityFrameworkCore.Metadata.IProperty"/> of this Repository's entity type. Read-only.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.Repository`1.PrimaryKeyVMProperty">
+            <summary>
+            The name of the ViewModel property which indicates the primary key. Read-only.
+            </summary>
+            <remarks>
+            References a class constant, but made available as an instance property so that it can be
+            defined on the interface.
+            </remarks>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.#ctor(VueCoreFramework.Core.Data.ApplicationDbContext)">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.Core.Data.Repository`1"/>.
+            </summary>
+            <param name="context">The <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> wrapped by this <see cref="T:VueCoreFramework.Core.Data.Repository`1"/>.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.AddAsync(System.Reflection.PropertyInfo,System.String,System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Asynchronously creates a new instance of the repository's type and adds it to the <see
+            cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> instance.
+            </summary>
+            <param name="childProp">
+            An optional navigation property which will be set on the new object.
+            </param>
+            <param name="parentId">
+            The primary key of the entity which will be set on the <paramref name="childProp"/>
+            property, as a string.
+            </param>
+            <param name="culture">A string indicating the current culture.</param>
+            <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+            <returns>A ViewModel instance representing the newly added entity.</returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.AddChildrenToCollectionAsync(System.String,System.Reflection.PropertyInfo,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Asynchronously adds an assortment of child entities to a parent entity under the given
+            navigation property.
+            </summary>
+            <param name="id">The primary key of the parent entity, as a string.</param>
+            <param name="childProp">The navigation property to which the children will be added.</param>
+            <param name="childIds">The primary keys of the child entities which will be added, as strings.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.DuplicateAsync(System.String,System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Asynchronously duplicates an entity in the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>. Returns a
+            ViewModel representing the new copy.
+            </summary>
+            <param name="id">The primary key of the entity to be copied, as a string.</param>
+            <param name="culture">A string indicating the current culture.</param>
+            <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+            <returns>A ViewModel representing the new item.</returns>
+            <remarks>
+            All non-navigation properties are copied. Navigation properties for one-to-many or
+            many-to-many relationships are duplicated. Navigation properties for other
+            relationships are left null (since the relationship forbids having more than one).
+            </remarks>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.FindAsync(System.String,System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Finds an entity with the given primary key value and returns a ViewModel for that entity.
+            If no entity is found, null is returned.
+            </summary>
+            <param name="id">The primary key of the entity to be found, as a string.</param>
+            <param name="culture">A string indicating the current culture.</param>
+            <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+            <returns>A ViewModel representing the item found, or null if none is found.</returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.FindItemAsync(System.String)">
+            <summary>
+            Finds an entity with the given primary key value. If no entity is found, then null is returned.
+            </summary>
+            <param name="id">The primary key of the entity to be found, as a string.</param>
+            <returns>
+            The item found, or null if none is found.
+            </returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.FindItemWithPKAsync(System.Object)">
+            <summary>
+            Finds an entity with the given primary key value. If no entity is found, then null is returned.
+            </summary>
+            <param name="key">The primary key of the entity to be found.</param>
+            <returns>
+            The item found, or null if none is found.
+            </returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.GetAllAsync(System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Enumerates all the entities in the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>'s set, returning a
+            ViewModel representing each.
+            </summary>
+            <param name="culture">A string indicating the current culture.</param>
+            <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+            <returns>ViewModels representing the items in the set.</returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.GetAllChildIdsAsync(System.String,System.Reflection.PropertyInfo)">
+            <summary>
+            Finds the primary keys of all child entities in the given relationship, as strings.
+            </summary>
+            <param name="id">The primary key of the parent entity, as a string.</param>
+            <param name="childProp">The navigation property of the relationship.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.GetChildIdAsync(System.String,System.Reflection.PropertyInfo)">
+            <summary>
+            Finds the primary key of a child entity in the given relationship, as a string.
+            </summary>
+            <param name="id">The primary key of the parent entity, as a string.</param>
+            <param name="childProp">The navigation property of the relationship.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.GetChildPageAsync(System.String,System.Reflection.PropertyInfo,System.String,System.String,System.Boolean,System.Int32,System.Int32,System.Collections.Generic.IList{System.Security.Claims.Claim},System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Calculates and enumerates the set of child entities in a given relationship with the
+            given paging parameters, as ViewModels.
+            </summary>
+            <param name="id">The primary key of the parent entity, as a string.</param>
+            <param name="childProp">The navigation property of the relationship on the parent entity.</param>
+            <param name="search">
+            An optional search term which will filter the results. Any string or numeric property
+            with matching text will be included.
+            </param>
+            <param name="sortBy">
+            An optional property name which will be used to sort the items before calculating the
+            page contents.
+            </param>
+            <param name="descending">
+            Indicates whether the sort is descending; if false, the sort is ascending.
+            </param>
+            <param name="page">The page number requested.</param>
+            <param name="rowsPerPage">The number of items per page.</param>
+            <param name="claims">The collection of claims held by the current user.</param>
+            <param name="culture">A string indicating the current culture.</param>
+            <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.GetChildTotalAsync(System.String,System.Reflection.PropertyInfo)">
+            <summary>
+            Retrieves the total number of child entities in the given relationship.
+            </summary>
+            <param name="id">The primary key of the parent entity, as a string.</param>
+            <param name="childProp">The navigation property of the relationship on the parent entity.</param>
+            <returns>
+            A <see cref="T:System.Int64"/> that represents the total number of children in the relationship.
+            </returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.GetFieldDefinitions(Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Retrieves the <see cref="T:VueCoreFramework.Core.Models.FieldDefinition"/> s associated with this <see
+            cref="T:VueCoreFramework.Core.Data.Repository`1"/>'s data type. The list is cached for future retrieval.
+            </summary>
+            <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+            <returns>
+            A <see cref="T:System.Collections.Generic.List`1"/> of <see cref="T:VueCoreFramework.Core.Models.FieldDefinition"/> s for this <see
+            cref="T:VueCoreFramework.Core.Data.Repository`1"/>'s data type.
+            </returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.GetPageAsync(System.String,System.String,System.Boolean,System.Int32,System.Int32,System.Collections.Generic.IEnumerable{System.String},System.Collections.Generic.IList{System.Security.Claims.Claim},System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Calculates and enumerates the set of entities with the given paging parameters, as ViewModels.
+            </summary>
+            <param name="search">
+            An optional search term which will filter the results. Any string or numeric property
+            with matching text will be included.
+            </param>
+            <param name="sortBy">
+            An optional property name which will be used to sort the items before calculating the
+            page contents.
+            </param>
+            <param name="descending">
+            Indicates whether the sort is descending; if false, the sort is ascending.
+            </param>
+            <param name="page">The page number requested.</param>
+            <param name="rowsPerPage">The number of items per page.</param>
+            <param name="except">
+            An enumeration of primary keys of items which should be excluded from the results before
+            calculating the page contents, as strings.
+            </param>
+            <param name="claims">The collection of claims held by the current user.</param>
+            <param name="culture">A string indicating the current culture.</param>
+            <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.GetPageItemsAsync(System.Linq.IQueryable{System.Object},System.String,System.String,System.Boolean,System.Int32,System.Int32,System.Collections.Generic.IList{System.Security.Claims.Claim},System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Calculates and enumerates the given items with the given paging parameters, as ViewModels.
+            </summary>
+            <param name="items">The items to filter, sort, and page.</param>
+            <param name="search">
+            An optional search term which will filter the results. Any string or numeric property
+            with matching text will be included.
+            </param>
+            <param name="sortBy">
+            An optional property name which will be used to sort the items before calculating the
+            page contents.
+            </param>
+            <param name="descending">
+            Indicates whether the sort is descending; if false, the sort is ascending.
+            </param>
+            <param name="page">The page number requested.</param>
+            <param name="rowsPerPage">The number of items per page.</param>
+            <param name="claims">The collection of claims held by the current user.</param>
+            <param name="culture">A string indicating the current culture.</param>
+            <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.GetPrimaryKeyFromString(System.String)">
+            <summary>
+            Converts the given string into its equivalent primary key for this type.
+            </summary>
+            <param name="pk_string">The primary key to convert, as a string.</param>
+            <returns>The primary key, as whatever type is defined by the entity.</returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.GetTotalAsync">
+            <summary>
+            Asynchronously returns a <see cref="T:System.Int64"/> that represents the total number of entities
+            in the set.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.RemoveAsync(System.String)">
+            <summary>
+            Asynchronously removes an entity from the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
+            </summary>
+            <param name="id">The primary key of the entity to remove, as a string.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.RemoveChildrenFromCollectionAsync(System.String,System.Reflection.PropertyInfo,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Asynchronously removes an assortment of child entities from a parent entity under the
+            given navigation property.
+            </summary>
+            <param name="id">The primary key of the parent entity, as a string.</param>
+            <param name="childProp">The navigation property from which the children will be removed.</param>
+            <param name="childIds">The primary keys of the child entities which will be removed, as strings.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.RemoveFromParentAsync(System.String,System.Reflection.PropertyInfo)">
+            <summary>
+            Asynchronously terminates a relationship bewteen two entities. If the child entity is
+            made an orphan by the removal and is not a MenuClass object, it is then removed from the
+            <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            </summary>
+            <param name="id">The primary key of the child entity whose relationship is being severed, as a string.</param>
+            <param name="childProp">The navigation property of the relationship being severed.</param>
+            <returns>True if the item is removed from the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>, false if not.</returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.RemoveRangeAsync(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Asynchronously removes a collection of entities from the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
+            </summary>
+            <param name="ids">An enumeration of the primary keys of the entities to remove, as strings.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.RemoveRangeFromParentAsync(System.Collections.Generic.IEnumerable{System.String},System.Reflection.PropertyInfo)">
+            <summary>
+            Asynchronously terminates a relationship for multiple entities. If any child entity is
+            made an orphan by the removal and is not a MenuClass object, it is then removed from the
+            <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            </summary>
+            <param name="ids">
+            An enumeration of primary keys of child entities whose relationships are being severed, as strings.
+            </param>
+            <param name="childProp">The navigation property of the relationship being severed.</param>
+            <returns>A list of the Ids of any items removed from the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>, as strings.</returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.ReplaceChildAsync(System.String,System.String,System.Reflection.PropertyInfo)">
+            <summary>
+            Asynchronously creates a relationship between two entities, replacing another entity
+            which was previously in that relationship with another one. If the replaced entity is
+            made an orphan by the removal and is not a MenuClass object, it is then removed from the
+            <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            </summary>
+            <param name="parentId">
+            The primary key of the parent entity in the relationship, as a string.
+            </param>
+            <param name="newChildId">
+            The primary key of the new child entity entering into the relationship, as a string.
+            </param>
+            <param name="childProp">The navigation property of the relationship on the child entity.</param>
+            <returns>
+            The Id of the removed child, if it is removed from the <see
+            cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>, as a string; null if it is not.
+            </returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.ReplaceChildWithNewAsync(System.String,System.Reflection.PropertyInfo,System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Asynchronously creates a relationship between two entities, replacing another entity
+            which was previously in that relationship with a new entity. If the replaced entity is
+            made an orphan by the removal and is not a MenuClass object, it is then removed from the
+            <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            </summary>
+            <param name="parentId">The primary key of the parent entity in the relationship, as a string.</param>
+            <param name="childProp">The navigation property of the relationship on the child entity.</param>
+            <param name="culture">A string indicating the current culture.</param>
+            <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.UpdateAsync(System.Object,System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Asynchronously updates an entity in the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>. Returns a
+            ViewModel representing the updated item.
+            </summary>
+            <param name="item">The item to update.</param>
+            <param name="culture">A string indicating the current culture.</param>
+            <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+            <returns>A ViewModel representing the updated item.</returns>
+        </member>
+        <member name="T:VueCoreFramework.Core.Extensions.EnumExtensions">
+            <summary>
+            Custom extensions for enum.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Extensions.EnumExtensions.GetDescription(System.Type,System.Object,Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Gets the description of the enum value, or the Name of the value if no
+            explicit description has been set.
+            </summary>
+            <returns>
+            The description, or null if the value is not named (e.g. a combined Flags
+            value, or a value which is simply incorrect).
+            </returns>
+        </member>
+        <member name="T:VueCoreFramework.Core.Extensions.StringExtensions">
+            <summary>
+            Custom extensions for <see cref="T:System.String"/>.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Extensions.StringExtensions.ToInitialCaps(System.String)">
+            <summary>
+            Gets a version of this string with the first character converted to upper case.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Extensions.StringExtensions.ToInitialLower(System.String)">
+            <summary>
+            Gets a version of this string with the first character converted to lower case.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Core.Extensions.TypeExtensions">
+            <summary>
+            Custom extensions for <see cref="T:System.Type"/>.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Extensions.TypeExtensions.GetAttribute``1(System.Object)">
+            <summary>
+            Gets an Attribute of the given type for an enum.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Extensions.TypeExtensions.IsIntegralNumeric(System.Type)">
+            <summary>
+            Determines if the <see cref="T:System.Type"/> is an integer-type numeric type.
+            </summary>
+            <remarks>
+            Integer-type numeric types are considered to include <see cref="T:System.Byte"/>, <see
+            cref="T:System.SByte"/>, <see cref="T:System.Int16"/>, <see cref="T:System.UInt16"/>, <see cref="T:System.Int32"/>, <see
+            cref="T:System.UInt32"/>, <see cref="T:System.Int64"/>, and <see cref="T:System.UInt64"/>.
+            </remarks>
+        </member>
+        <member name="M:VueCoreFramework.Core.Extensions.TypeExtensions.IsNumeric(System.Type)">
+            <summary>
+            Determines if the Type is a numeric type.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Extensions.TypeExtensions.IsRealNumeric(System.Type)">
+            <summary>
+            Determines if the <see cref="T:System.Type"/> is a real-type numeric type.
+            </summary>
+            <remarks>
+            Real-type numeric types are considered to include <see cref="T:System.Single"/>, <see
+            cref="T:System.Double"/>, and <see cref="T:System.Decimal"/>.
+            </remarks>
+        </member>
+        <member name="T:VueCoreFramework.Core.Messages.EmailMessages">
+            <summary>
+            A collection of string constants used to construct email messages.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Core.Messages.ErrorMessages">
+            <summary>
+            A collection of string constants used for error messages.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Core.Messages.LogEvent">
+            <summary>
+            A collection of log event codes.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Core.Models.ApplicationUser">
+            <summary>
+            Represents a user.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.ApplicationUser.Culture">
+            <summary>
+            The user's selected culture.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.ApplicationUser.NewEmail">
+            <summary>
+            The new email requested during an email change.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.ApplicationUser.OldEmail">
+            <summary>
+            The original email after an email change.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.ApplicationUser.LastEmailChange">
+            <summary>
+            The date/time of the last email change.
+            </summary>
+            <remarks>
+            Only one is allowed per day, to make it more difficult for an unauthorized party who
+            gains access to an account to perform a double-change, and thereby make it impossible for
+            the original owner to recover the account.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.ApplicationUser.AdminLocked">
+            <summary>
+            Indicates that the user's account has been locked by an admin.
+            </summary>
+            <remarks>
+            An admin lock prevents any use or access with the account. An account is locked rather
+            than deleted to prevent re-registration with the same information. Since only verified
+            email accounts are allowed access, a repeat offender must at least go to the trouble of
+            creating new valid email accounts in order to create new site accounts.
+            </remarks>
+        </member>
+        <member name="T:VueCoreFramework.Core.Models.Airline">
+            <summary>
+            A <see cref="T:VueCoreFramework.Core.Models.DataItem"/> representing an airline.
+            </summary>
+            <remarks>
+            Note that Airlines are being nested within the Country category, although they are both
+            MenuClass types, and in fact the Airline type is a peer of Country, which can be created and
+            deleted independently of any Countries. MenuClass types can be organized in the framework
+            menu in any order and hierarchy, regardless of the database relationships they share (if
+            any).
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Airline.Countries">
+            <summary>
+            The countries in which the airline operates.
+            </summary>
+            <remarks>
+            It is not necessary to hide either side of a many-to-many relationship. Here, airlines
+            have been made conceptual children of countries: nested in their menu and accessible from
+            their form, but not vice-versa. This is an example of a conceptual hierarchy being
+            created in the framework to simplify the user experience, which does not represent the
+            data structure exactly.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Airline.International">
+            <summary>
+            Indicates whether the airline offers international flights.
+            </summary>
+            <remarks>
+            Obviously this would be a caluclated property in a real application. It is implemented in
+            this way for the purpose of demonstrating nullable boolean fields. The Description
+            property of the Display Attribute is used to set help text.
+            </remarks>
+        </member>
+        <member name="T:VueCoreFramework.Core.Models.AirlineCountry">
+            <summary>
+            The many-to-many join table entity class which joins Airlines to Countries.
+            </summary>
+            <remarks>
+            The SPA framework is able to recognize and interpret many-to-many join tables, but only when
+            their only properties are a pair of navigation properties and foreign keys. A many-to-many
+            join table with additional properties of its own will not be recognized by the SPA framework
+            as a join table, but as an entity class unto itself, and will model each navigation as a
+            one-to-many relationship from that class. This is likely to be the desired behavior in most
+            cases anyhow, since additional properties will usually mean that such classes should be
+            visible and editable on tables and forms of their own, not handled 'invisibly' as join tables.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.AirlineCountry.Airline">
+            <summary>
+            The <see cref="T:VueCoreFramework.Core.Models.Airline"/> referred to by this relationship.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.AirlineCountry.AirlineId">
+            <summary>
+            The foreign key for <see cref="P:VueCoreFramework.Core.Models.AirlineCountry.Airline"/>.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.AirlineCountry.Country">
+            <summary>
+            The <see cref="T:VueCoreFramework.Core.Models.Country"/> referred to by this relationship.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.AirlineCountry.CountryId">
+            <summary>
+            The foreign key for <see cref="P:VueCoreFramework.Core.Models.AirlineCountry.Country"/>.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Core.Models.CityTransit">
+            <summary>
+            Types of city transportation.
+            </summary>
+            <remarks>
+            A Flags enum is represented by the framework as a multiselect input, allowing 0 or more
+            selections. A 'None' value (0) is not required for the framework, and will be a functionless
+            placeholder in the dropdown (selecting it will have no effect).
+            </remarks>
+        </member>
+        <member name="F:VueCoreFramework.Core.Models.CityTransit.BusStation">
+            <remarks>
+            Description can be used to set the display value used in the dropdown. The name of the
+            value is used otherwise.
+            </remarks>
+        </member>
+        <member name="T:VueCoreFramework.Core.Models.City">
+            <summary>
+            A <see cref="T:VueCoreFramework.Core.Models.NamedDataItem"/> representing a city.
+            </summary>
+            <remarks>
+            Because this class doesn't have the <see cref="T:VueCoreFramework.Core.Data.Attributes.MenuClassAttribute"/>, it will not appear in
+            the menu of the SPA, and items of this type will therefore only be available to view or edit
+            as children of another object (a <see cref="T:VueCoreFramework.Core.Models.Country"/>, in this case). The
+            DashboardFormContent property indicates that a custom component exists which will be
+            displayed above data forms when viewing cities.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.City.LocalTimeAtGMTMidnight">
+            <summary>
+            The local time in the city at GMT midnight.
+            </summary>
+            <remarks>
+            The DataType can control the type of field displayed in forms. Time will present a time
+            picker alone. Without this specification, a DateTime property would be represented by
+            both date and timne pickers.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.City.Population">
+            <summary>
+            The population of the city.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.City.Transit">
+            <summary>
+            The types of transportation available in the city.
+            </summary>
+            <remarks>
+            A Flags enum property is represented by the framework as a multiselect input. In a data
+            table, no selection will be displayed as '[None]', a selection with a valid name or
+            description will be displayed, and any other selection (e.g. a combination of Flags
+            values) will be displayed as '[...]', to avoid the expensive operations required to
+            validate and break down the flag value. For this reason, it may be best to hide Flags
+            enums in tables when it is expected that multiple selections will be common, as is done
+            here, to avoid a column full of unhelpful placeholder text. When single selections are
+            expected to be more common, the field can be left visible so that the named selections
+            can be shown in tables.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.City.Country">
+            <summary>
+            The country to which this city belongs.
+            </summary>
+            <remarks>
+            It is not necessary to hide inverse references on child objects (a field with a view/edit
+            option will be generated). However, it can make views cleaner when the child object has
+            just one parent, since the parent object can always be accessed from the child by going
+            back or cancelling the current operation, making a reverse navigation field redundant. In
+            cases where a child may be in relationships to different parents, visible reverse
+            navigation fields can be helpful to browse among the related entities.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.City.CountryId">
+            <summary>
+            The foreign key for <see cref="P:VueCoreFramework.Core.Models.City.Country"/>.
+            </summary>
+            <remarks>
+            Although Entity Framework can automatically create foreign keys, the SPA framework
+            requires explicitly defined foreign keys for one-to-one and many-to-one relationships.
+            Foreign key properties are never shown by the framework, so it isn't necessary to mark it
+            as hidden.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.City.IsCapitol">
+            <summary>
+            Indicates that this city is the capitol of the country.
+            </summary>
+            <remarks>
+            Since only one city may be the capitol, but there is no way to enforce such a constraint
+            with the Entity Framework and VueCoreFramework Attribute decoration system, a custom
+            control is provided on the City form to perform this function instead. Therefore, it is
+            hidden from the normal form (but not in tables).
+            </remarks>
+        </member>
+        <member name="T:VueCoreFramework.Core.Models.Country">
+            <summary>
+            A <see cref="T:VueCoreFramework.Core.Models.NamedDataItem"/> representing a country.
+            </summary>
+            <remarks>
+            Because this class is decorated with the MenuClass attribute, it will appear in the
+            SPA framework's displayed menu.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Country.Airlines">
+            <summary>
+            The airlines operating in the country.
+            </summary>
+            <remarks>
+            A many-to-many relationship with another MenuClass entity. AirlineCountry is a
+            many-to-many join table entity class. Navigation properties must have the JsonIgnore
+            Attribute to prevent the model from attempting to set its value to the placeholder text
+            used in the ViewModel. It isn't necesary to hide navigation properties in data tables,
+            but since all a table will show is '[None]' for an empty collection and '[...]' for a
+            non-empty collection, it will usually provide a better user experience to avoid filling a
+            column with such placeholder text. It has a property constructor in order to avoid a null
+            collection during certain framework operations; this is a requirement of all collection
+            properties for the SPA framework.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Country.EpiIndex">
+            <summary>
+            The EPI Index of the country.
+            </summary>
+            <remarks>
+            The Display Attribute is used to control the decoration of the field. Prompt will set
+            placeholder text for most fields. GroupName can be used to group fields together under a
+            heading. Range can be used for numeric, text, DateTime, or TimeSpan fields. For text
+            fields, it indicates required length.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Country.FlagPrimaryColor">
+            <summary>
+            The main color of the country's flag.
+            </summary>
+            <remarks>
+            The 'Color' custom DataType is special in the SPA framework, and will generate a color
+            picker control in edit forms. The data is represented as a 7-character hex string
+            (#000000), and this raw value is shown on tables (which only display text, not rich
+            content like colors). The field is hidden from tables here to avoid such a
+            non-user-friendly display format, but that is not required. Display Name is used to set a
+            label for the input group (color fields do not use placeholder text).
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Country.Capitol">
+            <summary>
+            The country's capitol city.
+            </summary>
+            <remarks>
+            This is a computed property which finds the child with the relevant property. Since it is
+            a reference to an entity type, but is not an actual Entity Framework navigation property,
+            VueCoreFramework will show it as a read-only label.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Country.Cities">
+            <summary>
+            The cities of the country.
+            </summary>
+            <remarks>
+            A many-to-one relationship with a child object.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Country.Leader">
+            <summary>
+            The country's head of government.
+            </summary>
+            <remarks>
+            A one-to-one relationship with a child object.
+            </remarks>
+        </member>
+        <member name="T:VueCoreFramework.Core.Models.MaritalStatus">
+            <summary>
+            Types of marital status.
+            </summary>
+            <remarks>
+            A non-Flags enum is represented by the framework as a select input, allowing a single
+            selection. A 'None' entry, if present, will be treated the same as any other selection. The
+            selection control will not supply a 'None' or other unset value if the enum does not contain
+            one. The framework also will not add an unset selection placeholder for Nullable Enum
+            properties, in order to avoid duplicating any existing 'None' entry. For this reason Nullable
+            Enum properties are not feasible with the SPA framework (they will not cause any errors, but
+            it will not be possible to preserve nulls; updates from the SPA will always contain a value
+            for the property). Use a 'None' value in your enum if you wish an unset value to be
+            represented in your data, instead of making the property nullable.
+            </remarks>
+        </member>
+        <member name="T:VueCoreFramework.Core.Models.Leader">
+            <summary>
+            A <see cref="T:VueCoreFramework.Core.Models.NamedDataItem"/> representing a country's head of government.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Leader.Age">
+            <summary>
+            The age of the leader.
+            </summary>
+            <remarks>
+            In a real application this would surely be computed from birthdate; it is provided here
+            purely for the demonstration of numeric input fields.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Leader.Birthdate">
+            <summary>
+            The birthdate of the leader.
+            </summary>
+            <remarks>
+            A DataType of Date is represented in forms by a date picker. The time portion is ignored.
+            Because this is a nullable property, the field will also have the option to set a null
+            value rather than a date.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Leader.Country">
+            <summary>
+            The country represented by this leader.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Leader.CountryId">
+            <summary>
+            Foreign key for <see cref="P:VueCoreFramework.Core.Models.Leader.Country"/>
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Leader.MaritalStatus">
+            <summary>
+            The marital status of the leader.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Leader.TimeInOfficeTicks">
+            <summary>
+            Time in office (as a Ticks value).
+            </summary>
+            <remarks>
+            Although the SPA framework can handle TimeSpan properties, SQL databases cannot store
+            TimeSpans >= 24 hours, so the SPA framework can also interpret long values as TimeSpan
+            Ticks by indicating the Duration DataType. Display Description is used to set hint text
+            for the field. The DisplayFormat DataFormatString can be used to indicate which values of
+            the TimeSpan will be displayed (and available for editing); it must take the form
+            'y:M:d:h:m:s' representing years, months, days, hours, minutes, seconds (including
+            fractional seconds). Any number of indicators may be omitted from the beginning or end
+            (e.g. the format below shows only years, months, and days; not hours, minutes, or
+            seconds), but omitting any in the middle is disregarded (since overflow from a low unit
+            must be shown and editable with in-between units). Note that Range for a Duration uses
+            TimeSpan units, even when the property is a long.
+            </remarks>
+        </member>
+        <member name="T:VueCoreFramework.Core.Models.DataItem">
+            <summary>
+            A base class for database objects. Provides a GUID primary key.
+            </summary>
+            <remarks>
+            The SPA framework doesn't require using a base class like this, it's just used for
+            convenience in the examples.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.DataItem.Id">
+            <summary>
+            The unique ID (primary key) of the item.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Core.Models.FieldDefinition">
+            <summary>
+            A ViewModel for field definitions used by vue-form-generator.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.Disabled">
+            <summary>
+            Indicates whether the field is disabled.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.GroupName">
+            <summary>
+            Optionally designates a group to which the field belongs.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.Help">
+            <summary>
+            Optional help text displayed with the field.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.HideInTable">
+            <summary>
+            Indicates that the field is hidden in data tables (but may still be visible in forms).
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.Hint">
+            <summary>
+            Optional hint text displayed with the field.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.Icon">
+            <summary>
+            The name of a Material Icon displayed with certain fields.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.InputType">
+            <summary>
+            The input type of certain fields which can display more than one type of data.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.InverseType">
+            <summary>
+            For navigation properties, indicates the name of the inverse navigation property.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.IsName">
+            <summary>
+            Indicates that the field is a Name property.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.Label">
+            <summary>
+            Optional label text displayed with the field.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.Max">
+            <summary>
+            An optional maximum value for the field.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.Min">
+            <summary>
+            An optional minimum value for the field.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.Model">
+            <summary>
+            The name of the model property represented by the field.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.NavigationType">
+            <summary>
+            For navigation properties, indicates the type of navigation property.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.ParentType">
+            <summary>
+            For navigation properties, indicates the name of the parent data type.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.Pattern">
+            <summary>
+            An optional regex pattern used to validate the field.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.Placeholder">
+            <summary>
+            Optional placeholder text displayed with the field.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.Prefix">
+            <summary>
+            Optional text displayed before a text field.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.Readonly">
+            <summary>
+            Indicates that the text field is read-only.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.Required">
+            <summary>
+            Indicates that the field is required.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.Rows">
+            <summary>
+            An optional value indicating the number of rows in a textarea field.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.Step">
+            <summary>
+            An optional step value for numeric text fields, and TimeSpan fields.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.Suffix">
+            <summary>
+            Optional text displayed after a text field.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.Type">
+            <summary>
+            Indicates the type of field. Required.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.Validator">
+            <summary>
+            An optional name of a validator used to validate the field.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.Values">
+            <summary>
+            The list of options for a select or multiselect field.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.FieldDefinition.Visible">
+            <summary>
+            Indicates whether the field is visible on data tables and forms.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Core.Models.ChoiceOption">
+            <summary>
+            Represents an option in a select or multiselect field.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.ChoiceOption.Text">
+            <summary>
+            The text displayed for the option.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.ChoiceOption.Value">
+            <summary>
+            The value of the option.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Core.Models.ICulturalDataItem">
+            <summary>
+            Types which implement this interface provide an overload of <see cref="M:VueCoreFramework.Core.Models.ICulturalDataItem.ToString(System.String)"/> which
+            accepts a culture.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Models.ICulturalDataItem.ToString(System.String)">
+            <summary>
+            Returns a representation of the object for the given culture, as a <see cref="T:System.String"/>.
+            </summary>
+            <param name="culture">A culture name.</param>
+            <returns>A representation of the object for the given culture, as a <see cref="T:System.String"/>.</returns>
+        </member>
+        <member name="T:VueCoreFramework.Core.Models.ILocalizable">
+            <summary>
+            If your data classes implement this interface, their ViewModels will automatically invoke
+            this variation of <see cref="M:VueCoreFramework.Core.Models.ILocalizable.ToString(Microsoft.Extensions.Localization.IStringLocalizer)"/> with the current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> so
+            that you can properly localize the result.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Core.Models.Log">
+            <summary>
+            A model for log entries.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Log.Id">
+            <summary>
+            The ID (primary key) for the log entry.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Log.Timestamp">
+            <summary>
+            The timestamp of the log entry.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Log.Level">
+            <summary>
+            The level of the log entry.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Log.Message">
+            <summary>
+            An optional message.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Log.Logger">
+            <summary>
+            The logger used to create this entry.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Log.Callsite">
+            <summary>
+            The site at which the entry was generated.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Log.Exception">
+            <summary>
+            The exception type which caused the log entry to be created, if any.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Log.Url">
+            <summary>
+            The URL of the page on which the log entry was generated, if any.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Core.Models.Message">
+            <summary>
+            Represents a message sent within the SPA framework to a user, or to a group.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Message.Id">
+            <summary>
+            The primary key of the <see cref="T:VueCoreFramework.Core.Models.Message"/>.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Message.Content">
+            <summary>
+            The content of the message. Accepts markdown-formatted text.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Message.GroupRecipient">
+            <summary>
+            The group to which the message was sent (if not an individual message).
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Message.GroupRecipientName">
+            <summary>
+            The name of the group to which the message was sent (if not an individual message).
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Message.IsSystemMessage">
+            <summary>
+            Indicates that the message is from the system, rather than from a user.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Message.Received">
+            <summary>
+            Indicates that the single recipient has read the message.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Message.RecipientDeleted">
+            <summary>
+            Indicates that the single recipient has marked the message as deleted.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Message.Sender">
+            <summary>
+            The user who sent the message.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Message.SenderDeleted">
+            <summary>
+            Indicates that the sender has marked the message as deleted.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Message.SenderUsername">
+            <summary>
+            The name of the user who sent the message.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Message.SingleRecipient">
+            <summary>
+            The user to whom the message was sent (if not a group message).
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Message.SingleRecipientName">
+            <summary>
+            The name of the user to whom the message was sent (if not a group message).
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.Message.Timestamp">
+            <summary>
+            The date and time when the message was sent.
+            </summary>
+            <remarks>Set automatically by the database.</remarks>
+        </member>
+        <member name="T:VueCoreFramework.Core.Models.NamedDataItem">
+            <summary>
+            A convenience subclass of <see cref="T:VueCoreFramework.Core.Models.DataItem"/> which defines a name property and overrides
+            ToString to display that name.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Models.NamedDataItem.Name">
+            <summary>
+            The name of the item.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Models.NamedDataItem.ToString">
+            <summary>
+            Returns the item's name for the default culture, as a <see cref="T:System.String"/>.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Models.NamedDataItem.ToString(System.String)">
+            <summary>
+            Returns the item's name for the given culture, as a <see cref="T:System.String"/>.
+            </summary>
+            <param name="culture">A culture name.</param>
+            <returns>The item's name for the given culture, as a <see cref="T:System.String"/>.</returns>
+        </member>
+        <member name="T:VueCoreFramework.Core.Services.AuthMessageSender">
+            <summary>
+            This class is used by the application to send email.
+            </summary>
+            <remarks>
+            See https://go.microsoft.com/fwlink/?LinkID=532713
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Core.Services.AuthMessageSender.Options">
+            <summary>
+            The email options configuration object.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Services.AuthMessageSender.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Services.AuthMessageSenderOptions},Microsoft.Extensions.Logging.ILogger{VueCoreFramework.Core.Services.AuthMessageSender})">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.Core.Services.AuthMessageSender"/>.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Services.AuthMessageSender.SendEmailAsync(System.String,System.String,System.String)">
+            <summary>
+            Sends an email message to the supplied address.
+            </summary>
+            <param name="email">The email address to which the message will be sent.</param>
+            <param name="subject">The subject of the email message.</param>
+            <param name="message">The body of the email message.</param>
+        </member>
+        <member name="T:VueCoreFramework.Core.Services.AuthMessageSenderOptions">
+            <summary>
+            Options configuration object containing information about the email service used to send email from the application.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Services.AuthMessageSenderOptions.EmailFromName">
+            <summary>
+            The 'from' name for sent emails.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Services.AuthMessageSenderOptions.EmailFromAddress">
+            <summary>
+            The email address from which messages will be sent.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Services.AuthMessageSenderOptions.EmailFromPassword">
+            <summary>
+            The password for the email account from which messages will be sent.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Services.AuthMessageSenderOptions.SmtpServer">
+            <summary>
+            The address of the SMTP server used to send email.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Services.AuthMessageSenderOptions.SmtpPort">
+            <summary>
+            The port number used for email.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Services.AuthMessageSenderOptions.UseSsl">
+            <summary>
+            Indicates whether SSL is required by the mail service.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Services.AuthMessageSenderOptions.UseXOAUTH2">
+            <summary>
+            Indicates whether the XOATH2 protocol is used by the mail service.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Services.AuthMessageSenderOptions.RequiresAuth">
+            <summary>
+            Indicates whether the mail service requires authorization.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Core.Services.IEmailSender">
+            <summary>
+            This interface is used by the application to send email.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Services.IEmailSender.SendEmailAsync(System.String,System.String,System.String)">
+            <summary>
+            Sends an email message to the supplied address.
+            </summary>
+            <param name="email">The email address to which the message will be sent.</param>
+            <param name="subject">The subject of the email message.</param>
+            <param name="message">The body of the email message.</param>
+        </member>
+    </members>
+</doc>

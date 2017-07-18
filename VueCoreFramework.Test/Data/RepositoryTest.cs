@@ -1,15 +1,18 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using VueCoreFramework.Data;
-using VueCoreFramework.Extensions;
-using VueCoreFramework.Models;
-using VueCoreFramework.Services;
+using VueCoreFramework.API;
+using VueCoreFramework.Core.Data;
+using VueCoreFramework.Core.Data.Identity;
+using VueCoreFramework.Core.Extensions;
+using VueCoreFramework.Core.Models;
 
 namespace VueCoreFramework.Test.Data
 {
@@ -17,6 +20,7 @@ namespace VueCoreFramework.Test.Data
     public class RepositoryTest
     {
         private static ApplicationDbContext context;
+        private static IStringLocalizer<Startup> _localizer;
 
         [ClassInitialize]
         public static void Setup(TestContext testContext)
@@ -24,6 +28,10 @@ namespace VueCoreFramework.Test.Data
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
             optionsBuilder.UseInMemoryDatabase();
             context = new ApplicationDbContext(optionsBuilder.Options);
+
+            var mock = new Mock<IStringLocalizer<Startup>>();
+            mock.Setup(x => x[It.IsAny<string>()]).Returns<string>(x => new LocalizedString(x, x));
+            _localizer = mock.Object;
         }
 
         [TestMethod]
@@ -31,7 +39,7 @@ namespace VueCoreFramework.Test.Data
         {
             var repo = context.GetRepositoryForType(typeof(Country));
 
-            await repo.AddAsync(null, null);
+            await repo.AddAsync(null, null, "en-US", _localizer);
             var item = context.Countries.FirstOrDefault();
 
             Assert.IsNotNull(item);
@@ -45,7 +53,7 @@ namespace VueCoreFramework.Test.Data
             var childProp = typeof(City).GetProperty(nameof(City.Country));
             var navProp = typeof(City).GetProperty(nameof(City.CountryId));
 
-            await repo.AddAsync(childProp, Guid.Empty.ToString());
+            await repo.AddAsync(childProp, Guid.Empty.ToString(), "en-US", _localizer);
             var item = context.Cities.FirstOrDefault();
 
             Assert.IsNotNull(item);
@@ -60,11 +68,11 @@ namespace VueCoreFramework.Test.Data
 
             var childProp = typeof(Country).GetProperty(nameof(Country.Airlines));
 
-            await parentRepo.AddAsync(null, null);
+            await parentRepo.AddAsync(null, null, "en-US", _localizer);
             var parent = context.Countries.FirstOrDefault();
             Assert.IsNotNull(parent);
 
-            await childRepo.AddAsync(null, null);
+            await childRepo.AddAsync(null, null, "en-US", _localizer);
             var child = context.Airlines.FirstOrDefault();
             Assert.IsNotNull(child);
 
@@ -80,10 +88,10 @@ namespace VueCoreFramework.Test.Data
         {
             var repo = context.GetRepositoryForType(typeof(Country));
 
-            await repo.AddAsync(null, null);
+            await repo.AddAsync(null, null, "en-US", _localizer);
             var item = context.Countries.FirstOrDefault();
 
-            await repo.DuplicateAsync(item.Id.ToString());
+            await repo.DuplicateAsync(item.Id.ToString(), "en-US", _localizer);
         }
 
         [TestMethod]
@@ -91,12 +99,12 @@ namespace VueCoreFramework.Test.Data
         {
             var repo = context.GetRepositoryForType(typeof(Country));
 
-            await repo.AddAsync(null, null);
+            await repo.AddAsync(null, null, "en-US", _localizer);
             var item = context.Countries.FirstOrDefault();
 
             Assert.IsNotNull(item);
 
-            var vm = await repo.FindAsync(item.Id.ToString());
+            var vm = await repo.FindAsync(item.Id.ToString(), "en-US", _localizer);
             Assert.IsTrue(vm.Keys.Contains(nameof(DataItem.Id).ToInitialLower()));
             Assert.AreEqual(item.Id.ToString(), vm[nameof(DataItem.Id).ToInitialLower()]);
         }
@@ -106,7 +114,7 @@ namespace VueCoreFramework.Test.Data
         {
             var repo = context.GetRepositoryForType(typeof(Country));
 
-            var vm = await repo.FindAsync(Guid.Empty.ToString());
+            var vm = await repo.FindAsync(Guid.Empty.ToString(), "en-US", _localizer);
             Assert.IsTrue(vm.Keys.Contains(nameof(DataItem.Id).ToInitialLower()));
             Assert.IsNull(vm[nameof(DataItem.Id).ToInitialLower()]);
         }
@@ -116,7 +124,7 @@ namespace VueCoreFramework.Test.Data
         {
             var repo = context.GetRepositoryForType(typeof(Country));
 
-            await repo.AddAsync(null, null);
+            await repo.AddAsync(null, null, "en-US", _localizer);
             var item = context.Countries.FirstOrDefault();
 
             Assert.IsNotNull(item);
@@ -139,11 +147,11 @@ namespace VueCoreFramework.Test.Data
         {
             var repo = context.GetRepositoryForType(typeof(Country));
 
-            await repo.AddAsync(null, null);
-            await repo.AddAsync(null, null);
+            await repo.AddAsync(null, null, "en-US", _localizer);
+            await repo.AddAsync(null, null, "en-US", _localizer);
 
             var count = context.Countries.Count();
-            var vms = await repo.GetAllAsync();
+            var vms = await repo.GetAllAsync("en-US", _localizer);
             Assert.AreEqual(count, vms.Count());
         }
 
@@ -153,7 +161,7 @@ namespace VueCoreFramework.Test.Data
             var repo = context.GetRepositoryForType(typeof(Country));
 
             await repo.RemoveRangeAsync(context.Countries.Select(c => c.Id.ToString()));
-            var vms = await repo.GetAllAsync();
+            var vms = await repo.GetAllAsync("en-US", _localizer);
             Assert.AreEqual(0, vms.Count());
         }
 
@@ -163,7 +171,7 @@ namespace VueCoreFramework.Test.Data
             var parentRepo = context.GetRepositoryForType(typeof(Country));
             var childRepo = context.GetRepositoryForType(typeof(Leader));
 
-            await parentRepo.AddAsync(null, null);
+            await parentRepo.AddAsync(null, null, "en-US", _localizer);
             var parent = context.Countries.FirstOrDefault();
 
             Assert.IsNotNull(parent);
@@ -171,7 +179,7 @@ namespace VueCoreFramework.Test.Data
             var parentProp = typeof(Country).GetProperty(nameof(Country.Leader));
             var childProp = typeof(Leader).GetProperty(nameof(Leader.Country));
 
-            var vm = await childRepo.AddAsync(childProp, parent.Id.ToString());
+            var vm = await childRepo.AddAsync(childProp, parent.Id.ToString(), "en-US", _localizer);
             var childId = vm[nameof(DataItem.Id).ToInitialLower()];
 
             var id = await parentRepo.GetChildIdAsync(parent.Id.ToString(), parentProp);
@@ -184,7 +192,7 @@ namespace VueCoreFramework.Test.Data
             var parentRepo = context.GetRepositoryForType(typeof(Country));
             var childRepo = context.GetRepositoryForType(typeof(City));
 
-            await parentRepo.AddAsync(null, null);
+            await parentRepo.AddAsync(null, null, "en-US", _localizer);
             var parent = context.Countries.FirstOrDefault();
 
             Assert.IsNotNull(parent);
@@ -192,7 +200,7 @@ namespace VueCoreFramework.Test.Data
             var parentProp = typeof(Country).GetProperty(nameof(Country.Cities));
             var childProp = typeof(City).GetProperty(nameof(City.Country));
 
-            await childRepo.AddAsync(childProp, parent.Id.ToString());
+            await childRepo.AddAsync(childProp, parent.Id.ToString(), "en-US", _localizer);
 
             var total = await parentRepo.GetChildTotalAsync(parent.Id.ToString(), parentProp);
             Assert.AreEqual(1, total);
@@ -203,7 +211,7 @@ namespace VueCoreFramework.Test.Data
         {
             var repo = context.GetRepositoryForType(typeof(Country));
 
-            var defs = repo.FieldDefinitions;
+            var defs = repo.GetFieldDefinitions(_localizer);
 
             Assert.IsTrue(defs.Any(d => d.Model == nameof(DataItem.Id).ToInitialLower()));
         }
@@ -213,12 +221,13 @@ namespace VueCoreFramework.Test.Data
         {
             var repo = context.GetRepositoryForType(typeof(Country));
 
-            await repo.AddAsync(null, null);
-            await repo.AddAsync(null, null);
+            await repo.AddAsync(null, null, "en-US", _localizer);
+            await repo.AddAsync(null, null, "en-US", _localizer);
             var count = context.Countries.Count();
 
             var vms = await repo.GetPageAsync(null, null, false, 1, 5, new string[] { },
-                new List<Claim> { new Claim(CustomClaimTypes.PermissionDataAll, CustomClaimTypes.PermissionAll) });
+                new List<Claim> { new Claim(CustomClaimTypes.PermissionDataAll, CustomClaimTypes.PermissionAll) },
+                "en-US", _localizer);
             Assert.AreEqual(count, vms.Count());
         }
 
@@ -227,11 +236,11 @@ namespace VueCoreFramework.Test.Data
         {
             var repo = context.GetRepositoryForType(typeof(Country));
 
-            await repo.AddAsync(null, null);
-            await repo.AddAsync(null, null);
+            await repo.AddAsync(null, null, "en-US", _localizer);
+            await repo.AddAsync(null, null, "en-US", _localizer);
 
             var vms = await repo.GetPageAsync(null, null, false, 1, 5, new string[] { },
-                new List<Claim> { });
+                new List<Claim> { }, "en-US", _localizer);
             Assert.AreEqual(0, vms.Count());
         }
 
@@ -240,14 +249,15 @@ namespace VueCoreFramework.Test.Data
         {
             var repo = context.GetRepositoryForType(typeof(Country));
 
-            await repo.AddAsync(null, null);
+            await repo.AddAsync(null, null, "en-US", _localizer);
             var item = context.Countries.FirstOrDefault();
             Assert.IsNotNull(item);
 
-            await repo.AddAsync(null, null);
+            await repo.AddAsync(null, null, "en-US", _localizer);
 
             var vms = await repo.GetPageAsync(null, null, false, 1, 5, new string[] { },
-                new List<Claim> { new Claim(CustomClaimTypes.PermissionDataAll, $"{nameof(Country)}{{{item.Id}}}") });
+                new List<Claim> { new Claim(CustomClaimTypes.PermissionDataAll, $"{nameof(Country)}{{{item.Id}}}") },
+                "en-US", _localizer);
             Assert.AreEqual(1, vms.Count());
         }
 
@@ -256,8 +266,8 @@ namespace VueCoreFramework.Test.Data
         {
             var repo = context.GetRepositoryForType(typeof(Country));
 
-            await repo.AddAsync(null, null);
-            await repo.AddAsync(null, null);
+            await repo.AddAsync(null, null, "en-US", _localizer);
+            await repo.AddAsync(null, null, "en-US", _localizer);
 
             var count = context.Countries.Count();
 
@@ -270,7 +280,7 @@ namespace VueCoreFramework.Test.Data
         {
             var repo = context.GetRepositoryForType(typeof(Country));
 
-            await repo.AddAsync(null, null);
+            await repo.AddAsync(null, null, "en-US", _localizer);
             var item = context.Countries.FirstOrDefault();
 
             Assert.IsNotNull(item);
@@ -290,11 +300,11 @@ namespace VueCoreFramework.Test.Data
 
             var childProp = typeof(Country).GetProperty(nameof(Country.Airlines));
 
-            await parentRepo.AddAsync(null, null);
+            await parentRepo.AddAsync(null, null, "en-US", _localizer);
             var parent = context.Countries.FirstOrDefault();
             Assert.IsNotNull(parent);
 
-            await childRepo.AddAsync(null, null);
+            await childRepo.AddAsync(null, null, "en-US", _localizer);
             var child = context.Airlines.FirstOrDefault();
             Assert.IsNotNull(child);
 
@@ -314,7 +324,7 @@ namespace VueCoreFramework.Test.Data
 
             var childProp = typeof(City).GetProperty(nameof(City.Country));
 
-            await repo.AddAsync(childProp, Guid.Empty.ToString());
+            await repo.AddAsync(childProp, Guid.Empty.ToString(), "en-US", _localizer);
             var item = context.Cities.FirstOrDefault();
             var count = context.Cities.Count();
 
@@ -331,8 +341,8 @@ namespace VueCoreFramework.Test.Data
         {
             var repo = context.GetRepositoryForType(typeof(Country));
 
-            await repo.AddAsync(null, null);
-            await repo.AddAsync(null, null);
+            await repo.AddAsync(null, null, "en-US", _localizer);
+            await repo.AddAsync(null, null, "en-US", _localizer);
 
             await repo.RemoveRangeAsync(context.Countries.Select(c => c.Id.ToString()));
 
@@ -346,8 +356,8 @@ namespace VueCoreFramework.Test.Data
 
             var childProp = typeof(City).GetProperty(nameof(City.Country));
 
-            await repo.AddAsync(childProp, Guid.Empty.ToString());
-            await repo.AddAsync(childProp, Guid.Empty.ToString());
+            await repo.AddAsync(childProp, Guid.Empty.ToString(), "en-US", _localizer);
+            await repo.AddAsync(childProp, Guid.Empty.ToString(), "en-US", _localizer);
 
             var count = context.Cities.Count();
 
@@ -365,12 +375,12 @@ namespace VueCoreFramework.Test.Data
 
             var childProp = typeof(Leader).GetProperty(nameof(Leader.Country));
 
-            await parentRepo.AddAsync(null, null);
+            await parentRepo.AddAsync(null, null, "en-US", _localizer);
             var parent = context.Countries.FirstOrDefault();
 
-            await childRepo.AddAsync(childProp, parent.Id.ToString());
+            await childRepo.AddAsync(childProp, parent.Id.ToString(), "en-US", _localizer);
             var oldChild = context.Leaders.FirstOrDefault();
-            await childRepo.AddAsync(null, null);
+            await childRepo.AddAsync(null, null, "en-US", _localizer);
             var newChild = context.Leaders.FirstOrDefault(c => c != oldChild);
 
             var count = context.Leaders.Count();
@@ -386,12 +396,12 @@ namespace VueCoreFramework.Test.Data
         {
             var repo = context.GetRepositoryForType(typeof(Country));
 
-            await repo.AddAsync(null, null);
+            await repo.AddAsync(null, null, "en-US", _localizer);
             var item = context.Countries.FirstOrDefault();
 
             Assert.IsNotNull(item);
 
-            await repo.UpdateAsync(item);
+            await repo.UpdateAsync(item, "en-US", _localizer);
         }
     }
 }

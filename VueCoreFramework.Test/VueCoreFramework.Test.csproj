@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>    
+  <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
   </PropertyGroup>
 
@@ -21,7 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\VueCoreFramework\VueCoreFramework.csproj" />
+    <ProjectReference Include="..\VueCoreFramework.API\VueCoreFramework.API.csproj" />
+    <ProjectReference Include="..\VueCoreFramework.Core\VueCoreFramework.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

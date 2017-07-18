@@ -1,6 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using VueCoreFramework.Extensions;
+using VueCoreFramework.Core.Extensions;
 
 namespace VueCoreFramework.Test.Extensions
 {

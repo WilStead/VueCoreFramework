@@ -5,7 +5,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Reflection;
 using System.Threading.Tasks;
-using VueCoreFramework.Services;
+using VueCoreFramework.API;
+using VueCoreFramework.Core.Services;
 
 namespace VueCoreFramework.Test.Services
 {
