@@ -7,12 +7,12 @@ import * as ErrorMsg from './error-msg';
 Oidc.Log.level = Oidc.Log.WARN;
 Oidc.Log.logger = JL("OIDC");
 const config: Oidc.UserManagerSettings = {
-    authority: "https://localhost:44393/",
+    authority: "https://localhost:44329/",
     client_id: "vue",
-    redirect_uri: "https://localhost:44393/Authorization/oidc",
+    redirect_uri: "https://localhost:44333/Authorization/Callback",
     response_type: "id_token token",
     scope: "openid profile vcfapi",
-    post_logout_redirect_uri: "https://localhost:44393/"
+    post_logout_redirect_uri: "https://localhost:44333/"
 };
 export let authMgr = new Oidc.UserManager(config);
 
@@ -31,7 +31,7 @@ export function authenticate(full?: boolean): Promise<string> {
             }
         });
 
-    let url = '/api/Authorization/Authenticate/';
+    let url = '/Authorization/Authenticate/';
     if (full || !Store.store.state.userState.user) {
         full = true;
         url += '?full=true';
@@ -128,7 +128,7 @@ export interface AuthorizationViewModel {
  * @returns {string} Either 'authorized' or 'unauthorized' or 'login' if the user must sign in.
  */
 export function checkAuthorization(dataType: string, operation = '', id = ''): Promise<string> {
-    let url = `/api/Authorization/Authorize/${dataType}`;
+    let url = `/Authorization/Authorize/${dataType}`;
     if (operation) url += `?operation=${operation}`;
     if (id) {
         if (operation) {

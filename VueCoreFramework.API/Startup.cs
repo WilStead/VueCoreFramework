@@ -61,20 +61,18 @@ namespace VueCoreFramework.API
         /// <param name="services">A collection of service descriptors.</param>
         public void ConfigureServices(IServiceCollection services)
         {
-            // Add framework services.
             services.AddOptions();
 
-            var connectionString = Configuration.GetConnectionString("DefaultConnection");
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(connectionString));
+                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
             services.AddIdentity<ApplicationUser, IdentityRole>(config =>
             {
                 config.User.RequireUniqueEmail = true;
                 config.SignIn.RequireConfirmedEmail = true;
                 config.Cookies.ApplicationCookie.AutomaticChallenge = false;
-                config.Cookies.ApplicationCookie.LoginPath = new PathString("/Home/Index?forwardUrl=%2Flogin");
-                config.Cookies.ApplicationCookie.AccessDeniedPath = new PathString("/Home/Index?forwardUrl=%2Ferror%2F403");
+                config.Cookies.ApplicationCookie.LoginPath = new PathString($"{URLs.ClientURL}Home/Index?forwardUrl=%2Flogin");
+                config.Cookies.ApplicationCookie.AccessDeniedPath = new PathString($"{URLs.ClientURL}Home/Index?forwardUrl=%2Ferror%2F403");
             })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
@@ -91,9 +89,19 @@ namespace VueCoreFramework.API
                 options.SupportedUICultures = supportedCultures;
             });
 
+            services.AddCors(options =>
+            {
+                options.AddPolicy("default", policy =>
+                {
+                    policy.WithOrigins(URLs.ClientURL)
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+            });
+
             services.AddMvc(options =>
             {
-                options.SslPort = 44393;
+                options.SslPort = 44371;
                 options.Filters.Add(new RequireHttpsAttribute());
             })
             .AddDataAnnotationsLocalization();
@@ -117,13 +125,11 @@ namespace VueCoreFramework.API
         /// <param name="app">Provides the mechanisms to configure the application's request pipeline.</param>
         /// <param name="env">An <see cref="IHostingEnvironment"/> used to set up configuration sources.</param>
         /// <param name="loggerFactory">Used to configure the logging system.</param>
-        /// <param name="context">The application's Entity Framework database context.</param>
         /// <param name="localization">Specifies options for the <see cref="RequestLocalizationMiddleware"/>.</param>
         public void Configure(
             IApplicationBuilder app,
             IHostingEnvironment env,
             ILoggerFactory loggerFactory,
-            ApplicationDbContext context,
             IOptions<RequestLocalizationOptions> localization)
         {
             loggerFactory.AddNLog();
@@ -134,6 +140,7 @@ namespace VueCoreFramework.API
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.UseDatabaseErrorPage();
             }
             else
             {
@@ -149,6 +156,18 @@ namespace VueCoreFramework.API
             app.UseStaticFiles();
 
             app.UseIdentity();
+
+            app.UseCors("default");
+
+            app.UseIdentityServerAuthentication(new IdentityServerAuthenticationOptions
+            {
+                Authority = URLs.AuthURL,
+                ApiName = IdentityServerConfig.apiName,
+                RequireHttpsMetadata = true,
+
+                AutomaticAuthenticate = true,
+                AutomaticChallenge = true
+            });
 
             app.UseMvc(routes =>
             {

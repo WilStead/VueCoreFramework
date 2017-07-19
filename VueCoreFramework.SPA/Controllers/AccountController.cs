@@ -385,6 +385,8 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> Logout()
         {
+            await HttpContext.Authentication.SignOutAsync("Cookies");
+            await HttpContext.Authentication.SignOutAsync("oidc");
             await _signInManager.SignOutAsync();
             return Ok();
         }

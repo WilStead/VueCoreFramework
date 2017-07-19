@@ -18,7 +18,7 @@ using NLog.Extensions.Logging;
 using NLog.Web;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Reflection;
+using System.IdentityModel.Tokens.Jwt;
 using VueCoreFramework.Core.Configuration;
 using VueCoreFramework.Core.Data;
 using VueCoreFramework.Core.Models;
@@ -113,17 +113,6 @@ namespace VueCoreFramework
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.Configure<AuthMessageSenderOptions>(Configuration.GetSection("AuthMessageSender"));
             services.Configure<AdminOptions>(Configuration.GetSection("AdminOptions"));
-
-            var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
-            services.AddIdentityServer()
-                .AddTemporarySigningCredential()
-                .AddConfigurationStore(builder =>
-                    builder.UseSqlServer(connectionString, options =>
-                        options.MigrationsAssembly(migrationsAssembly)))
-                .AddOperationalStore(builder =>
-                    builder.UseSqlServer(connectionString, options =>
-                        options.MigrationsAssembly(migrationsAssembly)))
-                .AddAspNetIdentity<ApplicationUser>();
         }
 
         /// <summary>
@@ -199,15 +188,27 @@ namespace VueCoreFramework
 
             app.UseIdentity();
 
-            app.UseIdentityServer();
-            app.UseIdentityServerAuthentication(new IdentityServerAuthenticationOptions
+            app.UseCookieAuthentication(new CookieAuthenticationOptions
             {
-                Authority = URLs.ClientURL,
-                ApiName = IdentityServerConfig.apiName,
+                AuthenticationScheme = "Cookies"
+            });
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+            app.UseOpenIdConnectAuthentication(new OpenIdConnectOptions
+            {
+                AuthenticationScheme = "oidc",
+                SignInScheme = "Cookies",
+
+                Authority = URLs.AuthURL,
                 RequireHttpsMetadata = true,
 
-                AutomaticAuthenticate = true,
-                AutomaticChallenge = true
+                ClientId = IdentityServerConfig.mvcClientName,
+                ClientSecret = Configuration["secretJwtKey"],
+
+                ResponseType = "code id_token",
+                Scope = { IdentityServerConfig.apiName, "offline_access" },
+
+                GetClaimsFromUserInfoEndpoint = true,
+                SaveTokens = true
             });
 
             app.UseMvc(routes =>

@@ -16,7 +16,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VueCoreFramework.Test", "Vu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VueCoreFramework.Core", "VueCoreFramework.Core\VueCoreFramework.Core.csproj", "{F73EE05E-3A1E-496A-B9B5-A300C9383BE4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VueCoreFramework.API", "VueCoreFramework.API\VueCoreFramework.API.csproj", "{5AEBD3C1-7FE4-405C-8E78-51C13013A84E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VueCoreFramework.API", "VueCoreFramework.API\VueCoreFramework.API.csproj", "{5AEBD3C1-7FE4-405C-8E78-51C13013A84E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VueCoreFramework.Auth", "VueCoreFramework.Auth\VueCoreFramework.Auth.csproj", "{DABC189E-7DB8-46F4-9A32-AE67E08367A7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -40,6 +42,10 @@ Global
 		{5AEBD3C1-7FE4-405C-8E78-51C13013A84E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5AEBD3C1-7FE4-405C-8E78-51C13013A84E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5AEBD3C1-7FE4-405C-8E78-51C13013A84E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DABC189E-7DB8-46F4-9A32-AE67E08367A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DABC189E-7DB8-46F4-9A32-AE67E08367A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DABC189E-7DB8-46F4-9A32-AE67E08367A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DABC189E-7DB8-46F4-9A32-AE67E08367A7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

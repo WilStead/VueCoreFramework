@@ -17,7 +17,6 @@ namespace VueCoreFramework.Controllers
     /// <summary>
     /// An MVC controller for handling user authorization tasks.
     /// </summary>
-    [Route("api/[controller]/[action]")]
     public class AuthorizationController : Controller
     {
         private readonly RoleManager<IdentityRole> _roleManager;
@@ -165,6 +164,15 @@ namespace VueCoreFramework.Controllers
             }
 
             return vm;
+        }
+
+        /// <summary>
+        /// Callback URL for IdentityServer OopenID Connect.
+        /// </summary>
+        [HttpGet]
+        public IActionResult Callback()
+        {
+            return View();
         }
     }
 }

@@ -2,6 +2,7 @@
 using IdentityServer4;
 using IdentityServer4.Models;
 using System.Collections.Generic;
+using VueCoreFramework.Core.Configuration;
 
 namespace VueCoreFramework.Core.Data
 {
@@ -16,19 +17,9 @@ namespace VueCoreFramework.Core.Data
         public const string apiName = "vcfapi";
 
         /// <summary>
-        /// The base URL for the MVC app.
-        /// </summary>
-        public const string mvcBaseAddress = "https://localhost:44393/";
-
-        /// <summary>
         /// The default MVC client name for IdentityServer.
         /// </summary>
         public const string mvcClientName = "mvc.client";
-
-        /// <summary>
-        /// The base URL for the Vue app.
-        /// </summary>
-        public const string vueBaseAddress = "https://localhost:44393/";
 
         /// <summary>
         /// The default Vue client name for IdentityServer.
@@ -69,8 +60,8 @@ namespace VueCoreFramework.Core.Data
 
                     ClientSecrets = { new Secret(secret.Sha256()) },
 
-                    RedirectUris = { mvcBaseAddress },
-                    PostLogoutRedirectUris = { mvcBaseAddress },
+                    RedirectUris = { $"{URLs.ClientURL}signin-oidc" },
+                    PostLogoutRedirectUris = { $"{URLs.ClientURL}signout-callback-oidc" },
 
                     AllowedScopes = new List<string>
                     {
@@ -85,14 +76,15 @@ namespace VueCoreFramework.Core.Data
                 {
                     ClientId = vueClientName,
                     ClientName = "Vue Client",
-                    ClientUri = vueBaseAddress,
+                    ClientUri = URLs.ClientURL,
                     RequireConsent = false,
 
                     AllowedGrantTypes = GrantTypes.Implicit,
                     AllowAccessTokensViaBrowser = true,
 
-                    RedirectUris = { $"{vueBaseAddress}/oidc" },
-                    PostLogoutRedirectUris = { vueBaseAddress },
+                    RedirectUris = { $"{URLs.ClientURL}Authorization/Callback" },
+                    PostLogoutRedirectUris = { URLs.ClientURL },
+                    AllowedCorsOrigins = { URLs.ClientURL },
 
                     AllowedScopes = new List<string>
                     {
