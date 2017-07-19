@@ -2,6 +2,7 @@
 import Vuex from 'vuex';
 Vue.use(Vuex);
 import Oidc from 'oidc-client';
+import * as Api from '../api';
 import { uiState, getMenuItems, getChildItems } from './uiStore';
 import { userState, PermissionData, SharePermission } from './userStore';
 import { authMgr, AuthorizationViewModel, checkAuthorization } from '../authorization';
@@ -368,15 +369,7 @@ export const store = new Vuex.Store({
          * Updates the user's group memberships from the API.
          */
         refreshGroups({ commit, state }, returnPath) {
-            return fetch('/api/Group/GetGroupMemberships/',
-                {
-                    method: 'GET',
-                    headers: {
-                        'Accept': `application/json;v=${state.apiVer}`,
-                        'Accept-Language': state.userState.culture,
-                        'Authorization': `bearer ${state.userState.user.access_token}`
-                    }
-                })
+            return Api.getApi('/api/Group/GetGroupMemberships/')
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(response.statusText);

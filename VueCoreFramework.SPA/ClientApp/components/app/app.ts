@@ -1,9 +1,9 @@
 import Vue from 'vue';
 import { Component } from 'vue-property-decorator';
+import * as Api from '../../api';
 import * as Store from '../../store/store';
 import { ConversationViewModel, MessageViewModel, messaging } from '../../store/messaging';
 import { defaultCulture } from '../../globalization/globalization';
-import { checkResponse, ApiResponseViewModel } from '../../router';
 import { Group } from '../group/manage';
 import * as ErrorMsg from '../../error-msg';
 import VueMarkdown from 'vue-markdown';
@@ -183,16 +183,7 @@ export default class AppComponent extends Vue {
     }
 
     onLockAccount() {
-        fetch(`/api/Manage/LockAccount/${this.foundUser.username}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.postApi(`/api/Manage/LockAccount/${this.foundUser.username}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {
@@ -240,16 +231,7 @@ export default class AppComponent extends Vue {
     }
 
     onUnlockAccount() {
-        fetch(`/api/Manage/UnlockAccount/${this.foundUser.username}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.postApi(`/api/Manage/UnlockAccount/${this.foundUser.username}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {
@@ -282,16 +264,7 @@ export default class AppComponent extends Vue {
         this.chatErrorMessage = '';
         this.foundUser = null;
         if (this.searchUsername) {
-            fetch(`/api/Account/VerifyUser/${this.searchUsername}`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                        'Accept-Language': this.$store.state.userState.culture,
-                        'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                    }
-                })
-                .then(response => checkResponse(response, this.$route.fullPath))
+            Api.postApi(`/api/Account/VerifyUser/${this.searchUsername}`, this.$route.fullPath)
                 .then(response => {
                     if (!response.ok) {
                         if (response.statusText) {
@@ -426,16 +399,7 @@ export default class AppComponent extends Vue {
     suggestSearchUsername() {
         this.searchUsernameTimeout = 0;
         if (this.searchUsername) {
-            fetch(`/api/Share/GetShareableUsernameCompletion/${this.searchUsername}`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                        'Accept-Language': this.$store.state.userState.culture,
-                        'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                    }
-                })
-                .then(response => checkResponse(response, this.$route.fullPath))
+            Api.getApi(`/api/Share/GetShareableUsernameCompletion/${this.searchUsername}`, this.$route.fullPath)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`CODE:${response.statusText}`);

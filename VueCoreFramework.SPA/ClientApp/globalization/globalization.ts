@@ -1,11 +1,12 @@
-﻿import { store } from '../store/store';
+﻿import * as Api from '../api';
+import { store } from '../store/store';
 import _t from '../globalization/translate';
 import * as ErrorMsg from '../error-msg';
 
 export const defaultCulture = "en-US";
 
 export function setCulture(culture: string) {
-    fetch(`dist/globalization/messages/${culture}.json`,
+    Api.callApi(`dist/globalization/messages/${culture}.json`,
         {
             method: 'GET',
             headers: {

@@ -88,14 +88,6 @@ router.beforeEach((to, from, next) => {
 });
 
 /**
- * A ViewModel used to receive a response from an API call, with an error and response string.
- */
-export interface ApiResponseViewModel {
-    error: string,
-    response: string
-}
-
-/**
  * Calls an API endpoint which authorizes the current user for the route being navigated to.
  * @param to The Route being navigated to.
  * @returns {string} Either 'authorized' or 'unauthorized' or 'login' if the user must sign in.

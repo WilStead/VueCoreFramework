@@ -1,9 +1,9 @@
 ﻿import Vue from 'vue';
 import VueRouter from 'vue-router';
 import { Component, Prop, Watch } from 'vue-property-decorator';
+import * as Api from '../../api';
 import * as ErrorMsg from '../../error-msg';
 import { permissionIncludesTarget, permissions, ShareData } from '../../store/userStore';
-import { ApiResponseViewModel, checkResponse } from '../../router';
 
 @Component
 export default class DashboardComponent extends Vue {
@@ -77,16 +77,7 @@ export default class DashboardComponent extends Vue {
         } else {
             action = `HideDataFromGroup/${share.name}`;
         }
-        fetch(`/api/Share/${action}/${this.routeName}?operation=${encodeURIComponent(share.level)}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.postApi(`/api/Share/${action}/${this.routeName}?operation=${encodeURIComponent(share.level)}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -151,16 +142,7 @@ export default class DashboardComponent extends Vue {
         if (!this.allPermission) {
             url += `?operation=${encodeURIComponent(this.selectedPermission)}`;
         }
-        fetch(url,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.postApi(url, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -183,16 +165,7 @@ export default class DashboardComponent extends Vue {
     suggestShareGroup() {
         this.shareGroupTimeout = 0;
         if (this.shareGroup) {
-            fetch(`/api/Share/GetShareableGroupCompletion/${this.shareGroup}`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                        'Accept-Language': this.$store.state.userState.culture,
-                        'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                    }
-                })
-                .then(response => checkResponse(response, this.$route.fullPath))
+            Api.getApi(`/api/Share/GetShareableGroupCompletion/${this.shareGroup}`, this.$route.fullPath)
                 .then(response => {
                     if (!response.ok) {
                         if (response.status === 404) {
@@ -213,16 +186,7 @@ export default class DashboardComponent extends Vue {
     suggestShareUsername() {
         this.shareUsernameTimeout = 0;
         if (this.shareUsername) {
-            fetch(`/api/Share/GetShareableUsernameCompletion/${this.shareUsername}`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                        'Accept-Language': this.$store.state.userState.culture,
-                        'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                    }
-                })
-                .then(response => checkResponse(response, this.$route.fullPath))
+            Api.getApi(`/api/Share/GetShareableUsernameCompletion/${this.shareUsername}`, this.$route.fullPath)
                 .then(response => {
                     if (!response.ok) {
                         if (response.status === 404) {
@@ -241,16 +205,7 @@ export default class DashboardComponent extends Vue {
     }
 
     updateShares() {
-        fetch(`/api/Share/GetCurrentShares/${this.routeName}`,
-            {
-                method: 'GET',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.getApi(`/api/Share/GetCurrentShares/${this.routeName}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -268,16 +223,7 @@ export default class DashboardComponent extends Vue {
             .catch(error => {
                 ErrorMsg.logError('dynamic-table.updateShares', error);
             });
-        fetch(`/api/Share/GetShareableGroupMembers`,
-            {
-                method: 'GET',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.getApi(`/api/Share/GetShareableGroupMembers`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -291,16 +237,7 @@ export default class DashboardComponent extends Vue {
             .catch(error => {
                 ErrorMsg.logError('dynamic-table.updateShares', error);
             });
-        fetch(`/api/Share/GetShareableGroupSubset`,
-            {
-                method: 'GET',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.getApi(`/api/Share/GetShareableGroupSubset`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);

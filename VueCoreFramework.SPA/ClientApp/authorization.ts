@@ -1,4 +1,5 @@
 ﻿import Oidc from 'oidc-client';
+import * as Api from './api';
 import * as Store from './store/store';
 import { PermissionData } from './store/userStore';
 import { JL } from 'jsnlog';
@@ -7,12 +8,12 @@ import * as ErrorMsg from './error-msg';
 Oidc.Log.level = Oidc.Log.WARN;
 Oidc.Log.logger = JL("OIDC");
 const config: Oidc.UserManagerSettings = {
-    authority: "https://localhost:44329/",
+    authority: Api.urls.authUrl,
     client_id: "vue",
-    redirect_uri: "https://localhost:44333/Authorization/Callback",
+    redirect_uri: `${Api.urls.spaUrl}Authorization/Callback`,
     response_type: "id_token token",
     scope: "openid profile vcfapi",
-    post_logout_redirect_uri: "https://localhost:44333/"
+    post_logout_redirect_uri: Api.urls.spaUrl
 };
 export let authMgr = new Oidc.UserManager(config);
 
@@ -36,14 +37,7 @@ export function authenticate(full?: boolean): Promise<string> {
         full = true;
         url += '?full=true';
     }
-    return fetch(url,
-        {
-            headers: {
-                'Accept': `application/json;v=${Store.store.state.apiVer}`,
-                'Accept-Language': Store.store.state.userState.culture,
-                'Authorization': `bearer ${Store.store.state.userState.user.access_token}`
-            }
-        })
+    return Api.getApi(url)
         .then(response => {
             if (!response.ok) {
                 if (response.status === 401) {
@@ -138,14 +132,7 @@ export function checkAuthorization(dataType: string, operation = '', id = ''): P
         }
         url += `id=${id}`;
     }
-    return fetch(url,
-        {
-            headers: {
-                'Accept': `application/json;v=${Store.store.state.apiVer}`,
-                'Accept-Language': Store.store.state.userState.culture,
-                'Authorization': `bearer ${Store.store.state.userState.user.access_token}`
-            }
-        })
+    return Api.getApi(url)
         .then(response => {
             if (!response.ok) {
                 if (response.status === 401) {

@@ -1,8 +1,9 @@
 ﻿import Vue from 'vue';
 import { Component, Prop, Watch } from 'vue-property-decorator';
+import * as Api from '../../api';
 import * as Store from '../../store/store';
 import { authenticate } from '../../authorization';
-import { checkResponse, ApiResponseViewModel } from '../../router';
+import { checkResponse } from '../../router';
 import { OperationReply } from '../../store/repository';
 import { defaultCulture, setCulture } from '../../globalization/globalization';
 import VueFormGenerator from 'vue-form-generator';
@@ -159,15 +160,7 @@ export default class ManageUserComponent extends Vue {
     }
 
     created() {
-        fetch('/api/Account/HasPassword',
-            {
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.getApi('/api/Account/HasPassword', this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {
@@ -176,12 +169,7 @@ export default class ManageUserComponent extends Vue {
                         this.errors.push("A problem occurred.");
                     }
                     throw new Error(response.statusText);
-                }
-                return response;
-            })
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
-            .then(data => {
-                if (data.response === "yes") {
+                } else if (response.statusText === "yes") {
                     this.hasPassword = true;
                 }
             })
@@ -193,15 +181,7 @@ export default class ManageUserComponent extends Vue {
     }
 
     mounted() {
-        fetch('/api/Account/GetUserAuthProviders',
-            {
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.getApi('/api/Account/GetUserAuthProviders', this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {
@@ -232,7 +212,7 @@ export default class ManageUserComponent extends Vue {
                     ErrorMsg.logError("user/manage.mounted", new Error(error));
                 }
             });
-        fetch('/api/Manage/GetCultures',
+        Api.callApi('/api/Manage/GetCultures',
             {
                 headers: {
                     'Accept': `application/json;v=${this.$store.state.apiVer}`,
@@ -283,16 +263,7 @@ export default class ManageUserComponent extends Vue {
 
     loadXferUsernames() {
         this.xferLoading = true;
-        fetch('/api/Manage/LoadXferUsernames',
-            {
-                method: 'GET',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.getApi('/api/Manage/LoadXferUsernames', this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error("CODE");
@@ -322,16 +293,7 @@ export default class ManageUserComponent extends Vue {
             return;
         }
 
-        fetch(`/api/Manage/SetCulture/${value}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.postApi(`/api/Manage/SetCulture/${value}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {
@@ -366,17 +328,7 @@ export default class ManageUserComponent extends Vue {
         if (this.selectedXferUsername) {
             url += `?xferUsername=${this.selectedXferUsername}`;
         }
-        fetch(url,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Content-Type': `application/json;v=${this.$store.state.apiVer}`,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.postApi(url, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {
@@ -408,7 +360,7 @@ export default class ManageUserComponent extends Vue {
         this.submitting = true;
         this.errors = [];
         this.model.authProvider = provider;
-        fetch('/api/Manage/LinkLogin',
+        Api.callApi('/api/Manage/LinkLogin',
             {
                 method: 'POST',
                 headers: {
@@ -450,7 +402,7 @@ export default class ManageUserComponent extends Vue {
         this.submitting = true;
         this.errors = [];
         this.model.authProvider = provider;
-        fetch('/api/Manage/RemoveLogin',
+        Api.callApi('/api/Manage/RemoveLogin',
             {
                 method: 'POST',
                 headers: {
@@ -500,7 +452,7 @@ export default class ManageUserComponent extends Vue {
         } else {
             url = 'api/Manage/SetPassword';
         }
-        fetch(url,
+        Api.callApi(url,
             {
                 method: 'POST',
                 headers: {

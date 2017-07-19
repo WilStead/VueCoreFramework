@@ -1,5 +1,6 @@
 ﻿import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
+import * as Api from '../../api';
 import * as ErrorMsg from '../../error-msg';
 import VueFormGenerator from 'vue-form-generator';
 import { Schema, VFGOptions } from '../../vfg/vfg';
@@ -111,7 +112,7 @@ export default class RegisterComponent extends Vue {
         this.success = false;
         if (!this.isValid) return;
         this.errors = [];
-        fetch('/api/Account/Register',
+        Api.callApi('/api/Account/Register',
             {
                 method: 'POST',
                 headers: {

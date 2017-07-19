@@ -311,8 +311,8 @@ namespace VueCoreFramework.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
             }
-            if (await _userManager.HasPasswordAsync(user)) return Json(new { response = "yes" });
-            else return Json(new { response = "no" });
+            if (await _userManager.HasPasswordAsync(user)) return Ok("yes");
+            else return Ok("no");
         }
 
         /// <summary>

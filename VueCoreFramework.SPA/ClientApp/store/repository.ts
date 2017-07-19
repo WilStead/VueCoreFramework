@@ -1,4 +1,5 @@
-﻿import { router, checkResponse, ApiResponseViewModel } from '../router';
+﻿import * as Api from '../api';
+import { checkResponse } from '../router';
 import { store } from './store';
 import { FieldDefinition } from '../vfg/vfg';
 import { validators } from '../vfg/vfg-custom-validators';
@@ -77,16 +78,7 @@ export class Repository {
         if (childProp && parentId) {
             url += `/${childProp}/${parentId}`;
         }
-        return fetch(url,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${store.state.apiVer}`,
-                    'Accept-Language': store.state.userState.culture,
-                    'Authorization': `bearer ${store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, returnPath))
+        return Api.postApi(url, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -109,7 +101,7 @@ export class Repository {
      * @returns {Response} The response.
      */
     addChildrenToCollection(returnPath: string, id: string, childProp: string, ids: string[]): Promise<Response> {
-        return fetch(`/api/Data/${this.dataType}/AddChildrenToCollection/${id}/${childProp}`,
+        return Api.callApi(`/api/Data/${this.dataType}/AddChildrenToCollection/${id}/${childProp}`,
             {
                 method: 'POST',
                 headers: {
@@ -142,16 +134,7 @@ export class Repository {
         if (id === undefined || id === null || id === '') {
             return Promise.reject("The item id was missing from your request.");
         }
-        return fetch(`/api/Data/${this.dataType}/Duplicate/${id}`,
-            {
-                method: 'GET',
-                headers: {
-                    'Accept': `application/json;v=${store.state.apiVer}`,
-                    'Accept-Language': store.state.userState.culture,
-                    'Authorization': `bearer ${store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, returnPath))
+        return Api.getApi(`/api/Data/${this.dataType}/Duplicate/${id}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -174,16 +157,7 @@ export class Repository {
         if (id === undefined || id === null || id === '') {
             return Promise.reject("The item id was missing from your request.");
         }
-        return fetch(`/api/Data/${this.dataType}/Find/${id}`,
-            {
-                method: 'GET',
-                headers: {
-                    'Accept': `application/json;v=${store.state.apiVer}`,
-                    'Accept-Language': store.state.userState.culture,
-                    'Authorization': `bearer ${store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, returnPath))
+        return Api.getApi(`/api/Data/${this.dataType}/Find/${id}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     if (response.status === 404) {
@@ -207,16 +181,7 @@ export class Repository {
      * @returns {DataItem[]} All the items.
      */
     getAll(returnPath: string): Promise<DataItem[]> {
-        return fetch(`/api/Data/${this.dataType}/GetAll`,
-            {
-                method: 'GET',
-                headers: {
-                    'Accept': `application/json;v=${store.state.apiVer}`,
-                    'Accept-Language': store.state.userState.culture,
-                    'Authorization': `bearer ${store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, returnPath))
+        return Api.getApi(`/api/Data/${this.dataType}/GetAll`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -237,16 +202,7 @@ export class Repository {
      * @returns {string[]} The primary keys of all the children.
      */
     getAllChildIds(returnPath: string, id: string, childProp: string): Promise<string[]> {
-        return fetch(`/api/Data/${this.dataType}/GetAllChildIds/${id}/${childProp}`,
-            {
-                method: 'GET',
-                headers: {
-                    'Accept': `application/json;v=${store.state.apiVer}`,
-                    'Accept-Language': store.state.userState.culture,
-                    'Authorization': `bearer ${store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, returnPath))
+        return Api.getApi(`/api/Data/${this.dataType}/GetAllChildIds/${id}/${childProp}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -267,16 +223,7 @@ export class Repository {
      * @returns {string} The primary key of the child entity.
      */
     getChildId(returnPath: string, id: string, childProp: string): Promise<string> {
-        return fetch(`/api/Data/${this.dataType}/GetChildId/${id}/${childProp}`,
-            {
-                method: 'GET',
-                headers: {
-                    'Accept': `application/json;v=${store.state.apiVer}`,
-                    'Accept-Language': store.state.userState.culture,
-                    'Authorization': `bearer ${store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, returnPath))
+        return Api.getApi(`/api/Data/${this.dataType}/GetChildId/${id}/${childProp}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -343,16 +290,7 @@ export class Repository {
             }
             url += `rowsPerPage=${rowsPerPage}`;
         }
-        return fetch(`/api/Data/${this.dataType}/GetChildTotal/${id}/${childProp}`,
-            {
-                method: 'GET',
-                headers: {
-                    'Accept': `application/json;v=${store.state.apiVer}`,
-                    'Accept-Language': store.state.userState.culture,
-                    'Authorization': `bearer ${store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, returnPath))
+        return Api.getApi(`/api/Data/${this.dataType}/GetChildTotal/${id}/${childProp}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -361,16 +299,7 @@ export class Repository {
                 }
             })
             .then(response => {
-                return fetch(url,
-                    {
-                        method: 'GET',
-                        headers: {
-                            'Accept': `application/json;v=${store.state.apiVer}`,
-                            'Accept-Language': store.state.userState.culture,
-                            'Authorization': `bearer ${store.state.userState.user.access_token}`
-                        }
-                    })
-                    .then(response => checkResponse(response, returnPath))
+                return Api.getApi(url, returnPath)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error(`CODE:${response.statusText}`);
@@ -397,16 +326,7 @@ export class Repository {
      */
     getFieldDefinitions(returnPath: string): Promise<FieldDefinition[]> {
         if (this.fieldDefinitions === null) {
-            return fetch(`/api/Data/${this.dataType}/GetFieldDefinitions`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Accept': `application/json;v=${store.state.apiVer}`,
-                        'Accept-Language': store.state.userState.culture,
-                        'Authorization': `bearer ${store.state.userState.user.access_token}`
-                    }
-                })
-                .then(response => checkResponse(response, returnPath))
+            return Api.getApi(`/api/Data/${this.dataType}/GetFieldDefinitions`, returnPath)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`CODE:${response.statusText}`);
@@ -490,16 +410,7 @@ export class Repository {
             url += '&';
         }
         url += `culture=${store.state.userState.culture}`;
-        return fetch(`/api/Data/${this.dataType}/GetTotal`,
-            {
-                method: 'GET',
-                headers: {
-                    'Accept': `application/json;v=${store.state.apiVer}`,
-                    'Accept-Language': store.state.userState.culture,
-                    'Authorization': `bearer ${store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, returnPath))
+        return Api.getApi(`/api/Data/${this.dataType}/GetTotal`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -508,7 +419,7 @@ export class Repository {
                 }
             })
             .then(response => {
-                return fetch(url,
+                return Api.callApi(url,
                     {
                         method: 'POST',
                         headers: {
@@ -549,16 +460,7 @@ export class Repository {
         if (id === undefined || id === null || id === '') {
             throw new Error("The item id was missing from your request.");
         }
-        return fetch(`/api/Data/${this.dataType}/Remove/${id}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${store.state.apiVer}`,
-                    'Accept-Language': store.state.userState.culture,
-                    'Authorization': `bearer ${store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, returnPath))
+        return Api.postApi(`/api/Data/${this.dataType}/Remove/${id}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -580,7 +482,7 @@ export class Repository {
      * @returns {Response} The response.
      */
     removeChildrenFromCollection(returnPath: string, id: string, childProp: string, childIds: Array<string>): Promise<Response> {
-        return fetch(`/api/Data/${this.dataType}/RemoveChildrenFromCollection/${id}/${childProp}`,
+        return Api.callApi(`/api/Data/${this.dataType}/RemoveChildrenFromCollection/${id}/${childProp}`,
             {
                 method: 'POST',
                 headers: {
@@ -613,17 +515,7 @@ export class Repository {
      * @returns {Response} The response.
      */
     removeFromParent(returnPath: string, id: string, childProp: string): Promise<Response> {
-        return fetch(`/api/Data/${this.dataType}/RemoveFromParent/${id}/${childProp}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${store.state.apiVer}`,
-                    'Accept-Language': store.state.userState.culture,
-                    'Content-Type': `application/json;v=${store.state.apiVer}`,
-                    'Authorization': `bearer ${store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, returnPath))
+        return Api.postApi(`/api/Data/${this.dataType}/RemoveFromParent/${id}/${childProp}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -645,7 +537,7 @@ export class Repository {
         if (ids === undefined || ids === null || !ids.length) {
             throw new Error("The item ids were missing from your request.");
         }
-        return fetch(`/api/Data/${this.dataType}/RemoveRange`,
+        return Api.callApi(`/api/Data/${this.dataType}/RemoveRange`,
             {
                 method: 'POST',
                 headers: {
@@ -678,7 +570,7 @@ export class Repository {
      * @returns {Response} The response.
      */
     removeRangeFromParent(returnPath: string, childProp: string, ids: string[]): Promise<Response> {
-        return fetch(`/api/Data/${this.dataType}/RemoveRangeFromParent/${childProp}`,
+        return Api.callApi(`/api/Data/${this.dataType}/RemoveRangeFromParent/${childProp}`,
             {
                 method: 'POST',
                 headers: {
@@ -712,17 +604,7 @@ export class Repository {
      * @returns {Response} The response.
      */
     replaceChild(returnPath: string, parentId: string, newChildId: string, childProp: string): Promise<Response> {
-        return fetch(`/api/Data/${this.dataType}/ReplaceChild/${parentId}/${newChildId}/${childProp}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${store.state.apiVer}`,
-                    'Accept-Language': store.state.userState.culture,
-                    'Content-Type': `application/json;v=${store.state.apiVer}`,
-                    'Authorization': `bearer ${store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, returnPath))
+        return Api.postApi(`/api/Data/${this.dataType}/ReplaceChild/${parentId}/${newChildId}/${childProp}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -744,17 +626,7 @@ export class Repository {
      * @returns {DataItem} The new item.
      */
     replaceChildWithNew(returnPath: string, parentId: string, childProp: string): Promise<DataItem> {
-        return fetch(`/api/Data/${this.dataType}/ReplaceChildWithNew/${parentId}/${childProp}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${store.state.apiVer}`,
-                    'Accept-Language': store.state.userState.culture,
-                    'Content-Type': `application/json;v=${store.state.apiVer}`,
-                    'Authorization': `bearer ${store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, returnPath))
+        return Api.postApi(`/api/Data/${this.dataType}/ReplaceChildWithNew/${parentId}/${childProp}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -774,7 +646,7 @@ export class Repository {
      * @returns {DataItem} A response object containing any error which occurred, or the updated item.
      */
     update(returnPath: string, vm: DataItem): Promise<DataItem> {
-        return fetch(`/api/Data/${this.dataType}/Update`,
+        return Api.callApi(`/api/Data/${this.dataType}/Update`,
             {
                 method: 'POST',
                 headers: {

@@ -1,7 +1,8 @@
 ﻿import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
+import * as Api from '../../api';
 import * as Store from '../../store/store';
-import { checkResponse, ApiResponseViewModel } from '../../router';
+import { checkResponse } from '../../router';
 import * as ErrorMsg from '../../error-msg';
 import VueFormGenerator from 'vue-form-generator';
 import { Schema, VFGOptions } from '../../vfg/vfg';
@@ -102,7 +103,7 @@ export default class LoginComponent extends Vue {
     submitting = false;
 
     mounted() {
-        fetch('/api/Account/GetAuthProviders',
+        Api.callApi('/api/Account/GetAuthProviders',
             {
                 method: 'GET',
                 headers: {
@@ -135,7 +136,7 @@ export default class LoginComponent extends Vue {
         if (!this.isValid) return;
         this.submitting = true;
         this.errorMessage = '';
-        fetch('/api/Account/ForgotPassword',
+        Api.callApi('/api/Account/ForgotPassword',
             {
                 method: 'POST',
                 headers: {
@@ -174,7 +175,7 @@ export default class LoginComponent extends Vue {
         this.submitting = true;
         this.errorMessage = '';
         this.model.authProvider = provider;
-        fetch('/api/Account/ExternalLogin',
+        Api.callApi('/api/Account/ExternalLogin',
             {
                 method: 'POST',
                 headers: {
@@ -219,7 +220,7 @@ export default class LoginComponent extends Vue {
         this.submitting = true;
         this.errorMessage = '';
 
-        fetch('/api/Account/Login',
+        Api.callApi('/api/Account/Login',
             {
                 method: 'POST',
                 headers: {

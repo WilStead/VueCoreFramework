@@ -1,7 +1,7 @@
 ﻿import Vue from 'vue';
 import { Component, Prop, Watch } from 'vue-property-decorator';
+import * as Api from '../../api';
 import * as Store from '../../store/store';
-import { checkResponse, ApiResponseViewModel } from '../../router';
 import * as ErrorMsg from '../../error-msg';
 
 export interface Group {
@@ -71,16 +71,7 @@ export default class ManageGroupComponent extends Vue {
                 this.errorMessage = '';
                 this.createErrorMessage = '';
                 this.successMessage = '';
-                fetch(`/api/Group/StartNewGroup/${this.newGroupName}`,
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                            'Accept-Language': this.$store.state.userState.culture,
-                            'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                        }
-                    })
-                    .then(response => checkResponse(response, this.$route.fullPath))
+                Api.postApi(`/api/Group/StartNewGroup/${this.newGroupName}`, this.$route.fullPath)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error(`CODE:${response.statusText}`);
@@ -107,16 +98,7 @@ export default class ManageGroupComponent extends Vue {
         this.errorMessage = '';
         this.successMessage = '';
         this.deleteGroupDialog = false;
-        fetch(`/api/Group/RemoveGroup/${this.deleteGroup.name}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.postApi(`/api/Group/RemoveGroup/${this.deleteGroup.name}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -149,16 +131,7 @@ export default class ManageGroupComponent extends Vue {
         this.activity = true;
         this.errorMessage = '';
         this.successMessage = '';
-        fetch(`/api/Group/GetGroup/${this.searchGroup}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.postApi(`/api/Group/GetGroup/${this.searchGroup}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     if (response.status === 404) {
@@ -190,16 +163,7 @@ export default class ManageGroupComponent extends Vue {
 
     onInvite() {
         this.inviteDialog = false;
-        fetch(`/api/Group/InviteUserToGroup/${this.searchUsername}/${this.inviteGroup.name}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.postApi(`/api/Group/InviteUserToGroup/${this.searchUsername}/${this.inviteGroup.name}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -228,16 +192,7 @@ export default class ManageGroupComponent extends Vue {
         this.errorMessage = '';
         this.successMessage = '';
         this.leaveGroupDialog = false;
-        fetch(`/api/Group/LeaveGroup/${this.leaveGroup.name}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.postApi(`/api/Group/LeaveGroup/${this.leaveGroup.name}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -265,16 +220,7 @@ export default class ManageGroupComponent extends Vue {
         this.activity = true;
         this.errorMessage = '';
         this.successMessage = '';
-        fetch(`/api/Group/RemoveUserFromGroup/${member}/${group.name}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.postApi(`/api/Group/RemoveUserFromGroup/${member}/${group.name}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -317,16 +263,7 @@ export default class ManageGroupComponent extends Vue {
         this.successMessage = '';
         this.xferGroupDialog = false;
         if (this.xferGroup.name === 'Admin') {
-            fetch(`/api/Group/TransferSiteAdminToUser/${this.newManager}`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                        'Accept-Language': this.$store.state.userState.culture,
-                        'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                    }
-                })
-                .then(response => checkResponse(response, this.$route.fullPath))
+            Api.postApi(`/api/Group/TransferSiteAdminToUser/${this.newManager}`, this.$route.fullPath)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`CODE:${response.statusText}`);
@@ -345,16 +282,7 @@ export default class ManageGroupComponent extends Vue {
                     ErrorMsg.logError('group/manage.onXferGroup', error);
                 });
         } else {
-            fetch(`/api/Group/TransferManagerToUser/${this.newManager}/${this.xferGroup.name}`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                        'Accept-Language': this.$store.state.userState.culture,
-                        'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                    }
-                })
-                .then(response => checkResponse(response, this.$route.fullPath))
+            Api.postApi(`/api/Group/TransferManagerToUser/${this.newManager}/${this.xferGroup.name}`, this.$route.fullPath)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`CODE:${response.statusText}`);
@@ -386,16 +314,7 @@ export default class ManageGroupComponent extends Vue {
     suggestSearchGroup() {
         this.searchGroupTimeout = 0;
         if (this.searchGroup) {
-            fetch(`/api/Share/GetShareableGroupCompletion/${this.searchGroup}`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                        'Accept-Language': this.$store.state.userState.culture,
-                        'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                    }
-                })
-                .then(response => checkResponse(response, this.$route.fullPath))
+            Api.getApi(`/api/Share/GetShareableGroupCompletion/${this.searchGroup}`, this.$route.fullPath)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`CODE:${response.statusText}`);
@@ -413,16 +332,7 @@ export default class ManageGroupComponent extends Vue {
     suggestSearchUsername() {
         this.searchUsernameTimeout = 0;
         if (this.searchUsername) {
-            fetch(`/api/Share/GetShareableUsernameCompletion/${this.searchUsername}`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                        'Accept-Language': this.$store.state.userState.culture,
-                        'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                    }
-                })
-                .then(response => checkResponse(response, this.$route.fullPath))
+            Api.getApi(`/api/Share/GetShareableUsernameCompletion/${this.searchUsername}`, this.$route.fullPath)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`CODE:${response.statusText}`);

@@ -1,5 +1,6 @@
 ﻿import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
+import * as Api from '../../../api';
 import { checkResponse } from '../../../router';
 import VueFormGenerator from 'vue-form-generator';
 import { Schema, VFGOptions } from '../../../vfg/vfg';
@@ -96,7 +97,7 @@ export default class ResetComponent extends Vue {
     onSubmit() {
         if (!this.isValid) return;
         this.submitting = true;
-        fetch('api/Account/ResetPassword',
+        Api.callApi('api/Account/ResetPassword',
             {
                 method: 'POST',
                 headers: {

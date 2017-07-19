@@ -1,12 +1,12 @@
 ﻿import Vue from 'vue';
 import VueRouter from 'vue-router';
 import { Component, Prop, Watch } from 'vue-property-decorator';
+import * as Api from '../../api';
 import * as ErrorMsg from '../../error-msg';
 import { FieldDefinition, Schema, VFGOptions } from '../../vfg/vfg';
 import VueFormGenerator from 'vue-form-generator';
 import { DataItem, Repository, OperationReply } from '../../store/repository';
 import { permissionIncludesTarget, permissions, ShareData } from '../../store/userStore';
-import { ApiResponseViewModel, router, checkResponse } from '../../router';
 
 @Component
 export default class DynamicFormComponent extends Vue {
@@ -155,20 +155,10 @@ export default class DynamicFormComponent extends Vue {
         } else {
             action = `HideDataFromGroup/${share.name}`;
         }
-        fetch(`/api/Share/${action}/${this.$route.name}?operation=${share.level}&id=${this.id}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
-            .then(data => {
-                if (data.error) {
-                    this.shareErrorMessage = data.error;
+        Api.postApi(`/api/Share/${action}/${this.$route.name}?operation=${share.level}&id=${this.id}`, this.$route.fullPath)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
                 } else {
                     this.updateShares();
                     this.shareSuccessMessage = 'Success';
@@ -177,6 +167,9 @@ export default class DynamicFormComponent extends Vue {
             })
             .catch(error => {
                 this.shareErrorMessage = 'A problem occurred.';
+                if (error && error.message && error.message.startsWith("CODE:")) {
+                    this.errorMessage += error.message.replace('CODE:', '');
+                }
                 ErrorMsg.logError('dynamic-form.onHide', error);
             });
     }
@@ -253,20 +246,10 @@ export default class DynamicFormComponent extends Vue {
             url += `/${target}`;
         }
         url += `/${this.$route.name}?operation=${this.selectedPermission}&id=${this.id}`;
-        fetch(url,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                }
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
-            .then(response => response.json() as Promise<ApiResponseViewModel>)
-            .then(data => {
-                if (data.error) {
-                    this.shareErrorMessage = data.error;
+        Api.postApi(url, this.$route.fullPath)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
                 } else {
                     this.updateShares();
                     this.shareSuccessMessage = 'Success';
@@ -275,6 +258,9 @@ export default class DynamicFormComponent extends Vue {
             })
             .catch(error => {
                 this.shareErrorMessage = 'A problem occurred.';
+                if (error && error.message && error.message.startsWith("CODE:")) {
+                    this.errorMessage += error.message.replace('CODE:', '');
+                }
                 this.shareActivity = false;
                 ErrorMsg.logError('dynamic-form.share', error);
             });
@@ -283,22 +269,12 @@ export default class DynamicFormComponent extends Vue {
     suggestShareGroup() {
         this.shareGroupTimeout = 0;
         if (this.shareGroup) {
-            fetch(`/api/Share/GetShareableGroupCompletion/${this.shareGroup}`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                        'Accept-Language': this.$store.state.userState.culture,
-                        'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                    }
-                })
-                .then(response => checkResponse(response, this.$route.fullPath))
-                .then(response => response.json() as Promise<ApiResponseViewModel>)
-                .then(data => {
-                    if (data['error']) {
-                        throw new Error(`There was a problem retrieving a share group suggestion: ${data['error']}`);
+            Api.getApi(`/api/Share/GetShareableGroupCompletion/${this.shareGroup}`, this.$route.fullPath)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`CODE:${response.statusText}`);
                     } else {
-                        this.shareGroupSuggestion = data.response;
+                        this.shareGroupSuggestion = response.statusText;
                     }
                 })
                 .catch(error => {
@@ -310,22 +286,12 @@ export default class DynamicFormComponent extends Vue {
     suggestShareUsername() {
         this.shareUsernameTimeout = 0;
         if (this.shareUsername) {
-            fetch(`/api/Share/GetShareableUsernameCompletion/${this.shareUsername}`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                        'Accept-Language': this.$store.state.userState.culture,
-                        'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                    }
-                })
-                .then(response => checkResponse(response, this.$route.fullPath))
-                .then(response => response.json() as Promise<ApiResponseViewModel>)
-                .then(data => {
-                    if (data['error']) {
-                        throw new Error(`There was a problem retrieving a share group suggestion: ${data['error']}`);
+            Api.getApi(`/api/Share/GetShareableUsernameCompletion/${this.shareUsername}`, this.$route.fullPath)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`CODE:${response.statusText}`);
                     } else {
-                        this.shareUsernameSuggestion = data.response;
+                        this.shareUsernameSuggestion = response.statusText;
                     }
                 })
                 .catch(error => {
@@ -399,70 +365,48 @@ export default class DynamicFormComponent extends Vue {
     }
 
     updateShares() {
-        fetch(`/api/Share/GetCurrentShares/${this.$route.name}?id=${this.id}`,
-            {
-                method: 'GET',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
+        Api.getApi(`/api/Share/GetCurrentShares/${this.$route.name}?id=${this.id}`, this.$route.fullPath)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
                 }
+                return response;
             })
-            .then(response => checkResponse(response, this.$route.fullPath))
             .then(response => response.json() as Promise<Array<ShareData>>)
             .then(data => {
-                if (data['error']) {
-                    throw new Error(`There was a problem retrieving current shares: ${data['error']}`);
-                } else {
-                    this.shares = [];
-                    for (var i = 0; i < data.length; i++) {
-                        this.shares[i] = data[i];
-                        this.shares[i].id = i;
-                    }
+                this.shares = [];
+                for (var i = 0; i < data.length; i++) {
+                    this.shares[i] = data[i];
+                    this.shares[i].id = i;
                 }
             })
             .catch(error => {
                 ErrorMsg.logError('dynamic-form.updateShares', error);
             });
-        fetch(`/api/Share/GetShareableGroupMembers`,
-            {
-                method: 'GET',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
+        Api.getApi(`/api/Share/GetShareableGroupMembers`, this.$route.fullPath)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
                 }
+                return response;
             })
-            .then(response => checkResponse(response, this.$route.fullPath))
             .then(response => response.json() as Promise<Array<string>>)
             .then(data => {
-                if (data['error']) {
-                    throw new Error(`There was a problem retrieving sharable group members: ${data['error']}`);
-                } else {
-                    this.groupMembers = data;
-                }
+                this.groupMembers = data;
             })
             .catch(error => {
                 ErrorMsg.logError('dynamic-form.updateShares', error);
             });
-        fetch(`/api/Share/GetShareableGroupSubset`,
-            {
-                method: 'GET',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
+        Api.getApi(`/api/Share/GetShareableGroupSubset`, this.$route.fullPath)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
                 }
+                return response;
             })
-            .then(response => checkResponse(response, this.$route.fullPath))
             .then(response => response.json() as Promise<Array<string>>)
             .then(data => {
-                if (data['error']) {
-                    this.shareGroups = [];
-                    throw new Error(`There was a problem retrieving sharable groups: ${data['error']}`);
-                } else {
-                    this.shareGroups = data;
-                }
+                this.shareGroups = data;
             })
             .catch(error => {
                 ErrorMsg.logError('dynamic-form.updateShares', error);
