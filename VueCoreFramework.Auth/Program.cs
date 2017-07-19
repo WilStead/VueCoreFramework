@@ -1,5 +1,7 @@
-﻿using System.IO;
-using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Hosting;
+using System.IO;
+using System.Security.Cryptography.X509Certificates;
+using VueCoreFramework.Core.Configuration;
 
 namespace VueCoreFramework.Auth
 {
@@ -14,8 +16,11 @@ namespace VueCoreFramework.Auth
         /// <param name="args">Any commandline arguments passed to the application on launch.</param>
         public static void Main(string[] args)
         {
+            var cert = new X509Certificate2("localhost.pfx", "password");
+
             var host = new WebHostBuilder()
-                .UseKestrel()
+                .UseKestrel(options => options.UseHttps(cert))
+                .UseUrls(URLs.AuthURL)
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()
                 .UseStartup<Startup>()

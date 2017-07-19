@@ -71,7 +71,7 @@ export default class ManageGroupComponent extends Vue {
                 this.errorMessage = '';
                 this.createErrorMessage = '';
                 this.successMessage = '';
-                Api.postApi(`/api/Group/StartNewGroup/${this.newGroupName}`, this.$route.fullPath)
+                Api.postApi(`api/Group/StartNewGroup/${this.newGroupName}`, this.$route.fullPath)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error(`CODE:${response.statusText}`);
@@ -98,7 +98,7 @@ export default class ManageGroupComponent extends Vue {
         this.errorMessage = '';
         this.successMessage = '';
         this.deleteGroupDialog = false;
-        Api.postApi(`/api/Group/RemoveGroup/${this.deleteGroup.name}`, this.$route.fullPath)
+        Api.postApi(`api/Group/RemoveGroup/${this.deleteGroup.name}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -131,7 +131,7 @@ export default class ManageGroupComponent extends Vue {
         this.activity = true;
         this.errorMessage = '';
         this.successMessage = '';
-        Api.postApi(`/api/Group/GetGroup/${this.searchGroup}`, this.$route.fullPath)
+        Api.postApi(`api/Group/GetGroup/${this.searchGroup}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     if (response.status === 404) {
@@ -163,7 +163,7 @@ export default class ManageGroupComponent extends Vue {
 
     onInvite() {
         this.inviteDialog = false;
-        Api.postApi(`/api/Group/InviteUserToGroup/${this.searchUsername}/${this.inviteGroup.name}`, this.$route.fullPath)
+        Api.postApi(`api/Group/InviteUserToGroup/${this.searchUsername}/${this.inviteGroup.name}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -192,7 +192,7 @@ export default class ManageGroupComponent extends Vue {
         this.errorMessage = '';
         this.successMessage = '';
         this.leaveGroupDialog = false;
-        Api.postApi(`/api/Group/LeaveGroup/${this.leaveGroup.name}`, this.$route.fullPath)
+        Api.postApi(`api/Group/LeaveGroup/${this.leaveGroup.name}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -220,7 +220,7 @@ export default class ManageGroupComponent extends Vue {
         this.activity = true;
         this.errorMessage = '';
         this.successMessage = '';
-        Api.postApi(`/api/Group/RemoveUserFromGroup/${member}/${group.name}`, this.$route.fullPath)
+        Api.postApi(`api/Group/RemoveUserFromGroup/${member}/${group.name}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -263,7 +263,7 @@ export default class ManageGroupComponent extends Vue {
         this.successMessage = '';
         this.xferGroupDialog = false;
         if (this.xferGroup.name === 'Admin') {
-            Api.postApi(`/api/Group/TransferSiteAdminToUser/${this.newManager}`, this.$route.fullPath)
+            Api.postApi(`api/Group/TransferSiteAdminToUser/${this.newManager}`, this.$route.fullPath)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`CODE:${response.statusText}`);
@@ -282,7 +282,7 @@ export default class ManageGroupComponent extends Vue {
                     ErrorMsg.logError('group/manage.onXferGroup', error);
                 });
         } else {
-            Api.postApi(`/api/Group/TransferManagerToUser/${this.newManager}/${this.xferGroup.name}`, this.$route.fullPath)
+            Api.postApi(`api/Group/TransferManagerToUser/${this.newManager}/${this.xferGroup.name}`, this.$route.fullPath)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`CODE:${response.statusText}`);
@@ -314,7 +314,7 @@ export default class ManageGroupComponent extends Vue {
     suggestSearchGroup() {
         this.searchGroupTimeout = 0;
         if (this.searchGroup) {
-            Api.getApi(`/api/Share/GetShareableGroupCompletion/${this.searchGroup}`, this.$route.fullPath)
+            Api.getApi(`api/Share/GetShareableGroupCompletion/${this.searchGroup}`, this.$route.fullPath)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`CODE:${response.statusText}`);
@@ -332,7 +332,7 @@ export default class ManageGroupComponent extends Vue {
     suggestSearchUsername() {
         this.searchUsernameTimeout = 0;
         if (this.searchUsername) {
-            Api.getApi(`/api/Share/GetShareableUsernameCompletion/${this.searchUsername}`, this.$route.fullPath)
+            Api.getApi(`api/Share/GetShareableUsernameCompletion/${this.searchUsername}`, this.$route.fullPath)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`CODE:${response.statusText}`);

@@ -103,7 +103,7 @@ export default class LoginComponent extends Vue {
     submitting = false;
 
     mounted() {
-        Api.callApi('/api/Account/GetAuthProviders',
+        Api.callSpa('Account/GetAuthProviders',
             {
                 method: 'GET',
                 headers: {
@@ -136,7 +136,7 @@ export default class LoginComponent extends Vue {
         if (!this.isValid) return;
         this.submitting = true;
         this.errorMessage = '';
-        Api.callApi('/api/Account/ForgotPassword',
+        Api.callSpa('Account/ForgotPassword',
             {
                 method: 'POST',
                 headers: {
@@ -175,7 +175,7 @@ export default class LoginComponent extends Vue {
         this.submitting = true;
         this.errorMessage = '';
         this.model.authProvider = provider;
-        Api.callApi('/api/Account/ExternalLogin',
+        Api.callSpa('Account/ExternalLogin',
             {
                 method: 'POST',
                 headers: {
@@ -220,7 +220,7 @@ export default class LoginComponent extends Vue {
         this.submitting = true;
         this.errorMessage = '';
 
-        Api.callApi('/api/Account/Login',
+        Api.callSpa('Account/Login',
             {
                 method: 'POST',
                 headers: {

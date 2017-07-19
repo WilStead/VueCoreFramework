@@ -74,7 +74,7 @@ export class Repository {
      * @returns {DataItem} The newly added item.
      */
     add(returnPath: string, childProp: string, parentId: string): Promise<DataItem> {
-        let url = `/api/Data/${this.dataType}/Add`;
+        let url = `api/Data/${this.dataType}/Add`;
         if (childProp && parentId) {
             url += `/${childProp}/${parentId}`;
         }
@@ -101,7 +101,7 @@ export class Repository {
      * @returns {Response} The response.
      */
     addChildrenToCollection(returnPath: string, id: string, childProp: string, ids: string[]): Promise<Response> {
-        return Api.callApi(`/api/Data/${this.dataType}/AddChildrenToCollection/${id}/${childProp}`,
+        return Api.callApi(`api/Data/${this.dataType}/AddChildrenToCollection/${id}/${childProp}`,
             {
                 method: 'POST',
                 headers: {
@@ -134,7 +134,7 @@ export class Repository {
         if (id === undefined || id === null || id === '') {
             return Promise.reject("The item id was missing from your request.");
         }
-        return Api.getApi(`/api/Data/${this.dataType}/Duplicate/${id}`, returnPath)
+        return Api.getApi(`api/Data/${this.dataType}/Duplicate/${id}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -157,7 +157,7 @@ export class Repository {
         if (id === undefined || id === null || id === '') {
             return Promise.reject("The item id was missing from your request.");
         }
-        return Api.getApi(`/api/Data/${this.dataType}/Find/${id}`, returnPath)
+        return Api.getApi(`api/Data/${this.dataType}/Find/${id}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     if (response.status === 404) {
@@ -181,7 +181,7 @@ export class Repository {
      * @returns {DataItem[]} All the items.
      */
     getAll(returnPath: string): Promise<DataItem[]> {
-        return Api.getApi(`/api/Data/${this.dataType}/GetAll`, returnPath)
+        return Api.getApi(`api/Data/${this.dataType}/GetAll`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -202,7 +202,7 @@ export class Repository {
      * @returns {string[]} The primary keys of all the children.
      */
     getAllChildIds(returnPath: string, id: string, childProp: string): Promise<string[]> {
-        return Api.getApi(`/api/Data/${this.dataType}/GetAllChildIds/${id}/${childProp}`, returnPath)
+        return Api.getApi(`api/Data/${this.dataType}/GetAllChildIds/${id}/${childProp}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -223,7 +223,7 @@ export class Repository {
      * @returns {string} The primary key of the child entity.
      */
     getChildId(returnPath: string, id: string, childProp: string): Promise<string> {
-        return Api.getApi(`/api/Data/${this.dataType}/GetChildId/${id}/${childProp}`, returnPath)
+        return Api.getApi(`api/Data/${this.dataType}/GetChildId/${id}/${childProp}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -290,7 +290,7 @@ export class Repository {
             }
             url += `rowsPerPage=${rowsPerPage}`;
         }
-        return Api.getApi(`/api/Data/${this.dataType}/GetChildTotal/${id}/${childProp}`, returnPath)
+        return Api.getApi(`api/Data/${this.dataType}/GetChildTotal/${id}/${childProp}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -326,7 +326,7 @@ export class Repository {
      */
     getFieldDefinitions(returnPath: string): Promise<FieldDefinition[]> {
         if (this.fieldDefinitions === null) {
-            return Api.getApi(`/api/Data/${this.dataType}/GetFieldDefinitions`, returnPath)
+            return Api.getApi(`api/Data/${this.dataType}/GetFieldDefinitions`, returnPath)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`CODE:${response.statusText}`);
@@ -410,7 +410,7 @@ export class Repository {
             url += '&';
         }
         url += `culture=${store.state.userState.culture}`;
-        return Api.getApi(`/api/Data/${this.dataType}/GetTotal`, returnPath)
+        return Api.getApi(`api/Data/${this.dataType}/GetTotal`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -460,7 +460,7 @@ export class Repository {
         if (id === undefined || id === null || id === '') {
             throw new Error("The item id was missing from your request.");
         }
-        return Api.postApi(`/api/Data/${this.dataType}/Remove/${id}`, returnPath)
+        return Api.postApi(`api/Data/${this.dataType}/Remove/${id}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -482,7 +482,7 @@ export class Repository {
      * @returns {Response} The response.
      */
     removeChildrenFromCollection(returnPath: string, id: string, childProp: string, childIds: Array<string>): Promise<Response> {
-        return Api.callApi(`/api/Data/${this.dataType}/RemoveChildrenFromCollection/${id}/${childProp}`,
+        return Api.callApi(`api/Data/${this.dataType}/RemoveChildrenFromCollection/${id}/${childProp}`,
             {
                 method: 'POST',
                 headers: {
@@ -515,7 +515,7 @@ export class Repository {
      * @returns {Response} The response.
      */
     removeFromParent(returnPath: string, id: string, childProp: string): Promise<Response> {
-        return Api.postApi(`/api/Data/${this.dataType}/RemoveFromParent/${id}/${childProp}`, returnPath)
+        return Api.postApi(`api/Data/${this.dataType}/RemoveFromParent/${id}/${childProp}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -537,7 +537,7 @@ export class Repository {
         if (ids === undefined || ids === null || !ids.length) {
             throw new Error("The item ids were missing from your request.");
         }
-        return Api.callApi(`/api/Data/${this.dataType}/RemoveRange`,
+        return Api.callApi(`api/Data/${this.dataType}/RemoveRange`,
             {
                 method: 'POST',
                 headers: {
@@ -570,7 +570,7 @@ export class Repository {
      * @returns {Response} The response.
      */
     removeRangeFromParent(returnPath: string, childProp: string, ids: string[]): Promise<Response> {
-        return Api.callApi(`/api/Data/${this.dataType}/RemoveRangeFromParent/${childProp}`,
+        return Api.callApi(`api/Data/${this.dataType}/RemoveRangeFromParent/${childProp}`,
             {
                 method: 'POST',
                 headers: {
@@ -604,7 +604,7 @@ export class Repository {
      * @returns {Response} The response.
      */
     replaceChild(returnPath: string, parentId: string, newChildId: string, childProp: string): Promise<Response> {
-        return Api.postApi(`/api/Data/${this.dataType}/ReplaceChild/${parentId}/${newChildId}/${childProp}`, returnPath)
+        return Api.postApi(`api/Data/${this.dataType}/ReplaceChild/${parentId}/${newChildId}/${childProp}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -626,7 +626,7 @@ export class Repository {
      * @returns {DataItem} The new item.
      */
     replaceChildWithNew(returnPath: string, parentId: string, childProp: string): Promise<DataItem> {
-        return Api.postApi(`/api/Data/${this.dataType}/ReplaceChildWithNew/${parentId}/${childProp}`, returnPath)
+        return Api.postApi(`api/Data/${this.dataType}/ReplaceChildWithNew/${parentId}/${childProp}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -646,7 +646,7 @@ export class Repository {
      * @returns {DataItem} A response object containing any error which occurred, or the updated item.
      */
     update(returnPath: string, vm: DataItem): Promise<DataItem> {
-        return Api.callApi(`/api/Data/${this.dataType}/Update`,
+        return Api.callApi(`api/Data/${this.dataType}/Update`,
             {
                 method: 'POST',
                 headers: {

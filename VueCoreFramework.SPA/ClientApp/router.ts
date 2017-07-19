@@ -4,6 +4,7 @@ import * as ErrorMsg from './error-msg';
 
 const routes: Array<VueRouter.RouteConfig> = [
     { path: '/', component: require('./components/home/home.vue') },
+    { path: '/home/index', redirect: '/' },
     {
         path: '/login',
         component: require('./components/user/login.vue'),

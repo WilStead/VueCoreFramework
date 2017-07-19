@@ -28,7 +28,6 @@ namespace VueCoreFramework.Controllers
     /// An MVC controller for handling user management tasks.
     /// </summary>
     [Authorize]
-    [Route("api/[controller]/[action]")]
     public class ManageController : Controller
     {
         private readonly AdminOptions _adminOptions;
@@ -484,17 +483,16 @@ namespace VueCoreFramework.Controllers
         /// <summary>
         /// Called to lock a user's account. Admin only.
         /// </summary>
-        /// <param name="username">The username of the account to lock.</param>
+        /// <param name="id">The username of the account to lock.</param>
         /// <response code="400">Bad request.</response>
         /// <response code="403">Forbidden.</response>
         /// <response code="200">Success.</response>
-        [HttpPost("{username}")]
         [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
         [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
         [ProducesResponseType(200)]
-        public async Task<IActionResult> LockAccount(string username)
+        public async Task<IActionResult> LockAccount(string id)
         {
-            if (string.IsNullOrEmpty(username))
+            if (string.IsNullOrEmpty(id))
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetUserError]);
             }
@@ -514,7 +512,7 @@ namespace VueCoreFramework.Controllers
                 return StatusCode(403, _errorLocalizer[ErrorMessages.AdminOnlyError]);
             }
 
-            var lockUser = await _userManager.FindByNameAsync(username);
+            var lockUser = await _userManager.FindByNameAsync(id);
             if (lockUser == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetUserError]);
@@ -661,17 +659,16 @@ namespace VueCoreFramework.Controllers
         /// <summary>
         /// Called to unlock a user's account. Admin only.
         /// </summary>
-        /// <param name="username">The username of the account to unlock.</param>
+        /// <param name="id">The username of the account to unlock.</param>
         /// <response code="400">Bad request.</response>
         /// <response code="403">Forbidden.</response>
         /// <response code="200">Success.</response>
-        [HttpPost("{username}")]
         [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
         [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
         [ProducesResponseType(200)]
-        public async Task<IActionResult> UnlockAccount(string username)
+        public async Task<IActionResult> UnlockAccount(string id)
         {
-            if (string.IsNullOrEmpty(username))
+            if (string.IsNullOrEmpty(id))
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetUserError]);
             }
@@ -691,7 +688,7 @@ namespace VueCoreFramework.Controllers
                 return StatusCode(403, _errorLocalizer[ErrorMessages.AdminOnlyError]);
             }
 
-            var lockUser = await _userManager.FindByNameAsync(username);
+            var lockUser = await _userManager.FindByNameAsync(id);
             if (lockUser == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetUserError]);

@@ -24,7 +24,6 @@ namespace VueCoreFramework.Controllers
     /// <summary>
     /// An MVC controller for handling user account tasks.
     /// </summary>
-    [Route("api/[controller]/[action]")]
     public class AccountController : Controller
     {
         private readonly AdminOptions _adminOptions;
@@ -559,18 +558,17 @@ namespace VueCoreFramework.Controllers
         /// <summary>
         /// Called to get information about the user with the given username. Admin only.
         /// </summary>
-        /// <param name="username">The username to verify.</param>
+        /// <param name="id">The username to verify.</param>
         /// <response code="400">Bad request.</response>
         /// <response code="404">No such user.</response>
         /// <response code="200">User data.</response>
         [Authorize]
-        [HttpPost("{username}")]
         [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
         [ProducesResponseType(404)]
         [ProducesResponseType(typeof(UserViewModel), 200)]
-        public async Task<IActionResult> VerifyUser(string username)
+        public async Task<IActionResult> VerifyUser(string id)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -587,7 +585,7 @@ namespace VueCoreFramework.Controllers
                 return BadRequest(_errorLocalizer[ErrorMessages.AdminOnlyError]);
             }
 
-            var targetUser = await _userManager.FindByNameAsync(username);
+            var targetUser = await _userManager.FindByNameAsync(id);
             if (targetUser == null)
             {
                 return NotFound();

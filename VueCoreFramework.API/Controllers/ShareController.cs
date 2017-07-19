@@ -68,7 +68,7 @@ namespace VueCoreFramework.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidDataTypeError]);
             }
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -192,7 +192,7 @@ namespace VueCoreFramework.Controllers
                 return NotFound();
             }
 
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -265,7 +265,7 @@ namespace VueCoreFramework.Controllers
                 return NotFound();
             }
 
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -333,7 +333,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(typeof(IDictionary<string, string>), 200)]
         public async Task<IActionResult> GetShareableGroupMembers()
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -379,7 +379,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(typeof(IDictionary<string, string>), 200)]
         public async Task<IActionResult> GetShareableGroupSubset()
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -444,7 +444,7 @@ namespace VueCoreFramework.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidDataTypeError]);
             }
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -502,7 +502,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> HideDataFromGroup(string group, string dataType, string operation, string id)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -561,7 +561,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> HideDataFromUser(string username, string dataType, string operation, string id)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -616,7 +616,7 @@ namespace VueCoreFramework.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidDataTypeError]);
             }
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -677,7 +677,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> ShareDataWithGroup(string group, string dataType, string operation, string id)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -754,7 +754,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> ShareDataWithUser(string username, string dataType, string operation, string id)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {

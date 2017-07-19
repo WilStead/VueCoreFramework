@@ -19,9 +19,62 @@
             The default site admin email password.
             </summary>
         </member>
+        <member name="T:VueCoreFramework.Core.Configuration.IdentityServerConfig">
+            <summary>
+            Provides configuration for IdentityServer.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Configuration.IdentityServerConfig.apiName">
+            <summary>
+            The API name for IdentityServer.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Configuration.IdentityServerConfig.apiClientName">
+            <summary>
+            The API client name for IdentityServer.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Configuration.IdentityServerConfig.mvcClientName">
+            <summary>
+            The default MVC client name for IdentityServer.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Configuration.IdentityServerConfig.vueClientName">
+            <summary>
+            The default Vue client name for IdentityServer.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Configuration.IdentityServerConfig.GetApiResources(System.String)">
+            <summary>
+            Obtains a list of <see cref="T:IdentityServer4.Models.ApiResource"/> objects for IdentityServer.
+            </summary>
+            <returns>A list of <see cref="T:IdentityServer4.Models.ApiResource"/> objects for IdentityServer.</returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Configuration.IdentityServerConfig.GetClients(System.String)">
+            <summary>
+            Obtains a list of <see cref="T:IdentityServer4.Models.Client"/> objects for IdentityServer.
+            </summary>
+            <returns>A list of <see cref="T:IdentityServer4.Models.Client"/> objects for IdentityServer.</returns>
+        </member>
+        <member name="M:VueCoreFramework.Core.Configuration.IdentityServerConfig.GetIdentityResources">
+            <summary>
+            Obtains a list of <see cref="T:IdentityServer4.Models.IdentityResource"/> objects for IdentityServer.
+            </summary>
+            <returns>A list of <see cref="T:IdentityServer4.Models.IdentityResource"/> objects for IdentityServer.</returns>
+        </member>
         <member name="T:VueCoreFramework.Core.Configuration.URLs">
             <summary>
             Provides the URLs for the different hosts which form the application.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Configuration.URLs.ApiURL">
+            <summary>
+            The URL of the API server.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Configuration.URLs.AuthURL">
+            <summary>
+            The URL of the authentication server.
             </summary>
         </member>
         <member name="F:VueCoreFramework.Core.Configuration.URLs.ClientURL">
@@ -96,6 +149,17 @@
             <param name="dataType">The data type requested.</param>
             <param name="repository">If successful, the <see cref="T:VueCoreFramework.Core.Data.Repository`1"/> instance.</param>
             <returns>true if a <see cref="T:VueCoreFramework.Core.Data.Repository`1"/> instance could be obtained; otherwise false.</returns>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.ApplicationDbContextFactory">
+            <summary>
+            The <see cref="T:Microsoft.EntityFrameworkCore.Infrastructure.IDbContextFactory`1"/> for <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.ApplicationDbContextFactory.Create(Microsoft.EntityFrameworkCore.Infrastructure.DbContextFactoryOptions)">
+            <summary>
+            Creates a new instance of <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
+            </summary>
+            <returns>A new instance of <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.</returns>
         </member>
         <member name="T:VueCoreFramework.Core.Data.Attributes.CulturalAttribute">
             <summary>
@@ -346,54 +410,6 @@
             <summary>
             Seeds the application's database with sample data.
             </summary>
-        </member>
-        <member name="T:VueCoreFramework.Core.Data.IdentityServerConfig">
-            <summary>
-            Provides configuration for IdentityServer.
-            </summary>
-        </member>
-        <member name="F:VueCoreFramework.Core.Data.IdentityServerConfig.apiName">
-            <summary>
-            The API name for IdentityServer.
-            </summary>
-        </member>
-        <member name="F:VueCoreFramework.Core.Data.IdentityServerConfig.mvcBaseAddress">
-            <summary>
-            The base URL for the MVC app.
-            </summary>
-        </member>
-        <member name="F:VueCoreFramework.Core.Data.IdentityServerConfig.mvcClientName">
-            <summary>
-            The default MVC client name for IdentityServer.
-            </summary>
-        </member>
-        <member name="F:VueCoreFramework.Core.Data.IdentityServerConfig.vueBaseAddress">
-            <summary>
-            The base URL for the Vue app.
-            </summary>
-        </member>
-        <member name="F:VueCoreFramework.Core.Data.IdentityServerConfig.vueClientName">
-            <summary>
-            The default Vue client name for IdentityServer.
-            </summary>
-        </member>
-        <member name="M:VueCoreFramework.Core.Data.IdentityServerConfig.GetApiResources(System.String)">
-            <summary>
-            Obtains a list of <see cref="T:IdentityServer4.Models.ApiResource"/> objects for IdentityServer.
-            </summary>
-            <returns>A list of <see cref="T:IdentityServer4.Models.ApiResource"/> objects for IdentityServer.</returns>
-        </member>
-        <member name="M:VueCoreFramework.Core.Data.IdentityServerConfig.GetClients(System.String)">
-            <summary>
-            Obtains a list of <see cref="T:IdentityServer4.Models.Client"/> objects for IdentityServer.
-            </summary>
-            <returns>A list of <see cref="T:IdentityServer4.Models.Client"/> objects for IdentityServer.</returns>
-        </member>
-        <member name="M:VueCoreFramework.Core.Data.IdentityServerConfig.GetIdentityResources">
-            <summary>
-            Obtains a list of <see cref="T:IdentityServer4.Models.IdentityResource"/> objects for IdentityServer.
-            </summary>
-            <returns>A list of <see cref="T:IdentityServer4.Models.IdentityResource"/> objects for IdentityServer.</returns>
         </member>
         <member name="T:VueCoreFramework.Core.Data.Identity.Authorization">
             <summary>

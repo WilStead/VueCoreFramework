@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import { Component } from 'vue-property-decorator';
+import { configureOidc } from '../../authorization';
 import * as Api from '../../api';
 import * as Store from '../../store/store';
 import { ConversationViewModel, MessageViewModel, messaging } from '../../store/messaging';
@@ -52,6 +53,10 @@ export default class AppComponent extends Vue {
 
     get groups() {
         return this.$store.state.userState.managedGroups.concat(this.$store.state.userState.joinedGroups);
+    }
+
+    created() {
+        configureOidc();
     }
 
     mounted() {
@@ -183,7 +188,7 @@ export default class AppComponent extends Vue {
     }
 
     onLockAccount() {
-        Api.postApi(`/api/Manage/LockAccount/${this.foundUser.username}`, this.$route.fullPath)
+        Api.postSpa(`Manage/LockAccount/${this.foundUser.username}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {
@@ -231,7 +236,7 @@ export default class AppComponent extends Vue {
     }
 
     onUnlockAccount() {
-        Api.postApi(`/api/Manage/UnlockAccount/${this.foundUser.username}`, this.$route.fullPath)
+        Api.postSpa(`Manage/UnlockAccount/${this.foundUser.username}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {
@@ -264,7 +269,7 @@ export default class AppComponent extends Vue {
         this.chatErrorMessage = '';
         this.foundUser = null;
         if (this.searchUsername) {
-            Api.postApi(`/api/Account/VerifyUser/${this.searchUsername}`, this.$route.fullPath)
+            Api.postSpa(`Account/VerifyUser/${this.searchUsername}`, this.$route.fullPath)
                 .then(response => {
                     if (!response.ok) {
                         if (response.statusText) {
@@ -399,7 +404,7 @@ export default class AppComponent extends Vue {
     suggestSearchUsername() {
         this.searchUsernameTimeout = 0;
         if (this.searchUsername) {
-            Api.getApi(`/api/Share/GetShareableUsernameCompletion/${this.searchUsername}`, this.$route.fullPath)
+            Api.getApi(`api/Share/GetShareableUsernameCompletion/${this.searchUsername}`, this.$route.fullPath)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`CODE:${response.statusText}`);

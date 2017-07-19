@@ -63,7 +63,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
         public async Task<IActionResult> GetConversations()
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -111,7 +111,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
         public async Task<IActionResult> GetGroupMessages(string group)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -185,7 +185,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
         public async Task<IActionResult> GetProxyConversations(string proxy)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -236,7 +236,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
         public async Task<IActionResult> GetProxyUserMessages(string proxy, string username)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -288,7 +288,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
         public async Task<IActionResult> GetSystemMessages()
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -327,7 +327,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
         public async Task<IActionResult> GetUserMessages(string username)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -376,7 +376,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> MarkConversationDeleted(string username)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -425,7 +425,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> MarkConversationRead(string username)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -458,7 +458,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> MarkSystemMessagesRead()
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -496,7 +496,7 @@ namespace VueCoreFramework.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.MessageInvalidLengthError]);
             }
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -548,7 +548,7 @@ namespace VueCoreFramework.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.MessageInvalidLengthError]);
             }
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {

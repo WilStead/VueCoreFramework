@@ -15,6 +15,7 @@ using NLog;
 using NLog.Extensions.Logging;
 using NLog.Web;
 using System.Globalization;
+using System.Reflection;
 using VueCoreFramework.Core.Configuration;
 using VueCoreFramework.Core.Data;
 using VueCoreFramework.Core.Models;
@@ -71,8 +72,8 @@ namespace VueCoreFramework.API
                 config.User.RequireUniqueEmail = true;
                 config.SignIn.RequireConfirmedEmail = true;
                 config.Cookies.ApplicationCookie.AutomaticChallenge = false;
-                config.Cookies.ApplicationCookie.LoginPath = new PathString($"{URLs.ClientURL}Home/Index?forwardUrl=%2Flogin");
-                config.Cookies.ApplicationCookie.AccessDeniedPath = new PathString($"{URLs.ClientURL}Home/Index?forwardUrl=%2Ferror%2F403");
+                config.Cookies.ApplicationCookie.LoginPath = PathString.FromUriComponent("/Home/Index?forwardUrl=%2Flogin");
+                config.Cookies.ApplicationCookie.AccessDeniedPath = PathString.FromUriComponent("/Home/Index?forwardUrl=%2Ferror%2F403");
             })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
@@ -93,7 +94,8 @@ namespace VueCoreFramework.API
             {
                 options.AddPolicy("default", policy =>
                 {
-                    policy.WithOrigins(URLs.ClientURL)
+                    policy
+                        .AllowAnyOrigin()
                         .AllowAnyHeader()
                         .AllowAnyMethod();
                 });
@@ -101,7 +103,7 @@ namespace VueCoreFramework.API
 
             services.AddMvc(options =>
             {
-                options.SslPort = 44371;
+                options.SslPort = 44325;
                 options.Filters.Add(new RequireHttpsAttribute());
             })
             .AddDataAnnotationsLocalization();
@@ -163,10 +165,7 @@ namespace VueCoreFramework.API
             {
                 Authority = URLs.AuthURL,
                 ApiName = IdentityServerConfig.apiName,
-                RequireHttpsMetadata = true,
-
-                AutomaticAuthenticate = true,
-                AutomaticChallenge = true
+                RequireHttpsMetadata = true
             });
 
             app.UseMvc(routes =>
@@ -178,9 +177,6 @@ namespace VueCoreFramework.API
 
             // Seed the database
             DbInitialize.Initialize(app.ApplicationServices);
-
-            // Add IdentityServer data
-            DbInitialize.InitializeIdentitySever(app, Configuration["secretJwtKey"]);
 
             // Add sample data
             DbInitialize.InitializeSampleData(app.ApplicationServices);

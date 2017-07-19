@@ -62,7 +62,7 @@ export const messaging = {
      * @returns {ConversationViewModel[]} The list of conversations.
      */
     getConversations(returnPath: string): Promise<ConversationViewModel[]> {
-        return Api.getApi(`/api/Message/GetConversations`, returnPath)
+        return Api.getApi(`api/Message/GetConversations`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -82,7 +82,7 @@ export const messaging = {
      * @returns {MessageViewModel[]} The ordered list of messages.
      */
     getGroupMessages(returnPath: string, group: string): Promise<MessageViewModel[]> {
-        return Api.getApi(`/api/Message/GetGroupMessages/${group}`, returnPath)
+        return Api.getApi(`api/Message/GetGroupMessages/${group}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -103,7 +103,7 @@ export const messaging = {
      * @returns {ConversationViewModel[]} The list of conversations.
      */
     getProxyConversations(returnPath: string, proxy: string): Promise<ConversationViewModel[]> {
-        return Api.getApi(`/api/Message/GetProxyConversations/${proxy}`, returnPath)
+        return Api.getApi(`api/Message/GetProxyConversations/${proxy}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -124,7 +124,7 @@ export const messaging = {
      * @returns {MessageViewModel[]} The ordered list of messages.
      */
     getProxyUserMessages(returnPath: string, proxy: string, username: string): Promise<MessageViewModel[]> {
-        return Api.getApi(`/api/Message/GetProxyUserMessages/${proxy}/${username}`, returnPath)
+        return Api.getApi(`api/Message/GetProxyUserMessages/${proxy}/${username}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -144,7 +144,7 @@ export const messaging = {
      * @returns {MessageViewModel[]} The ordered list of messages.
      */
     getSystemMessages(returnPath: string): Promise<MessageViewModel[]> {
-        return Api.getApi('/api/Message/GetSystemMessages', returnPath)
+        return Api.getApi('api/Message/GetSystemMessages', returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -165,7 +165,7 @@ export const messaging = {
      * @returns {MessageViewModel[]} The ordered list of messages.
      */
     getUserMessages(returnPath: string, username: string): Promise<MessageViewModel[]> {
-        return Api.getApi(`/api/Message/GetUserMessages/${username}`, returnPath)
+        return Api.getApi(`api/Message/GetUserMessages/${username}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -185,7 +185,7 @@ export const messaging = {
      * @returns {Response} A response object containing any error which occurred.
      */
     markConversationDeleted(returnPath: string, username: string): Promise<Response> {
-        return Api.postApi(`/api/Message/MarkConversationDeleted/${username}`, returnPath)
+        return Api.postApi(`api/Message/MarkConversationDeleted/${username}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -204,7 +204,7 @@ export const messaging = {
      * @returns {Response} A response object containing any error which occurred.
      */
     markConversationRead(returnPath: string, username: string): Promise<Response> {
-        return Api.postApi(`/api/Message/MarkConversationRead/${username}`, returnPath)
+        return Api.postApi(`api/Message/MarkConversationRead/${username}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -222,7 +222,7 @@ export const messaging = {
      * @returns {Response} A response object containing any error which occurred.
      */
     markSystemMessagesRead(returnPath: string): Promise<Response> {
-        return Api.postApi('/api/Message/MarkSystemMessagesRead', returnPath)
+        return Api.postApi('api/Message/MarkSystemMessagesRead', returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -242,7 +242,7 @@ export const messaging = {
      * @returns {Response} A response object containing any error which occurred.
      */
     sendMessageToGroup(returnPath: string, group: string, message: string): Promise<Response> {
-        return Api.postApi(`/api/Message/SendMessageToGroup/${group}?message=${encodeURIComponent(message)}`, returnPath)
+        return Api.postApi(`api/Message/SendMessageToGroup/${group}?message=${encodeURIComponent(message)}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -262,7 +262,7 @@ export const messaging = {
      * @returns {Response} A response object containing any error which occurred.
      */
     sendMessageToUser(returnPath: string, username: string, message: string): Promise<Response> {
-        return Api.postApi(`/api/Message/SendMessageToUser/${username}?message=${encodeURIComponent(message)}`, returnPath)
+        return Api.postApi(`api/Message/SendMessageToUser/${username}?message=${encodeURIComponent(message)}`, returnPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);

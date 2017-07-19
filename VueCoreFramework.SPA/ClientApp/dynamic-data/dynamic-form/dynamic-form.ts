@@ -155,7 +155,7 @@ export default class DynamicFormComponent extends Vue {
         } else {
             action = `HideDataFromGroup/${share.name}`;
         }
-        Api.postApi(`/api/Share/${action}/${this.$route.name}?operation=${share.level}&id=${this.id}`, this.$route.fullPath)
+        Api.postApi(`api/Share/${action}/${this.$route.name}?operation=${share.level}&id=${this.id}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -241,7 +241,7 @@ export default class DynamicFormComponent extends Vue {
         this.shareActivity = true;
         this.shareErrorMessage = '';
         this.shareSuccessMessage = '';
-        let url = `/api/Share/${action}`;
+        let url = `api/Share/${action}`;
         if (target) {
             url += `/${target}`;
         }
@@ -269,7 +269,7 @@ export default class DynamicFormComponent extends Vue {
     suggestShareGroup() {
         this.shareGroupTimeout = 0;
         if (this.shareGroup) {
-            Api.getApi(`/api/Share/GetShareableGroupCompletion/${this.shareGroup}`, this.$route.fullPath)
+            Api.getApi(`api/Share/GetShareableGroupCompletion/${this.shareGroup}`, this.$route.fullPath)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`CODE:${response.statusText}`);
@@ -286,7 +286,7 @@ export default class DynamicFormComponent extends Vue {
     suggestShareUsername() {
         this.shareUsernameTimeout = 0;
         if (this.shareUsername) {
-            Api.getApi(`/api/Share/GetShareableUsernameCompletion/${this.shareUsername}`, this.$route.fullPath)
+            Api.getApi(`api/Share/GetShareableUsernameCompletion/${this.shareUsername}`, this.$route.fullPath)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`CODE:${response.statusText}`);
@@ -365,7 +365,7 @@ export default class DynamicFormComponent extends Vue {
     }
 
     updateShares() {
-        Api.getApi(`/api/Share/GetCurrentShares/${this.$route.name}?id=${this.id}`, this.$route.fullPath)
+        Api.getApi(`api/Share/GetCurrentShares/${this.$route.name}?id=${this.id}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -383,7 +383,7 @@ export default class DynamicFormComponent extends Vue {
             .catch(error => {
                 ErrorMsg.logError('dynamic-form.updateShares', error);
             });
-        Api.getApi(`/api/Share/GetShareableGroupMembers`, this.$route.fullPath)
+        Api.getApi(`api/Share/GetShareableGroupMembers`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -397,7 +397,7 @@ export default class DynamicFormComponent extends Vue {
             .catch(error => {
                 ErrorMsg.logError('dynamic-form.updateShares', error);
             });
-        Api.getApi(`/api/Share/GetShareableGroupSubset`, this.$route.fullPath)
+        Api.getApi(`api/Share/GetShareableGroupSubset`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);

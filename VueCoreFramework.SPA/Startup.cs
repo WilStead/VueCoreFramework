@@ -97,7 +97,7 @@ namespace VueCoreFramework
 
             services.AddMvc(options =>
             {
-                options.SslPort = 44333;
+                options.SslPort = 44350;
                 options.Filters.Add(new RequireHttpsAttribute());
             })
             .AddDataAnnotationsLocalization();

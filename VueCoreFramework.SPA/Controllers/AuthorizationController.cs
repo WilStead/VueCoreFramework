@@ -43,7 +43,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(typeof(AuthorizationViewModel), 200)]
         public async Task<AuthorizationViewModel> Authenticate(string full = null)
         {
-            var email = HttpContext.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var email = HttpContext.User?.FindFirst(ClaimTypes.Email)?.Value;
             if (string.IsNullOrEmpty(email))
             {
                 return new AuthorizationViewModel { Authorization = Authorization.login };
@@ -108,7 +108,7 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(typeof(AuthorizationViewModel), 200)]
         public async Task<AuthorizationViewModel> Authorize(string dataType, string operation = "view", string id = null)
         {
-            var email = HttpContext.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var email = HttpContext.User?.FindFirst(ClaimTypes.Email)?.Value;
             if (string.IsNullOrEmpty(email))
             {
                 return new AuthorizationViewModel { Authorization = Authorization.login };
@@ -164,15 +164,6 @@ namespace VueCoreFramework.Controllers
             }
 
             return vm;
-        }
-
-        /// <summary>
-        /// Callback URL for IdentityServer OopenID Connect.
-        /// </summary>
-        [HttpGet]
-        public IActionResult Callback()
-        {
-            return View();
         }
     }
 }

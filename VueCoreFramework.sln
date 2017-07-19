@@ -18,7 +18,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VueCoreFramework.Core", "Vu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VueCoreFramework.API", "VueCoreFramework.API\VueCoreFramework.API.csproj", "{5AEBD3C1-7FE4-405C-8E78-51C13013A84E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VueCoreFramework.Auth", "VueCoreFramework.Auth\VueCoreFramework.Auth.csproj", "{DABC189E-7DB8-46F4-9A32-AE67E08367A7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VueCoreFramework.Auth", "VueCoreFramework.Auth\VueCoreFramework.Auth.csproj", "{DABC189E-7DB8-46F4-9A32-AE67E08367A7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

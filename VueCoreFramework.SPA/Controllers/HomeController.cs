@@ -21,6 +21,22 @@ namespace VueCoreFramework.Controllers
         }
 
         /// <summary>
+        /// Shows a generic error page, in the event that an internal error occurs at a stage which
+        /// prevents even loading the SPA (which has its own error pages).
+        /// </summary>
+        public IActionResult Error(int? errorId = null)
+        {
+            var exc = HttpContext.Features.Get<IExceptionHandlerFeature>();
+
+            if (exc != null)
+            {
+                _logger.LogError(LogEvent.INTERNAL_ERROR, exc.Error, "An internal error occurred.");
+            }
+
+            return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = $"/error/{errorId ?? 500}" });
+        }
+
+        /// <summary>
         /// The primary endpoint for the site. Displays the SPA.
         /// </summary>
         /// <param name="forwardUrl">
@@ -33,19 +49,25 @@ namespace VueCoreFramework.Controllers
         }
 
         /// <summary>
-        /// Shows a generic error page, in the event that an internal error occurs at a stage which
-        /// prevents even loading the SPA (which has its own error pages).
+        /// Automatically redirects to the login page of the SPA.
         /// </summary>
-        public IActionResult Error()
+        /// <param name="returnUrl">
+        /// An optional redirect URL which will be passed to the login page.
+        /// </param>
+        public IActionResult Login(string returnUrl = "")
         {
-            var exc = HttpContext.Features.Get<IExceptionHandlerFeature>();
+            ViewData["ForwardUrl"] = "login";
+            ViewData["ReturnUrl"] = returnUrl;
+            return View(nameof(Index));
+        }
 
-            if (exc != null)
-            {
-                _logger.LogError(LogEvent.INTERNAL_ERROR, exc.Error, "An internal error occurred.");
-            }
-
-            return RedirectToAction(nameof(HomeController.Index), new { forwardUrl = "/error/500" });
+        /// <summary>
+        /// Callback URL for IdentityServer OpenID Connect.
+        /// </summary>
+        [HttpGet("oidc/callback")]
+        public IActionResult OidcCallback()
+        {
+            return View();
         }
     }
 }

@@ -97,7 +97,7 @@ export default class ResetComponent extends Vue {
     onSubmit() {
         if (!this.isValid) return;
         this.submitting = true;
-        Api.callApi('api/Account/ResetPassword',
+        Api.callSpa('Account/ResetPassword',
             {
                 method: 'POST',
                 headers: {

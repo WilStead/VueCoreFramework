@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>VueCoreFramework.Auth</name>
+    </assembly>
+    <members>
+        <member name="T:VueCoreFramework.Auth.Controllers.HomeController">
+            <summary>
+            The main MVC controller for the auth server.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Auth.Controllers.HomeController.#ctor(Microsoft.AspNetCore.Identity.SignInManager{VueCoreFramework.Core.Models.ApplicationUser})">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.Auth.Controllers.HomeController"/>.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Auth.Controllers.HomeController.Error">
+            <summary>
+            If an error is encountered by the auth server which requires a page display, the user is
+            redirected to the main SPA application's error page.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Auth.Controllers.HomeController.Index(System.String)">
+            <summary>
+            If a user navigates to the root of the auth server, the user is automatically redirected
+            to the main SPA application's homepage.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Auth.Controllers.HomeController.Logout">
+            <summary>
+            An endpoint which both logs out the user and redirects back to the SPA homepage.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Auth.Program">
+            <summary>
+            The main class of the application.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Auth.Program.Main(System.String[])">
+            <summary>
+            The main entry point of the application.
+            </summary>
+            <param name="args">Any commandline arguments passed to the application on launch.</param>
+        </member>
+        <member name="T:VueCoreFramework.Auth.Startup">
+            <summary>
+            Configures services and the application's request pipeline.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Auth.Startup.#ctor(Microsoft.AspNetCore.Hosting.IHostingEnvironment)">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.Auth.Startup"/>.
+            </summary>
+            <param name="env">An <see cref="T:Microsoft.AspNetCore.Hosting.IHostingEnvironment"/> used to set up configuration sources.</param>
+        </member>
+        <member name="P:VueCoreFramework.Auth.Startup.Configuration">
+            <summary>
+            The root of the configuration hierarchy.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Auth.Startup.ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            This method gets called by the runtime, and is used to add services to the container.
+            </summary>
+            <param name="services">A collection of service descriptors.</param>
+        </member>
+        <member name="M:VueCoreFramework.Auth.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IHostingEnvironment,Microsoft.Extensions.Logging.ILoggerFactory)">
+            <summary>
+            This method gets called by the runtime, and is used to configure the HTTP request pipeline.
+            </summary>
+            <param name="app">Provides the mechanisms to configure the application's request pipeline.</param>
+            <param name="env">An <see cref="T:Microsoft.AspNetCore.Hosting.IHostingEnvironment"/> used to set up configuration sources.</param>
+            <param name="loggerFactory">Used to configure the logging system.</param>
+        </member>
+    </members>
+</doc>

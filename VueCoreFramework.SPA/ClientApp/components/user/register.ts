@@ -112,7 +112,7 @@ export default class RegisterComponent extends Vue {
         this.success = false;
         if (!this.isValid) return;
         this.errors = [];
-        Api.callApi('/api/Account/Register',
+        Api.callSpa('Account/Register',
             {
                 method: 'POST',
                 headers: {

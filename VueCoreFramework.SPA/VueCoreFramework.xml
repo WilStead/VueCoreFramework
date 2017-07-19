@@ -208,6 +208,12 @@
             Initializes a new instance of <see cref="T:VueCoreFramework.Controllers.HomeController"/>.
             </summary>
         </member>
+        <member name="M:VueCoreFramework.Controllers.HomeController.Error(System.Nullable{System.Int32})">
+            <summary>
+            Shows a generic error page, in the event that an internal error occurs at a stage which
+            prevents even loading the SPA (which has its own error pages).
+            </summary>
+        </member>
         <member name="M:VueCoreFramework.Controllers.HomeController.Index(System.String)">
             <summary>
             The primary endpoint for the site. Displays the SPA.
@@ -216,10 +222,17 @@
             An optional redirect URL which may be used to load a specific page within the SPA.
             </param>
         </member>
-        <member name="M:VueCoreFramework.Controllers.HomeController.Error">
+        <member name="M:VueCoreFramework.Controllers.HomeController.Login(System.String)">
             <summary>
-            Shows a generic error page, in the event that an internal error occurs at a stage which
-            prevents even loading the SPA (which has its own error pages).
+            Automatically redirects to the login page of the SPA.
+            </summary>
+            <param name="returnUrl">
+            An optional redirect URL which will be passed to the login page.
+            </param>
+        </member>
+        <member name="M:VueCoreFramework.Controllers.HomeController.OidcCallback">
+            <summary>
+            Callback URL for IdentityServer OpenID Connect.
             </summary>
         </member>
         <member name="T:VueCoreFramework.Controllers.ManageController">

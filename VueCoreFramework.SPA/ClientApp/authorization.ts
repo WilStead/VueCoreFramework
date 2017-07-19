@@ -5,20 +5,23 @@ import { PermissionData } from './store/userStore';
 import { JL } from 'jsnlog';
 import * as ErrorMsg from './error-msg';
 
-Oidc.Log.level = Oidc.Log.WARN;
-Oidc.Log.logger = JL("OIDC");
-const config: Oidc.UserManagerSettings = {
-    authority: Api.urls.authUrl,
-    client_id: "vue",
-    redirect_uri: `${Api.urls.spaUrl}Authorization/Callback`,
-    response_type: "id_token token",
-    scope: "openid profile vcfapi",
-    post_logout_redirect_uri: Api.urls.spaUrl
-};
-export let authMgr = new Oidc.UserManager(config);
+export let authMgr = undefined;
+export function configureOidc() {
+    Oidc.Log.level = Oidc.Log.WARN;
+    Oidc.Log.logger = JL("OIDC");
+    const config: Oidc.UserManagerSettings = {
+        authority: Api.urls.authUrl,
+        client_id: "vue",
+        redirect_uri: `${Api.urls.spaUrl}oidc/callback`,
+        response_type: "id_token token",
+        scope: "openid profile vcfapi",
+        post_logout_redirect_uri: Api.urls.spaUrl
+    };
+    authMgr = new Oidc.UserManager(config);
+}
 
 /**
- * Calls an API endpoint which authenticates the current user.
+ * Authenticates the current user.
  * @returns {string} Either 'authorized' or 'login' if the user must sign in.
  */
 export function authenticate(full?: boolean): Promise<string> {
@@ -32,12 +35,12 @@ export function authenticate(full?: boolean): Promise<string> {
             }
         });
 
-    let url = '/Authorization/Authenticate/';
+    let url = 'Authorization/Authenticate/';
     if (full || !Store.store.state.userState.user) {
         full = true;
         url += '?full=true';
     }
-    return Api.getApi(url)
+    return Api.getSpa(url)
         .then(response => {
             if (!response.ok) {
                 if (response.status === 401) {
@@ -116,13 +119,13 @@ export interface AuthorizationViewModel {
 
 /**
  * Calls an API endpoint which authorizes the current user for the data indicated.
- * @param {string} dataType The type of daya requested.
+ * @param {string} dataType The type of data requested.
  * @param {string} operation The type of operation to be performed on the data.
  * @param {string} id The primary key of the data item requested.
  * @returns {string} Either 'authorized' or 'unauthorized' or 'login' if the user must sign in.
  */
 export function checkAuthorization(dataType: string, operation = '', id = ''): Promise<string> {
-    let url = `/Authorization/Authorize/${dataType}`;
+    let url = `Authorization/Authorize/${dataType}`;
     if (operation) url += `?operation=${operation}`;
     if (id) {
         if (operation) {
@@ -132,7 +135,7 @@ export function checkAuthorization(dataType: string, operation = '', id = ''): P
         }
         url += `id=${id}`;
     }
-    return Api.getApi(url)
+    return Api.getSpa(url)
         .then(response => {
             if (!response.ok) {
                 if (response.status === 401) {

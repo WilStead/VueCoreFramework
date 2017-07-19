@@ -83,7 +83,7 @@ namespace VueCoreFramework.API.Controllers
         [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
         public async Task<IActionResult> Add(string dataType, string childProp, string parentId, [FromHeader(Name = "Accept-Language")]string culture)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -160,7 +160,7 @@ namespace VueCoreFramework.API.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.MissingDataError]);
             }
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -227,7 +227,7 @@ namespace VueCoreFramework.API.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.MissingIdError]);
             }
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -292,7 +292,7 @@ namespace VueCoreFramework.API.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.MissingIdError]);
             }
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -350,7 +350,7 @@ namespace VueCoreFramework.API.Controllers
         [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
         public async Task<IActionResult> GetAll(string dataType, [FromHeader(Name = "Accept-Language")]string culture)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -406,7 +406,7 @@ namespace VueCoreFramework.API.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.MissingDataError]);
             }
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -476,7 +476,7 @@ namespace VueCoreFramework.API.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.MissingDataError]);
             }
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -571,7 +571,7 @@ namespace VueCoreFramework.API.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.MissingDataError]);
             }
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -646,7 +646,7 @@ namespace VueCoreFramework.API.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.MissingDataError]);
             }
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -817,7 +817,7 @@ namespace VueCoreFramework.API.Controllers
             [FromBody]string[] except,
             [FromHeader(Name = "Accept-Language")]string culture)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -867,7 +867,7 @@ namespace VueCoreFramework.API.Controllers
         [ProducesResponseType(typeof(IDictionary<string, long>), 200)]
         public async Task<IActionResult> GetTotal(string dataType)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -965,7 +965,7 @@ namespace VueCoreFramework.API.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.MissingIdError]);
             }
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -1031,7 +1031,7 @@ namespace VueCoreFramework.API.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.MissingDataError]);
             }
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -1103,7 +1103,7 @@ namespace VueCoreFramework.API.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.MissingDataError]);
             }
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -1174,7 +1174,7 @@ namespace VueCoreFramework.API.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.MissingIdError]);
             }
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -1245,7 +1245,7 @@ namespace VueCoreFramework.API.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.MissingDataError]);
             }
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -1328,7 +1328,7 @@ namespace VueCoreFramework.API.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.MissingDataError]);
             }
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -1408,7 +1408,7 @@ namespace VueCoreFramework.API.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.MissingDataError]);
             }
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -1510,7 +1510,7 @@ namespace VueCoreFramework.API.Controllers
         [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
         public async Task<IActionResult> Update(string dataType, [FromHeader(Name = "Accept-Language")]string culture, [FromBody]JObject item)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {

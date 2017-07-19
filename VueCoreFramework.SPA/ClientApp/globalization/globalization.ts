@@ -6,7 +6,7 @@ import * as ErrorMsg from '../error-msg';
 export const defaultCulture = "en-US";
 
 export function setCulture(culture: string) {
-    Api.callApi(`dist/globalization/messages/${culture}.json`,
+    fetch(`dist/globalization/messages/${culture}.json`,
         {
             method: 'GET',
             headers: {

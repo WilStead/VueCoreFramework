@@ -273,7 +273,7 @@ function addMenuItem(menu: MenuItem, router: VueRouter, data: any, dataClass: st
  * @param {string} apiVer The current API version.
  */
 export function getChildItems(router: VueRouter, apiVer: string, culture: string): Promise<void> {
-    return Api.callApi('/api/Data/GetChildTypes',
+    return Api.callApi('api/Data/GetChildTypes',
         {
             method: 'GET',
             headers: {
@@ -338,7 +338,7 @@ export function getChildItems(router: VueRouter, apiVer: string, culture: string
  * @param {MenuItem} menu The top-level MenuItem under which all data types will be added.
  */
 export function getMenuItems(router: VueRouter, apiVer: string, culture: string, menu: MenuItem): Promise<void> {
-    return Api.callApi('/api/Data/GetTypes',
+    return Api.callApi('api/Data/GetTypes',
         {
             method: 'GET',
             headers: {

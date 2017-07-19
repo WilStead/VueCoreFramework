@@ -369,7 +369,7 @@ export const store = new Vuex.Store({
          * Updates the user's group memberships from the API.
          */
         refreshGroups({ commit, state }, returnPath) {
-            return Api.getApi('/api/Group/GetGroupMemberships/')
+            return Api.getApi('api/Group/GetGroupMemberships/')
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(response.statusText);

@@ -77,7 +77,7 @@ export default class DashboardComponent extends Vue {
         } else {
             action = `HideDataFromGroup/${share.name}`;
         }
-        Api.postApi(`/api/Share/${action}/${this.routeName}?operation=${encodeURIComponent(share.level)}`, this.$route.fullPath)
+        Api.postApi(`api/Share/${action}/${this.routeName}?operation=${encodeURIComponent(share.level)}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -134,7 +134,7 @@ export default class DashboardComponent extends Vue {
         this.shareActivity = true;
         this.shareErrorMessage = '';
         this.shareSuccessMessage = '';
-        let url = `/api/Share/${action}`;
+        let url = `api/Share/${action}`;
         if (target) {
             url += `/${target}`;
         }
@@ -165,7 +165,7 @@ export default class DashboardComponent extends Vue {
     suggestShareGroup() {
         this.shareGroupTimeout = 0;
         if (this.shareGroup) {
-            Api.getApi(`/api/Share/GetShareableGroupCompletion/${this.shareGroup}`, this.$route.fullPath)
+            Api.getApi(`api/Share/GetShareableGroupCompletion/${this.shareGroup}`, this.$route.fullPath)
                 .then(response => {
                     if (!response.ok) {
                         if (response.status === 404) {
@@ -186,7 +186,7 @@ export default class DashboardComponent extends Vue {
     suggestShareUsername() {
         this.shareUsernameTimeout = 0;
         if (this.shareUsername) {
-            Api.getApi(`/api/Share/GetShareableUsernameCompletion/${this.shareUsername}`, this.$route.fullPath)
+            Api.getApi(`api/Share/GetShareableUsernameCompletion/${this.shareUsername}`, this.$route.fullPath)
                 .then(response => {
                     if (!response.ok) {
                         if (response.status === 404) {
@@ -205,7 +205,7 @@ export default class DashboardComponent extends Vue {
     }
 
     updateShares() {
-        Api.getApi(`/api/Share/GetCurrentShares/${this.routeName}`, this.$route.fullPath)
+        Api.getApi(`api/Share/GetCurrentShares/${this.routeName}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -223,7 +223,7 @@ export default class DashboardComponent extends Vue {
             .catch(error => {
                 ErrorMsg.logError('dynamic-table.updateShares', error);
             });
-        Api.getApi(`/api/Share/GetShareableGroupMembers`, this.$route.fullPath)
+        Api.getApi(`api/Share/GetShareableGroupMembers`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -237,7 +237,7 @@ export default class DashboardComponent extends Vue {
             .catch(error => {
                 ErrorMsg.logError('dynamic-table.updateShares', error);
             });
-        Api.getApi(`/api/Share/GetShareableGroupSubset`, this.$route.fullPath)
+        Api.getApi(`api/Share/GetShareableGroupSubset`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);

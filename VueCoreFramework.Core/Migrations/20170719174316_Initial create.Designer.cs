@@ -8,10 +8,12 @@ using VueCoreFramework.Core.Models;
 
 namespace VueCoreFramework.Core.Migrations
 {
+#pragma warning disable CS1591
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20170719174316_Initial create")]
+    partial class Initialcreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.1.2")
@@ -432,4 +434,5 @@ namespace VueCoreFramework.Core.Migrations
                 });
         }
     }
+#pragma warning restore CS1591
 }

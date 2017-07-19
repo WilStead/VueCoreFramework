@@ -450,14 +450,13 @@
             </summary>
             <param name="services">A collection of service descriptors.</param>
         </member>
-        <member name="M:VueCoreFramework.API.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IHostingEnvironment,Microsoft.Extensions.Logging.ILoggerFactory,VueCoreFramework.Core.Data.ApplicationDbContext,Microsoft.Extensions.Options.IOptions{Microsoft.AspNetCore.Builder.RequestLocalizationOptions})">
+        <member name="M:VueCoreFramework.API.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IHostingEnvironment,Microsoft.Extensions.Logging.ILoggerFactory,Microsoft.Extensions.Options.IOptions{Microsoft.AspNetCore.Builder.RequestLocalizationOptions})">
             <summary>
             This method gets called by the runtime, and is used to configure the HTTP request pipeline.
             </summary>
             <param name="app">Provides the mechanisms to configure the application's request pipeline.</param>
             <param name="env">An <see cref="T:Microsoft.AspNetCore.Hosting.IHostingEnvironment"/> used to set up configuration sources.</param>
             <param name="loggerFactory">Used to configure the logging system.</param>
-            <param name="context">The application's Entity Framework database context.</param>
             <param name="localization">Specifies options for the <see cref="T:Microsoft.AspNetCore.Localization.RequestLocalizationMiddleware"/>.</param>
         </member>
         <member name="T:VueCoreFramework.API.ViewModels.ConversationViewModel">
@@ -563,6 +562,17 @@
         <member name="P:VueCoreFramework.API.ViewModels.ShareViewModel.Type">
             <summary>
             Indicates whether the data is shared with a user or group.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Auth.Controllers.HomeController">
+            <summary>
+            The main MVC controller for the API server.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Auth.Controllers.HomeController.Index(System.String)">
+            <summary>
+            If a user navigates to the root of the API server, the user is automatically redirected
+            to the main SPA application's homepage.
             </summary>
         </member>
         <member name="T:VueCoreFramework.Controllers.MessageController">
