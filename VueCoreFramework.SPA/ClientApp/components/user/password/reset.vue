@@ -18,8 +18,8 @@
                 <v-progress-circular indeterminate class="primary--text"></v-progress-circular>
             </v-card-text>
             <v-card-actions v-if="!submitting && !changeSuccess">
-                <v-btn default @click.native.stop.prevent="cancelChange">Cancel</v-btn>
-                <v-btn primary @click.native.stop.prevent="onSubmit">Submit</v-btn>
+                <v-btn default @click.stop.prevent="cancelChange">Cancel</v-btn>
+                <v-btn primary @click.stop.prevent="onSubmit">Submit</v-btn>
             </v-card-actions>
         </v-card>
     </v-layout>

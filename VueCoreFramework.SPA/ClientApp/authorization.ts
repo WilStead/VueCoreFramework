@@ -13,11 +13,14 @@ export function configureOidc() {
         authority: Api.urls.authUrl,
         client_id: "vue",
         redirect_uri: `${Api.urls.spaUrl}oidc/callback`,
+        silent_redirect_uri: `${Api.urls.spaUrl}oidc/silent_callback`,
         response_type: "id_token token",
-        scope: "openid profile vcfapi",
-        post_logout_redirect_uri: Api.urls.spaUrl
+        scope: "openid email profile vcfapi",
+        post_logout_redirect_uri: Api.urls.spaUrl,
+        automaticSilentRenew: true
     };
     authMgr = new Oidc.UserManager(config);
+    window["_oidc_userMgr"] = authMgr;
 }
 
 /**
@@ -40,7 +43,7 @@ export function authenticate(full?: boolean): Promise<string> {
         full = true;
         url += '?full=true';
     }
-    return Api.getSpa(url)
+    return Api.getAuth(url)
         .then(response => {
             if (!response.ok) {
                 if (response.status === 401) {
@@ -62,14 +65,18 @@ export function authenticate(full?: boolean): Promise<string> {
                 Store.store.commit(Store.setIsSiteAdmin, data.isSiteAdmin);
             }
             if (data.authorization === "login") {
-                Store.store.commit(Store.setToken, '');
+                if (Store.store.state.userState.user) {
+                    Store.store.commit(Store.setToken, '');
+                }
                 return "login";
             } else {
                 return "authorized";
             }
         })
         .catch(error => {
-            Store.store.commit(Store.setToken, '');
+            if (Store.store.state.userState.user) {
+                Store.store.commit(Store.setToken, '');
+            }
             if (error.message !== "login") {
                 ErrorMsg.logError("router.checkAuthorization", new Error(error));
             }
@@ -135,7 +142,7 @@ export function checkAuthorization(dataType: string, operation = '', id = ''): P
         }
         url += `id=${id}`;
     }
-    return Api.getSpa(url)
+    return Api.getAuth(url)
         .then(response => {
             if (!response.ok) {
                 if (response.status === 401) {
@@ -148,7 +155,9 @@ export function checkAuthorization(dataType: string, operation = '', id = ''): P
         .then(response => response.json() as Promise<AuthorizationViewModel>)
         .then(data => {
             if (data.authorization === "login") {
-                Store.store.commit(Store.setToken, '');
+                if (Store.store.state.userState.user) {
+                    Store.store.commit(Store.setToken, '');
+                }
                 return "login";
             }
             Store.store.commit(Store.setEmail, data.email);

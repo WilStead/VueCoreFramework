@@ -8,7 +8,7 @@
         <v-navigation-drawer right persistent disable-route-watcher v-model="$store.state.uiState.messaging.messagingShown">
             <v-card v-if="$store.state.uiState.messaging.chatShown" style="display: flex; flex-flow: column nowrap; min-height: 100%;">
                 <v-toolbar card class="primary" style="flex-grow: 0;">
-                    <v-btn icon @click.native="onHideChat"><v-icon>arrow_back</v-icon></v-btn>
+                    <v-btn icon @click="onHideChat"><v-icon>arrow_back</v-icon></v-btn>
                     <v-toolbar-title>
                         <span v-if="$store.state.uiState.messaging.groupChat">{{ $store.state.uiState.messaging.groupChat }}</span>
                         <span v-else>{{ $store.state.uiState.messaging.interlocutor }}</span>
@@ -60,7 +60,7 @@
                         <v-list-tile-title>System Messages</v-list-tile-title>
                     </v-list-tile-content>
                     <v-list-tile-action>
-                        <v-btn icon class="info--text" @click.native="onSystemChat"><v-icon>chat</v-icon></v-btn>
+                        <v-btn icon class="info--text" @click="onSystemChat"><v-icon>chat</v-icon></v-btn>
                     </v-list-tile-action>
                 </v-list-tile>
                 <v-divider v-if="$store.state.uiState.messaging.systemMessages.length"></v-divider>
@@ -72,7 +72,7 @@
                         <v-list-tile-sub-title>{{ describeMembers(group) }}</v-list-tile-sub-title>
                     </v-list-tile-content>
                     <v-list-tile-action>
-                        <v-btn icon class="info--text" @click.native="onGroupChat(group)"><v-icon>chat</v-icon></v-btn>
+                        <v-btn icon class="info--text" @click="onGroupChat(group)"><v-icon>chat</v-icon></v-btn>
                     </v-list-tile-action>
                 </v-list-tile>
                 <v-divider v-if="groups.length > 0 && $store.state.uiState.messaging.conversations.length > 0"></v-divider>
@@ -84,10 +84,10 @@
                         <v-list-tile-title>{{ conversation.interlocutor }}</v-list-tile-title>
                     </v-list-tile-content>
                     <v-list-tile-action>
-                        <v-btn icon class="info--text" @click.native="onUserChat(conversation.interlocutor)"><v-icon>chat</v-icon></v-btn>
+                        <v-btn icon class="info--text" @click="onUserChat(conversation.interlocutor)"><v-icon>chat</v-icon></v-btn>
                     </v-list-tile-action>
                     <v-list-tile-action>
-                        <v-btn icon class="error--text" @click.native="onDeleteChat(conversation.interlocutor)"><v-icon>delete</v-icon></v-btn>
+                        <v-btn icon class="error--text" @click="onDeleteChat(conversation.interlocutor)"><v-icon>delete</v-icon></v-btn>
                     </v-list-tile-action>
                 </v-list-tile>
                 <v-list-tile v-for="conversation in $store.state.uiState.messaging.conversations.filter(c => c.unreadCount === 0)"
@@ -98,10 +98,10 @@
                         <v-list-tile-title>{{ conversation.interlocutor }}</v-list-tile-title>
                     </v-list-tile-content>
                     <v-list-tile-action>
-                        <v-btn icon class="info--text" @click.native="onUserChat(conversation.interlocutor)"><v-icon>chat</v-icon></v-btn>
+                        <v-btn icon class="info--text" @click="onUserChat(conversation.interlocutor)"><v-icon>chat</v-icon></v-btn>
                     </v-list-tile-action>
                     <v-list-tile-action>
-                        <v-btn icon class="error--text" @click.native="onDeleteChat(conversation.interlocutor)"><v-icon>delete</v-icon></v-btn>
+                        <v-btn icon class="error--text" @click="onDeleteChat(conversation.interlocutor)"><v-icon>delete</v-icon></v-btn>
                     </v-list-tile-action>
                 </v-list-tile>
                 <v-list-tile>
@@ -119,7 +119,7 @@
                 <v-list-group v-if="foundUser">
                     <v-list-tile avatar slot="item" v-tooltip:top="{ html: foundUser.email }">
                         <v-list-tile-avatar>
-                            <v-btn icon class="info--text" @click.native="onUserChat(foundUser.username)"><v-icon>chat</v-icon></v-btn>
+                            <v-btn icon class="info--text" @click="onUserChat(foundUser.username)"><v-icon>chat</v-icon></v-btn>
                         </v-list-tile-avatar>
                         <v-list-tile-content>
                             <v-list-tile-title>{{ foundUser.username }}</v-list-tile-title>
@@ -135,7 +135,7 @@
                             <v-list-tile-title>{{ conversation.interlocutor }}</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
-                            <v-btn icon class="info--text" @click.native="onAdminChatProxy(conversation.interlocutor)"><v-icon>chat</v-icon></v-btn>
+                            <v-btn icon class="info--text" @click="onAdminChatProxy(conversation.interlocutor)"><v-icon>chat</v-icon></v-btn>
                         </v-list-tile-action>
                     </v-list-tile>
                     <v-list-tile v-if="foundUser.isLocked" class="primary">
@@ -143,7 +143,7 @@
                             <v-list-tile-title>Unlock user account</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
-                            <v-btn icon class="white success--text" @click.native="onUnlockAccount()"><v-icon>lock_open</v-icon></v-btn>
+                            <v-btn icon class="white success--text" @click="onUnlockAccount()"><v-icon>lock_open</v-icon></v-btn>
                         </v-list-tile-action>
                     </v-list-tile>
                     <v-list-tile v-else class="error">
@@ -151,14 +151,14 @@
                             <v-list-tile-title>Lock user account</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
-                            <v-btn icon class="white error--text" @click.native="onLockAccount()"><v-icon>lock</v-icon></v-btn>
+                            <v-btn icon class="white error--text" @click="onLockAccount()"><v-icon>lock</v-icon></v-btn>
                         </v-list-tile-action>
                     </v-list-tile>
                 </v-list-group>
             </v-list>
         </v-navigation-drawer>
         <v-toolbar fixed class="primary topnav">
-            <v-toolbar-side-icon @click.native.stop="sideNav = !sideNav" />
+            <v-toolbar-side-icon @click.stop="sideNav = !sideNav" />
             <div class="logo-container">
                 <router-link to="/"><span class="logo-link"></span></router-link>
             </div>
@@ -181,7 +181,7 @@
                         <v-card-title primary-title class="error white--text">Error!</v-card-title>
                         <v-card-text class="error--text text--darken-4 mt-4">{{ $store.state.error.message }}</v-card-text>
                         <v-card-actions>
-                            <v-btn default @click.native="$store.state.error.dialogShown = false">Close</v-btn>
+                            <v-btn default @click="$store.state.error.dialogShown = false">Close</v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-dialog>

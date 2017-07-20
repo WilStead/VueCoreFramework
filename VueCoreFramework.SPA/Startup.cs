@@ -1,14 +1,10 @@
 using JSNLog;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.SpaServices.Webpack;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -20,9 +16,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using VueCoreFramework.Core.Configuration;
-using VueCoreFramework.Core.Data;
-using VueCoreFramework.Core.Models;
-using VueCoreFramework.Core.Services;
 
 namespace VueCoreFramework
 {
@@ -68,31 +61,12 @@ namespace VueCoreFramework
             // Add framework services.
             services.AddOptions();
 
-            var connectionString = Configuration.GetConnectionString("DefaultConnection");
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(connectionString));
-
-            services.AddIdentity<ApplicationUser, IdentityRole>(config =>
-            {
-                config.User.RequireUniqueEmail = true;
-                config.SignIn.RequireConfirmedEmail = true;
-                config.Cookies.ApplicationCookie.AutomaticChallenge = false;
-                config.Cookies.ApplicationCookie.LoginPath = new PathString("/Home/Index?forwardUrl=%2Flogin");
-                config.Cookies.ApplicationCookie.AccessDeniedPath = new PathString("/Home/Index?forwardUrl=%2Ferror%2F403");
-            })
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
-
             services.AddLocalization(options => options.ResourcesPath = "Resources");
-            var supportedCultures = new[]
-            {
-                new CultureInfo("en-US")
-            };
             services.Configure<RequestLocalizationOptions>(options =>
             {
                 options.DefaultRequestCulture = new RequestCulture("en-US");
-                options.SupportedCultures = supportedCultures;
-                options.SupportedUICultures = supportedCultures;
+                options.SupportedCultures = LocalizationConfig.SupportedCultures;
+                options.SupportedUICultures = LocalizationConfig.SupportedCultures;
             });
 
             services.AddMvc(options =>
@@ -101,18 +75,6 @@ namespace VueCoreFramework
                 options.Filters.Add(new RequireHttpsAttribute());
             })
             .AddDataAnnotationsLocalization();
-
-            services.AddApiVersioning(options =>
-            {
-                options.ApiVersionReader = new MediaTypeApiVersionReader();
-                options.AssumeDefaultVersionWhenUnspecified = true;
-                options.ApiVersionSelector = new CurrentImplementationApiVersionSelector(options);
-            });
-
-            // Add application services.
-            services.AddTransient<IEmailSender, AuthMessageSender>();
-            services.Configure<AuthMessageSenderOptions>(Configuration.GetSection("AuthMessageSender"));
-            services.Configure<AdminOptions>(Configuration.GetSection("AdminOptions"));
         }
 
         /// <summary>
@@ -121,15 +83,15 @@ namespace VueCoreFramework
         /// <param name="app">Provides the mechanisms to configure the application's request pipeline.</param>
         /// <param name="env">An <see cref="IHostingEnvironment"/> used to set up configuration sources.</param>
         /// <param name="loggerFactory">Used to configure the logging system.</param>
-        /// <param name="context">The application's Entity Framework database context.</param>
         /// <param name="localization">Specifies options for the <see cref="RequestLocalizationMiddleware"/>.</param>
         public void Configure(
             IApplicationBuilder app,
             IHostingEnvironment env,
             ILoggerFactory loggerFactory,
-            ApplicationDbContext context,
             IOptions<RequestLocalizationOptions> localization)
         {
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
             loggerFactory.AddNLog();
             app.AddNLogWeb();
             LogManager.Configuration.Variables["connectionString"] = Configuration.GetConnectionString("DefaultConnection");
@@ -184,15 +146,10 @@ namespace VueCoreFramework
 
             app.UseRequestLocalization(localization.Value);
 
-            app.UseStaticFiles();
-
-            app.UseIdentity();
-
             app.UseCookieAuthentication(new CookieAuthenticationOptions
             {
                 AuthenticationScheme = "Cookies"
             });
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
             app.UseOpenIdConnectAuthentication(new OpenIdConnectOptions
             {
                 AuthenticationScheme = "oidc",
@@ -210,6 +167,8 @@ namespace VueCoreFramework
                 GetClaimsFromUserInfoEndpoint = true,
                 SaveTokens = true
             });
+
+            app.UseStaticFiles();
 
             app.UseMvc(routes =>
             {

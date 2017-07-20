@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using VueCoreFramework.Core.Configuration;
 
-namespace VueCoreFramework.Auth.Controllers
+namespace VueCoreFramework.API.Controllers
 {
     /// <summary>
     /// The main MVC controller for the API server.

@@ -1,13 +1,17 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using IdentityServer4.Services;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NLog;
 using NLog.Extensions.Logging;
 using NLog.Web;
@@ -15,6 +19,7 @@ using System.Reflection;
 using VueCoreFramework.Core.Configuration;
 using VueCoreFramework.Core.Data;
 using VueCoreFramework.Core.Models;
+using VueCoreFramework.Core.Services;
 
 namespace VueCoreFramework.Auth
 {
@@ -73,10 +78,34 @@ namespace VueCoreFramework.Auth
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
+            services.AddLocalization(options => options.ResourcesPath = "Resources");
+            services.Configure<RequestLocalizationOptions>(options =>
+            {
+                options.DefaultRequestCulture = new RequestCulture("en-US");
+                options.SupportedCultures = LocalizationConfig.SupportedCultures;
+                options.SupportedUICultures = LocalizationConfig.SupportedCultures;
+            });
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("default", policy =>
+                {
+                    policy
+                        .AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+            });
+
             services.AddMvc(options =>
             {
                 options.SslPort = 44300;
                 options.Filters.Add(new RequireHttpsAttribute());
+            })
+            .AddDataAnnotationsLocalization();
+            services.Configure<MvcOptions>(options =>
+            {
+                options.Filters.Add(new CorsAuthorizationFilterFactory("default"));
             });
 
             var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
@@ -94,6 +123,11 @@ namespace VueCoreFramework.Auth
                     builder.UseSqlServer(connectionString, options =>
                         options.MigrationsAssembly(migrationsAssembly)))
                 .AddAspNetIdentity<ApplicationUser>();
+
+            // Add application services.
+            services.AddTransient<IEmailSender, AuthMessageSender>();
+            services.Configure<AuthMessageSenderOptions>(Configuration.GetSection("AuthMessageSender"));
+            services.Configure<AdminOptions>(Configuration.GetSection("AdminOptions"));
         }
 
         /// <summary>
@@ -101,8 +135,13 @@ namespace VueCoreFramework.Auth
         /// </summary>
         /// <param name="app">Provides the mechanisms to configure the application's request pipeline.</param>
         /// <param name="env">An <see cref="IHostingEnvironment"/> used to set up configuration sources.</param>
+        /// <param name="localization">Specifies options for the <see cref="RequestLocalizationMiddleware"/>.</param>
         /// <param name="loggerFactory">Used to configure the logging system.</param>
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(
+            IApplicationBuilder app,
+            IHostingEnvironment env,
+            IOptions<RequestLocalizationOptions> localization,
+            ILoggerFactory loggerFactory)
         {
             loggerFactory.AddNLog();
             app.AddNLogWeb();
@@ -121,6 +160,10 @@ namespace VueCoreFramework.Auth
 
             var options = new RewriteOptions().AddRedirectToHttps();
             app.UseRewriter(options);
+
+            app.UseCors("default");
+
+            app.UseRequestLocalization(localization.Value);
 
             app.UseIdentity();
 

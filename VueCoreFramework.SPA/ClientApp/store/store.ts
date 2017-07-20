@@ -116,13 +116,18 @@ export const store = new Vuex.Store({
                         || !state.uiState.menuItems[dataItemIndex].submenu.length) {
                         state.uiState.menuItems.splice(dataItemIndex, 1);
                     }
+
+                    // Must be added after dynamic routes to avoid matching before them.
+                    router.addRoutes([{ path: '*', redirect: '/error/notfound' }]);
                 })
-                .catch(error => ErrorLog.logError("store.addTypeRoutes.getMenuItems", error));
+                .catch(error => {
+                    // Ensure added.
+                    router.addRoutes([{ path: '*', redirect: '/error/notfound' }]);
+
+                    ErrorLog.logError("store.addTypeRoutes.getMenuItems", error);
+                });
             getChildItems(router, state.apiVer, state.userState.culture)
                 .catch(error => ErrorLog.logError("store.addTypeRoutes.getChildItems", error));
-
-            // must be added after dynamic routes to avoid matching before them.
-            router.addRoutes([{ path: '*', redirect: '/error/notfound' }]);
         },
 
         /**

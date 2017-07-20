@@ -14,8 +14,6 @@ using Microsoft.Extensions.Options;
 using NLog;
 using NLog.Extensions.Logging;
 using NLog.Web;
-using System.Globalization;
-using System.Reflection;
 using VueCoreFramework.Core.Configuration;
 using VueCoreFramework.Core.Data;
 using VueCoreFramework.Core.Models;
@@ -79,15 +77,11 @@ namespace VueCoreFramework.API
                 .AddDefaultTokenProviders();
 
             services.AddLocalization(options => options.ResourcesPath = "Resources");
-            var supportedCultures = new[]
-            {
-                new CultureInfo("en-US")
-            };
             services.Configure<RequestLocalizationOptions>(options =>
             {
                 options.DefaultRequestCulture = new RequestCulture("en-US");
-                options.SupportedCultures = supportedCultures;
-                options.SupportedUICultures = supportedCultures;
+                options.SupportedCultures = LocalizationConfig.SupportedCultures;
+                options.SupportedUICultures = LocalizationConfig.SupportedCultures;
             });
 
             services.AddCors(options =>
@@ -154,8 +148,6 @@ namespace VueCoreFramework.API
             app.UseRewriter(options);
 
             app.UseRequestLocalization(localization.Value);
-
-            app.UseStaticFiles();
 
             app.UseIdentity();
 

@@ -37,11 +37,7 @@ export default class TopbarComponent extends Vue {
     }
 
     onLogin() {
-        authMgr.signinRedirect()
-            .then(() => {
-                this.signedIn = true;
-                this.$router.push(this.getReturnUrl());
-            });
+        this.$router.push({ path: '/login', query: { returnUrl: this.getReturnUrl() } });
     }
 
     onLogout() {

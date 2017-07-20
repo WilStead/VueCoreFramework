@@ -9,7 +9,7 @@
                     <v-btn v-tooltip:top="{ html: 'type sharing' }" icon class="info--text" slot="activator"><v-icon>visibility</v-icon></v-btn>
                     <v-card>
                         <v-card-title primary-title class="info">
-                            <v-btn icon @click.native="shareDialog = false"><v-icon>close</v-icon></v-btn>
+                            <v-btn icon @click="shareDialog = false"><v-icon>close</v-icon></v-btn>
                             <span class="white--text headline">Share {{routeName}} Data Type</span>
                         </v-card-title>
                         <v-alert error :value="shareErrorMessage">{{ shareErrorMessage }}</v-alert>
@@ -31,7 +31,7 @@
                                             <v-list-tile-sub-title>{{ share.shortLevel }}</v-list-tile-sub-title>
                                         </v-list-tile-content>
                                         <v-list-tile-action>
-                                            <v-btn v-tooltip:top="{ html: 'hide' }" icon class="info--text" @click.native="onHide(share)"><v-icon>visibility_off</v-icon></v-btn>
+                                            <v-btn v-tooltip:top="{ html: 'hide' }" icon class="info--text" @click="onHide(share)"><v-icon>visibility_off</v-icon></v-btn>
                                         </v-list-tile-action>
                                     </v-list-tile>
                                 </v-list-group>
@@ -70,7 +70,7 @@
                                         <v-select label="Permission" v-model="selectedPermission" :items="permissionOptions" auto></v-select>
                                     </v-flex>
                                     <v-flex xs3>
-                                        <v-btn v-tooltip:top="{ html: 'share' }" primary @click.native="onShare()">Share</v-btn>
+                                        <v-btn v-tooltip:top="{ html: 'share' }" primary @click="onShare()">Share</v-btn>
                                     </v-flex>
                                 </v-layout>
                             </v-container>
@@ -79,7 +79,7 @@
                             <v-progress-circular indeterminate class="primary--text"></v-progress-circular>
                         </v-card-text>
                         <v-card-actions>
-                            <v-btn @click.native="shareDialog = false">Done</v-btn>
+                            <v-btn @click="shareDialog = false">Done</v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-dialog>

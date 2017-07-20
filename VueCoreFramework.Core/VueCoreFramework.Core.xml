@@ -62,6 +62,16 @@
             </summary>
             <returns>A list of <see cref="T:IdentityServer4.Models.IdentityResource"/> objects for IdentityServer.</returns>
         </member>
+        <member name="T:VueCoreFramework.Core.Configuration.LocalizationConfig">
+            <summary>
+            Contains localization configuration data.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Configuration.LocalizationConfig.SupportedCultures">
+            <summary>
+            Retrieves a list of the <see cref="T:System.Globalization.CultureInfo"/> objects supported by this framework.
+            </summary>
+        </member>
         <member name="T:VueCoreFramework.Core.Configuration.URLs">
             <summary>
             Provides the URLs for the different hosts which form the application.

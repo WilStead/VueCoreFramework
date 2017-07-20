@@ -32,8 +32,8 @@ interface UserViewModel {
 
 @Component({
     components: {
-        TopbarComponent: require('../topbar/topbar.vue'),
-        MenuItemComponent: require('../menu-item/menu-item.vue'),
+        TopbarComponent: require('../topbar/topbar.vue').default,
+        MenuItemComponent: require('../menu-item/menu-item.vue').default,
         VueMarkdown
     }
 })
@@ -57,6 +57,9 @@ export default class AppComponent extends Vue {
 
     created() {
         configureOidc();
+
+        this.$store.commit(Store.setCulture, defaultCulture);
+        this.$store.commit(Store.addTypeRoutes, this.$router);
     }
 
     mounted() {
@@ -64,9 +67,6 @@ export default class AppComponent extends Vue {
         if (forwardUrl) {
             this.$router.push(forwardUrl);
         }
-
-        this.$store.commit(Store.setCulture, defaultCulture);
-        this.$store.commit(Store.addTypeRoutes, this.$router);
 
         if (this.groupRefreshTimeout === 0) {
             this.groupRefreshTimeout = setTimeout(this.refreshGroups, 100);
@@ -188,7 +188,7 @@ export default class AppComponent extends Vue {
     }
 
     onLockAccount() {
-        Api.postSpa(`Manage/LockAccount/${this.foundUser.username}`, this.$route.fullPath)
+        Api.postAuth(`Manage/LockAccount/${this.foundUser.username}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {
@@ -236,7 +236,7 @@ export default class AppComponent extends Vue {
     }
 
     onUnlockAccount() {
-        Api.postSpa(`Manage/UnlockAccount/${this.foundUser.username}`, this.$route.fullPath)
+        Api.postAuth(`Manage/UnlockAccount/${this.foundUser.username}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {
@@ -269,7 +269,7 @@ export default class AppComponent extends Vue {
         this.chatErrorMessage = '';
         this.foundUser = null;
         if (this.searchUsername) {
-            Api.postSpa(`Account/VerifyUser/${this.searchUsername}`, this.$route.fullPath)
+            Api.postAuth(`Account/VerifyUser/${this.searchUsername}`, this.$route.fullPath)
                 .then(response => {
                     if (!response.ok) {
                         if (response.statusText) {

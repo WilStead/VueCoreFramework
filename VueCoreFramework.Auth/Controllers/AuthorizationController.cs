@@ -8,11 +8,11 @@ using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using VueCoreFramework.Auth.ViewModels;
 using VueCoreFramework.Core.Data.Identity;
 using VueCoreFramework.Core.Models;
-using VueCoreFramework.ViewModels;
 
-namespace VueCoreFramework.Controllers
+namespace VueCoreFramework.Auth.Controllers
 {
     /// <summary>
     /// An MVC controller for handling user authorization tasks.
@@ -104,7 +104,7 @@ namespace VueCoreFramework.Controllers
         /// <response code="200">
         /// An <see cref="AuthorizationViewModel"/> indicating whether the current user is authorized.
         /// </response>
-        [HttpGet("{dataType}")]
+        [HttpGet("[controller]/[action]/{dataType}")]
         [ProducesResponseType(typeof(AuthorizationViewModel), 200)]
         public async Task<AuthorizationViewModel> Authorize(string dataType, string operation = "view", string id = null)
         {

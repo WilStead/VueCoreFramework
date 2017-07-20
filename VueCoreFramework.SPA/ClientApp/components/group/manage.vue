@@ -9,7 +9,7 @@
                 <v-list-group v-for="group in $store.state.userState.managedGroups" :key="group.name">
                     <v-list-tile avatar slot="item">
                         <v-list-tile-avatar>
-                            <v-btn v-tooltip:top="{ html: 'group chat' }" icon class="info--text" @click.native="onGroupChat(group)"><v-icon>group</v-icon></v-btn>
+                            <v-btn v-tooltip:top="{ html: 'group chat' }" icon class="info--text" @click="onGroupChat(group)"><v-icon>group</v-icon></v-btn>
                         </v-list-tile-avatar>
                         <v-list-tile-content>
                             <v-list-tile-title>{{ group.name }}</v-list-tile-title>
@@ -21,13 +21,13 @@
                     </v-list-tile>
                     <v-list-tile v-for="member in group.members.filter(m => m !== $store.state.userState.username)" :key="member" avatar>
                         <v-list-tile-avatar>
-                            <v-btn v-tooltip:top="{ html: 'chat' }" icon class="info--text" @click.native="onContactGroupMember(member)"><v-icon>person</v-icon></v-btn>
+                            <v-btn v-tooltip:top="{ html: 'chat' }" icon class="info--text" @click="onContactGroupMember(member)"><v-icon>person</v-icon></v-btn>
                         </v-list-tile-avatar>
                         <v-list-tile-content>
                             <v-list-tile-title>{{ member }}</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
-                            <v-btn v-tooltip:top="{ html: 'remove from group' }" icon class="error--text" @click.native="onRemoveGroupMember(group, member)"><v-icon>remove_circle</v-icon></v-btn>
+                            <v-btn v-tooltip:top="{ html: 'remove from group' }" icon class="error--text" @click="onRemoveGroupMember(group, member)"><v-icon>remove_circle</v-icon></v-btn>
                         </v-list-tile-action>
                     </v-list-tile>
                     <v-list-tile>
@@ -35,7 +35,7 @@
                             <v-list-tile-title>Invite a new member</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
-                            <v-btn icon class="success--text" @click.native.stop="onInviteConfirm(group)"><v-icon>person_add</v-icon></v-btn>
+                            <v-btn icon class="success--text" @click.stop="onInviteConfirm(group)"><v-icon>person_add</v-icon></v-btn>
                         </v-list-tile-action>
                     </v-list-tile>
                     <v-list-tile v-if="group.name !== 'Admin' && group.members.length > 1">
@@ -43,7 +43,7 @@
                             <v-list-tile-title>Transfer management</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
-                            <v-btn icon class="primary--text" @click.native.stop="onXferGroupConfirm(group)"><v-icon>transfer_within_a_station</v-icon></v-btn>
+                            <v-btn icon class="primary--text" @click.stop="onXferGroupConfirm(group)"><v-icon>transfer_within_a_station</v-icon></v-btn>
                         </v-list-tile-action>
                     </v-list-tile>
                     <v-list-tile v-if="group.name !== 'Admin'" class="error white--text">
@@ -51,7 +51,7 @@
                             <v-list-tile-title>Delete this group</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
-                            <v-btn icon class="white--text" @click.native="onDeleteConfirm(group)"><v-icon>remove_circle</v-icon></v-btn>
+                            <v-btn icon class="white--text" @click="onDeleteConfirm(group)"><v-icon>remove_circle</v-icon></v-btn>
                         </v-list-tile-action>
                     </v-list-tile>
                 </v-list-group>
@@ -60,7 +60,7 @@
                 <v-list-group v-for="group in $store.state.userState.joinedGroups" :key="group.name">
                     <v-list-tile slot="item">
                         <v-list-tile-avatar>
-                            <v-btn v-tooltip:top="{ html: 'group chat' }" icon class="info--text" @click.native="onGroupChat(group)"><v-icon>group</v-icon></v-btn>
+                            <v-btn v-tooltip:top="{ html: 'group chat' }" icon class="info--text" @click="onGroupChat(group)"><v-icon>group</v-icon></v-btn>
                         </v-list-tile-avatar>
                         <v-list-tile-content>
                             <v-list-tile-title>{{ group.name }}</v-list-tile-title>
@@ -72,7 +72,7 @@
                     </v-list-tile>
                     <v-list-tile v-for="member in group.members.filter(m => m !== $store.state.userState.username)" :key="member" avatar>
                         <v-list-tile-avatar>
-                            <v-btn v-tooltip:top="{ html: 'contact' }" icon class="info--text" @click.native="onContactGroupMember(member)"><v-icon>person</v-icon></v-btn>
+                            <v-btn v-tooltip:top="{ html: 'contact' }" icon class="info--text" @click="onContactGroupMember(member)"><v-icon>person</v-icon></v-btn>
                         </v-list-tile-avatar>
                         <v-list-tile-content>
                             <v-list-tile-title>{{ member }}</v-list-tile-title>
@@ -84,7 +84,7 @@
                             <v-list-tile-title>Leave this group</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
-                            <v-btn slot="activator" icon class="white--text" @click.native.stop="onLeaveGroupConfirm(group)"><v-icon>remove_circle</v-icon></v-btn>
+                            <v-btn slot="activator" icon class="white--text" @click.stop="onLeaveGroupConfirm(group)"><v-icon>remove_circle</v-icon></v-btn>
                         </v-list-tile-action>
                     </v-list-tile>
                 </v-list-group>
@@ -103,8 +103,8 @@
                             <v-text-field label="Group name" v-model="newGroupName" :rules="[validateGroupName]"></v-text-field>
                         </v-card-text>
                         <v-card-actions>
-                            <v-btn flat @click.native="createGroupDialog = false">Cancel</v-btn>
-                            <v-btn primary @click.native="onCreateGroup" :disabled="!newGroupName">Create Group</v-btn>
+                            <v-btn flat @click="createGroupDialog = false">Cancel</v-btn>
+                            <v-btn primary @click="onCreateGroup" :disabled="!newGroupName">Create Group</v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-dialog>
@@ -123,7 +123,7 @@
                 <v-list-group>
                     <v-list-tile slot="item">
                         <v-list-tile-avatar>
-                            <v-btn v-tooltip:top="{ html: 'group chat' }" icon class="info--text" @click.native="onGroupChat(foundGroup)"><v-icon>group</v-icon></v-btn>
+                            <v-btn v-tooltip:top="{ html: 'group chat' }" icon class="info--text" @click="onGroupChat(foundGroup)"><v-icon>group</v-icon></v-btn>
                         </v-list-tile-avatar>
                         <v-list-tile-content>
                             <v-list-tile-title>{{ foundGroup.name }}</v-list-tile-title>
@@ -135,13 +135,13 @@
                     </v-list-tile>
                     <v-list-tile v-for="member in foundGroup.members.filter(m => m !== $store.state.userState.username)" :key="member" avatar>
                         <v-list-tile-avatar>
-                            <v-btn v-tooltip:top="{ html: 'contact' }" icon class="info--text" @click.native="onContactGroupMember(member)"><v-icon>person</v-icon></v-btn>
+                            <v-btn v-tooltip:top="{ html: 'contact' }" icon class="info--text" @click="onContactGroupMember(member)"><v-icon>person</v-icon></v-btn>
                         </v-list-tile-avatar>
                         <v-list-tile-content>
                             <v-list-tile-title>{{ member }}</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
-                            <v-btn v-tooltip:top="{ html: 'remove from group' }" icon class="error--text" @click.native="onRemoveGroupMember(foundGroup, member)"><v-icon>remove_circle</v-icon></v-btn>
+                            <v-btn v-tooltip:top="{ html: 'remove from group' }" icon class="error--text" @click="onRemoveGroupMember(foundGroup, member)"><v-icon>remove_circle</v-icon></v-btn>
                         </v-list-tile-action>
                     </v-list-tile>
                     <v-list-tile>
@@ -149,7 +149,7 @@
                             <v-list-tile-title>Invite a new member</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
-                            <v-btn icon class="success--text" @click.native="onInviteConfirm(foundGroup)"><v-icon>person_add</v-icon></v-btn>
+                            <v-btn icon class="success--text" @click="onInviteConfirm(foundGroup)"><v-icon>person_add</v-icon></v-btn>
                         </v-list-tile-action>
                     </v-list-tile>
                     <v-list-tile>
@@ -157,7 +157,7 @@
                             <v-list-tile-title>Transfer management</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
-                            <v-btn icon class="primary--text" @click.native="onXferGroupConfirm(foundGroup)"><v-icon>transfer_within_a_station</v-icon></v-btn>
+                            <v-btn icon class="primary--text" @click="onXferGroupConfirm(foundGroup)"><v-icon>transfer_within_a_station</v-icon></v-btn>
                         </v-list-tile-action>
                     </v-list-tile>
                     <v-list-tile v-if="foundGroup.name !== 'Admin'" class="error white--text">
@@ -165,7 +165,7 @@
                             <v-list-tile-title>Delete this group</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
-                            <v-btn icon class="white--text" @click.native="onDeleteConfirm(foundGroup)"><v-icon>remove_circle</v-icon></v-btn>
+                            <v-btn icon class="white--text" @click="onDeleteConfirm(foundGroup)"><v-icon>remove_circle</v-icon></v-btn>
                         </v-list-tile-action>
                     </v-list-tile>
                 </v-list-group>
@@ -179,8 +179,8 @@
                     <v-text-field label="Username" v-model="searchUsername" @input="onSearchUsernameChange" :hint="searchUsernameSuggestion"></v-text-field>
                 </v-card-text>
                 <v-card-actions>
-                    <v-btn flat @click.native="inviteDialog = false">Cancel</v-btn>
-                    <v-btn primary @click.native="onInvite">Invite</v-btn>
+                    <v-btn flat @click="inviteDialog = false">Cancel</v-btn>
+                    <v-btn primary @click="onInvite">Invite</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -199,8 +199,8 @@
                     <v-select label="New manager" v-model="newManager" :items="xferGroup.members.filter(m => m !== xferGroup.manager)" single-line auto></v-select>
                 </v-card-text>
                 <v-card-actions>
-                    <v-btn flat @click.native="xferGroupDialog = false">Cancel</v-btn>
-                    <v-btn warning @click.native="onXferGroup" :disabled="!newManager">Transfer</v-btn>
+                    <v-btn flat @click="xferGroupDialog = false">Cancel</v-btn>
+                    <v-btn warning @click="onXferGroup" :disabled="!newManager">Transfer</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -212,8 +212,8 @@
                     <p>This action cannot be undone. Only the group manager will be able to invite you to join the group again.</p>
                 </v-card-text>
                 <v-card-actions>
-                    <v-btn flat @click.native="leaveGroupDialog = false">Cancel</v-btn>
-                    <v-btn error @click.native="onLeaveGroup">Leave Group</v-btn>
+                    <v-btn flat @click="leaveGroupDialog = false">Cancel</v-btn>
+                    <v-btn error @click="onLeaveGroup">Leave Group</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -225,8 +225,8 @@
                     <p>This action cannot be undone. You can re-form the group later, but all members will need to be re-invited to join the new group, and all data associated with the original group will be permanently lost.</p>
                 </v-card-text>
                 <v-card-actions>
-                    <v-btn flat @click.native="deleteGroupDialog = false">Cancel</v-btn>
-                    <v-btn error @click.native="onDeleteGroup">Delete Group</v-btn>
+                    <v-btn flat @click="deleteGroupDialog = false">Cancel</v-btn>
+                    <v-btn error @click="onDeleteGroup">Delete Group</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>

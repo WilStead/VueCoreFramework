@@ -12,14 +12,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using VueCoreFramework.Auth.ViewModels;
 using VueCoreFramework.Core.Configuration;
 using VueCoreFramework.Core.Data.Identity;
 using VueCoreFramework.Core.Messages;
 using VueCoreFramework.Core.Models;
 using VueCoreFramework.Core.Services;
-using VueCoreFramework.ViewModels;
 
-namespace VueCoreFramework.Controllers
+namespace VueCoreFramework.Auth.Controllers
 {
     /// <summary>
     /// An MVC controller for handling user account tasks.
@@ -135,7 +135,10 @@ namespace VueCoreFramework.Controllers
                 return BadRequest(_errorLocalizer[ErrorMessages.AuthProviderError]);
             }
             // Request a redirect to the external login provider.
-            var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Account", new { RememberUser = model.RememberUser });
+            var redirectUrl = Url.Action(
+                action: nameof(ExternalLoginCallback),
+                controller: "Account",
+                values: new { RememberUser = model.RememberUser });
             var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider.AuthenticationScheme, redirectUrl);
             return Challenge(properties, provider.AuthenticationScheme);
         }
@@ -144,7 +147,6 @@ namespace VueCoreFramework.Controllers
         /// The endpoint reached when a user returns from an external authentication provider when
         /// attempting to sign in with that account.
         /// </summary>
-        /// <returns>A <see cref="LoginViewModel"/> used to transfer task data.</returns>
         /// <response code="400">Invalid login attempt.</response>
         /// <response code="200">An access token.</response>
         [HttpGet]
@@ -320,11 +322,11 @@ namespace VueCoreFramework.Controllers
         /// <param name="model">A <see cref="LoginViewModel"/> used to transfer task data.</param>
         /// <response code="400">Invalid login attempt.</response>
         /// <response code="403">Locked account.</response>
-        /// <response code="200">An access token.</response>
+        /// <response code="200">OK</response>
         [HttpPost]
         [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
         [ProducesResponseType(typeof(IDictionary<string, string>), 403)]
-        [ProducesResponseType(typeof(IDictionary<string, string>), 200)]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> Login([FromBody]LoginViewModel model)
         {
             // Users can sign in with a username or email address.
@@ -364,29 +366,6 @@ namespace VueCoreFramework.Controllers
                 new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) });
 
             _logger.LogInformation(LogEvent.LOGIN, "User {USER} logged in.", user.Email);
-
-            var token = await HttpContext.Authentication.GetTokenAsync("access_token");
-            if (string.IsNullOrEmpty(token))
-            {
-                return BadRequest(_errorLocalizer[ErrorMessages.InvalidLogin]);
-            }
-            else
-            {
-                return Json(token);
-            }
-        }
-
-        /// <summary>
-        /// Called to sign out the current user.
-        /// </summary>
-        /// <response code="200">OK</response>
-        [HttpPost]
-        [ProducesResponseType(200)]
-        public async Task<IActionResult> Logout()
-        {
-            await HttpContext.Authentication.SignOutAsync("Cookies");
-            await HttpContext.Authentication.SignOutAsync("oidc");
-            await _signInManager.SignOutAsync();
             return Ok();
         }
 
@@ -550,7 +529,10 @@ namespace VueCoreFramework.Controllers
             // For more information on how to enable account confirmation and password reset please visit https://go.microsoft.com/fwlink/?LinkID=532713
             // Send an email with this link
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var callbackUrl = Url.Action(nameof(ConfirmEmail), "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
+            var callbackUrl = Url.Action(
+                action: nameof(ConfirmEmail),
+                controller: "Account",
+                values: new { userId = user.Id, code = code });
             await _emailSender.SendEmailAsync(model.Email, _emailLocalizer[EmailMessages.ConfirmAccountEmailSubject],
                 $"{_emailLocalizer[EmailMessages.ConfirmAccountEmailBody]} <a href='{callbackUrl}'>link</a>");
         }

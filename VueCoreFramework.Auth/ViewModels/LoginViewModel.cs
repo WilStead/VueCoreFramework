@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace VueCoreFramework.ViewModels
+namespace VueCoreFramework.Auth.ViewModels
 {
     /// <summary>
     /// A ViewModel used to transfer information during user account login tasks.

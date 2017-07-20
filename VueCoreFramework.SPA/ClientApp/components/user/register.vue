@@ -16,7 +16,7 @@
             </v-card-text>
             <v-card-actions v-else>
                 <router-link tag="button" class="btn btn--dark btn--raised btn--default" :to="{ path: '/login', query: { returnUrl }}">Cancel</router-link>
-                <v-btn primary ripple @click.native.stop.prevent="onSubmit">Register</v-btn>
+                <v-btn primary ripple @click.stop.prevent="onSubmit">Register</v-btn>
             </v-card-actions>
         </v-card>
     </v-layout>

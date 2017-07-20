@@ -1,4 +1,4 @@
-﻿namespace VueCoreFramework.ViewModels
+﻿namespace VueCoreFramework.Auth.ViewModels
 {
     /// <summary>
     /// Used to transfer information about a user.

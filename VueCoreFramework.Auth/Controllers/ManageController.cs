@@ -14,15 +14,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using VueCoreFramework.Auth.ViewModels;
 using VueCoreFramework.Core.Configuration;
 using VueCoreFramework.Core.Data;
 using VueCoreFramework.Core.Data.Identity;
 using VueCoreFramework.Core.Messages;
 using VueCoreFramework.Core.Models;
 using VueCoreFramework.Core.Services;
-using VueCoreFramework.ViewModels;
 
-namespace VueCoreFramework.Controllers
+namespace VueCoreFramework.Auth.Controllers
 {
     /// <summary>
     /// An MVC controller for handling user management tasks.
@@ -107,7 +107,11 @@ namespace VueCoreFramework.Controllers
             // 'Account' controller, so the current user can undo this change, if it was a mistake,
             // or from an unauthorized source.
             var confirmCode = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var restoreCallbackUrl = Url.Action(nameof(AccountController.RestoreEmail), "Account", new { userId = user.Id, code = confirmCode }, protocol: HttpContext.Request.Scheme);
+            var restoreCallbackUrl = Url.Action(
+                action: nameof(AccountController.RestoreEmail),
+                controller: "Account",
+                values: new { userId = user.Id, code = confirmCode },
+                protocol: HttpContext.Request.Scheme);
             await _emailSender.SendEmailAsync(user.Email, _emailLocalizer[EmailMessages.ConfirmEmailChangeSubject],
                 $"{_emailLocalizer[EmailMessages.ConfirmEmailChangeCancelBody]} <a href='{restoreCallbackUrl}'>link</a>");
 
@@ -115,7 +119,11 @@ namespace VueCoreFramework.Controllers
             // 'Account' controller, which will confirm the change by validating that the newly
             // requested email belongs to the user.
             var changeCode = await _userManager.GenerateChangeEmailTokenAsync(user, user.NewEmail);
-            var changeCallbackUrl = Url.Action(nameof(AccountController.ChangeEmail), "Account", new { userId = user.Id, code = changeCode }, protocol: HttpContext.Request.Scheme);
+            var changeCallbackUrl = Url.Action(
+                action: nameof(AccountController.ChangeEmail),
+                controller: "Account",
+                values: new { userId = user.Id, code = changeCode },
+                protocol: HttpContext.Request.Scheme);
             await _emailSender.SendEmailAsync(user.NewEmail, _emailLocalizer[EmailMessages.ConfirmEmailChangeSubject],
                 $"{_emailLocalizer[EmailMessages.ConfirmEmailChangeSubject]} <a href='{changeCallbackUrl}'>link</a>");
 
@@ -225,11 +233,15 @@ namespace VueCoreFramework.Controllers
 
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var restoreCallbackUrl = Url.Action(
-                nameof(ManageController.DeleteAccountCallback),
-                "Manage",
-                new { userId = user.Id, code = code, xferUsername = xferUsername },
+                action: nameof(DeleteAccountCallback),
+                controller: "Manage",
+                values: new { userId = user.Id, code = code, xferUsername = xferUsername },
                 protocol: HttpContext.Request.Scheme);
-            var loginLink = Url.Action(nameof(HomeController.Index), "Home", new { forwardUrl = "/login" });
+            var loginLink = Url.Action(
+                action: nameof(HomeController.Index),
+                controller: "Home",
+                values: new { forwardUrl = "/login" },
+                protocol: HttpContext.Request.Scheme);
             await _emailSender.SendEmailAsync(user.Email, _emailLocalizer[EmailMessages.ConfirmAccountDeletionSubject],
                 $"{_emailLocalizer[EmailMessages.ConfirmAccountDeletionBody]} <a href='{restoreCallbackUrl}'>link</a>. {_emailLocalizer[EmailMessages.ConfirmAccountDeletionBody2]} <a href='{loginLink}'>login</a>.");
             return Ok();
@@ -381,15 +393,6 @@ namespace VueCoreFramework.Controllers
         }
 
         /// <summary>
-        /// Called to retrieve a list of the supported cultures.
-        /// </summary>
-        /// <returns>A list of the supported cultures.</returns>
-        [HttpGet]
-        [AllowAnonymous]
-        public JsonResult GetCultures()
-            => Json(_localizationOptions.SupportedCultures.Select(c => c.Name));
-
-        /// <summary>
         /// Called to link a user's external authentication provider account with their site account.
         /// </summary>
         /// <param name="model">A <see cref="ManageUserViewModel"/> used to transfer task data.</param>
@@ -407,7 +410,11 @@ namespace VueCoreFramework.Controllers
                 return BadRequest(_errorLocalizer[ErrorMessages.AuthProviderError]);
             }
             // Request a redirect to the external login provider to link a login for the current user
-            var redirectUrl = Url.Action(nameof(LinkLoginCallback), "Manage");
+            var redirectUrl = Url.Action(
+                action: nameof(LinkLoginCallback),
+                controller: "Manage",
+                values: null,
+                protocol: HttpContext.Request.Scheme);
             var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider.AuthenticationScheme, redirectUrl, _userManager.GetUserId(User));
             return Challenge(properties, provider.AuthenticationScheme);
         }
@@ -422,7 +429,6 @@ namespace VueCoreFramework.Controllers
         [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
         public async Task<IActionResult> LinkLoginCallback()
         {
-            var model = new ManageUserViewModel();
             var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (user == null)
             {

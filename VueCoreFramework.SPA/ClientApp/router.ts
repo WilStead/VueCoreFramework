@@ -3,40 +3,40 @@ import { authenticate, AuthorizationViewModel, checkAuthorization } from './auth
 import * as ErrorMsg from './error-msg';
 
 const routes: Array<VueRouter.RouteConfig> = [
-    { path: '/', component: require('./components/home/home.vue') },
+    { path: '/', component: require('./components/home/home.vue').default },
     { path: '/home/index', redirect: '/' },
     {
         path: '/login',
-        component: require('./components/user/login.vue'),
+        component: require('./components/user/login.vue').default,
         props: (route) => ({ returnUrl: route.query.returnUrl })
     },
     {
         path: '/register',
-        component: require('./components/user/register.vue'),
+        component: require('./components/user/register.vue').default,
         props: (route) => ({ returnUrl: route.query.returnUrl })
     },
     {
         path: '/user/manage',
         meta: { requiresAuthenticate: true },
-        component: require('./components/user/manage.vue')
+        component: require('./components/user/manage.vue').default
     },
     {
         path: '/user/email/confirm',
-        component: require('./components/user/email/confirm.vue')
+        component: require('./components/user/email/confirm.vue').default
     },
     {
         path: '/user/email/restore',
-        component: require('./components/user/email/restore.vue')
+        component: require('./components/user/email/restore.vue').default
     },
     {
         path: '/user/reset/:code',
-        component: require('./components/user/password/reset.vue'),
+        component: require('./components/user/password/reset.vue').default,
         props: true
     },
     {
         path: '/group/manage',
         meta: { requiresAuthenticate: true },
-        component: require('./components/group/manage.vue')
+        component: require('./components/group/manage.vue').default
     },
     { path: '/error/notfound', component: resolve => require(['./components/error/notfound.vue'], resolve) },
     { path: '/error/:code', component: resolve => require(['./components/error/error.vue'], resolve), props: true }
@@ -82,6 +82,9 @@ router.beforeEach((to, from, next) => {
                 } else {
                     next({ path: '/login', query: { returnUrl: to.fullPath } });
                 }
+            })
+            .catch(error => {
+                let err = error.message;
             });
     } else {
         next();

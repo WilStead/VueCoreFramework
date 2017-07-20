@@ -17,25 +17,25 @@
             <v-card-text v-if="!submitting && (authProviderFacebook || authProviderGoogle || authProviderMicrosoft) && (!authProviderFacebookUser || !authProviderGoogleUser || !authProviderMicrosoftUser)">
                 <span>Add external login</span>
                 <div class="auth-providers">
-                    <v-btn icon ripple v-if="authProviderFacebook && !authProviderFacebookUser" @click.native="onSignInProviderAdd('Facebook')"><v-icon fa>facebook</v-icon></v-btn>
-                    <v-btn icon ripple v-if="authProviderGoogle && !authProviderGoogleUser" @click.native="onSignInProviderAdd('Google')"><v-icon fa>google</v-icon></v-btn>
-                    <v-btn icon ripple v-if="authProviderMicrosoft && !authProviderMicrosoftUser" @click.native="onSignInProviderAdd('Microsoft')"><v-icon fa>windows</v-icon></v-btn>
+                    <v-btn icon ripple v-if="authProviderFacebook && !authProviderFacebookUser" @click="onSignInProviderAdd('Facebook')"><v-icon fa>facebook</v-icon></v-btn>
+                    <v-btn icon ripple v-if="authProviderGoogle && !authProviderGoogleUser" @click="onSignInProviderAdd('Google')"><v-icon fa>google</v-icon></v-btn>
+                    <v-btn icon ripple v-if="authProviderMicrosoft && !authProviderMicrosoftUser" @click="onSignInProviderAdd('Microsoft')"><v-icon fa>windows</v-icon></v-btn>
                 </div>
             </v-card-text>
             <v-card-text v-if="!submitting && (authProviderFacebookUser || authProviderGoogleUser || authProviderMicrosoftUser)">
                 <span>Remove external login</span>
                 <div class="auth-providers">
-                    <v-btn icon ripple v-if="authProviderFacebook && authProviderFacebookUser" @click.native="onSignInProviderRemove('Facebook')"><v-icon fa>facebook</v-icon></v-btn>
-                    <v-btn icon ripple v-if="authProviderGoogle && authProviderGoogleUser" @click.native="onSignInProviderRemove('Google')"><v-icon fa>google</v-icon></v-btn>
-                    <v-btn icon ripple v-if="authProviderMicrosoft && authProviderMicrosoftUser" @click.native="onSignInProviderRemove('Microsoft')"><v-icon fa>windows</v-icon></v-btn>
+                    <v-btn icon ripple v-if="authProviderFacebook && authProviderFacebookUser" @click="onSignInProviderRemove('Facebook')"><v-icon fa>facebook</v-icon></v-btn>
+                    <v-btn icon ripple v-if="authProviderGoogle && authProviderGoogleUser" @click="onSignInProviderRemove('Google')"><v-icon fa>google</v-icon></v-btn>
+                    <v-btn icon ripple v-if="authProviderMicrosoft && authProviderMicrosoftUser" @click="onSignInProviderRemove('Microsoft')"><v-icon fa>windows</v-icon></v-btn>
                 </div>
             </v-card-text>
             <v-card-text v-if="submitting" class="activity-row">
                 <v-progress-circular indeterminate class="primary--text"></v-progress-circular>
             </v-card-text>
             <v-card-actions v-else-if="changingUsername || changingEmail || changingPassword || settingPassword">
-                <v-btn default @click.native.stop.prevent="cancelChange">Cancel</v-btn>
-                <v-btn primary @click.native.stop.prevent="onSubmit">Submit</v-btn>
+                <v-btn default @click.stop.prevent="cancelChange">Cancel</v-btn>
+                <v-btn primary @click.stop.prevent="onSubmit">Submit</v-btn>
             </v-card-actions>
             <v-card-text v-else>
                 <dl class="dl-horizontal">
@@ -80,8 +80,8 @@
                             <v-progress-circular indeterminate class="primary--text"></v-progress-circular>
                         </v-card-text>
                         <v-card-actions v-else>
-                            <v-btn flat class="success--text" @click.native="deleteAccountDialog = false">Cancel</v-btn>
-                            <v-btn :disabled="xferData && !validXferUsername" error @click.native="onDeleteAccount">Delete Account</v-btn>
+                            <v-btn flat class="success--text" @click="deleteAccountDialog = false">Cancel</v-btn>
+                            <v-btn :disabled="xferData && !validXferUsername" error @click="onDeleteAccount">Delete Account</v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-dialog>

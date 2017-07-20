@@ -1,6 +1,7 @@
 ﻿import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import * as Api from '../../api';
+import { authMgr } from '../../authorization';
 import * as Store from '../../store/store';
 import { checkResponse } from '../../router';
 import * as ErrorMsg from '../../error-msg';
@@ -103,7 +104,7 @@ export default class LoginComponent extends Vue {
     submitting = false;
 
     mounted() {
-        Api.callSpa('Account/GetAuthProviders',
+        Api.callAuth('Account/GetAuthProviders',
             {
                 method: 'GET',
                 headers: {
@@ -136,7 +137,7 @@ export default class LoginComponent extends Vue {
         if (!this.isValid) return;
         this.submitting = true;
         this.errorMessage = '';
-        Api.callSpa('Account/ForgotPassword',
+        Api.callAuth('Account/ForgotPassword',
             {
                 method: 'POST',
                 headers: {
@@ -175,7 +176,7 @@ export default class LoginComponent extends Vue {
         this.submitting = true;
         this.errorMessage = '';
         this.model.authProvider = provider;
-        Api.callSpa('Account/ExternalLogin',
+        Api.callAuth('Account/ExternalLogin',
             {
                 method: 'POST',
                 headers: {
@@ -220,7 +221,7 @@ export default class LoginComponent extends Vue {
         this.submitting = true;
         this.errorMessage = '';
 
-        Api.callSpa('Account/Login',
+        Api.callAuth('Account/Login',
             {
                 method: 'POST',
                 headers: {
@@ -238,16 +239,12 @@ export default class LoginComponent extends Vue {
                         this.errorMessage = "A problem occurred.";
                     }
                     throw new Error(response.statusText);
+                } else {
+                    authMgr.signinRedirect()
+                        .then(() => {
+                            this.$router.push(this.returnUrl || '/');
+                        });
                 }
-                return response;
-            })
-            .then(response => response.json() as Promise<string>)
-            .then(data => {
-                this.$store.commit(Store.setToken, data);
-                if (this.model.rememberUser) {
-                    localStorage.setItem('token', data);
-                }
-                this.$router.push(this.returnUrl || '/');
                 this.submitting = false;
             })
             .catch(error => {

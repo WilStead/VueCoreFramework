@@ -160,7 +160,7 @@ export default class ManageUserComponent extends Vue {
     }
 
     created() {
-        Api.getSpa('Account/HasPassword', this.$route.fullPath)
+        Api.getAuth('Account/HasPassword', this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {
@@ -181,7 +181,7 @@ export default class ManageUserComponent extends Vue {
     }
 
     mounted() {
-        Api.getSpa('Account/GetUserAuthProviders', this.$route.fullPath)
+        Api.getAuth('Account/GetUserAuthProviders', this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {
@@ -212,7 +212,7 @@ export default class ManageUserComponent extends Vue {
                     ErrorMsg.logError("user/manage.mounted", new Error(error));
                 }
             });
-        Api.callSpa('Manage/GetCultures',
+        Api.callSpa('Home/GetCultures',
             {
                 headers: {
                     'Accept': `application/json;v=${this.$store.state.apiVer}`,
@@ -263,7 +263,7 @@ export default class ManageUserComponent extends Vue {
 
     loadXferUsernames() {
         this.xferLoading = true;
-        Api.getSpa('Manage/LoadXferUsernames', this.$route.fullPath)
+        Api.getAuth('Manage/LoadXferUsernames', this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     throw new Error("CODE");
@@ -293,7 +293,7 @@ export default class ManageUserComponent extends Vue {
             return;
         }
 
-        Api.postSpa(`Manage/SetCulture/${value}`, this.$route.fullPath)
+        Api.postAuth(`Manage/SetCulture/${value}`, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {
@@ -328,7 +328,7 @@ export default class ManageUserComponent extends Vue {
         if (this.selectedXferUsername) {
             url += `?xferUsername=${this.selectedXferUsername}`;
         }
-        Api.postSpa(url, this.$route.fullPath)
+        Api.postAuth(url, this.$route.fullPath)
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {
@@ -360,7 +360,7 @@ export default class ManageUserComponent extends Vue {
         this.submitting = true;
         this.errors = [];
         this.model.authProvider = provider;
-        Api.callSpa('Manage/LinkLogin',
+        Api.callAuth('Manage/LinkLogin',
             {
                 method: 'POST',
                 headers: {
@@ -402,7 +402,7 @@ export default class ManageUserComponent extends Vue {
         this.submitting = true;
         this.errors = [];
         this.model.authProvider = provider;
-        Api.callSpa('Manage/RemoveLogin',
+        Api.callAuth('Manage/RemoveLogin',
             {
                 method: 'POST',
                 headers: {
@@ -452,7 +452,7 @@ export default class ManageUserComponent extends Vue {
         } else {
             url = 'Manage/SetPassword';
         }
-        Api.callSpa(url,
+        Api.callAuth(url,
             {
                 method: 'POST',
                 headers: {

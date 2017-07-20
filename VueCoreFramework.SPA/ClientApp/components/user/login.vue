@@ -11,8 +11,8 @@
             </v-card-text>
             <div v-else>
                 <v-card-actions>
-                    <v-btn primary ripple v-if="this.forgottenPassword" @click.native="resetPassword">Reset Password</v-btn>
-                    <v-btn primary ripple v-else @click.native="onSubmit">Sign In</v-btn>
+                    <v-btn primary ripple v-if="this.forgottenPassword" @click="resetPassword">Reset Password</v-btn>
+                    <v-btn primary ripple v-else @click="onSubmit">Sign In</v-btn>
                     <router-link class="ml-5 mr-3" :to="{ path: '/register', query: { returnUrl }}">New? Register here</router-link>
                 </v-card-actions>
                 <v-card-text class="text-xs-right small">
@@ -31,9 +31,9 @@
                 <v-card-text v-if="authProviderFacebook || authProviderGoogle || authProviderMicrosoft">
                     <span>Sign in with an external account</span>
                     <div class="auth-providers">
-                        <v-btn icon ripple v-if="authProviderFacebook" @click.native="onSignInProvider('Facebook')"><v-icon fa>facebook</v-icon></v-btn>
-                        <v-btn icon ripple v-if="authProviderGoogle" @click.native="onSignInProvider('Google')"><v-icon fa>google</v-icon></v-btn>
-                        <v-btn icon ripple v-if="authProviderMicrosoft" @click.native="onSignInProvider('Microsoft')"><v-icon fa>windows</v-icon></v-btn>
+                        <v-btn icon ripple v-if="authProviderFacebook" @click="onSignInProvider('Facebook')"><v-icon fa>facebook</v-icon></v-btn>
+                        <v-btn icon ripple v-if="authProviderGoogle" @click="onSignInProvider('Google')"><v-icon fa>google</v-icon></v-btn>
+                        <v-btn icon ripple v-if="authProviderMicrosoft" @click="onSignInProvider('Microsoft')"><v-icon fa>windows</v-icon></v-btn>
                     </div>
                 </v-card-text>
             </div>

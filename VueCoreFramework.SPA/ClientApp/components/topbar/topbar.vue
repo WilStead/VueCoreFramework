@@ -1,13 +1,13 @@
 ﻿<template>
     <v-list class="topbar">
-        <v-btn icon v-tooltip:left="{ html: 'sign in' }" v-if="!signedIn" @click.native="onLogin"><v-icon class="user-icon">account_circle</v-icon></v-btn>
+        <v-btn icon v-tooltip:left="{ html: 'sign in' }" v-if="!signedIn" @click="onLogin"><v-icon class="user-icon">account_circle</v-icon></v-btn>
         <div v-else>
-            <v-btn icon v-tooltip:left="{ html: 'chat' }" @click.native="onToggleChat">
+            <v-btn icon v-tooltip:left="{ html: 'chat' }" @click="onToggleChat">
                 <v-icon v-badge="{ value: totalUnread, overlap: true, visible: totalUnread > 0 }"
                         class="info--after user-icon">chat</v-icon>
             </v-btn>
             <router-link class="btn btn--icon btn--raised" v-tooltip:left="{ html: 'profile' }" title="profile" to="/user/manage"><v-icon class="user-icon">account_circle</v-icon></router-link>
-            <v-btn icon v-tooltip:left="{ html: 'sign out' }" @click.native="onLogout"><v-icon class="user-icon">exit_to_app</v-icon></v-btn>
+            <v-btn icon v-tooltip:left="{ html: 'sign out' }" @click="onLogout"><v-icon class="user-icon">exit_to_app</v-icon></v-btn>
         </div>
         <div>
             <a class="btn btn--icon btn--raised" href="http://twitter.com" title="Twitter"><v-icon fa>twitter</v-icon></a>

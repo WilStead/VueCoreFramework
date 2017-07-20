@@ -64,6 +64,8 @@ namespace VueCoreFramework.Core.Configuration
 
                     ClientSecrets = { new Secret(secret.Sha256()) },
 
+                    AllowedCorsOrigins = { URLs.ApiURL.Remove(URLs.ApiURL.Length - 1) },
+
                     AllowedScopes = { apiName }
                 },
                 new Client
@@ -78,6 +80,7 @@ namespace VueCoreFramework.Core.Configuration
 
                     RedirectUris = { $"{URLs.ClientURL}signin-oidc" },
                     PostLogoutRedirectUris = { $"{URLs.ClientURL}signout-callback-oidc" },
+                    AllowedCorsOrigins = { URLs.ClientURL.Remove(URLs.ClientURL.Length - 1) },
 
                     AllowedScopes = new List<string>
                     {
@@ -98,9 +101,9 @@ namespace VueCoreFramework.Core.Configuration
                     AllowedGrantTypes = GrantTypes.Implicit,
                     AllowAccessTokensViaBrowser = true,
 
-                    RedirectUris = { $"{URLs.ClientURL}Authorization/Callback" },
+                    RedirectUris = { $"{URLs.ClientURL}oidc/callback" },
                     PostLogoutRedirectUris = { URLs.ClientURL },
-                    AllowedCorsOrigins = { URLs.ClientURL },
+                    AllowedCorsOrigins = { URLs.ClientURL.Remove(URLs.ClientURL.Length - 1) },
 
                     AllowedScopes = new List<string>
                     {

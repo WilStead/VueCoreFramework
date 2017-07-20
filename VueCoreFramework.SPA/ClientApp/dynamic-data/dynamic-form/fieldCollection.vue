@@ -17,8 +17,8 @@
                                         @onError="onEditError"></dynamic-data-table>
                     <v-container fluid>
                         <v-layout row justify-space-around>
-                            <v-btn success icon v-tooltip:top="{ html: 'add' }" :disabled="!selected.length" @click.native="onAddSelect"><v-icon>arrow_downward</v-icon></v-btn>
-                            <v-btn error icon v-tooltip:top="{ html: 'remove' }" :disabled="!selectedChildren.length" @click.native="onRemoveSelect"><v-icon>arrow_upward</v-icon></v-btn>
+                            <v-btn success icon v-tooltip:top="{ html: 'add' }" :disabled="!selected.length" @click="onAddSelect"><v-icon>arrow_downward</v-icon></v-btn>
+                            <v-btn error icon v-tooltip:top="{ html: 'remove' }" :disabled="!selectedChildren.length" @click="onRemoveSelect"><v-icon>arrow_upward</v-icon></v-btn>
                         </v-layout>
                     </v-container>
                     <dynamic-data-table :childProp="schema.inverseType"
@@ -33,7 +33,7 @@
                         <v-progress-circular indeterminate class="primary--text"></v-progress-circular>
                     </v-card-text>
                     <v-card-actions v-else>
-                        <v-btn primary @click.native="editDialogShown = false">Finish</v-btn>
+                        <v-btn primary @click="editDialogShown = false">Finish</v-btn>
                     </v-card-actions>
                 </v-card>
             </v-dialog>

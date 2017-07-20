@@ -38,7 +38,7 @@
                             <v-radio label="HSL" value="HSL" v-model="inputType"></v-radio>
                         </v-flex>
                         <v-flex xs4 pr-0 style="display: flex; justify-content: flex-end;">
-                            <v-btn v-if="!schema.required" class="btn-null-clear" floating primary @click.native="onClear"><v-icon>remove</v-icon></v-btn>
+                            <v-btn v-if="!schema.required" class="btn-null-clear" floating primary @click="onClear"><v-icon>remove</v-icon></v-btn>
                         </v-flex>
                     </v-layout>
                 </v-container>
@@ -68,8 +68,8 @@
                 </v-container>
             </v-card-text>
             <v-card-actions>
-                <v-btn default flat @click.native="dialog = false">Cancel</v-btn>
-                <v-btn primary @click.native="onSelect">Select</v-btn>
+                <v-btn default flat @click="dialog = false">Cancel</v-btn>
+                <v-btn primary @click="onSelect">Select</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>

@@ -15,6 +15,14 @@ export function callApi(relUrl: string, init?: RequestInit): Promise<Response> {
     }
 }
 
+export function callAuth(relUrl: string, init?: RequestInit): Promise<Response> {
+    if (init) {
+        return fetch(urls.authUrl + relUrl, init);
+    } else {
+        return fetch(urls.authUrl + relUrl);
+    }
+}
+
 export function callSpa(relUrl: string, init?: RequestInit): Promise<Response> {
     if (init) {
         return fetch(urls.spaUrl + relUrl, init);
@@ -47,12 +55,20 @@ export function getApi(relUrl: string, returnPath?: string): Promise<Response> {
     return invokeHost(urls.apiUrl, relUrl, 'GET', returnPath);
 }
 
+export function getAuth(relUrl: string, returnPath?: string): Promise<Response> {
+    return invokeHost(urls.authUrl, relUrl, 'GET', returnPath);
+}
+
 export function getSpa(relUrl: string, returnPath?: string): Promise<Response> {
     return invokeHost(urls.spaUrl, relUrl, 'GET', returnPath);
 }
 
 export function postApi(relUrl: string, returnPath?: string): Promise<Response> {
     return invokeHost(urls.apiUrl, relUrl, 'POST', returnPath);
+}
+
+export function postAuth(relUrl: string, returnPath?: string): Promise<Response> {
+    return invokeHost(urls.authUrl, relUrl, 'POST', returnPath);
 }
 
 export function postSpa(relUrl: string, returnPath?: string): Promise<Response> {

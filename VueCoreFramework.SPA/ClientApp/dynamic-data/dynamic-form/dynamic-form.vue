@@ -7,7 +7,7 @@
                 <v-btn v-tooltip:top="{ html: 'item sharing' }" icon class="info--text" slot="activator"><v-icon>visibility</v-icon></v-btn>
                 <v-card>
                     <v-card-title class="info">
-                        <v-btn icon @click.native="shareDialog = false"><v-icon>close</v-icon></v-btn>
+                        <v-btn icon @click="shareDialog = false"><v-icon>close</v-icon></v-btn>
                         <span class="white--text headline">Sharing</span>
                     </v-card-title>
                     <v-alert error :value="shareErrorMessage">{{ shareErrorMessage }}</v-alert>
@@ -29,7 +29,7 @@
                                         <v-list-tile-sub-title>{{ share.shortLevel }}</v-list-tile-sub-title>
                                     </v-list-tile-content>
                                     <v-list-tile-action>
-                                        <v-btn v-tooltip:top="{ html: 'hide' }" icon class="info--text" @click.native="onHide(share)"><v-icon>visibility_off</v-icon></v-btn>
+                                        <v-btn v-tooltip:top="{ html: 'hide' }" icon class="info--text" @click="onHide(share)"><v-icon>visibility_off</v-icon></v-btn>
                                     </v-list-tile-action>
                                 </v-list-tile>
                             </v-list-group>
@@ -66,7 +66,7 @@
                                     <v-select label="Permission" v-model="selectedPermission" :items="permissionOptions" auto></v-select>
                                 </v-flex>
                                 <v-flex xs3>
-                                    <v-btn v-tooltip:top="{ html: 'share' }" primary @click.native="onShare()">Share</v-btn>
+                                    <v-btn v-tooltip:top="{ html: 'share' }" primary @click="onShare()">Share</v-btn>
                                 </v-flex>
                             </v-layout>
                         </v-container>
@@ -75,7 +75,7 @@
                         <v-progress-circular indeterminate class="primary--text"></v-progress-circular>
                     </v-card-text>
                     <v-card-actions>
-                        <v-btn @click.native="shareDialog = false">Done</v-btn>
+                        <v-btn @click="shareDialog = false">Done</v-btn>
                     </v-card-actions>
                 </v-card>
             </v-dialog>
@@ -87,12 +87,12 @@
             <v-progress-circular indeterminate class="primary--text"></v-progress-circular>
         </v-card-text>
         <v-card-actions v-else-if="operation === 'view'">
-            <v-btn default @click.native="onCancel">Back</v-btn>
-            <v-btn v-if="canEdit" primary @click.native="onEdit">Edit</v-btn>
+            <v-btn default @click="onCancel">Back</v-btn>
+            <v-btn v-if="canEdit" primary @click="onEdit">Edit</v-btn>
         </v-card-actions>
         <v-card-actions v-else-if="operation === 'edit' || operation === 'add'">
-            <v-btn default @click.native="onCancel">Cancel</v-btn>
-            <v-btn primary :class="{ 'btn--disabled': !isValid }" @click.native="onSave">Save</v-btn>
+            <v-btn default @click="onCancel">Cancel</v-btn>
+            <v-btn primary :class="{ 'btn--disabled': !isValid }" @click="onSave">Save</v-btn>
         </v-card-actions>
     </v-card>
 </template>
