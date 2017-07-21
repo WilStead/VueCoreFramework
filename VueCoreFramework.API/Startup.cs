@@ -113,6 +113,7 @@ namespace VueCoreFramework.API
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.Configure<AuthMessageSenderOptions>(Configuration.GetSection("AuthMessageSender"));
             services.Configure<AdminOptions>(Configuration.GetSection("AdminOptions"));
+            services.Configure<URLOptions>(Configuration.GetSection("URLs"));
         }
 
         /// <summary>
@@ -122,11 +123,13 @@ namespace VueCoreFramework.API
         /// <param name="env">An <see cref="IHostingEnvironment"/> used to set up configuration sources.</param>
         /// <param name="loggerFactory">Used to configure the logging system.</param>
         /// <param name="localization">Specifies options for the <see cref="RequestLocalizationMiddleware"/>.</param>
+        /// <param name="urls">Provides the URLs for the different hosts which form the application.</param>
         public void Configure(
             IApplicationBuilder app,
             IHostingEnvironment env,
             ILoggerFactory loggerFactory,
-            IOptions<RequestLocalizationOptions> localization)
+            IOptions<RequestLocalizationOptions> localization,
+            IOptions<URLOptions> urls)
         {
             loggerFactory.AddNLog();
             app.AddNLogWeb();
@@ -155,7 +158,7 @@ namespace VueCoreFramework.API
 
             app.UseIdentityServerAuthentication(new IdentityServerAuthenticationOptions
             {
-                Authority = URLs.AuthURL,
+                Authority = urls.Value.AuthURL,
                 ApiName = IdentityServerConfig.apiName,
                 RequireHttpsMetadata = true
             });

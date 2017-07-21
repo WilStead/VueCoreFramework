@@ -3,6 +3,11 @@
     /// <summary>
     /// Provides the URLs for the different hosts which form the application.
     /// </summary>
+    /// <remarks>
+    /// This static class is used by the Program files for self-hosting, when dependency injection
+    /// from settings is not yet available. When deploying to production, it may or may not be
+    /// necessary to update these, depending on how you are deploying and hosting.
+    /// </remarks>
     public static class URLs
     {
         /// <summary>

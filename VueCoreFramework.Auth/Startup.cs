@@ -1,11 +1,9 @@
-﻿using IdentityServer4.Services;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -103,10 +101,6 @@ namespace VueCoreFramework.Auth
                 options.Filters.Add(new RequireHttpsAttribute());
             })
             .AddDataAnnotationsLocalization();
-            services.Configure<MvcOptions>(options =>
-            {
-                options.Filters.Add(new CorsAuthorizationFilterFactory("default"));
-            });
 
             var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
             services.AddIdentityServer(options =>
@@ -128,6 +122,7 @@ namespace VueCoreFramework.Auth
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.Configure<AuthMessageSenderOptions>(Configuration.GetSection("AuthMessageSender"));
             services.Configure<AdminOptions>(Configuration.GetSection("AdminOptions"));
+            services.Configure<URLOptions>(Configuration.GetSection("URLs"));
         }
 
         /// <summary>
@@ -137,11 +132,13 @@ namespace VueCoreFramework.Auth
         /// <param name="env">An <see cref="IHostingEnvironment"/> used to set up configuration sources.</param>
         /// <param name="localization">Specifies options for the <see cref="RequestLocalizationMiddleware"/>.</param>
         /// <param name="loggerFactory">Used to configure the logging system.</param>
+        /// <param name="urls">Provides the URLs for the different hosts which form the application.</param>
         public void Configure(
             IApplicationBuilder app,
             IHostingEnvironment env,
             IOptions<RequestLocalizationOptions> localization,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            IOptions<URLOptions> urls)
         {
             loggerFactory.AddNLog();
             app.AddNLogWeb();
@@ -177,7 +174,7 @@ namespace VueCoreFramework.Auth
             });
 
             // Add IdentityServer data
-            DbInitialize.InitializeIdentitySever(app, Configuration["secretJwtKey"]);
+            DbInitialize.InitializeIdentitySever(app, Configuration["secretJwtKey"], true);
         }
     }
 }

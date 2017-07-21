@@ -58,23 +58,14 @@ namespace VueCoreFramework.Controllers
         /// <param name="forwardUrl">
         /// An optional redirect URL which may be used to load a specific page within the SPA.
         /// </param>
-        public IActionResult Index(string forwardUrl = "")
-        {
-            ViewData["ForwardUrl"] = forwardUrl;
-            return View();
-        }
-
-        /// <summary>
-        /// Automatically redirects to the login page of the SPA.
-        /// </summary>
         /// <param name="returnUrl">
         /// An optional redirect URL which will be passed to the login page.
         /// </param>
-        public IActionResult Login(string returnUrl = "")
+        public IActionResult Index(string forwardUrl = "", string returnUrl = "")
         {
-            ViewData["ForwardUrl"] = "login";
+            ViewData["ForwardUrl"] = forwardUrl;
             ViewData["ReturnUrl"] = returnUrl;
-            return View(nameof(Index));
+            return View();
         }
 
         /// <summary>
@@ -96,7 +87,8 @@ namespace VueCoreFramework.Controllers
         [Route("oidc/callback")]
         public IActionResult OidcCallback()
         {
-            return View();
+            ViewData["ForwardUrl"] = "oidc-callback";
+            return View(nameof(Index));
         }
 
         /// <summary>
@@ -105,7 +97,8 @@ namespace VueCoreFramework.Controllers
         [Route("oidc/callback_silent")]
         public IActionResult OidcSilentCallback()
         {
-            return View();
+            ViewData["ForwardUrl"] = "oidc-callback-silent";
+            return View(nameof(Index));
         }
     }
 }

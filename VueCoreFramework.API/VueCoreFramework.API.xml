@@ -435,6 +435,12 @@
             The main MVC controller for the API server.
             </summary>
         </member>
+        <member name="M:VueCoreFramework.API.Controllers.HomeController.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.URLOptions})">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.API.Controllers.HomeController"/>.
+            </summary>
+            <param name="urls">Provides the URLs for the different hosts which form the application.</param>
+        </member>
         <member name="M:VueCoreFramework.API.Controllers.HomeController.Index(System.String)">
             <summary>
             If a user navigates to the root of the API server, the user is automatically redirected
@@ -474,7 +480,7 @@
             </summary>
             <param name="services">A collection of service descriptors.</param>
         </member>
-        <member name="M:VueCoreFramework.API.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IHostingEnvironment,Microsoft.Extensions.Logging.ILoggerFactory,Microsoft.Extensions.Options.IOptions{Microsoft.AspNetCore.Builder.RequestLocalizationOptions})">
+        <member name="M:VueCoreFramework.API.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IHostingEnvironment,Microsoft.Extensions.Logging.ILoggerFactory,Microsoft.Extensions.Options.IOptions{Microsoft.AspNetCore.Builder.RequestLocalizationOptions},Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.URLOptions})">
             <summary>
             This method gets called by the runtime, and is used to configure the HTTP request pipeline.
             </summary>
@@ -482,6 +488,7 @@
             <param name="env">An <see cref="T:Microsoft.AspNetCore.Hosting.IHostingEnvironment"/> used to set up configuration sources.</param>
             <param name="loggerFactory">Used to configure the logging system.</param>
             <param name="localization">Specifies options for the <see cref="T:Microsoft.AspNetCore.Localization.RequestLocalizationMiddleware"/>.</param>
+            <param name="urls">Provides the URLs for the different hosts which form the application.</param>
         </member>
         <member name="T:VueCoreFramework.API.ViewModels.ConversationViewModel">
             <summary>

@@ -1,7 +1,7 @@
 ﻿import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import * as Api from '../../api';
-import { authMgr } from '../../authorization';
+import { authMgr, login } from '../../authorization';
 import * as Store from '../../store/store';
 import { checkResponse } from '../../router';
 import * as ErrorMsg from '../../error-msg';
@@ -240,10 +240,7 @@ export default class LoginComponent extends Vue {
                     }
                     throw new Error(response.statusText);
                 } else {
-                    authMgr.signinRedirect()
-                        .then(() => {
-                            this.$router.push(this.returnUrl || '/');
-                        });
+                    login(this.returnUrl);
                 }
                 this.submitting = false;
             })

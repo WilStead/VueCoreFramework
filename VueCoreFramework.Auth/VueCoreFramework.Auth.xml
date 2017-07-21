@@ -91,6 +91,12 @@
             <response code="403">Locked account.</response>
             <response code="200">OK</response>
         </member>
+        <member name="M:VueCoreFramework.Auth.Controllers.AccountController.Logout(System.String)">
+            <summary>
+            Called to log out. Redirects to the homepage.
+            </summary>
+            <param name="logoutId">An ID string which identifies the current user.</param>
+        </member>
         <member name="M:VueCoreFramework.Auth.Controllers.AccountController.Register(VueCoreFramework.Auth.ViewModels.RegisterViewModel)">
             <summary>
             Called to register a new user account with the provided credentials. User accounts cannot
@@ -173,7 +179,7 @@
             The main MVC controller for the auth server.
             </summary>
         </member>
-        <member name="M:VueCoreFramework.Auth.Controllers.HomeController.#ctor(Microsoft.AspNetCore.Identity.SignInManager{VueCoreFramework.Core.Models.ApplicationUser})">
+        <member name="M:VueCoreFramework.Auth.Controllers.HomeController.#ctor(Microsoft.AspNetCore.Identity.SignInManager{VueCoreFramework.Core.Models.ApplicationUser},Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.URLOptions})">
             <summary>
             Initializes a new instance of <see cref="T:VueCoreFramework.Auth.Controllers.HomeController"/>.
             </summary>
@@ -184,7 +190,7 @@
             redirected to the main SPA application's error page.
             </summary>
         </member>
-        <member name="M:VueCoreFramework.Auth.Controllers.HomeController.Index(System.String)">
+        <member name="M:VueCoreFramework.Auth.Controllers.HomeController.Index(System.String,System.String)">
             <summary>
             If a user navigates to the root of the auth server, the user is automatically redirected
             to the main SPA application's homepage.
@@ -348,7 +354,7 @@
             </summary>
             <param name="services">A collection of service descriptors.</param>
         </member>
-        <member name="M:VueCoreFramework.Auth.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IHostingEnvironment,Microsoft.Extensions.Options.IOptions{Microsoft.AspNetCore.Builder.RequestLocalizationOptions},Microsoft.Extensions.Logging.ILoggerFactory)">
+        <member name="M:VueCoreFramework.Auth.Startup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IHostingEnvironment,Microsoft.Extensions.Options.IOptions{Microsoft.AspNetCore.Builder.RequestLocalizationOptions},Microsoft.Extensions.Logging.ILoggerFactory,Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.URLOptions})">
             <summary>
             This method gets called by the runtime, and is used to configure the HTTP request pipeline.
             </summary>
@@ -356,6 +362,7 @@
             <param name="env">An <see cref="T:Microsoft.AspNetCore.Hosting.IHostingEnvironment"/> used to set up configuration sources.</param>
             <param name="localization">Specifies options for the <see cref="T:Microsoft.AspNetCore.Localization.RequestLocalizationMiddleware"/>.</param>
             <param name="loggerFactory">Used to configure the logging system.</param>
+            <param name="urls">Provides the URLs for the different hosts which form the application.</param>
         </member>
         <member name="T:VueCoreFramework.Auth.ViewModels.AuthorizationViewModel">
             <summary>

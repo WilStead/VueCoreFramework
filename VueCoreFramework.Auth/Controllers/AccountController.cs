@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using VueCoreFramework.Auth.ViewModels;
 using VueCoreFramework.Core.Configuration;
@@ -367,6 +368,18 @@ namespace VueCoreFramework.Auth.Controllers
 
             _logger.LogInformation(LogEvent.LOGIN, "User {USER} logged in.", user.Email);
             return Ok();
+        }
+
+        /// <summary>
+        /// Called to log out. Redirects to the homepage.
+        /// </summary>
+        /// <param name="logoutId">An ID string which identifies the current user.</param>
+        [HttpGet]
+        public async Task<IActionResult> Logout(string logoutId = "")
+        {
+            await _signInManager.SignOutAsync();
+            _logger.LogInformation(4, "User logged out.");
+            return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
         /// <summary>

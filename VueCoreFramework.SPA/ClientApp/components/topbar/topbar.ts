@@ -2,7 +2,7 @@
 import VueRouter from 'vue-router';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import * as Store from '../../store/store';
-import { authenticate, authMgr } from '../../authorization';
+import { authenticate, authMgr, logout } from '../../authorization';
 import * as moment from 'moment';
 
 @Component
@@ -41,9 +41,7 @@ export default class TopbarComponent extends Vue {
     }
 
     onLogout() {
-        this.signedIn = false;
-        this.$store.dispatch(Store.logout);
-        this.$router.push('/');
+        logout();
     }
 
     onToggleChat() {

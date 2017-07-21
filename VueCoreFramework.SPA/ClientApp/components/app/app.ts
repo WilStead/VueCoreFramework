@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import { Component } from 'vue-property-decorator';
-import { configureOidc } from '../../authorization';
+import { authMgr, configureOidc } from '../../authorization';
 import * as Api from '../../api';
 import * as Store from '../../store/store';
 import { ConversationViewModel, MessageViewModel, messaging } from '../../store/messaging';
@@ -64,8 +64,35 @@ export default class AppComponent extends Vue {
 
     mounted() {
         let forwardUrl = document.getElementById("forward-url").getAttribute("data-forward-url");
-        if (forwardUrl) {
-            this.$router.push(forwardUrl);
+        if (forwardUrl === "oidc-callback") {
+            authMgr.signinRedirectCallback()
+                .then(user => {
+                    if (user && user.state) {
+                        if (user.state.startsWith("http")) {
+                            if (user.state.startsWith(Api.urls.spaUrl)) {
+                                let local = user.state.substr(Api.urls.spaUrl.length - 1);
+                                this.$router.push(local);
+                            } else {
+                                this.$router.push('/'); // External redirects not allowed.
+                            }
+                        } else {
+                            this.$router.push(user.state);
+                        }
+                    } else {
+                        this.$router.push('/');
+                    }
+                });
+        } else if (forwardUrl === "oidc-callback-silent") {
+            authMgr.signinSilentCallback();
+        } else {
+            let returnUrl = document.getElementById("return-url").getAttribute("data-return-url");
+            if (forwardUrl) {
+                if (returnUrl) {
+                    this.$router.push({ path: forwardUrl, query: { returnUrl } });
+                } else {
+                    this.$router.push(forwardUrl);
+                }
+            }
         }
 
         if (this.groupRefreshTimeout === 0) {

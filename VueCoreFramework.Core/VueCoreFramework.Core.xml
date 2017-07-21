@@ -34,15 +34,16 @@
             The API client name for IdentityServer.
             </summary>
         </member>
-        <member name="F:VueCoreFramework.Core.Configuration.IdentityServerConfig.mvcClientName">
-            <summary>
-            The default MVC client name for IdentityServer.
-            </summary>
-        </member>
         <member name="F:VueCoreFramework.Core.Configuration.IdentityServerConfig.vueClientName">
             <summary>
             The default Vue client name for IdentityServer.
             </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Configuration.IdentityServerConfig.GetIdentityResources">
+            <summary>
+            Obtains a list of <see cref="T:IdentityServer4.Models.IdentityResource"/> objects for IdentityServer.
+            </summary>
+            <returns>A list of <see cref="T:IdentityServer4.Models.IdentityResource"/> objects for IdentityServer.</returns>
         </member>
         <member name="M:VueCoreFramework.Core.Configuration.IdentityServerConfig.GetApiResources(System.String)">
             <summary>
@@ -50,17 +51,11 @@
             </summary>
             <returns>A list of <see cref="T:IdentityServer4.Models.ApiResource"/> objects for IdentityServer.</returns>
         </member>
-        <member name="M:VueCoreFramework.Core.Configuration.IdentityServerConfig.GetClients(System.String)">
+        <member name="M:VueCoreFramework.Core.Configuration.IdentityServerConfig.GetClients(System.String,VueCoreFramework.Core.Configuration.URLOptions)">
             <summary>
             Obtains a list of <see cref="T:IdentityServer4.Models.Client"/> objects for IdentityServer.
             </summary>
             <returns>A list of <see cref="T:IdentityServer4.Models.Client"/> objects for IdentityServer.</returns>
-        </member>
-        <member name="M:VueCoreFramework.Core.Configuration.IdentityServerConfig.GetIdentityResources">
-            <summary>
-            Obtains a list of <see cref="T:IdentityServer4.Models.IdentityResource"/> objects for IdentityServer.
-            </summary>
-            <returns>A list of <see cref="T:IdentityServer4.Models.IdentityResource"/> objects for IdentityServer.</returns>
         </member>
         <member name="T:VueCoreFramework.Core.Configuration.LocalizationConfig">
             <summary>
@@ -72,10 +67,35 @@
             Retrieves a list of the <see cref="T:System.Globalization.CultureInfo"/> objects supported by this framework.
             </summary>
         </member>
+        <member name="T:VueCoreFramework.Core.Configuration.URLOptions">
+            <summary>
+            Provides the URLs for the different hosts which form the application.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Configuration.URLOptions.ApiURL">
+            <summary>
+            The URL of the API server.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Configuration.URLOptions.AuthURL">
+            <summary>
+            The URL of the authentication server.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Configuration.URLOptions.ClientURL">
+            <summary>
+            The URL of the default Vue client.
+            </summary>
+        </member>
         <member name="T:VueCoreFramework.Core.Configuration.URLs">
             <summary>
             Provides the URLs for the different hosts which form the application.
             </summary>
+            <remarks>
+            This static class is used by the Program files for self-hosting, when dependency injection
+            from settings is not yet available. When deploying to production, it may or may not be
+            necessary to update these, depending on how you are deploying and hosting.
+            </remarks>
         </member>
         <member name="F:VueCoreFramework.Core.Configuration.URLs.ApiURL">
             <summary>
@@ -411,7 +431,7 @@
             Seeds the application's database.
             </summary>
         </member>
-        <member name="M:VueCoreFramework.Core.Data.DbInitialize.InitializeIdentitySever(Microsoft.AspNetCore.Builder.IApplicationBuilder,System.String)">
+        <member name="M:VueCoreFramework.Core.Data.DbInitialize.InitializeIdentitySever(Microsoft.AspNetCore.Builder.IApplicationBuilder,System.String,System.Boolean)">
             <summary>
             Seeds the application's database with IdentityServer data.
             </summary>
@@ -1173,6 +1193,17 @@
             <param name="culture">A string indicating the current culture.</param>
             <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
             <returns>A ViewModel representing the updated item.</returns>
+        </member>
+        <member name="T:VueCoreFramework.Core.Extensions.DbSetExtensions">
+            <summary>
+            Custom extensions for <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1"/>.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Extensions.DbSetExtensions.Clear``1(Microsoft.EntityFrameworkCore.DbSet{``0})">
+            <summary>
+            Removes all rows in the set. WARNING: Not optimized for performance, intended only for
+            clearing seed and/or test data.
+            </summary>
         </member>
         <member name="T:VueCoreFramework.Core.Extensions.EnumExtensions">
             <summary>

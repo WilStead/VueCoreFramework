@@ -11,6 +11,7 @@ using System.Linq;
 using System.Security.Claims;
 using VueCoreFramework.Core.Configuration;
 using VueCoreFramework.Core.Data.Identity;
+using VueCoreFramework.Core.Extensions;
 using VueCoreFramework.Core.Models;
 
 namespace VueCoreFramework.Core.Data
@@ -68,23 +69,33 @@ namespace VueCoreFramework.Core.Data
         /// <summary>
         /// Seeds the application's database with IdentityServer data.
         /// </summary>
-        public static void InitializeIdentitySever(IApplicationBuilder app, string secret)
+        public static void InitializeIdentitySever(IApplicationBuilder app, string secret, bool replace)
         {
             using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
             {
                 serviceScope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>().Database.Migrate();
 
+                var urls = serviceScope.ServiceProvider.GetRequiredService<IOptions<URLOptions>>().Value;
+
                 var context = serviceScope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
                 context.Database.Migrate();
-                if (!context.Clients.Any())
+                if (replace)
                 {
-                    foreach (var client in IdentityServerConfig.GetClients(secret))
+                    context.Clients.Clear();
+                }
+                if (replace || !context.Clients.Any())
+                {
+                    foreach (var client in IdentityServerConfig.GetClients(secret, urls))
                     {
                         context.Clients.Add(client.ToEntity());
                     }
                     context.SaveChanges();
                 }
-                if (!context.IdentityResources.Any())
+                if (replace)
+                {
+                    context.IdentityResources.Clear();
+                }
+                if (replace || !context.IdentityResources.Any())
                 {
                     foreach (var resource in IdentityServerConfig.GetIdentityResources())
                     {
@@ -92,7 +103,11 @@ namespace VueCoreFramework.Core.Data
                     }
                     context.SaveChanges();
                 }
-                if (!context.ApiResources.Any())
+                if (replace)
+                {
+                    context.ApiResources.Clear();
+                }
+                if (replace || !context.ApiResources.Any())
                 {
                     foreach (var resource in IdentityServerConfig.GetApiResources(secret))
                     {

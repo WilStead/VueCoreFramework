@@ -5,13 +5,14 @@ import { PermissionData } from './store/userStore';
 import { JL } from 'jsnlog';
 import * as ErrorMsg from './error-msg';
 
-export let authMgr = undefined;
+export let authMgr: Oidc.UserManager;
+let config: Oidc.UserManagerSettings;
 export function configureOidc() {
     Oidc.Log.level = Oidc.Log.WARN;
     Oidc.Log.logger = JL("OIDC");
-    const config: Oidc.UserManagerSettings = {
+    config = {
         authority: Api.urls.authUrl,
-        client_id: "vue",
+        client_id: "vue.client",
         redirect_uri: `${Api.urls.spaUrl}oidc/callback`,
         silent_redirect_uri: `${Api.urls.spaUrl}oidc/silent_callback`,
         response_type: "id_token token",
@@ -20,7 +21,45 @@ export function configureOidc() {
         automaticSilentRenew: true
     };
     authMgr = new Oidc.UserManager(config);
-    window["_oidc_userMgr"] = authMgr;
+}
+
+function nonce() {
+    var guidHolder = 'xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx';
+    var hex = '0123456789abcdef';
+    var r = 0;
+    var guidResponse = "";
+    for (var i = 0; i < guidHolder.length; i++) {
+        if (guidHolder[i] !== '-' && guidHolder[i] !== '4') {
+            // each x and y needs to be random
+            r = Math.random() * 16 | 0;
+        }
+
+        if (guidHolder[i] === 'x') {
+            guidResponse += hex[r];
+        } else if (guidHolder[i] === 'y') {
+            // clock-seq-and-reserved first hex is filtered and remaining hex values are random
+            r &= 0x3; // bit and with 0011 to set pos 2 to zero ?0??
+            r |= 0x8; // set pos 3 to 1 as 1???
+            guidResponse += hex[r];
+        } else {
+            guidResponse += guidHolder[i];
+        }
+    }
+    return guidResponse;
+}
+
+export function login(returnUrl = '') {
+    let url = `connect/authorize?client_id=${config.client_id}&scope=${config.scope}&redirect_uri=${config.redirect_uri}&state=${returnUrl}&response_type=${config.response_type}&nonce=${nonce()}&prompt=none`;
+    Api.callAuth(url, {
+        credentials: 'include'
+    });
+}
+
+export function logout() {
+    authMgr.removeUser()
+        .then(() => {
+            Api.callAuth('Account/Logout');
+        });
 }
 
 /**

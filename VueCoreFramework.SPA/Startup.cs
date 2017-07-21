@@ -75,6 +75,8 @@ namespace VueCoreFramework
                 options.Filters.Add(new RequireHttpsAttribute());
             })
             .AddDataAnnotationsLocalization();
+
+            services.Configure<URLOptions>(Configuration.GetSection("URLs"));
         }
 
         /// <summary>
@@ -84,14 +86,14 @@ namespace VueCoreFramework
         /// <param name="env">An <see cref="IHostingEnvironment"/> used to set up configuration sources.</param>
         /// <param name="loggerFactory">Used to configure the logging system.</param>
         /// <param name="localization">Specifies options for the <see cref="RequestLocalizationMiddleware"/>.</param>
+        /// <param name="urls">Provides the URLs for the different hosts which form the application.</param>
         public void Configure(
             IApplicationBuilder app,
             IHostingEnvironment env,
             ILoggerFactory loggerFactory,
-            IOptions<RequestLocalizationOptions> localization)
+            IOptions<RequestLocalizationOptions> localization,
+            IOptions<URLOptions> urls)
         {
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-
             loggerFactory.AddNLog();
             app.AddNLogWeb();
             LogManager.Configuration.Variables["connectionString"] = Configuration.GetConnectionString("DefaultConnection");
@@ -145,28 +147,6 @@ namespace VueCoreFramework
             app.UseRewriter(options);
 
             app.UseRequestLocalization(localization.Value);
-
-            app.UseCookieAuthentication(new CookieAuthenticationOptions
-            {
-                AuthenticationScheme = "Cookies"
-            });
-            app.UseOpenIdConnectAuthentication(new OpenIdConnectOptions
-            {
-                AuthenticationScheme = "oidc",
-                SignInScheme = "Cookies",
-
-                Authority = URLs.AuthURL,
-                RequireHttpsMetadata = true,
-
-                ClientId = IdentityServerConfig.mvcClientName,
-                ClientSecret = Configuration["secretJwtKey"],
-
-                ResponseType = "code id_token",
-                Scope = { IdentityServerConfig.apiName, "offline_access" },
-
-                GetClaimsFromUserInfoEndpoint = true,
-                SaveTokens = true
-            });
 
             app.UseStaticFiles();
 
