@@ -5,12 +5,12 @@ export default {
     mixins: [abstractField],
     data() {
         let formats: Array<string> = this.schema.inputType.split(':');
-        let showYear = formats.indexOf('y') !== -1;
-        let showMonth = formats.indexOf('M') !== -1;
-        let showDay = formats.indexOf('d') !== -1;
-        let showHour = formats.indexOf('h') !== -1;
-        let showMinute = formats.indexOf('m') !== -1;
-        let showSecond = formats.indexOf('s') !== -1;
+        let showYear = formats.includes('y');
+        let showMonth = formats.includes('M');
+        let showDay = formats.includes('d');
+        let showHour = formats.includes('h');
+        let showMinute = formats.includes('m');
+        let showSecond = formats.includes('s');
 
         let max = moment.duration(this.schema.max);
         let min = moment.duration(this.schema.min);

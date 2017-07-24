@@ -108,9 +108,9 @@ export default class LoginComponent extends Vue {
             .then(response => response.json() as Promise<AuthProviders>)
             .then(data => {
                 if (data.providers) {
-                    this.authProviderFacebook = data.providers.indexOf('Facebook') !== -1;
-                    this.authProviderGoogle = data.providers.indexOf('Google') !== -1;
-                    this.authProviderMicrosoft = data.providers.indexOf('Microsoft') !== -1;
+                    this.authProviderFacebook = data.providers.includes('Facebook');
+                    this.authProviderGoogle = data.providers.includes('Google');
+                    this.authProviderMicrosoft = data.providers.includes('Microsoft');
                 }
             })
             .catch(error => {

@@ -196,14 +196,14 @@ export default class ManageUserComponent extends Vue {
             .then(response => response.json() as Promise<AuthProviders>)
             .then(data => {
                 if (data.providers) {
-                    this.authProviderFacebook = data.providers.indexOf('Facebook') !== -1;
-                    this.authProviderGoogle = data.providers.indexOf('Google') !== -1;
-                    this.authProviderMicrosoft = data.providers.indexOf('Microsoft') !== -1;
+                    this.authProviderFacebook = data.providers.includes('Facebook');
+                    this.authProviderGoogle = data.providers.includes('Google');
+                    this.authProviderMicrosoft = data.providers.includes('Microsoft');
                 }
                 if (data.userProviders) {
-                    this.authProviderFacebookUser = data.providers.indexOf('Facebook') !== -1;
-                    this.authProviderGoogleUser = data.providers.indexOf('Google') !== -1;
-                    this.authProviderMicrosoftUser = data.providers.indexOf('Microsoft') !== -1;
+                    this.authProviderFacebookUser = data.providers.includes('Facebook');
+                    this.authProviderGoogleUser = data.providers.includes('Google');
+                    this.authProviderMicrosoftUser = data.providers.includes('Microsoft');
                 }
             })
             .catch(error => {

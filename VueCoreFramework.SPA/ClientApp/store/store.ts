@@ -164,8 +164,8 @@ export const store = new Vuex.Store({
         setUser(state, user: Oidc.User) {
             state.userState.user = user;
             state.userState.username = user == null ? 'user' : user.profile.name;
-            state.userState.isAdmin = user == null ? false : user.profile.role.indexOf("Admin") !== -1;
-            state.userState.isSiteAdmin = user == null ? false : user.profile.role.indexOf("SiteAdmin") !== -1;
+            state.userState.isAdmin = user == null ? false : user.profile.role.includes("Admin");
+            state.userState.isSiteAdmin = user == null ? false : user.profile.role.includes("SiteAdmin");
         },
 
         /**

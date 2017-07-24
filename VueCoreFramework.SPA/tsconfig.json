@@ -8,7 +8,7 @@
     "sourceMap": true,
     "skipDefaultLibCheck": true,
     "types": [ "requirejs" ],
-    "lib": [ "dom", "es2015", "scripthost" ]
+    "lib": [ "dom", "es2017", "scripthost" ]
   },
   "exclude": [
       "bin",

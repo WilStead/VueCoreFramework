@@ -58,34 +58,33 @@ export const router = new VueRouter({
         }
     }
 });
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
     if (to.matched.some(record => record.meta.requiresAuthorize)) {
-        authorize(to)
-            .then(auth => {
-                if (auth === "login") {
-                    next({ path: '/login', query: { returnUrl: to.fullPath } });
-                } else if (auth === "unauthorized") {
-                    next({ path: '/error/401' });
-                } else {
-                    next();
-                }
-            })
-            .catch(error => {
-                ErrorMsg.logError("router.beforeEach", error);
+        try {
+            let auth = await authorize(to);
+            if (auth === "login") {
                 next({ path: '/login', query: { returnUrl: to.fullPath } });
-            });
+            } else if (auth === "unauthorized") {
+                next({ path: '/error/401' });
+            } else {
+                next();
+            }
+        } catch (error) {
+            ErrorMsg.logError("router.beforeEach", error);
+            next({ path: '/login', query: { returnUrl: to.fullPath } });
+        }
     } else if (to.matched.some(record => record.meta.requiresAuthenticate)) {
-        authenticate()
-            .then(auth => {
-                if (auth === "authorized") {
-                    next();
-                } else {
-                    next({ path: '/login', query: { returnUrl: to.fullPath } });
-                }
-            })
-            .catch(error => {
-                let err = error.message;
-            });
+        try {
+            let auth = await authenticate();
+            if (auth === "authorized") {
+                next();
+            } else {
+                next({ path: '/login', query: { returnUrl: to.fullPath } });
+            }
+        } catch (error) {
+            ErrorMsg.logError("router.beforeEach", error);
+            next({ path: '/login', query: { returnUrl: to.fullPath } });
+        };
     } else {
         next();
     }
