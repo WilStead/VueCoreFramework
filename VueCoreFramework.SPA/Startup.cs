@@ -13,8 +13,6 @@ using NLog;
 using NLog.Extensions.Logging;
 using NLog.Web;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IdentityModel.Tokens.Jwt;
 using VueCoreFramework.Core.Configuration;
 
 namespace VueCoreFramework

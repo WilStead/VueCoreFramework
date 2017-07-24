@@ -22,6 +22,7 @@ using VueCoreFramework.Core.Data.Identity;
 using VueCoreFramework.Core.Messages;
 using VueCoreFramework.Core.Models;
 using VueCoreFramework.Core.Services;
+using VueCoreFramework.Sample.Data;
 
 namespace VueCoreFramework.Auth.Controllers
 {
@@ -32,7 +33,7 @@ namespace VueCoreFramework.Auth.Controllers
     public class ManageController : Controller
     {
         private readonly AdminOptions _adminOptions;
-        private readonly ApplicationDbContext _context;
+        private readonly Sample.Data.ApplicationDbContext _context;
         private readonly IEmailSender _emailSender;
         private readonly IStringLocalizer<ErrorMessages> _errorLocalizer;
         private readonly RequestLocalizationOptions _localizationOptions;
@@ -47,7 +48,7 @@ namespace VueCoreFramework.Auth.Controllers
         /// </summary>
         public ManageController(
             IOptions<AdminOptions> adminOptions,
-            ApplicationDbContext context,
+            Sample.Data.ApplicationDbContext context,
             IEmailSender emailSender,
             IStringLocalizer<ErrorMessages> errorLocalizer,
             IOptions<RequestLocalizationOptions> localizationOptions,

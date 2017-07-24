@@ -16,15 +16,15 @@ using VueCoreFramework.Core.Models;
 namespace VueCoreFramework.Core.Data
 {
     /// <summary>
-    /// Handles operations with an <see cref="ApplicationDbContext"/> for a particular class.
+    /// Handles operations with an <see cref="VueCoreFrameworkDbContext"/> for a particular class.
     /// </summary>
     /// <typeparam name="T">
-    /// The class whose operations with the <see cref="ApplicationDbContext"/> are handled by this
+    /// The class whose operations with the <see cref="VueCoreFrameworkDbContext"/> are handled by this
     /// <see cref="Repository{T}"/>.
     /// </typeparam>
     public class Repository<T> : IRepository where T : class
     {
-        private readonly ApplicationDbContext _context;
+        private readonly VueCoreFrameworkDbContext _context;
         private List<FieldDefinition> _fieldDefinitions;
         private readonly bool _isMenuClass;
         private DbSet<T> items;
@@ -52,8 +52,8 @@ namespace VueCoreFramework.Core.Data
         /// <summary>
         /// Initializes a new instance of <see cref="Repository{T}"/>.
         /// </summary>
-        /// <param name="context">The <see cref="ApplicationDbContext"/> wrapped by this <see cref="Repository{T}"/>.</param>
-        public Repository(ApplicationDbContext context)
+        /// <param name="context">The <see cref="VueCoreFrameworkDbContext"/> wrapped by this <see cref="Repository{T}"/>.</param>
+        public Repository(VueCoreFrameworkDbContext context)
         {
             _context = context;
             EntityType = GetEntityType(context, typeof(T));
@@ -66,7 +66,7 @@ namespace VueCoreFramework.Core.Data
 
         /// <summary>
         /// Asynchronously creates a new instance of the repository's type and adds it to the <see
-        /// cref="ApplicationDbContext"/> instance.
+        /// cref="VueCoreFrameworkDbContext"/> instance.
         /// </summary>
         /// <param name="childProp">
         /// An optional navigation property which will be set on the new object.
@@ -199,7 +199,7 @@ namespace VueCoreFramework.Core.Data
         }
 
         /// <summary>
-        /// Asynchronously duplicates an entity in the <see cref="ApplicationDbContext"/>. Returns a
+        /// Asynchronously duplicates an entity in the <see cref="VueCoreFrameworkDbContext"/>. Returns a
         /// ViewModel representing the new copy.
         /// </summary>
         /// <param name="id">The primary key of the entity to be copied, as a string.</param>
@@ -349,7 +349,7 @@ namespace VueCoreFramework.Core.Data
         }
 
         /// <summary>
-        /// Enumerates all the entities in the <see cref="ApplicationDbContext"/>'s set, returning a
+        /// Enumerates all the entities in the <see cref="VueCoreFrameworkDbContext"/>'s set, returning a
         /// ViewModel representing each.
         /// </summary>
         /// <param name="culture">A string indicating the current culture.</param>
@@ -475,7 +475,7 @@ namespace VueCoreFramework.Core.Data
             return children.LongCount();
         }
 
-        private static IEntityType GetEntityType(ApplicationDbContext context, Type type)
+        private static IEntityType GetEntityType(VueCoreFrameworkDbContext context, Type type)
             => context.Model.FindEntityType(type.FullName);
 
         private FieldDefinition GetFieldDefinition(PropertyInfo pInfo, IStringLocalizer localizer)
@@ -1329,7 +1329,7 @@ namespace VueCoreFramework.Core.Data
         }
 
         /// <summary>
-        /// Asynchronously removes an entity from the <see cref="ApplicationDbContext"/>.
+        /// Asynchronously removes an entity from the <see cref="VueCoreFrameworkDbContext"/>.
         /// </summary>
         /// <param name="id">The primary key of the entity to remove, as a string.</param>
         public async Task RemoveAsync(string id)
@@ -1374,11 +1374,11 @@ namespace VueCoreFramework.Core.Data
         /// <summary>
         /// Asynchronously terminates a relationship bewteen two entities. If the child entity is
         /// made an orphan by the removal and is not a MenuClass object, it is then removed from the
-        /// <see cref="ApplicationDbContext"/> entirely.
+        /// <see cref="VueCoreFrameworkDbContext"/> entirely.
         /// </summary>
         /// <param name="id">The primary key of the child entity whose relationship is being severed, as a string.</param>
         /// <param name="childProp">The navigation property of the relationship being severed.</param>
-        /// <returns>True if the item is removed from the <see cref="ApplicationDbContext"/>, false if not.</returns>
+        /// <returns>True if the item is removed from the <see cref="VueCoreFrameworkDbContext"/>, false if not.</returns>
         public async Task<bool> RemoveFromParentAsync(string id, PropertyInfo childProp)
         {
             var childFK = EntityType.FindNavigation(childProp.Name).ForeignKey;
@@ -1422,7 +1422,7 @@ namespace VueCoreFramework.Core.Data
         }
 
         /// <summary>
-        /// Asynchronously removes a collection of entities from the <see cref="ApplicationDbContext"/>.
+        /// Asynchronously removes a collection of entities from the <see cref="VueCoreFrameworkDbContext"/>.
         /// </summary>
         /// <param name="ids">An enumeration of the primary keys of the entities to remove, as strings.</param>
         public async Task RemoveRangeAsync(IEnumerable<string> ids)
@@ -1434,13 +1434,13 @@ namespace VueCoreFramework.Core.Data
         /// <summary>
         /// Asynchronously terminates a relationship for multiple entities. If any child entity is
         /// made an orphan by the removal and is not a MenuClass object, it is then removed from the
-        /// <see cref="ApplicationDbContext"/> entirely.
+        /// <see cref="VueCoreFrameworkDbContext"/> entirely.
         /// </summary>
         /// <param name="ids">
         /// An enumeration of primary keys of child entities whose relationships are being severed, as strings.
         /// </param>
         /// <param name="childProp">The navigation property of the relationship being severed.</param>
-        /// <returns>A list of the Ids of any items removed from the <see cref="ApplicationDbContext"/>, as strings.</returns>
+        /// <returns>A list of the Ids of any items removed from the <see cref="VueCoreFrameworkDbContext"/>, as strings.</returns>
         public async Task<IList<string>> RemoveRangeFromParentAsync(IEnumerable<string> ids, PropertyInfo childProp)
         {
             var childFK = EntityType.FindNavigation(childProp.Name).ForeignKey;
@@ -1491,7 +1491,7 @@ namespace VueCoreFramework.Core.Data
         /// Asynchronously creates a relationship between two entities, replacing another entity
         /// which was previously in that relationship with another one. If the replaced entity is
         /// made an orphan by the removal and is not a MenuClass object, it is then removed from the
-        /// <see cref="ApplicationDbContext"/> entirely.
+        /// <see cref="VueCoreFrameworkDbContext"/> entirely.
         /// </summary>
         /// <param name="parentId">
         /// The primary key of the parent entity in the relationship, as a string.
@@ -1502,7 +1502,7 @@ namespace VueCoreFramework.Core.Data
         /// <param name="childProp">The navigation property of the relationship on the child entity.</param>
         /// <returns>
         /// The Id of the removed child, if it is removed from the <see
-        /// cref="ApplicationDbContext"/>, as a string; null if it is not.
+        /// cref="VueCoreFrameworkDbContext"/>, as a string; null if it is not.
         /// </returns>
         public async Task<string> ReplaceChildAsync(string parentId, string newChildId, PropertyInfo childProp)
         {
@@ -1524,7 +1524,7 @@ namespace VueCoreFramework.Core.Data
         /// Asynchronously creates a relationship between two entities, replacing another entity
         /// which was previously in that relationship with a new entity. If the replaced entity is
         /// made an orphan by the removal and is not a MenuClass object, it is then removed from the
-        /// <see cref="ApplicationDbContext"/> entirely.
+        /// <see cref="VueCoreFrameworkDbContext"/> entirely.
         /// </summary>
         /// <param name="parentId">The primary key of the parent entity in the relationship, as a string.</param>
         /// <param name="childProp">The navigation property of the relationship on the child entity.</param>
@@ -1546,7 +1546,7 @@ namespace VueCoreFramework.Core.Data
         }
 
         /// <summary>
-        /// Asynchronously updates an entity in the <see cref="ApplicationDbContext"/>. Returns a
+        /// Asynchronously updates an entity in the <see cref="VueCoreFrameworkDbContext"/>. Returns a
         /// ViewModel representing the updated item.
         /// </summary>
         /// <param name="item">The item to update.</param>

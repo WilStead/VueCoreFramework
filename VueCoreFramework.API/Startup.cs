@@ -15,9 +15,9 @@ using NLog;
 using NLog.Extensions.Logging;
 using NLog.Web;
 using VueCoreFramework.Core.Configuration;
-using VueCoreFramework.Core.Data;
 using VueCoreFramework.Core.Models;
 using VueCoreFramework.Core.Services;
+using VueCoreFramework.Sample.Data;
 
 namespace VueCoreFramework.API
 {
@@ -172,10 +172,12 @@ namespace VueCoreFramework.API
             });
 
             // Seed the database
-            DbInitialize.Initialize(app.ApplicationServices);
+            Core.Data.DbInitialize.Initialize(
+                app.ApplicationServices,
+                app.ApplicationServices.GetRequiredService<ApplicationDbContext>());
 
             // Add sample data
-            DbInitialize.InitializeSampleData(app.ApplicationServices);
+            DbInitialize.Initialize(app.ApplicationServices);
         }
     }
 }

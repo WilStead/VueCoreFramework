@@ -112,85 +112,6 @@
             The URL of the default Vue client.
             </summary>
         </member>
-        <member name="T:VueCoreFramework.Core.Data.ApplicationDbContext">
-            <summary>
-            The application's Entity Framework database context.
-            </summary>
-        </member>
-        <member name="P:VueCoreFramework.Core.Data.ApplicationDbContext.Logs">
-            <summary>
-            Gets or sets the <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1"/> of <see cref="T:VueCoreFramework.Core.Models.Log"/>s.
-            </summary>
-        </member>
-        <member name="P:VueCoreFramework.Core.Data.ApplicationDbContext.Messages">
-            <summary>
-            Gets or sets the <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1"/> of <see cref="T:VueCoreFramework.Core.Models.Message"/>s.
-            </summary>
-        </member>
-        <member name="P:VueCoreFramework.Core.Data.ApplicationDbContext.Airlines">
-            <summary>
-            Gets or sets the <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1"/> of <see cref="T:VueCoreFramework.Core.Models.Airline"/>s.
-            </summary>
-        </member>
-        <member name="P:VueCoreFramework.Core.Data.ApplicationDbContext.Cities">
-            <summary>
-            Gets or sets the <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1"/> of <see cref="T:VueCoreFramework.Core.Models.City"/>s.
-            </summary>
-        </member>
-        <member name="P:VueCoreFramework.Core.Data.ApplicationDbContext.Countries">
-            <summary>
-            Gets or sets the <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1"/> of <see cref="T:VueCoreFramework.Core.Models.Country"/>s.
-            </summary>
-        </member>
-        <member name="P:VueCoreFramework.Core.Data.ApplicationDbContext.Leaders">
-            <summary>
-            Gets or sets the <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1"/> of <see cref="T:VueCoreFramework.Core.Models.Leader"/>s.
-            </summary>
-        </member>
-        <member name="P:VueCoreFramework.Core.Data.ApplicationDbContext.RepositoryCache">
-            <summary>
-            Caches instances of <see cref="T:VueCoreFramework.Core.Data.IRepository"/> for the entity types tracked by this
-            <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
-            </summary>
-        </member>
-        <member name="M:VueCoreFramework.Core.Data.ApplicationDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{VueCoreFramework.Core.Data.ApplicationDbContext})">
-            <summary>
-            Initializes a new instance of <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
-            </summary>
-            <param name="options">The options to be used by a <see cref="T:Microsoft.EntityFrameworkCore.DbContext"/>.</param>
-        </member>
-        <member name="M:VueCoreFramework.Core.Data.ApplicationDbContext.GetRepositoryForType(System.Type)">
-            <summary>
-            Gets a <see cref="T:VueCoreFramework.Core.Data.Repository`1"/> for the given type, using a cached reference, if one
-            already exists.
-            </summary>
-            <param name="type">The entity type of the repository.</param>
-        </member>
-        <member name="M:VueCoreFramework.Core.Data.ApplicationDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <summary>
-            Configures the schema required for the framework.
-            </summary>
-            <param name="builder">The builder being used to construct the model for this context.</param>
-        </member>
-        <member name="M:VueCoreFramework.Core.Data.ApplicationDbContext.TryGetRepository(System.String,VueCoreFramework.Core.Data.IRepository@)">
-            <summary>
-            Attempts to get a <see cref="T:VueCoreFramework.Core.Data.Repository`1"/> instance for the given data type.
-            </summary>
-            <param name="dataType">The data type requested.</param>
-            <param name="repository">If successful, the <see cref="T:VueCoreFramework.Core.Data.Repository`1"/> instance.</param>
-            <returns>true if a <see cref="T:VueCoreFramework.Core.Data.Repository`1"/> instance could be obtained; otherwise false.</returns>
-        </member>
-        <member name="T:VueCoreFramework.Core.Data.ApplicationDbContextFactory">
-            <summary>
-            The <see cref="T:Microsoft.EntityFrameworkCore.Infrastructure.IDbContextFactory`1"/> for <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
-            </summary>
-        </member>
-        <member name="M:VueCoreFramework.Core.Data.ApplicationDbContextFactory.Create(Microsoft.EntityFrameworkCore.Infrastructure.DbContextFactoryOptions)">
-            <summary>
-            Creates a new instance of <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
-            </summary>
-            <returns>A new instance of <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.</returns>
-        </member>
         <member name="T:VueCoreFramework.Core.Data.Attributes.CulturalAttribute">
             <summary>
             Indicates that this property provides culture-specific values.
@@ -423,22 +344,17 @@
         </member>
         <member name="T:VueCoreFramework.Core.Data.DbInitialize">
             <summary>
-            Used to seed the application's database.
+            Used to seed the framework's database.
             </summary>
         </member>
-        <member name="M:VueCoreFramework.Core.Data.DbInitialize.Initialize(System.IServiceProvider)">
+        <member name="M:VueCoreFramework.Core.Data.DbInitialize.Initialize(System.IServiceProvider,VueCoreFramework.Core.Data.VueCoreFrameworkDbContext)">
             <summary>
-            Seeds the application's database.
+            Seeds the framework's database with core data.
             </summary>
         </member>
         <member name="M:VueCoreFramework.Core.Data.DbInitialize.InitializeIdentitySever(Microsoft.AspNetCore.Builder.IApplicationBuilder,System.String,System.Boolean)">
             <summary>
-            Seeds the application's database with IdentityServer data.
-            </summary>
-        </member>
-        <member name="M:VueCoreFramework.Core.Data.DbInitialize.InitializeSampleData(System.IServiceProvider)">
-            <summary>
-            Seeds the application's database with sample data.
+            Seeds the framework's database with IdentityServer data.
             </summary>
         </member>
         <member name="T:VueCoreFramework.Core.Data.Identity.Authorization">
@@ -583,7 +499,7 @@
         </member>
         <member name="T:VueCoreFramework.Core.Data.IRepository">
             <summary>
-            Represents operations with an <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> for a particular class.
+            Represents operations with an <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/> for a particular class.
             </summary>
         </member>
         <member name="P:VueCoreFramework.Core.Data.IRepository.EntityType">
@@ -604,7 +520,7 @@
         <member name="M:VueCoreFramework.Core.Data.IRepository.AddAsync(System.Reflection.PropertyInfo,System.String,System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
             <summary>
             Asynchronously creates a new instance of the repository's type and adds it to the <see
-            cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> instance.
+            cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/> instance.
             </summary>
             <param name="childProp">
             An optional navigation property which will be set on the new object.
@@ -628,7 +544,7 @@
         </member>
         <member name="M:VueCoreFramework.Core.Data.IRepository.DuplicateAsync(System.String,System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
             <summary>
-            Asynchronously duplicates an entity in the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>. Returns a
+            Asynchronously duplicates an entity in the <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>. Returns a
             ViewModel representing the new copy.
             </summary>
             <param name="id">The primary key of the entity to be copied, as a string.</param>
@@ -671,7 +587,7 @@
         </member>
         <member name="M:VueCoreFramework.Core.Data.IRepository.GetAllAsync(System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
             <summary>
-            Enumerates all the entities in the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>'s set, returning a
+            Enumerates all the entities in the <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>'s set, returning a
             ViewModel representing each.
             </summary>
             <param name="culture">A string indicating the current culture.</param>
@@ -799,7 +715,7 @@
         </member>
         <member name="M:VueCoreFramework.Core.Data.IRepository.RemoveAsync(System.String)">
             <summary>
-            Asynchronously removes an entity from the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
+            Asynchronously removes an entity from the <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>.
             </summary>
             <param name="id">The primary key of the entity to remove, as a string.</param>
         </member>
@@ -816,14 +732,14 @@
             <summary>
             Asynchronously terminates a relationship between two entities. If the child entity is
             made an orphan by the removal and is not a MenuClass object, it is then removed from the
-            <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/> entirely.
             </summary>
             <param name="id">The primary key of the child entity whose relationship is being severed, as a string.</param>
             <param name="childProp">The navigation property of the relationship being severed.</param>
         </member>
         <member name="M:VueCoreFramework.Core.Data.IRepository.RemoveRangeAsync(System.Collections.Generic.IEnumerable{System.String})">
             <summary>
-            Asynchronously removes a collection of entities from the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
+            Asynchronously removes a collection of entities from the <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>.
             </summary>
             <param name="ids">An enumeration of the primary keys of the entities to remove, as strings.</param>
         </member>
@@ -831,20 +747,20 @@
             <summary>
             Asynchronously terminates a relationship for multiple entities. If any child entity is
             made an orphan by the removal and is not a MenuClass object, it is then removed from the
-            <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/> entirely.
             </summary>
             <param name="ids">
             An enumeration of primary keys of child entities whose relationships are being severed, as strings.
             </param>
             <param name="childProp">The navigation property of the relationship being severed.</param>
-            <returns>A list of the Ids of any items removed from the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>, as strings.</returns>
+            <returns>A list of the Ids of any items removed from the <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>, as strings.</returns>
         </member>
         <member name="M:VueCoreFramework.Core.Data.IRepository.ReplaceChildAsync(System.String,System.String,System.Reflection.PropertyInfo)">
             <summary>
             Asynchronously creates a relationship between two entities, replacing another entity
             which was previously in that relationship with another one. If the replaced entity is
             made an orphan by the removal and is not a MenuClass object, it is then removed from the
-            <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/> entirely.
             </summary>
             <param name="parentId">
             The primary key of the parent entity in the relationship, as a string.
@@ -855,7 +771,7 @@
             <param name="childProp">The navigation property of the relationship on the child entity.</param>
             <returns>
             The Id of the removed child, if it is removed from the <see
-            cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>, as a string; null if it is not.
+            cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>, as a string; null if it is not.
             </returns>
         </member>
         <member name="M:VueCoreFramework.Core.Data.IRepository.ReplaceChildWithNewAsync(System.String,System.Reflection.PropertyInfo,System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
@@ -863,7 +779,7 @@
             Asynchronously creates a relationship between two entities, replacing another entity
             which was previously in that relationship with a new entity. If the replaced entity is
             made an orphan by the removal and is not a MenuClass object, it is then removed from the
-            <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/> entirely.
             </summary>
             <param name="parentId">The primary key of the parent entity in the relationship, as a string.</param>
             <param name="childProp">The navigation property of the relationship on the child entity.</param>
@@ -872,7 +788,7 @@
         </member>
         <member name="M:VueCoreFramework.Core.Data.IRepository.UpdateAsync(System.Object,System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
             <summary>
-            Asynchronously updates an entity in the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>. Returns a
+            Asynchronously updates an entity in the <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>. Returns a
             ViewModel representing the updated item.
             </summary>
             <param name="item">The item to update.</param>
@@ -882,10 +798,10 @@
         </member>
         <member name="T:VueCoreFramework.Core.Data.Repository`1">
             <summary>
-            Handles operations with an <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> for a particular class.
+            Handles operations with an <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/> for a particular class.
             </summary>
             <typeparam name="T">
-            The class whose operations with the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> are handled by this
+            The class whose operations with the <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/> are handled by this
             <see cref="T:VueCoreFramework.Core.Data.Repository`1"/>.
             </typeparam>
         </member>
@@ -908,16 +824,16 @@
             defined on the interface.
             </remarks>
         </member>
-        <member name="M:VueCoreFramework.Core.Data.Repository`1.#ctor(VueCoreFramework.Core.Data.ApplicationDbContext)">
+        <member name="M:VueCoreFramework.Core.Data.Repository`1.#ctor(VueCoreFramework.Core.Data.VueCoreFrameworkDbContext)">
             <summary>
             Initializes a new instance of <see cref="T:VueCoreFramework.Core.Data.Repository`1"/>.
             </summary>
-            <param name="context">The <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> wrapped by this <see cref="T:VueCoreFramework.Core.Data.Repository`1"/>.</param>
+            <param name="context">The <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/> wrapped by this <see cref="T:VueCoreFramework.Core.Data.Repository`1"/>.</param>
         </member>
         <member name="M:VueCoreFramework.Core.Data.Repository`1.AddAsync(System.Reflection.PropertyInfo,System.String,System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
             <summary>
             Asynchronously creates a new instance of the repository's type and adds it to the <see
-            cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> instance.
+            cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/> instance.
             </summary>
             <param name="childProp">
             An optional navigation property which will be set on the new object.
@@ -941,7 +857,7 @@
         </member>
         <member name="M:VueCoreFramework.Core.Data.Repository`1.DuplicateAsync(System.String,System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
             <summary>
-            Asynchronously duplicates an entity in the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>. Returns a
+            Asynchronously duplicates an entity in the <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>. Returns a
             ViewModel representing the new copy.
             </summary>
             <param name="id">The primary key of the entity to be copied, as a string.</param>
@@ -984,7 +900,7 @@
         </member>
         <member name="M:VueCoreFramework.Core.Data.Repository`1.GetAllAsync(System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
             <summary>
-            Enumerates all the entities in the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>'s set, returning a
+            Enumerates all the entities in the <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>'s set, returning a
             ViewModel representing each.
             </summary>
             <param name="culture">A string indicating the current culture.</param>
@@ -1112,7 +1028,7 @@
         </member>
         <member name="M:VueCoreFramework.Core.Data.Repository`1.RemoveAsync(System.String)">
             <summary>
-            Asynchronously removes an entity from the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
+            Asynchronously removes an entity from the <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>.
             </summary>
             <param name="id">The primary key of the entity to remove, as a string.</param>
         </member>
@@ -1129,15 +1045,15 @@
             <summary>
             Asynchronously terminates a relationship bewteen two entities. If the child entity is
             made an orphan by the removal and is not a MenuClass object, it is then removed from the
-            <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/> entirely.
             </summary>
             <param name="id">The primary key of the child entity whose relationship is being severed, as a string.</param>
             <param name="childProp">The navigation property of the relationship being severed.</param>
-            <returns>True if the item is removed from the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>, false if not.</returns>
+            <returns>True if the item is removed from the <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>, false if not.</returns>
         </member>
         <member name="M:VueCoreFramework.Core.Data.Repository`1.RemoveRangeAsync(System.Collections.Generic.IEnumerable{System.String})">
             <summary>
-            Asynchronously removes a collection of entities from the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
+            Asynchronously removes a collection of entities from the <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>.
             </summary>
             <param name="ids">An enumeration of the primary keys of the entities to remove, as strings.</param>
         </member>
@@ -1145,20 +1061,20 @@
             <summary>
             Asynchronously terminates a relationship for multiple entities. If any child entity is
             made an orphan by the removal and is not a MenuClass object, it is then removed from the
-            <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/> entirely.
             </summary>
             <param name="ids">
             An enumeration of primary keys of child entities whose relationships are being severed, as strings.
             </param>
             <param name="childProp">The navigation property of the relationship being severed.</param>
-            <returns>A list of the Ids of any items removed from the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>, as strings.</returns>
+            <returns>A list of the Ids of any items removed from the <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>, as strings.</returns>
         </member>
         <member name="M:VueCoreFramework.Core.Data.Repository`1.ReplaceChildAsync(System.String,System.String,System.Reflection.PropertyInfo)">
             <summary>
             Asynchronously creates a relationship between two entities, replacing another entity
             which was previously in that relationship with another one. If the replaced entity is
             made an orphan by the removal and is not a MenuClass object, it is then removed from the
-            <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/> entirely.
             </summary>
             <param name="parentId">
             The primary key of the parent entity in the relationship, as a string.
@@ -1169,7 +1085,7 @@
             <param name="childProp">The navigation property of the relationship on the child entity.</param>
             <returns>
             The Id of the removed child, if it is removed from the <see
-            cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>, as a string; null if it is not.
+            cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>, as a string; null if it is not.
             </returns>
         </member>
         <member name="M:VueCoreFramework.Core.Data.Repository`1.ReplaceChildWithNewAsync(System.String,System.Reflection.PropertyInfo,System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
@@ -1177,7 +1093,7 @@
             Asynchronously creates a relationship between two entities, replacing another entity
             which was previously in that relationship with a new entity. If the replaced entity is
             made an orphan by the removal and is not a MenuClass object, it is then removed from the
-            <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/> entirely.
             </summary>
             <param name="parentId">The primary key of the parent entity in the relationship, as a string.</param>
             <param name="childProp">The navigation property of the relationship on the child entity.</param>
@@ -1186,13 +1102,72 @@
         </member>
         <member name="M:VueCoreFramework.Core.Data.Repository`1.UpdateAsync(System.Object,System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
             <summary>
-            Asynchronously updates an entity in the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>. Returns a
+            Asynchronously updates an entity in the <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>. Returns a
             ViewModel representing the updated item.
             </summary>
             <param name="item">The item to update.</param>
             <param name="culture">A string indicating the current culture.</param>
             <param name="localizer">The current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
             <returns>A ViewModel representing the updated item.</returns>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext">
+            <summary>
+            VueCoreFramework's core Entity Framework database context.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext.Logs">
+            <summary>
+            Gets or sets the <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1"/> of <see cref="T:VueCoreFramework.Core.Models.Log"/>s.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext.Messages">
+            <summary>
+            Gets or sets the <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1"/> of <see cref="T:VueCoreFramework.Core.Models.Message"/>s.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext.RepositoryCache">
+            <summary>
+            Caches instances of <see cref="T:VueCoreFramework.Core.Data.IRepository"/> for the entity types tracked by this
+            <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions)">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>.
+            </summary>
+            <param name="options">The options to be used by a <see cref="T:Microsoft.EntityFrameworkCore.DbContext"/>.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext.GetRepositoryForType(System.Type)">
+            <summary>
+            Gets a <see cref="T:VueCoreFramework.Core.Data.Repository`1"/> for the given type, using a cached reference, if one
+            already exists.
+            </summary>
+            <param name="type">The entity type of the repository.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <summary>
+            Configures the schema required for the framework.
+            </summary>
+            <param name="builder">The builder being used to construct the model for this context.</param>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext.TryGetRepository(System.String,VueCoreFramework.Core.Data.IRepository@)">
+            <summary>
+            Attempts to get a <see cref="T:VueCoreFramework.Core.Data.Repository`1"/> instance for the given data type.
+            </summary>
+            <param name="dataType">The data type requested.</param>
+            <param name="repository">If successful, the <see cref="T:VueCoreFramework.Core.Data.Repository`1"/> instance.</param>
+            <returns>true if a <see cref="T:VueCoreFramework.Core.Data.Repository`1"/> instance could be obtained; otherwise false.</returns>
+        </member>
+        <member name="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContextFactory">
+            <summary>
+            The <see cref="T:Microsoft.EntityFrameworkCore.Infrastructure.IDbContextFactory`1"/> for <see cref="N:VueCoreFramework"/>.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Data.VueCoreFrameworkDbContextFactory.Create(Microsoft.EntityFrameworkCore.Infrastructure.DbContextFactoryOptions)">
+            <summary>
+            Creates a new instance of <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>.
+            </summary>
+            <returns>A new instance of <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>.</returns>
         </member>
         <member name="T:VueCoreFramework.Core.Extensions.DbSetExtensions">
             <summary>
@@ -1323,316 +1298,6 @@
             than deleted to prevent re-registration with the same information. Since only verified
             email accounts are allowed access, a repeat offender must at least go to the trouble of
             creating new valid email accounts in order to create new site accounts.
-            </remarks>
-        </member>
-        <member name="T:VueCoreFramework.Core.Models.Airline">
-            <summary>
-            A <see cref="T:VueCoreFramework.Core.Models.DataItem"/> representing an airline.
-            </summary>
-            <remarks>
-            Note that Airlines are being nested within the Country category, although they are both
-            MenuClass types, and in fact the Airline type is a peer of Country, which can be created and
-            deleted independently of any Countries. MenuClass types can be organized in the framework
-            menu in any order and hierarchy, regardless of the database relationships they share (if
-            any).
-            </remarks>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.Airline.Countries">
-            <summary>
-            The countries in which the airline operates.
-            </summary>
-            <remarks>
-            It is not necessary to hide either side of a many-to-many relationship. Here, airlines
-            have been made conceptual children of countries: nested in their menu and accessible from
-            their form, but not vice-versa. This is an example of a conceptual hierarchy being
-            created in the framework to simplify the user experience, which does not represent the
-            data structure exactly.
-            </remarks>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.Airline.International">
-            <summary>
-            Indicates whether the airline offers international flights.
-            </summary>
-            <remarks>
-            Obviously this would be a caluclated property in a real application. It is implemented in
-            this way for the purpose of demonstrating nullable boolean fields. The Description
-            property of the Display Attribute is used to set help text.
-            </remarks>
-        </member>
-        <member name="T:VueCoreFramework.Core.Models.AirlineCountry">
-            <summary>
-            The many-to-many join table entity class which joins Airlines to Countries.
-            </summary>
-            <remarks>
-            The SPA framework is able to recognize and interpret many-to-many join tables, but only when
-            their only properties are a pair of navigation properties and foreign keys. A many-to-many
-            join table with additional properties of its own will not be recognized by the SPA framework
-            as a join table, but as an entity class unto itself, and will model each navigation as a
-            one-to-many relationship from that class. This is likely to be the desired behavior in most
-            cases anyhow, since additional properties will usually mean that such classes should be
-            visible and editable on tables and forms of their own, not handled 'invisibly' as join tables.
-            </remarks>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.AirlineCountry.Airline">
-            <summary>
-            The <see cref="T:VueCoreFramework.Core.Models.Airline"/> referred to by this relationship.
-            </summary>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.AirlineCountry.AirlineId">
-            <summary>
-            The foreign key for <see cref="P:VueCoreFramework.Core.Models.AirlineCountry.Airline"/>.
-            </summary>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.AirlineCountry.Country">
-            <summary>
-            The <see cref="T:VueCoreFramework.Core.Models.Country"/> referred to by this relationship.
-            </summary>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.AirlineCountry.CountryId">
-            <summary>
-            The foreign key for <see cref="P:VueCoreFramework.Core.Models.AirlineCountry.Country"/>.
-            </summary>
-        </member>
-        <member name="T:VueCoreFramework.Core.Models.CityTransit">
-            <summary>
-            Types of city transportation.
-            </summary>
-            <remarks>
-            A Flags enum is represented by the framework as a multiselect input, allowing 0 or more
-            selections. A 'None' value (0) is not required for the framework, and will be a functionless
-            placeholder in the dropdown (selecting it will have no effect).
-            </remarks>
-        </member>
-        <member name="F:VueCoreFramework.Core.Models.CityTransit.BusStation">
-            <remarks>
-            Description can be used to set the display value used in the dropdown. The name of the
-            value is used otherwise.
-            </remarks>
-        </member>
-        <member name="T:VueCoreFramework.Core.Models.City">
-            <summary>
-            A <see cref="T:VueCoreFramework.Core.Models.NamedDataItem"/> representing a city.
-            </summary>
-            <remarks>
-            Because this class doesn't have the <see cref="T:VueCoreFramework.Core.Data.Attributes.MenuClassAttribute"/>, it will not appear in
-            the menu of the SPA, and items of this type will therefore only be available to view or edit
-            as children of another object (a <see cref="T:VueCoreFramework.Core.Models.Country"/>, in this case). The
-            DashboardFormContent property indicates that a custom component exists which will be
-            displayed above data forms when viewing cities.
-            </remarks>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.City.LocalTimeAtGMTMidnight">
-            <summary>
-            The local time in the city at GMT midnight.
-            </summary>
-            <remarks>
-            The DataType can control the type of field displayed in forms. Time will present a time
-            picker alone. Without this specification, a DateTime property would be represented by
-            both date and timne pickers.
-            </remarks>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.City.Population">
-            <summary>
-            The population of the city.
-            </summary>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.City.Transit">
-            <summary>
-            The types of transportation available in the city.
-            </summary>
-            <remarks>
-            A Flags enum property is represented by the framework as a multiselect input. In a data
-            table, no selection will be displayed as '[None]', a selection with a valid name or
-            description will be displayed, and any other selection (e.g. a combination of Flags
-            values) will be displayed as '[...]', to avoid the expensive operations required to
-            validate and break down the flag value. For this reason, it may be best to hide Flags
-            enums in tables when it is expected that multiple selections will be common, as is done
-            here, to avoid a column full of unhelpful placeholder text. When single selections are
-            expected to be more common, the field can be left visible so that the named selections
-            can be shown in tables.
-            </remarks>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.City.Country">
-            <summary>
-            The country to which this city belongs.
-            </summary>
-            <remarks>
-            It is not necessary to hide inverse references on child objects (a field with a view/edit
-            option will be generated). However, it can make views cleaner when the child object has
-            just one parent, since the parent object can always be accessed from the child by going
-            back or cancelling the current operation, making a reverse navigation field redundant. In
-            cases where a child may be in relationships to different parents, visible reverse
-            navigation fields can be helpful to browse among the related entities.
-            </remarks>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.City.CountryId">
-            <summary>
-            The foreign key for <see cref="P:VueCoreFramework.Core.Models.City.Country"/>.
-            </summary>
-            <remarks>
-            Although Entity Framework can automatically create foreign keys, the SPA framework
-            requires explicitly defined foreign keys for one-to-one and many-to-one relationships.
-            Foreign key properties are never shown by the framework, so it isn't necessary to mark it
-            as hidden.
-            </remarks>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.City.IsCapitol">
-            <summary>
-            Indicates that this city is the capitol of the country.
-            </summary>
-            <remarks>
-            Since only one city may be the capitol, but there is no way to enforce such a constraint
-            with the Entity Framework and VueCoreFramework Attribute decoration system, a custom
-            control is provided on the City form to perform this function instead. Therefore, it is
-            hidden from the normal form (but not in tables).
-            </remarks>
-        </member>
-        <member name="T:VueCoreFramework.Core.Models.Country">
-            <summary>
-            A <see cref="T:VueCoreFramework.Core.Models.NamedDataItem"/> representing a country.
-            </summary>
-            <remarks>
-            Because this class is decorated with the MenuClass attribute, it will appear in the
-            SPA framework's displayed menu.
-            </remarks>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.Country.Airlines">
-            <summary>
-            The airlines operating in the country.
-            </summary>
-            <remarks>
-            A many-to-many relationship with another MenuClass entity. AirlineCountry is a
-            many-to-many join table entity class. Navigation properties must have the JsonIgnore
-            Attribute to prevent the model from attempting to set its value to the placeholder text
-            used in the ViewModel. It isn't necesary to hide navigation properties in data tables,
-            but since all a table will show is '[None]' for an empty collection and '[...]' for a
-            non-empty collection, it will usually provide a better user experience to avoid filling a
-            column with such placeholder text. It has a property constructor in order to avoid a null
-            collection during certain framework operations; this is a requirement of all collection
-            properties for the SPA framework.
-            </remarks>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.Country.EpiIndex">
-            <summary>
-            The EPI Index of the country.
-            </summary>
-            <remarks>
-            The Display Attribute is used to control the decoration of the field. Prompt will set
-            placeholder text for most fields. GroupName can be used to group fields together under a
-            heading. Range can be used for numeric, text, DateTime, or TimeSpan fields. For text
-            fields, it indicates required length.
-            </remarks>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.Country.FlagPrimaryColor">
-            <summary>
-            The main color of the country's flag.
-            </summary>
-            <remarks>
-            The 'Color' custom DataType is special in the SPA framework, and will generate a color
-            picker control in edit forms. The data is represented as a 7-character hex string
-            (#000000), and this raw value is shown on tables (which only display text, not rich
-            content like colors). The field is hidden from tables here to avoid such a
-            non-user-friendly display format, but that is not required. Display Name is used to set a
-            label for the input group (color fields do not use placeholder text).
-            </remarks>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.Country.Capitol">
-            <summary>
-            The country's capitol city.
-            </summary>
-            <remarks>
-            This is a computed property which finds the child with the relevant property. Since it is
-            a reference to an entity type, but is not an actual Entity Framework navigation property,
-            VueCoreFramework will show it as a read-only label.
-            </remarks>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.Country.Cities">
-            <summary>
-            The cities of the country.
-            </summary>
-            <remarks>
-            A many-to-one relationship with a child object.
-            </remarks>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.Country.Leader">
-            <summary>
-            The country's head of government.
-            </summary>
-            <remarks>
-            A one-to-one relationship with a child object.
-            </remarks>
-        </member>
-        <member name="T:VueCoreFramework.Core.Models.MaritalStatus">
-            <summary>
-            Types of marital status.
-            </summary>
-            <remarks>
-            A non-Flags enum is represented by the framework as a select input, allowing a single
-            selection. A 'None' entry, if present, will be treated the same as any other selection. The
-            selection control will not supply a 'None' or other unset value if the enum does not contain
-            one. The framework also will not add an unset selection placeholder for Nullable Enum
-            properties, in order to avoid duplicating any existing 'None' entry. For this reason Nullable
-            Enum properties are not feasible with the SPA framework (they will not cause any errors, but
-            it will not be possible to preserve nulls; updates from the SPA will always contain a value
-            for the property). Use a 'None' value in your enum if you wish an unset value to be
-            represented in your data, instead of making the property nullable.
-            </remarks>
-        </member>
-        <member name="T:VueCoreFramework.Core.Models.Leader">
-            <summary>
-            A <see cref="T:VueCoreFramework.Core.Models.NamedDataItem"/> representing a country's head of government.
-            </summary>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.Leader.Age">
-            <summary>
-            The age of the leader.
-            </summary>
-            <remarks>
-            In a real application this would surely be computed from birthdate; it is provided here
-            purely for the demonstration of numeric input fields.
-            </remarks>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.Leader.Birthdate">
-            <summary>
-            The birthdate of the leader.
-            </summary>
-            <remarks>
-            A DataType of Date is represented in forms by a date picker. The time portion is ignored.
-            Because this is a nullable property, the field will also have the option to set a null
-            value rather than a date.
-            </remarks>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.Leader.Country">
-            <summary>
-            The country represented by this leader.
-            </summary>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.Leader.CountryId">
-            <summary>
-            Foreign key for <see cref="P:VueCoreFramework.Core.Models.Leader.Country"/>
-            </summary>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.Leader.MaritalStatus">
-            <summary>
-            The marital status of the leader.
-            </summary>
-        </member>
-        <member name="P:VueCoreFramework.Core.Models.Leader.TimeInOfficeTicks">
-            <summary>
-            Time in office (as a Ticks value).
-            </summary>
-            <remarks>
-            Although the SPA framework can handle TimeSpan properties, SQL databases cannot store
-            TimeSpans >= 24 hours, so the SPA framework can also interpret long values as TimeSpan
-            Ticks by indicating the Duration DataType. Display Description is used to set hint text
-            for the field. The DisplayFormat DataFormatString can be used to indicate which values of
-            the TimeSpan will be displayed (and available for editing); it must take the form
-            'y:M:d:h:m:s' representing years, months, days, hours, minutes, seconds (including
-            fractional seconds). Any number of indicators may be omitted from the beginning or end
-            (e.g. the format below shows only years, months, and days; not hours, minutes, or
-            seconds), but omitting any in the middle is disregarded (since overflow from a low unit
-            must be shown and editable with in-between units). Note that Range for a Duration uses
-            TimeSpan units, even when the property is a long.
             </remarks>
         </member>
         <member name="T:VueCoreFramework.Core.Models.DataItem">

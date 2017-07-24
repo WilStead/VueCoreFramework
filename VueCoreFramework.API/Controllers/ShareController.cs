@@ -11,11 +11,11 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using VueCoreFramework.API.ViewModels;
 using VueCoreFramework.Core.Configuration;
-using VueCoreFramework.Core.Data;
 using VueCoreFramework.Core.Data.Identity;
 using VueCoreFramework.Core.Extensions;
 using VueCoreFramework.Core.Messages;
 using VueCoreFramework.Core.Models;
+using VueCoreFramework.Sample.Data;
 
 namespace VueCoreFramework.Controllers
 {

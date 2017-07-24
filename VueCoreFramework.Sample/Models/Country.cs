@@ -5,8 +5,9 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using VueCoreFramework.Core.Data.Attributes;
+using VueCoreFramework.Core.Models;
 
-namespace VueCoreFramework.Core.Models
+namespace VueCoreFramework.Sample.Models
 {
     /// <summary>
     /// A <see cref="NamedDataItem"/> representing a country.

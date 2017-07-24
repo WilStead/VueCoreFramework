@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using VueCoreFramework.Core.Data.Attributes;
+using VueCoreFramework.Core.Models;
 
-namespace VueCoreFramework.Core.Models
+namespace VueCoreFramework.Sample.Models
 {
     /// <summary>
     /// A <see cref="DataItem"/> representing an airline.

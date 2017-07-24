@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\VueCoreFramework.Core\VueCoreFramework.Core.csproj" />
+    <ProjectReference Include="..\VueCoreFramework.Sample\VueCoreFramework.Sample.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="nlog.config">

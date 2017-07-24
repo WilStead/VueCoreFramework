@@ -21,6 +21,7 @@ using VueCoreFramework.Core.Data.Identity;
 using VueCoreFramework.Core.Extensions;
 using VueCoreFramework.Core.Messages;
 using VueCoreFramework.Core.Models;
+using VueCoreFramework.Sample.Data;
 
 namespace VueCoreFramework.API.Controllers
 {
@@ -32,7 +33,7 @@ namespace VueCoreFramework.API.Controllers
     public class DataController : Controller
     {
         private readonly AdminOptions _adminOptions;
-        private readonly ApplicationDbContext _context;
+        private readonly Sample.Data.ApplicationDbContext _context;
         private readonly IStringLocalizer<ErrorMessages> _errorLocalizer;
         private readonly ILogger<DataController> _logger;
         private readonly IStringLocalizer<EmailMessages> _emailLocalizer;
@@ -45,7 +46,7 @@ namespace VueCoreFramework.API.Controllers
         /// </summary>
         public DataController(
             IOptions<AdminOptions> adminOptions,
-            ApplicationDbContext context,
+            Sample.Data.ApplicationDbContext context,
             IStringLocalizer<ErrorMessages> errorLocalizer,
             ILogger<DataController> logger,
             IStringLocalizer<EmailMessages> emailLocalizer,
@@ -65,7 +66,7 @@ namespace VueCoreFramework.API.Controllers
 
         /// <summary>
         /// Called to create a new instance of <paramref name="dataType"/> and add it to the <see
-        /// cref="ApplicationDbContext"/> instance.
+        /// cref="Sample.Data.ApplicationDbContext"/> instance.
         /// </summary>
         /// <param name="dataType">The type of entity to add.</param>
         /// <param name="childProp">
@@ -207,7 +208,7 @@ namespace VueCoreFramework.API.Controllers
         }
 
         /// <summary>
-        /// Called to duplicate an entity in the <see cref="ApplicationDbContext"/>. Returns a
+        /// Called to duplicate an entity in the <see cref="Sample.Data.ApplicationDbContext"/>. Returns a
         /// ViewModel representing the new copy.
         /// </summary>
         /// <param name="dataType">The type of entity to find.</param>
@@ -334,7 +335,7 @@ namespace VueCoreFramework.API.Controllers
 
         /// <summary>
         /// Called to retrieve ViewModels representing all the entities in the <see
-        /// cref="ApplicationDbContext"/>'s set.
+        /// cref="Sample.Data.ApplicationDbContext"/>'s set.
         /// </summary>
         /// <param name="dataType">The type of entities to get.</param>
         /// <param name="culture">The name of the requested culture. Taken from the Accept-Language header.</param>
@@ -938,7 +939,7 @@ namespace VueCoreFramework.API.Controllers
         }
 
         /// <summary>
-        /// Called to remove an entity from the <see cref="ApplicationDbContext"/>.
+        /// Called to remove an entity from the <see cref="Sample.Data.ApplicationDbContext"/>.
         /// </summary>
         /// <param name="dataType">The type of entity to remove.</param>
         /// <param name="id">The primary key of the entity to remove.</param>
@@ -1069,7 +1070,7 @@ namespace VueCoreFramework.API.Controllers
         /// <summary>
         /// Called to terminate a relationship between two entities. If the child entity is made an
         /// orphan by the removal and is not a MenuClass object, it is then removed from the <see
-        /// cref="ApplicationDbContext"/> entirely.
+        /// cref="Sample.Data.ApplicationDbContext"/> entirely.
         /// </summary>
         /// <param name="dataType">The type of the child entity.</param>
         /// <param name="id">The primary key of the child entity whose relationship is being severed.</param>
@@ -1144,7 +1145,7 @@ namespace VueCoreFramework.API.Controllers
         }
 
         /// <summary>
-        /// Called to remove a collection of entities from the <see cref="ApplicationDbContext"/>.
+        /// Called to remove a collection of entities from the <see cref="Sample.Data.ApplicationDbContext"/>.
         /// </summary>
         /// <param name="dataType">The type of entity to remove.</param>
         /// <param name="ids">The primary keys of the entities to remove.</param>
@@ -1207,7 +1208,7 @@ namespace VueCoreFramework.API.Controllers
         /// <summary>
         /// Called to terminate a relationship for multiple entities. If any child entity is made an
         /// orphan by the removal and is not a MenuClass object, it is then removed from the <see
-        /// cref="ApplicationDbContext"/> entirely.
+        /// cref="Sample.Data.ApplicationDbContext"/> entirely.
         /// </summary>
         /// <param name="dataType">The type of the child entity.</param>
         /// <param name="childProp">The navigation property of the relationship being severed.</param>
@@ -1288,7 +1289,7 @@ namespace VueCoreFramework.API.Controllers
         /// Called to create a relationship between two entities, replacing another entity which was
         /// previously in that relationship with another one. If the replaced entity is made an
         /// orphan by the removal and is not a MenuClass object, it is then removed from the <see
-        /// cref="ApplicationDbContext"/> entirely.
+        /// cref="Sample.Data.ApplicationDbContext"/> entirely.
         /// </summary>
         /// <param name="dataType">The type of the parent entity.</param>
         /// <param name="parentId">The primary key of the parent entity in the relationship.</param>
@@ -1369,7 +1370,7 @@ namespace VueCoreFramework.API.Controllers
         /// Called to create a relationship between two entities, replacing another entity which was
         /// previously in that relationship with a new entity. If the replaced entity is made an
         /// orphan by the removal and is not a MenuClass object, it is then removed from the <see
-        /// cref="ApplicationDbContext"/> entirely.
+        /// cref="Sample.Data.ApplicationDbContext"/> entirely.
         /// </summary>
         /// <param name="dataType">The type of the parent entity.</param>
         /// <param name="parentId">The primary key of the parent entity in the relationship.</param>
@@ -1479,7 +1480,7 @@ namespace VueCoreFramework.API.Controllers
         }
 
         /// <summary>
-        /// Called to update an entity in the <see cref="ApplicationDbContext"/>.
+        /// Called to update an entity in the <see cref="Sample.Data.ApplicationDbContext"/>.
         /// </summary>
         /// <param name="dataType">The type of entity to update.</param>
         /// <param name="item">The item to update.</param>

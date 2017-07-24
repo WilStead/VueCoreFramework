@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Metadata;
 
-namespace VueCoreFramework.Core.Migrations
+namespace VueCoreFramework.Sample.Migrations
 {
 #pragma warning disable CS1591
     public partial class Initialcreate : Migration
@@ -39,19 +39,6 @@ namespace VueCoreFramework.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Airlines",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(nullable: false),
-                    International = table.Column<bool>(nullable: true),
-                    Name = table.Column<string>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Airlines", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "AspNetUsers",
                 columns: table => new
                 {
@@ -82,20 +69,6 @@ namespace VueCoreFramework.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Countries",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(nullable: false),
-                    EpiIndex = table.Column<double>(nullable: true),
-                    FlagPrimaryColor = table.Column<string>(nullable: true),
-                    Name = table.Column<string>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Countries", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Logs",
                 columns: table => new
                 {
@@ -112,6 +85,33 @@ namespace VueCoreFramework.Core.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Logs", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Airlines",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    International = table.Column<bool>(nullable: true),
+                    Name = table.Column<string>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Airlines", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Countries",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    EpiIndex = table.Column<double>(nullable: true),
+                    FlagPrimaryColor = table.Column<string>(nullable: true),
+                    Name = table.Column<string>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Countries", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -338,11 +338,6 @@ namespace VueCoreFramework.Core.Migrations
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AirlineCountry_AirlineId",
-                table: "AirlineCountry",
-                column: "AirlineId");
-
-            migrationBuilder.CreateIndex(
                 name: "EmailIndex",
                 table: "AspNetUsers",
                 column: "NormalizedEmail");
@@ -351,17 +346,6 @@ namespace VueCoreFramework.Core.Migrations
                 name: "UserNameIndex",
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Cities_CountryId",
-                table: "Cities",
-                column: "CountryId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Leaders_CountryId",
-                table: "Leaders",
-                column: "CountryId",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -378,6 +362,22 @@ namespace VueCoreFramework.Core.Migrations
                 name: "IX_Messages_SingleRecipientId",
                 table: "Messages",
                 column: "SingleRecipientId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AirlineCountry_AirlineId",
+                table: "AirlineCountry",
+                column: "AirlineId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Cities_CountryId",
+                table: "Cities",
+                column: "CountryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Leaders_CountryId",
+                table: "Leaders",
+                column: "CountryId",
+                unique: true);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -398,6 +398,12 @@ namespace VueCoreFramework.Core.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "Logs");
+
+            migrationBuilder.DropTable(
+                name: "Messages");
+
+            migrationBuilder.DropTable(
                 name: "AirlineCountry");
 
             migrationBuilder.DropTable(
@@ -407,22 +413,16 @@ namespace VueCoreFramework.Core.Migrations
                 name: "Leaders");
 
             migrationBuilder.DropTable(
-                name: "Logs");
+                name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "Messages");
+                name: "AspNetUsers");
 
             migrationBuilder.DropTable(
                 name: "Airlines");
 
             migrationBuilder.DropTable(
                 name: "Countries");
-
-            migrationBuilder.DropTable(
-                name: "AspNetRoles");
-
-            migrationBuilder.DropTable(
-                name: "AspNetUsers");
         }
     }
 #pragma warning restore CS1591

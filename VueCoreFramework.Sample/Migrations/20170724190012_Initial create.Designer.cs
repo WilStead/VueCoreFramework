@@ -3,15 +3,17 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
-using VueCoreFramework.Core.Data;
-using VueCoreFramework.Core.Models;
+using VueCoreFramework.Sample.Data;
+using VueCoreFramework.Sample.Models;
 
-namespace VueCoreFramework.Core.Migrations
+namespace VueCoreFramework.Sample.Migrations
 {
+#pragma warning disable CS1591
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20170724190012_Initial create")]
+    partial class Initialcreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.1.2")
@@ -124,34 +126,6 @@ namespace VueCoreFramework.Core.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
-            modelBuilder.Entity("VueCoreFramework.Core.Models.Airline", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<bool?>("International");
-
-                    b.Property<string>("Name")
-                        .IsRequired();
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Airlines");
-                });
-
-            modelBuilder.Entity("VueCoreFramework.Core.Models.AirlineCountry", b =>
-                {
-                    b.Property<Guid>("CountryId");
-
-                    b.Property<Guid>("AirlineId");
-
-                    b.HasKey("CountryId", "AirlineId");
-
-                    b.HasIndex("AirlineId");
-
-                    b.ToTable("AirlineCountry");
-                });
-
             modelBuilder.Entity("VueCoreFramework.Core.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -210,74 +184,6 @@ namespace VueCoreFramework.Core.Migrations
                         .HasName("UserNameIndex");
 
                     b.ToTable("AspNetUsers");
-                });
-
-            modelBuilder.Entity("VueCoreFramework.Core.Models.City", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<Guid>("CountryId");
-
-                    b.Property<bool>("IsCapitol");
-
-                    b.Property<DateTime>("LocalTimeAtGMTMidnight");
-
-                    b.Property<string>("Name")
-                        .IsRequired();
-
-                    b.Property<int>("Population");
-
-                    b.Property<int>("Transit");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CountryId");
-
-                    b.ToTable("Cities");
-                });
-
-            modelBuilder.Entity("VueCoreFramework.Core.Models.Country", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<double?>("EpiIndex");
-
-                    b.Property<string>("FlagPrimaryColor");
-
-                    b.Property<string>("Name")
-                        .IsRequired();
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Countries");
-                });
-
-            modelBuilder.Entity("VueCoreFramework.Core.Models.Leader", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<int>("Age");
-
-                    b.Property<DateTime?>("Birthdate");
-
-                    b.Property<Guid>("CountryId");
-
-                    b.Property<int>("MaritalStatus");
-
-                    b.Property<string>("Name")
-                        .IsRequired();
-
-                    b.Property<long?>("TimeInOfficeTicks");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CountryId")
-                        .IsUnique();
-
-                    b.ToTable("Leaders");
                 });
 
             modelBuilder.Entity("VueCoreFramework.Core.Models.Log", b =>
@@ -350,6 +256,102 @@ namespace VueCoreFramework.Core.Migrations
                     b.ToTable("Messages");
                 });
 
+            modelBuilder.Entity("VueCoreFramework.Sample.Models.Airline", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<bool?>("International");
+
+                    b.Property<string>("Name")
+                        .IsRequired();
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Airlines");
+                });
+
+            modelBuilder.Entity("VueCoreFramework.Sample.Models.AirlineCountry", b =>
+                {
+                    b.Property<Guid>("CountryId");
+
+                    b.Property<Guid>("AirlineId");
+
+                    b.HasKey("CountryId", "AirlineId");
+
+                    b.HasIndex("AirlineId");
+
+                    b.ToTable("AirlineCountry");
+                });
+
+            modelBuilder.Entity("VueCoreFramework.Sample.Models.City", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<Guid>("CountryId");
+
+                    b.Property<bool>("IsCapitol");
+
+                    b.Property<DateTime>("LocalTimeAtGMTMidnight");
+
+                    b.Property<string>("Name")
+                        .IsRequired();
+
+                    b.Property<int>("Population");
+
+                    b.Property<int>("Transit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CountryId");
+
+                    b.ToTable("Cities");
+                });
+
+            modelBuilder.Entity("VueCoreFramework.Sample.Models.Country", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<double?>("EpiIndex");
+
+                    b.Property<string>("FlagPrimaryColor");
+
+                    b.Property<string>("Name")
+                        .IsRequired();
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Countries");
+                });
+
+            modelBuilder.Entity("VueCoreFramework.Sample.Models.Leader", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<int>("Age");
+
+                    b.Property<DateTime?>("Birthdate");
+
+                    b.Property<Guid>("CountryId");
+
+                    b.Property<int>("MaritalStatus");
+
+                    b.Property<string>("Name")
+                        .IsRequired();
+
+                    b.Property<long?>("TimeInOfficeTicks");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CountryId")
+                        .IsUnique();
+
+                    b.ToTable("Leaders");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole")
@@ -387,35 +389,6 @@ namespace VueCoreFramework.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("VueCoreFramework.Core.Models.AirlineCountry", b =>
-                {
-                    b.HasOne("VueCoreFramework.Core.Models.Airline", "Airline")
-                        .WithMany("Countries")
-                        .HasForeignKey("AirlineId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("VueCoreFramework.Core.Models.Country", "Country")
-                        .WithMany("Airlines")
-                        .HasForeignKey("CountryId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("VueCoreFramework.Core.Models.City", b =>
-                {
-                    b.HasOne("VueCoreFramework.Core.Models.Country", "Country")
-                        .WithMany("Cities")
-                        .HasForeignKey("CountryId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("VueCoreFramework.Core.Models.Leader", b =>
-                {
-                    b.HasOne("VueCoreFramework.Core.Models.Country", "Country")
-                        .WithOne("Leader")
-                        .HasForeignKey("VueCoreFramework.Core.Models.Leader", "CountryId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
             modelBuilder.Entity("VueCoreFramework.Core.Models.Message", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole", "GroupRecipient")
@@ -430,6 +403,36 @@ namespace VueCoreFramework.Core.Migrations
                         .WithMany()
                         .HasForeignKey("SingleRecipientId");
                 });
+
+            modelBuilder.Entity("VueCoreFramework.Sample.Models.AirlineCountry", b =>
+                {
+                    b.HasOne("VueCoreFramework.Sample.Models.Airline", "Airline")
+                        .WithMany("Countries")
+                        .HasForeignKey("AirlineId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("VueCoreFramework.Sample.Models.Country", "Country")
+                        .WithMany("Airlines")
+                        .HasForeignKey("CountryId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("VueCoreFramework.Sample.Models.City", b =>
+                {
+                    b.HasOne("VueCoreFramework.Sample.Models.Country", "Country")
+                        .WithMany("Cities")
+                        .HasForeignKey("CountryId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("VueCoreFramework.Sample.Models.Leader", b =>
+                {
+                    b.HasOne("VueCoreFramework.Sample.Models.Country", "Country")
+                        .WithOne("Leader")
+                        .HasForeignKey("VueCoreFramework.Sample.Models.Leader", "CountryId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
         }
     }
+#pragma warning restore CS1591
 }

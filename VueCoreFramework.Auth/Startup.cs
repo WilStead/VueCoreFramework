@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -14,13 +13,12 @@ using Microsoft.Extensions.Options;
 using NLog;
 using NLog.Extensions.Logging;
 using NLog.Web;
-using System;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using VueCoreFramework.Core.Configuration;
-using VueCoreFramework.Core.Data;
 using VueCoreFramework.Core.Models;
 using VueCoreFramework.Core.Services;
+using VueCoreFramework.Sample.Data;
 
 namespace VueCoreFramework.Auth
 {
@@ -179,7 +177,7 @@ namespace VueCoreFramework.Auth
             });
 
             // Add IdentityServer data
-            DbInitialize.InitializeIdentitySever(app, Configuration["secretJwtKey"], true);
+            Core.Data.DbInitialize.InitializeIdentitySever(app, Configuration["secretJwtKey"], true);
         }
     }
 }

@@ -1,0 +1,376 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>VueCoreFramework.Sample</name>
+    </assembly>
+    <members>
+        <member name="T:VueCoreFramework.Sample.Data.ApplicationDbContext">
+            <summary>
+            The application's Entity Framework database context.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Data.ApplicationDbContext.Airlines">
+            <summary>
+            Gets or sets the <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1"/> of <see cref="T:VueCoreFramework.Sample.Models.Airline"/>s.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Data.ApplicationDbContext.Cities">
+            <summary>
+            Gets or sets the <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1"/> of <see cref="T:VueCoreFramework.Sample.Models.City"/>s.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Data.ApplicationDbContext.Countries">
+            <summary>
+            Gets or sets the <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1"/> of <see cref="T:VueCoreFramework.Sample.Models.Country"/>s.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Data.ApplicationDbContext.Leaders">
+            <summary>
+            Gets or sets the <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1"/> of <see cref="T:VueCoreFramework.Sample.Models.Leader"/>s.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Sample.Data.ApplicationDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{VueCoreFramework.Sample.Data.ApplicationDbContext})">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/>.
+            </summary>
+            <param name="options">The options to be used by a <see cref="T:Microsoft.EntityFrameworkCore.DbContext"/>.</param>
+        </member>
+        <member name="M:VueCoreFramework.Sample.Data.ApplicationDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <summary>
+            Configures the schema required for the framework.
+            </summary>
+            <param name="builder">The builder being used to construct the model for this context.</param>
+        </member>
+        <member name="T:VueCoreFramework.Sample.Data.ApplicationDbContextFactory">
+            <summary>
+            The <see cref="T:Microsoft.EntityFrameworkCore.Infrastructure.IDbContextFactory`1"/> for <see cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/>.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Sample.Data.ApplicationDbContextFactory.Create(Microsoft.EntityFrameworkCore.Infrastructure.DbContextFactoryOptions)">
+            <summary>
+            Creates a new instance of <see cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/>.
+            </summary>
+            <returns>A new instance of <see cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/>.</returns>
+        </member>
+        <member name="T:VueCoreFramework.Sample.Data.DbInitialize">
+            <summary>
+            Used to seed the application's database.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Sample.Data.DbInitialize.Initialize(System.IServiceProvider)">
+            <summary>
+            Seeds the application's database with data.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Sample.Models.Airline">
+            <summary>
+            A <see cref="T:VueCoreFramework.Core.Models.DataItem"/> representing an airline.
+            </summary>
+            <remarks>
+            Note that Airlines are being nested within the Country category, although they are both
+            MenuClass types, and in fact the Airline type is a peer of Country, which can be created and
+            deleted independently of any Countries. MenuClass types can be organized in the framework
+            menu in any order and hierarchy, regardless of the database relationships they share (if
+            any).
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.Airline.Countries">
+            <summary>
+            The countries in which the airline operates.
+            </summary>
+            <remarks>
+            It is not necessary to hide either side of a many-to-many relationship. Here, airlines
+            have been made conceptual children of countries: nested in their menu and accessible from
+            their form, but not vice-versa. This is an example of a conceptual hierarchy being
+            created in the framework to simplify the user experience, which does not represent the
+            data structure exactly.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.Airline.International">
+            <summary>
+            Indicates whether the airline offers international flights.
+            </summary>
+            <remarks>
+            Obviously this would be a caluclated property in a real application. It is implemented in
+            this way for the purpose of demonstrating nullable boolean fields. The Description
+            property of the Display Attribute is used to set help text.
+            </remarks>
+        </member>
+        <member name="T:VueCoreFramework.Sample.Models.AirlineCountry">
+            <summary>
+            The many-to-many join table entity class which joins Airlines to Countries.
+            </summary>
+            <remarks>
+            The SPA framework is able to recognize and interpret many-to-many join tables, but only when
+            their only properties are a pair of navigation properties and foreign keys. A many-to-many
+            join table with additional properties of its own will not be recognized by the SPA framework
+            as a join table, but as an entity class unto itself, and will model each navigation as a
+            one-to-many relationship from that class. This is likely to be the desired behavior in most
+            cases anyhow, since additional properties will usually mean that such classes should be
+            visible and editable on tables and forms of their own, not handled 'invisibly' as join tables.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.AirlineCountry.Airline">
+            <summary>
+            The <see cref="T:VueCoreFramework.Sample.Models.Airline"/> referred to by this relationship.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.AirlineCountry.AirlineId">
+            <summary>
+            The foreign key for <see cref="P:VueCoreFramework.Sample.Models.AirlineCountry.Airline"/>.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.AirlineCountry.Country">
+            <summary>
+            The <see cref="T:VueCoreFramework.Sample.Models.Country"/> referred to by this relationship.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.AirlineCountry.CountryId">
+            <summary>
+            The foreign key for <see cref="P:VueCoreFramework.Sample.Models.AirlineCountry.Country"/>.
+            </summary>
+        </member>
+        <member name="T:VueCoreFramework.Sample.Models.CityTransit">
+            <summary>
+            Types of city transportation.
+            </summary>
+            <remarks>
+            A Flags enum is represented by the framework as a multiselect input, allowing 0 or more
+            selections. A 'None' value (0) is not required for the framework, and will be a functionless
+            placeholder in the dropdown (selecting it will have no effect).
+            </remarks>
+        </member>
+        <member name="F:VueCoreFramework.Sample.Models.CityTransit.BusStation">
+            <remarks>
+            Description can be used to set the display value used in the dropdown. The name of the
+            value is used otherwise.
+            </remarks>
+        </member>
+        <member name="T:VueCoreFramework.Sample.Models.City">
+            <summary>
+            A <see cref="T:VueCoreFramework.Core.Models.NamedDataItem"/> representing a city.
+            </summary>
+            <remarks>
+            Because this class doesn't have the <see cref="T:VueCoreFramework.Core.Data.Attributes.MenuClassAttribute"/>, it will not appear in
+            the menu of the SPA, and items of this type will therefore only be available to view or edit
+            as children of another object (a <see cref="T:VueCoreFramework.Sample.Models.Country"/>, in this case). The
+            DashboardFormContent property indicates that a custom component exists which will be
+            displayed above data forms when viewing cities.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.City.LocalTimeAtGMTMidnight">
+            <summary>
+            The local time in the city at GMT midnight.
+            </summary>
+            <remarks>
+            The DataType can control the type of field displayed in forms. Time will present a time
+            picker alone. Without this specification, a DateTime property would be represented by
+            both date and timne pickers.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.City.Population">
+            <summary>
+            The population of the city.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.City.Transit">
+            <summary>
+            The types of transportation available in the city.
+            </summary>
+            <remarks>
+            A Flags enum property is represented by the framework as a multiselect input. In a data
+            table, no selection will be displayed as '[None]', a selection with a valid name or
+            description will be displayed, and any other selection (e.g. a combination of Flags
+            values) will be displayed as '[...]', to avoid the expensive operations required to
+            validate and break down the flag value. For this reason, it may be best to hide Flags
+            enums in tables when it is expected that multiple selections will be common, as is done
+            here, to avoid a column full of unhelpful placeholder text. When single selections are
+            expected to be more common, the field can be left visible so that the named selections
+            can be shown in tables.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.City.Country">
+            <summary>
+            The country to which this city belongs.
+            </summary>
+            <remarks>
+            It is not necessary to hide inverse references on child objects (a field with a view/edit
+            option will be generated). However, it can make views cleaner when the child object has
+            just one parent, since the parent object can always be accessed from the child by going
+            back or cancelling the current operation, making a reverse navigation field redundant. In
+            cases where a child may be in relationships to different parents, visible reverse
+            navigation fields can be helpful to browse among the related entities.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.City.CountryId">
+            <summary>
+            The foreign key for <see cref="P:VueCoreFramework.Sample.Models.City.Country"/>.
+            </summary>
+            <remarks>
+            Although Entity Framework can automatically create foreign keys, the SPA framework
+            requires explicitly defined foreign keys for one-to-one and many-to-one relationships.
+            Foreign key properties are never shown by the framework, so it isn't necessary to mark it
+            as hidden.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.City.IsCapitol">
+            <summary>
+            Indicates that this city is the capitol of the country.
+            </summary>
+            <remarks>
+            Since only one city may be the capitol, but there is no way to enforce such a constraint
+            with the Entity Framework and VueCoreFramework Attribute decoration system, a custom
+            control is provided on the City form to perform this function instead. Therefore, it is
+            hidden from the normal form (but not in tables).
+            </remarks>
+        </member>
+        <member name="T:VueCoreFramework.Sample.Models.Country">
+            <summary>
+            A <see cref="T:VueCoreFramework.Core.Models.NamedDataItem"/> representing a country.
+            </summary>
+            <remarks>
+            Because this class is decorated with the MenuClass attribute, it will appear in the
+            SPA framework's displayed menu.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.Country.Airlines">
+            <summary>
+            The airlines operating in the country.
+            </summary>
+            <remarks>
+            A many-to-many relationship with another MenuClass entity. AirlineCountry is a
+            many-to-many join table entity class. Navigation properties must have the JsonIgnore
+            Attribute to prevent the model from attempting to set its value to the placeholder text
+            used in the ViewModel. It isn't necesary to hide navigation properties in data tables,
+            but since all a table will show is '[None]' for an empty collection and '[...]' for a
+            non-empty collection, it will usually provide a better user experience to avoid filling a
+            column with such placeholder text. It has a property constructor in order to avoid a null
+            collection during certain framework operations; this is a requirement of all collection
+            properties for the SPA framework.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.Country.EpiIndex">
+            <summary>
+            The EPI Index of the country.
+            </summary>
+            <remarks>
+            The Display Attribute is used to control the decoration of the field. Prompt will set
+            placeholder text for most fields. GroupName can be used to group fields together under a
+            heading. Range can be used for numeric, text, DateTime, or TimeSpan fields. For text
+            fields, it indicates required length.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.Country.FlagPrimaryColor">
+            <summary>
+            The main color of the country's flag.
+            </summary>
+            <remarks>
+            The 'Color' custom DataType is special in the SPA framework, and will generate a color
+            picker control in edit forms. The data is represented as a 7-character hex string
+            (#000000), and this raw value is shown on tables (which only display text, not rich
+            content like colors). The field is hidden from tables here to avoid such a
+            non-user-friendly display format, but that is not required. Display Name is used to set a
+            label for the input group (color fields do not use placeholder text).
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.Country.Capitol">
+            <summary>
+            The country's capitol city.
+            </summary>
+            <remarks>
+            This is a computed property which finds the child with the relevant property. Since it is
+            a reference to an entity type, but is not an actual Entity Framework navigation property,
+            VueCoreFramework will show it as a read-only label.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.Country.Cities">
+            <summary>
+            The cities of the country.
+            </summary>
+            <remarks>
+            A many-to-one relationship with a child object.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.Country.Leader">
+            <summary>
+            The country's head of government.
+            </summary>
+            <remarks>
+            A one-to-one relationship with a child object.
+            </remarks>
+        </member>
+        <member name="T:VueCoreFramework.Sample.Models.MaritalStatus">
+            <summary>
+            Types of marital status.
+            </summary>
+            <remarks>
+            A non-Flags enum is represented by the framework as a select input, allowing a single
+            selection. A 'None' entry, if present, will be treated the same as any other selection. The
+            selection control will not supply a 'None' or other unset value if the enum does not contain
+            one. The framework also will not add an unset selection placeholder for Nullable Enum
+            properties, in order to avoid duplicating any existing 'None' entry. For this reason Nullable
+            Enum properties are not feasible with the SPA framework (they will not cause any errors, but
+            it will not be possible to preserve nulls; updates from the SPA will always contain a value
+            for the property). Use a 'None' value in your enum if you wish an unset value to be
+            represented in your data, instead of making the property nullable.
+            </remarks>
+        </member>
+        <member name="T:VueCoreFramework.Sample.Models.Leader">
+            <summary>
+            A <see cref="T:VueCoreFramework.Core.Models.NamedDataItem"/> representing a country's head of government.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.Leader.Age">
+            <summary>
+            The age of the leader.
+            </summary>
+            <remarks>
+            In a real application this would surely be computed from birthdate; it is provided here
+            purely for the demonstration of numeric input fields.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.Leader.Birthdate">
+            <summary>
+            The birthdate of the leader.
+            </summary>
+            <remarks>
+            A DataType of Date is represented in forms by a date picker. The time portion is ignored.
+            Because this is a nullable property, the field will also have the option to set a null
+            value rather than a date.
+            </remarks>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.Leader.Country">
+            <summary>
+            The country represented by this leader.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.Leader.CountryId">
+            <summary>
+            Foreign key for <see cref="P:VueCoreFramework.Sample.Models.Leader.Country"/>
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.Leader.MaritalStatus">
+            <summary>
+            The marital status of the leader.
+            </summary>
+        </member>
+        <member name="P:VueCoreFramework.Sample.Models.Leader.TimeInOfficeTicks">
+            <summary>
+            Time in office (as a Ticks value).
+            </summary>
+            <remarks>
+            Although the SPA framework can handle TimeSpan properties, SQL databases cannot store
+            TimeSpans >= 24 hours, so the SPA framework can also interpret long values as TimeSpan
+            Ticks by indicating the Duration DataType. Display Description is used to set hint text
+            for the field. The DisplayFormat DataFormatString can be used to indicate which values of
+            the TimeSpan will be displayed (and available for editing); it must take the form
+            'y:M:d:h:m:s' representing years, months, days, hours, minutes, seconds (including
+            fractional seconds). Any number of indicators may be omitted from the beginning or end
+            (e.g. the format below shows only years, months, and days; not hours, minutes, or
+            seconds), but omitting any in the middle is disregarded (since overflow from a low unit
+            must be shown and editable with in-between units). Note that Range for a Duration uses
+            TimeSpan units, even when the property is a long.
+            </remarks>
+        </member>
+    </members>
+</doc>

@@ -2,8 +2,9 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using VueCoreFramework.Core.Data.Attributes;
+using VueCoreFramework.Core.Models;
 
-namespace VueCoreFramework.Core.Models
+namespace VueCoreFramework.Sample.Models
 {
     /// <summary>
     /// Types of marital status.

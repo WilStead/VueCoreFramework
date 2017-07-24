@@ -45,7 +45,10 @@ export default class TopbarComponent extends Vue {
     }
 
     onLogout() {
-        logout();
+        logout()
+            .then(response => {
+                this.$router.push('/');
+            });
     }
 
     onToggleChat() {

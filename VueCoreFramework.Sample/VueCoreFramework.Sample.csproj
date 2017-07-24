@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.5</TargetFramework>
+    <AssemblyVersion>0.6.0.0</AssemblyVersion>
+    <FileVersion>0.6.0.0</FileVersion>
+    <Version>0.6.0</Version>
+    <Authors>Wil Stead</Authors>
+    <Company>Wil Stead</Company>
+    <Copyright>Wil Stead</Copyright>
+    <Description>ASP.NET Core API with Vue SPA</Description>
+    <PackageLicenseUrl>https://github.com/WilStead/VueCoreFramework/blob/master/LICENSE.txt</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/WilStead/VueCoreFramework</PackageProjectUrl>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>VueCoreFramework.Sample.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="1.1.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VueCoreFramework.Core\VueCoreFramework.Core.csproj" />
+  </ItemGroup>
+
+</Project>

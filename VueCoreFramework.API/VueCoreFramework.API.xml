@@ -9,7 +9,7 @@
             The API controller for handling data manipulation tasks.
             </summary>
         </member>
-        <member name="M:VueCoreFramework.API.Controllers.DataController.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.AdminOptions},VueCoreFramework.Core.Data.ApplicationDbContext,Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.ErrorMessages},Microsoft.Extensions.Logging.ILogger{VueCoreFramework.API.Controllers.DataController},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.EmailMessages},Microsoft.AspNetCore.Identity.RoleManager{Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.API.Startup},Microsoft.AspNetCore.Identity.UserManager{VueCoreFramework.Core.Models.ApplicationUser})">
+        <member name="M:VueCoreFramework.API.Controllers.DataController.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.AdminOptions},VueCoreFramework.Sample.Data.ApplicationDbContext,Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.ErrorMessages},Microsoft.Extensions.Logging.ILogger{VueCoreFramework.API.Controllers.DataController},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.EmailMessages},Microsoft.AspNetCore.Identity.RoleManager{Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.API.Startup},Microsoft.AspNetCore.Identity.UserManager{VueCoreFramework.Core.Models.ApplicationUser})">
             <summary>
             Initializes a new instance of <see cref="T:VueCoreFramework.API.Controllers.DataController"/>.
             </summary>
@@ -17,7 +17,7 @@
         <member name="M:VueCoreFramework.API.Controllers.DataController.Add(System.String,System.String,System.String,System.String)">
             <summary>
             Called to create a new instance of <paramref name="dataType"/> and add it to the <see
-            cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> instance.
+            cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/> instance.
             </summary>
             <param name="dataType">The type of entity to add.</param>
             <param name="childProp">
@@ -46,7 +46,7 @@
         </member>
         <member name="M:VueCoreFramework.API.Controllers.DataController.Duplicate(System.String,System.String,System.String)">
             <summary>
-            Called to duplicate an entity in the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>. Returns a
+            Called to duplicate an entity in the <see cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/>. Returns a
             ViewModel representing the new copy.
             </summary>
             <param name="dataType">The type of entity to find.</param>
@@ -72,7 +72,7 @@
         <member name="M:VueCoreFramework.API.Controllers.DataController.GetAll(System.String,System.String)">
             <summary>
             Called to retrieve ViewModels representing all the entities in the <see
-            cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>'s set.
+            cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/>'s set.
             </summary>
             <param name="dataType">The type of entities to get.</param>
             <param name="culture">The name of the requested culture. Taken from the Accept-Language header.</param>
@@ -202,7 +202,7 @@
         </member>
         <member name="M:VueCoreFramework.API.Controllers.DataController.Remove(System.String,System.String)">
             <summary>
-            Called to remove an entity from the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
+            Called to remove an entity from the <see cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/>.
             </summary>
             <param name="dataType">The type of entity to remove.</param>
             <param name="id">The primary key of the entity to remove.</param>
@@ -227,7 +227,7 @@
             <summary>
             Called to terminate a relationship between two entities. If the child entity is made an
             orphan by the removal and is not a MenuClass object, it is then removed from the <see
-            cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/> entirely.
             </summary>
             <param name="dataType">The type of the child entity.</param>
             <param name="id">The primary key of the child entity whose relationship is being severed.</param>
@@ -238,7 +238,7 @@
         </member>
         <member name="M:VueCoreFramework.API.Controllers.DataController.RemoveRange(System.String,System.Collections.Generic.List{System.String})">
             <summary>
-            Called to remove a collection of entities from the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
+            Called to remove a collection of entities from the <see cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/>.
             </summary>
             <param name="dataType">The type of entity to remove.</param>
             <param name="ids">The primary keys of the entities to remove.</param>
@@ -250,7 +250,7 @@
             <summary>
             Called to terminate a relationship for multiple entities. If any child entity is made an
             orphan by the removal and is not a MenuClass object, it is then removed from the <see
-            cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/> entirely.
             </summary>
             <param name="dataType">The type of the child entity.</param>
             <param name="childProp">The navigation property of the relationship being severed.</param>
@@ -266,7 +266,7 @@
             Called to create a relationship between two entities, replacing another entity which was
             previously in that relationship with another one. If the replaced entity is made an
             orphan by the removal and is not a MenuClass object, it is then removed from the <see
-            cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/> entirely.
             </summary>
             <param name="dataType">The type of the parent entity.</param>
             <param name="parentId">The primary key of the parent entity in the relationship.</param>
@@ -283,7 +283,7 @@
             Called to create a relationship between two entities, replacing another entity which was
             previously in that relationship with a new entity. If the replaced entity is made an
             orphan by the removal and is not a MenuClass object, it is then removed from the <see
-            cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/> entirely.
+            cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/> entirely.
             </summary>
             <param name="dataType">The type of the parent entity.</param>
             <param name="parentId">The primary key of the parent entity in the relationship.</param>
@@ -295,7 +295,7 @@
         </member>
         <member name="M:VueCoreFramework.API.Controllers.DataController.Update(System.String,System.String,Newtonsoft.Json.Linq.JObject)">
             <summary>
-            Called to update an entity in the <see cref="T:VueCoreFramework.Core.Data.ApplicationDbContext"/>.
+            Called to update an entity in the <see cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/>.
             </summary>
             <param name="dataType">The type of entity to update.</param>
             <param name="item">The item to update.</param>
@@ -326,7 +326,7 @@
             An API controller for handling group membership tasks.
             </summary>
         </member>
-        <member name="M:VueCoreFramework.API.Controllers.GroupController.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.AdminOptions},VueCoreFramework.Core.Data.ApplicationDbContext,VueCoreFramework.Core.Services.IEmailSender,Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.ErrorMessages},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.EmailMessages},Microsoft.AspNetCore.Identity.RoleManager{Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole},Microsoft.AspNetCore.Identity.UserManager{VueCoreFramework.Core.Models.ApplicationUser})">
+        <member name="M:VueCoreFramework.API.Controllers.GroupController.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.AdminOptions},VueCoreFramework.Sample.Data.ApplicationDbContext,VueCoreFramework.Core.Services.IEmailSender,Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.ErrorMessages},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.EmailMessages},Microsoft.AspNetCore.Identity.RoleManager{Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole},Microsoft.AspNetCore.Identity.UserManager{VueCoreFramework.Core.Models.ApplicationUser})">
             <summary>
             Initializes a new instance of <see cref="T:VueCoreFramework.API.Controllers.GroupController"/>.
             </summary>
@@ -600,7 +600,7 @@
             An API controller for handling messaging tasks.
             </summary>
         </member>
-        <member name="M:VueCoreFramework.Controllers.MessageController.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.AdminOptions},VueCoreFramework.Core.Data.ApplicationDbContext,Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.ErrorMessages},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.EmailMessages},Microsoft.AspNetCore.Identity.RoleManager{Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole},Microsoft.AspNetCore.Identity.UserManager{VueCoreFramework.Core.Models.ApplicationUser})">
+        <member name="M:VueCoreFramework.Controllers.MessageController.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.AdminOptions},VueCoreFramework.Sample.Data.ApplicationDbContext,Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.ErrorMessages},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.EmailMessages},Microsoft.AspNetCore.Identity.RoleManager{Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole},Microsoft.AspNetCore.Identity.UserManager{VueCoreFramework.Core.Models.ApplicationUser})">
             <summary>
             Initializes a new instance of <see cref="T:VueCoreFramework.Controllers.MessageController"/>.
             </summary>
@@ -724,7 +724,7 @@
             An API controller for handling sharing tasks.
             </summary>
         </member>
-        <member name="M:VueCoreFramework.Controllers.ShareController.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.AdminOptions},VueCoreFramework.Core.Data.ApplicationDbContext,Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.ErrorMessages},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.EmailMessages},Microsoft.AspNetCore.Identity.RoleManager{Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole},Microsoft.AspNetCore.Identity.UserManager{VueCoreFramework.Core.Models.ApplicationUser})">
+        <member name="M:VueCoreFramework.Controllers.ShareController.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.AdminOptions},VueCoreFramework.Sample.Data.ApplicationDbContext,Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.ErrorMessages},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.EmailMessages},Microsoft.AspNetCore.Identity.RoleManager{Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole},Microsoft.AspNetCore.Identity.UserManager{VueCoreFramework.Core.Models.ApplicationUser})">
             <summary>
             Initializes a new instance of <see cref="T:VueCoreFramework.Controllers.ShareController"/>.
             </summary>

@@ -9,10 +9,11 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using VueCoreFramework.API;
-using VueCoreFramework.Core.Data;
 using VueCoreFramework.Core.Data.Identity;
 using VueCoreFramework.Core.Extensions;
 using VueCoreFramework.Core.Models;
+using VueCoreFramework.Sample.Data;
+using VueCoreFramework.Sample.Models;
 
 namespace VueCoreFramework.Test.Data
 {
@@ -25,7 +26,7 @@ namespace VueCoreFramework.Test.Data
         [ClassInitialize]
         public static void Setup(TestContext testContext)
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
+            var optionsBuilder = new DbContextOptionsBuilder();
             optionsBuilder.UseInMemoryDatabase();
             context = new ApplicationDbContext(optionsBuilder.Options);
 

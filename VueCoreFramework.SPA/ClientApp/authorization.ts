@@ -85,10 +85,10 @@ export function login(returnUrl = ''): Promise<string> {
 }
 
 export function logout() {
-    authMgr.removeUser()
+    return authMgr.removeUser()
         .then(() => {
             Store.store.commit(Store.setUser, null);
-            Api.getAuth('Account/Logout');
+            return Api.getAuth('Account/Logout');
         });
 }
 
