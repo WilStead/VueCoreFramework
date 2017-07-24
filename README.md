@@ -32,6 +32,7 @@ VueCoreFramework was built with the essential help of libraries and technologies
 * [ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/)
 * [Bootstrap](http://getbootstrap.com/)
 * [Entity Framework Core](https://docs.microsoft.com/en-us/ef/core/)
+* [IdentityServer4](http://identityserver.io/)
 * [jQuery](https://jquery.com/)
 * [JSNLog](http://nodejs.jsnlog.com/)
 * [LocalePlanet](http://www.localeplanet.com/)
