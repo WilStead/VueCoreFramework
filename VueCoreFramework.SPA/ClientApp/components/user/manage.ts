@@ -212,13 +212,7 @@ export default class ManageUserComponent extends Vue {
                     ErrorMsg.logError("user/manage.mounted", new Error(error));
                 }
             });
-        Api.callSpa('Home/GetCultures',
-            {
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture
-                }
-            })
+        Api.getSpa('Home/GetCultures')
             .then(response => response.json() as Promise<string[]>)
             .then(data => {
                 this.cultures = data;
@@ -360,18 +354,7 @@ export default class ManageUserComponent extends Vue {
         this.submitting = true;
         this.errors = [];
         this.model.authProvider = provider;
-        Api.callAuth('Manage/LinkLogin',
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Content-Type': `application/json;v=${this.$store.state.apiVer}`,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                },
-                body: JSON.stringify(this.model)
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.postAuth('Manage/LinkLogin', this.$route.fullPath, JSON.stringify(this.model))
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {
@@ -402,18 +385,7 @@ export default class ManageUserComponent extends Vue {
         this.submitting = true;
         this.errors = [];
         this.model.authProvider = provider;
-        Api.callAuth('Manage/RemoveLogin',
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Content-Type': `application/json;v=${this.$store.state.apiVer}`,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                },
-                body: JSON.stringify(this.model)
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.postAuth('Manage/RemoveLogin', this.$route.fullPath, JSON.stringify(this.model))
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {
@@ -452,18 +424,7 @@ export default class ManageUserComponent extends Vue {
         } else {
             url = 'Manage/SetPassword';
         }
-        Api.callAuth(url,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Content-Type': `application/json;v=${this.$store.state.apiVer}`,
-                    'Authorization': `bearer ${this.$store.state.userState.user.access_token}`
-                },
-                body: JSON.stringify(this.model)
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.postAuth(url, this.$route.fullPath, JSON.stringify(this.model))
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {

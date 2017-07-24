@@ -190,7 +190,7 @@
             redirected to the main SPA application's error page.
             </summary>
         </member>
-        <member name="M:VueCoreFramework.Auth.Controllers.HomeController.Index(System.String,System.String)">
+        <member name="M:VueCoreFramework.Auth.Controllers.HomeController.Index(System.String)">
             <summary>
             If a user navigates to the root of the auth server, the user is automatically redirected
             to the main SPA application's homepage.

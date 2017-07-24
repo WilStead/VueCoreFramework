@@ -69,6 +69,18 @@ namespace VueCoreFramework
                 options.SupportedUICultures = LocalizationConfig.SupportedCultures;
             });
 
+            services.AddCors(options =>
+            {
+                options.AddPolicy("default", policy =>
+                {
+                    policy
+                        .AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials();
+                });
+            });
+
             services.AddMvc(options =>
             {
                 options.SslPort = 44350;
@@ -145,6 +157,8 @@ namespace VueCoreFramework
 
             var options = new RewriteOptions().AddRedirectToHttps();
             app.UseRewriter(options);
+
+            app.UseCors("default");
 
             app.UseRequestLocalization(localization.Value);
 

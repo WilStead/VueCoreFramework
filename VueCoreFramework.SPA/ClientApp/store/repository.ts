@@ -101,18 +101,7 @@ export class Repository {
      * @returns {Response} The response.
      */
     addChildrenToCollection(returnPath: string, id: string, childProp: string, ids: string[]): Promise<Response> {
-        return Api.callApi(`api/Data/${this.dataType}/AddChildrenToCollection/${id}/${childProp}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${store.state.apiVer}`,
-                    'Accept-Language': store.state.userState.culture,
-                    'Content-Type': `application/json;v=${store.state.apiVer}`,
-                    'Authorization': `bearer ${store.state.userState.user.access_token}`
-                },
-                body: JSON.stringify(ids)
-            })
-            .then(response => checkResponse(response, returnPath))
+        return Api.postApi(`api/Data/${this.dataType}/AddChildrenToCollection/${id}/${childProp}`, returnPath, JSON.stringify(ids))
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -419,18 +408,7 @@ export class Repository {
                 }
             })
             .then(response => {
-                return Api.callApi(url,
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Accept': `application/json;v=${store.state.apiVer}`,
-                            'Accept-Language': store.state.userState.culture,
-                            'Content-Type': `application/json;v=${store.state.apiVer}`,
-                            'Authorization': `bearer ${store.state.userState.user.access_token}`
-                        },
-                        body: JSON.stringify(except)
-                    })
-                    .then(response => checkResponse(response, returnPath))
+                return Api.postApi(url, returnPath, JSON.stringify(except))
                     .then(response => {
                         if (!response.ok) {
                             throw new Error(`CODE:${response.statusText}`);
@@ -482,18 +460,7 @@ export class Repository {
      * @returns {Response} The response.
      */
     removeChildrenFromCollection(returnPath: string, id: string, childProp: string, childIds: Array<string>): Promise<Response> {
-        return Api.callApi(`api/Data/${this.dataType}/RemoveChildrenFromCollection/${id}/${childProp}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${store.state.apiVer}`,
-                    'Accept-Language': store.state.userState.culture,
-                    'Content-Type': `application/json;v=${store.state.apiVer}`,
-                    'Authorization': `bearer ${store.state.userState.user.access_token}`
-                },
-                body: JSON.stringify(childIds)
-            })
-            .then(response => checkResponse(response, returnPath))
+        return Api.postApi(`api/Data/${this.dataType}/RemoveChildrenFromCollection/${id}/${childProp}`, returnPath, JSON.stringify(childIds))
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -537,18 +504,7 @@ export class Repository {
         if (ids === undefined || ids === null || !ids.length) {
             throw new Error("The item ids were missing from your request.");
         }
-        return Api.callApi(`api/Data/${this.dataType}/RemoveRange`,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${store.state.apiVer}`,
-                    'Accept-Language': store.state.userState.culture,
-                    'Content-Type': `application/json;v=${store.state.apiVer}`,
-                    'Authorization': `bearer ${store.state.userState.user.access_token}`
-                },
-                body: JSON.stringify(ids)
-            })
-            .then(response => checkResponse(response, returnPath))
+        return Api.postApi(`api/Data/${this.dataType}/RemoveRange`, returnPath, JSON.stringify(ids))
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -570,18 +526,7 @@ export class Repository {
      * @returns {Response} The response.
      */
     removeRangeFromParent(returnPath: string, childProp: string, ids: string[]): Promise<Response> {
-        return Api.callApi(`api/Data/${this.dataType}/RemoveRangeFromParent/${childProp}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${store.state.apiVer}`,
-                    'Accept-Language': store.state.userState.culture,
-                    'Content-Type': `application/json;v=${store.state.apiVer}`,
-                    'Authorization': `bearer ${store.state.userState.user.access_token}`
-                },
-                body: JSON.stringify(ids)
-            })
-            .then(response => checkResponse(response, returnPath))
+        return Api.postApi(`api/Data/${this.dataType}/RemoveRangeFromParent/${childProp}`, returnPath, JSON.stringify(ids))
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
@@ -646,18 +591,7 @@ export class Repository {
      * @returns {DataItem} A response object containing any error which occurred, or the updated item.
      */
     update(returnPath: string, vm: DataItem): Promise<DataItem> {
-        return Api.callApi(`api/Data/${this.dataType}/Update`,
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${store.state.apiVer}`,
-                    'Accept-Language': store.state.userState.culture,
-                    'Content-Type': `application/json;v=${store.state.apiVer}`,
-                    'Authorization': `bearer ${store.state.userState.user.access_token}`
-                },
-                body: JSON.stringify(vm)
-            })
-            .then(response => checkResponse(response, returnPath))
+        return Api.postApi(`api/Data/${this.dataType}/Update`, returnPath, JSON.stringify(vm))
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);

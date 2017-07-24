@@ -6,14 +6,7 @@ import * as ErrorMsg from '../error-msg';
 export const defaultCulture = "en-US";
 
 export function setCulture(culture: string) {
-    fetch(`dist/globalization/messages/${culture}.json`,
-        {
-            method: 'GET',
-            headers: {
-                'Accept': `application/json;v=${store.state.apiVer}`,
-                'Accept-Language': culture
-            }
-        })
+    Api.callFetch(`dist/globalization/messages/${culture}.json`)
         .then(response => response.json())
         .then(data => {
             _t.setTranslation(data);

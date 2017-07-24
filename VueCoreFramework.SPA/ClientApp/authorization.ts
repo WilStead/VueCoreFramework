@@ -2,6 +2,7 @@
 import * as Api from './api';
 import * as Store from './store/store';
 import { PermissionData } from './store/userStore';
+import { router } from './router';
 import { JL } from 'jsnlog';
 import * as ErrorMsg from './error-msg';
 
@@ -14,51 +15,61 @@ export function configureOidc() {
         authority: Api.urls.authUrl,
         client_id: "vue.client",
         redirect_uri: `${Api.urls.spaUrl}oidc/callback`,
-        silent_redirect_uri: `${Api.urls.spaUrl}oidc/silent_callback`,
         response_type: "id_token token",
         scope: "openid email profile vcfapi",
+        prompt: "none",
         post_logout_redirect_uri: Api.urls.spaUrl,
-        automaticSilentRenew: true
+        userStore: new Oidc.WebStorageStateStore({ store: window.localStorage })
     };
     authMgr = new Oidc.UserManager(config);
+    authMgr.events.addAccessTokenExpiring(authorize);
 }
 
-function nonce() {
-    var guidHolder = 'xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx';
-    var hex = '0123456789abcdef';
-    var r = 0;
-    var guidResponse = "";
-    for (var i = 0; i < guidHolder.length; i++) {
-        if (guidHolder[i] !== '-' && guidHolder[i] !== '4') {
-            // each x and y needs to be random
-            r = Math.random() * 16 | 0;
-        }
+function authorize(returnUrl = '') {
+    authMgr.createSigninRequest({ state: returnUrl })
+        .then(request => {
+            request.url = request.url.substring(Api.urls.authUrl.length);
+            request.url += '&response_mode=form_post';
+            Api.getAuth(request.url)
+                .then(response => response.text())
+                .then(text => {
+                    let regex = /name='([^']+)' value='([^']+)'/g;
+                    let parsed: RegExpExecArray;
 
-        if (guidHolder[i] === 'x') {
-            guidResponse += hex[r];
-        } else if (guidHolder[i] === 'y') {
-            // clock-seq-and-reserved first hex is filtered and remaining hex values are random
-            r &= 0x3; // bit and with 0011 to set pos 2 to zero ?0??
-            r |= 0x8; // set pos 3 to 1 as 1???
-            guidResponse += hex[r];
-        } else {
-            guidResponse += guidHolder[i];
-        }
-    }
-    return guidResponse;
+                    let fake_url = '';
+                    while (parsed = regex.exec(text)) {
+                        fake_url += `&${parsed[1]}=${parsed[2]}`;
+                    }
+
+                    authMgr.signinRedirectCallback(fake_url)
+                        .then(user => {
+                            if (user && user.state) {
+                                if (user.state.startsWith("http")) {
+                                    if (user.state.startsWith(Api.urls.spaUrl)) {
+                                        let local = user.state.substr(Api.urls.spaUrl.length - 1);
+                                        router.push(local);
+                                    } else {
+                                        router.push('/'); // External redirects not allowed.
+                                    }
+                                } else {
+                                    router.push(user.state);
+                                }
+                            } else {
+                                router.push('/');
+                            }
+                        });
+                });
+        });
 }
 
 export function login(returnUrl = '') {
-    let url = `connect/authorize?client_id=${config.client_id}&scope=${config.scope}&redirect_uri=${config.redirect_uri}&state=${returnUrl}&response_type=${config.response_type}&nonce=${nonce()}&prompt=none`;
-    Api.callAuth(url, {
-        credentials: 'include'
-    });
+    authorize(returnUrl);
 }
 
 export function logout() {
     authMgr.removeUser()
         .then(() => {
-            Api.callAuth('Account/Logout');
+            Api.getAuth('Account/Logout');
         });
 }
 

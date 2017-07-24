@@ -7,43 +7,33 @@ export const urls = {
     spaUrl: "https://localhost:44350/"
 };
 
-export function callApi(relUrl: string, init?: RequestInit): Promise<Response> {
-    if (init) {
-        return fetch(urls.apiUrl + relUrl, init);
-    } else {
-        return fetch(urls.apiUrl + relUrl);
+export function callFetch(url: string, method?: string, body?: any, cred?: boolean): Promise<Response> {
+    if (!method) {
+        method = 'GET';
     }
-}
-
-export function callAuth(relUrl: string, init?: RequestInit): Promise<Response> {
-    if (init) {
-        return fetch(urls.authUrl + relUrl, init);
-    } else {
-        return fetch(urls.authUrl + relUrl);
-    }
-}
-
-export function callSpa(relUrl: string, init?: RequestInit): Promise<Response> {
-    if (init) {
-        return fetch(urls.spaUrl + relUrl, init);
-    } else {
-        return fetch(urls.spaUrl + relUrl);
-    }
-}
-
-function invokeHost(hostUrl: string, relUrl: string, method: string, returnPath?: string) {
-    let headers = {
-        'Accept': `application/json;v=${store.state.apiVer}`,
-        'Accept-Language': store.state.userState.culture
+    let init: RequestInit = {
+        method,
+        headers: {
+            'Accept': `application/json;v=${store.state.apiVer}`,
+            'Accept-Language': store.state.userState.culture
+        }
     };
-    if (store.state.userState.user) {
-        headers['Authorization'] = `bearer ${store.state.userState.user.access_token}`;
+    if (cred) {
+        init.credentials = 'include';
+        init.mode = 'cors';
     }
-    let f = fetch(hostUrl + relUrl,
-        {
-            method,
-            headers
-        });
+    if (store.state.userState.user) {
+        init.headers['Authorization'] = `bearer ${store.state.userState.user.access_token}`;
+    }
+    if (body) {
+        init.body = body;
+        init.headers['Content-Type'] = `application/json;v=${store.state.apiVer}`;
+    }
+    return fetch(url, init);
+}
+
+function invokeHost(hostUrl: string, relUrl: string, returnPath: string, method: string, body: any, cred?: boolean) {
+    let f = callFetch(hostUrl + relUrl, method, body, cred);
     if (returnPath) {
         return f.then(response => checkResponse(response, returnPath));
     } else {
@@ -51,26 +41,26 @@ function invokeHost(hostUrl: string, relUrl: string, method: string, returnPath?
     }
 }
 
-export function getApi(relUrl: string, returnPath?: string): Promise<Response> {
-    return invokeHost(urls.apiUrl, relUrl, 'GET', returnPath);
+export function getApi(relUrl: string, returnPath?: string, body?: any): Promise<Response> {
+    return invokeHost(urls.apiUrl, relUrl, returnPath, 'GET', body);
 }
 
-export function getAuth(relUrl: string, returnPath?: string): Promise<Response> {
-    return invokeHost(urls.authUrl, relUrl, 'GET', returnPath);
+export function getAuth(relUrl: string, returnPath?: string, body?: any): Promise<Response> {
+    return invokeHost(urls.authUrl, relUrl, returnPath, 'GET', body, true);
 }
 
-export function getSpa(relUrl: string, returnPath?: string): Promise<Response> {
-    return invokeHost(urls.spaUrl, relUrl, 'GET', returnPath);
+export function getSpa(relUrl: string, returnPath?: string, body?: any): Promise<Response> {
+    return invokeHost(urls.spaUrl, relUrl, returnPath, 'GET', body);
 }
 
-export function postApi(relUrl: string, returnPath?: string): Promise<Response> {
-    return invokeHost(urls.apiUrl, relUrl, 'POST', returnPath);
+export function postApi(relUrl: string, returnPath?: string, body?: any): Promise<Response> {
+    return invokeHost(urls.apiUrl, relUrl, returnPath, 'POST', body);
 }
 
-export function postAuth(relUrl: string, returnPath?: string): Promise<Response> {
-    return invokeHost(urls.authUrl, relUrl, 'POST', returnPath);
+export function postAuth(relUrl: string, returnPath?: string, body?: any): Promise<Response> {
+    return invokeHost(urls.authUrl, relUrl, returnPath, 'POST', body, true);
 }
 
-export function postSpa(relUrl: string, returnPath?: string): Promise<Response> {
-    return invokeHost(urls.spaUrl, relUrl, 'POST', returnPath);
+export function postSpa(relUrl: string, returnPath?: string, body?: any): Promise<Response> {
+    return invokeHost(urls.spaUrl, relUrl, returnPath, 'POST', body);
 }

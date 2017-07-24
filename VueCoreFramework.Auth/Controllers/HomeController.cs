@@ -39,11 +39,10 @@ namespace VueCoreFramework.Auth.Controllers
         /// If a user navigates to the root of the auth server, the user is automatically redirected
         /// to the main SPA application's homepage.
         /// </summary>
-        public IActionResult Index(string forwardUrl = "", string returnUrl = "")
+        public IActionResult Index(string forwardUrl = "")
         {
             forwardUrl = UrlEncoder.Default.Encode(forwardUrl);
-            returnUrl = UrlEncoder.Default.Encode(_urls.AuthURL.TrimEnd('/') + returnUrl);
-            return Redirect($"{_urls.ClientURL}Home/Index?forwardUrl={forwardUrl}&returnUrl={returnUrl}");
+            return Redirect($"{_urls.ClientURL}Home/Index?forwardUrl={forwardUrl}");
         }
 
         /// <summary>

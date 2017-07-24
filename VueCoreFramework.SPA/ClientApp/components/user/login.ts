@@ -104,14 +104,7 @@ export default class LoginComponent extends Vue {
     submitting = false;
 
     mounted() {
-        Api.callAuth('Account/GetAuthProviders',
-            {
-                method: 'GET',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture
-                }
-            })
+        Api.getAuth('Account/GetAuthProviders')
             .then(response => response.json() as Promise<AuthProviders>)
             .then(data => {
                 if (data.providers) {
@@ -137,16 +130,7 @@ export default class LoginComponent extends Vue {
         if (!this.isValid) return;
         this.submitting = true;
         this.errorMessage = '';
-        Api.callAuth('Account/ForgotPassword',
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Content-Type': `application/json;v=${this.$store.state.apiVer}`
-                },
-                body: JSON.stringify(this.model)
-            })
+        Api.postAuth('Account/ForgotPassword', undefined, JSON.stringify(this.model))
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {
@@ -176,17 +160,7 @@ export default class LoginComponent extends Vue {
         this.submitting = true;
         this.errorMessage = '';
         this.model.authProvider = provider;
-        Api.callAuth('Account/ExternalLogin',
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Content-Type': `application/json;v=${this.$store.state.apiVer}`
-                },
-                body: JSON.stringify(this.model)
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.postAuth('Account/ExternalLogin', this.$route.fullPath, JSON.stringify(this.model))
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {
@@ -221,16 +195,7 @@ export default class LoginComponent extends Vue {
         this.submitting = true;
         this.errorMessage = '';
 
-        Api.callAuth('Account/Login',
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Content-Type': `application/json;v=${this.$store.state.apiVer}`
-                },
-                body: JSON.stringify(this.model)
-            })
+        Api.postAuth('Account/Login', undefined, JSON.stringify(this.model))
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {

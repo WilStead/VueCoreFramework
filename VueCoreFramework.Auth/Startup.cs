@@ -84,14 +84,16 @@ namespace VueCoreFramework.Auth
                 options.SupportedUICultures = LocalizationConfig.SupportedCultures;
             });
 
+            var urls = Configuration.GetSection("URLs");
             services.AddCors(options =>
             {
                 options.AddPolicy("default", policy =>
                 {
                     policy
-                        .AllowAnyOrigin()
+                        .WithOrigins(urls["ClientURL"].TrimEnd('/'))
                         .AllowAnyHeader()
-                        .AllowAnyMethod();
+                        .AllowAnyMethod()
+                        .AllowCredentials();
                 });
             });
 
@@ -122,7 +124,7 @@ namespace VueCoreFramework.Auth
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.Configure<AuthMessageSenderOptions>(Configuration.GetSection("AuthMessageSender"));
             services.Configure<AdminOptions>(Configuration.GetSection("AdminOptions"));
-            services.Configure<URLOptions>(Configuration.GetSection("URLs"));
+            services.Configure<URLOptions>(urls);
         }
 
         /// <summary>

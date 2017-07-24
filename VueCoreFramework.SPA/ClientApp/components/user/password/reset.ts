@@ -97,17 +97,7 @@ export default class ResetComponent extends Vue {
     onSubmit() {
         if (!this.isValid) return;
         this.submitting = true;
-        Api.callAuth('Account/ResetPassword',
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Content-Type': `application/json;v=${this.$store.state.apiVer}`
-                },
-                body: JSON.stringify(this.model)
-            })
-            .then(response => checkResponse(response, this.$route.fullPath))
+        Api.postAuth('Account/ResetPassword', this.$route.fullPath, JSON.stringify(this.model))
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {

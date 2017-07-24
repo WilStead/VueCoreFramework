@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using VueCoreFramework.Core.Messages;
 
@@ -58,13 +60,9 @@ namespace VueCoreFramework.Controllers
         /// <param name="forwardUrl">
         /// An optional redirect URL which may be used to load a specific page within the SPA.
         /// </param>
-        /// <param name="returnUrl">
-        /// An optional redirect URL which will be passed to the login page.
-        /// </param>
-        public IActionResult Index(string forwardUrl = "", string returnUrl = "")
+        public IActionResult Index(string forwardUrl = "")
         {
             ViewData["ForwardUrl"] = forwardUrl;
-            ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
@@ -82,23 +80,20 @@ namespace VueCoreFramework.Controllers
         }
 
         /// <summary>
-        /// Callback URL for IdentityServer OpenID Connect.
+        /// The OIDC callback endpoint for IdentityServer.
         /// </summary>
         [Route("oidc/callback")]
-        public IActionResult OidcCallback()
+        public IActionResult OidcCallback(IFormCollection data)
         {
-            ViewData["ForwardUrl"] = "oidc-callback";
-            return View(nameof(Index));
-        }
-
-        /// <summary>
-        /// Callback URL for IdentityServer OpenID Connect.
-        /// </summary>
-        [Route("oidc/callback_silent")]
-        public IActionResult OidcSilentCallback()
-        {
-            ViewData["ForwardUrl"] = "oidc-callback-silent";
-            return View(nameof(Index));
+            StringBuilder sb = new StringBuilder();
+            foreach (var item in data)
+            {
+                sb.Append("&");
+                sb.Append(item.Key);
+                sb.Append("=");
+                sb.Append(item.Value);
+            }
+            return Ok(sb.ToString());
         }
     }
 }

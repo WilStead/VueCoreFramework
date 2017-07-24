@@ -112,16 +112,7 @@ export default class RegisterComponent extends Vue {
         this.success = false;
         if (!this.isValid) return;
         this.errors = [];
-        Api.callAuth('Account/Register',
-            {
-                method: 'POST',
-                headers: {
-                    'Accept': `application/json;v=${this.$store.state.apiVer}`,
-                    'Accept-Language': this.$store.state.userState.culture,
-                    'Content-Type': `application/json;v=${this.$store.state.apiVer}`
-                },
-                body: JSON.stringify(this.model)
-            })
+        Api.postAuth('Account/Register', undefined, JSON.stringify(this.model))
             .then(response => {
                 if (!response.ok) {
                     if (response.statusText) {

@@ -26,15 +26,12 @@
             </summary>
             <returns>A list of the supported cultures.</returns>
         </member>
-        <member name="M:VueCoreFramework.Controllers.HomeController.Index(System.String,System.String)">
+        <member name="M:VueCoreFramework.Controllers.HomeController.Index(System.String)">
             <summary>
             The primary endpoint for the site. Displays the SPA.
             </summary>
             <param name="forwardUrl">
             An optional redirect URL which may be used to load a specific page within the SPA.
-            </param>
-            <param name="returnUrl">
-            An optional redirect URL which will be passed to the login page.
             </param>
         </member>
         <member name="M:VueCoreFramework.Controllers.HomeController.Logout">
@@ -43,14 +40,9 @@
             </summary>
             <response code="200">OK</response>
         </member>
-        <member name="M:VueCoreFramework.Controllers.HomeController.OidcCallback">
+        <member name="M:VueCoreFramework.Controllers.HomeController.OidcCallback(Microsoft.AspNetCore.Http.IFormCollection)">
             <summary>
-            Callback URL for IdentityServer OpenID Connect.
-            </summary>
-        </member>
-        <member name="M:VueCoreFramework.Controllers.HomeController.OidcSilentCallback">
-            <summary>
-            Callback URL for IdentityServer OpenID Connect.
+            The OIDC callback endpoint for IdentityServer.
             </summary>
         </member>
         <member name="T:VueCoreFramework.Program">
