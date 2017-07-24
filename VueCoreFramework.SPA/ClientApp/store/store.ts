@@ -145,27 +145,6 @@ export const store = new Vuex.Store({
         },
 
         /**
-         * Sets the current user email.
-         */
-        setEmail(state, email: string) {
-            state.userState.email = email;
-        },
-
-        /**
-         * Sets whether the current user is an administrator.
-         */
-        setIsAdmin(state, isAdmin: boolean) {
-            state.userState.isAdmin = isAdmin;
-        },
-
-        /**
-         * Sets whether the current user is the site administrator.
-         */
-        setIsSiteAdmin(state, isSiteAdmin: boolean) {
-            state.userState.isSiteAdmin = isSiteAdmin;
-        },
-
-        /**
          * Sets the current users managed groups.
          */
         setJoinedGroups(state, joinedGroups: Group[]) {
@@ -180,24 +159,13 @@ export const store = new Vuex.Store({
         },
 
         /**
-         * Sets the current JWT bearer token.
-         */
-        setToken(state, token: string) {
-            state.userState.user.access_token = token;
-        },
-
-        /**
          * Sets the current OIDC user.
          */
         setUser(state, user: Oidc.User) {
             state.userState.user = user;
-        },
-
-        /**
-         * Sets the current username.
-         */
-        setUsername(state, username: string) {
-            state.userState.username = username;
+            state.userState.username = user == null ? 'user' : user.profile.name;
+            state.userState.isAdmin = user == null ? false : user.profile.role.indexOf("Admin") !== -1;
+            state.userState.isSiteAdmin = user == null ? false : user.profile.role.indexOf("SiteAdmin") !== -1;
         },
 
         /**
@@ -306,7 +274,6 @@ export const store = new Vuex.Store({
             state.uiState.messaging.chatShown = false;
             state.uiState.messaging.messagingShown = false;
             state.userState.username = 'user';
-            state.userState.email = 'user@example.com';
             authMgr.signoutRedirect();
         },
 
@@ -424,14 +391,9 @@ export const refreshConversations = 'refreshConversations';
 export const refreshGroups = 'refreshGroups';
 export const refreshSystemMessages = 'refreshSystemMessages';
 export const setCulture = 'setCulture';
-export const setEmail = 'setEmail';
-export const setIsAdmin = 'setIsAdmin';
-export const setIsSiteAdmin = 'setIsSiteAdmin';
 export const setJoinedGroups = 'setJoinedGroups';
 export const setManagedGroups = 'setManagedGroups';
-export const setToken = 'setToken';
 export const setUser = 'setUser';
-export const setUsername = 'setUsername';
 export const startChatAdminReview = 'startChatAdminReview';
 export const startChatWithGroup = 'startChatWithGroup';
 export const startChatWithSystem = 'startChatWithSystem';

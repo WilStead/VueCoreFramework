@@ -248,7 +248,7 @@ export class Repository {
         descending: boolean,
         page: number,
         rowsPerPage: number): Promise<PageData<DataItem>> {
-        var url = `/api/Data/${this.dataType}/GetChildPage/${id}/${childProp}`;
+        var url = `api/Data/${this.dataType}/GetChildPage/${id}/${childProp}`;
         if (search || sortBy || descending || page || rowsPerPage) {
             url += '?';
         }
@@ -364,7 +364,7 @@ export class Repository {
         page: number,
         rowsPerPage: number,
         except: string[] = []): Promise<PageData<DataItem>> {
-        var url = `/api/Data/${this.dataType}/GetPage`;
+        var url = `api/Data/${this.dataType}/GetPage`;
         if (search || sortBy || descending || page || rowsPerPage) {
             url += '?';
         }

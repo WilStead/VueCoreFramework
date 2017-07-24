@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -13,7 +14,9 @@ using Microsoft.Extensions.Options;
 using NLog;
 using NLog.Extensions.Logging;
 using NLog.Web;
+using System;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using VueCoreFramework.Core.Configuration;
 using VueCoreFramework.Core.Data;
 using VueCoreFramework.Core.Models;
@@ -111,7 +114,7 @@ namespace VueCoreFramework.Auth
                 options.UserInteraction.LogoutUrl = "/Home/Logout";
                 options.UserInteraction.ErrorUrl = "/Home/Error";
             })
-                .AddTemporarySigningCredential()
+                .AddSigningCredential(new X509Certificate2("localhost.pfx", "password"))
                 .AddConfigurationStore(builder =>
                     builder.UseSqlServer(connectionString, options =>
                         options.MigrationsAssembly(migrationsAssembly)))

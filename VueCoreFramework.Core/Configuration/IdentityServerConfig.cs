@@ -32,8 +32,8 @@ namespace VueCoreFramework.Core.Configuration
             => new List<IdentityResource>
             {
                 new IdentityResources.OpenId(),
-                new IdentityResources.Email(),
-                new IdentityResources.Profile()
+                new IdentityResources.Profile(),
+                new IdentityResource("roles", "Roles", new[]{ "role" })
             };
 
         /// <summary>
@@ -89,8 +89,8 @@ namespace VueCoreFramework.Core.Configuration
                     AllowedScopes = new List<string>
                     {
                         IdentityServerConstants.StandardScopes.OpenId,
-                        IdentityServerConstants.StandardScopes.Email,
                         IdentityServerConstants.StandardScopes.Profile,
+                        "roles",
                         apiName
                     }
                 }

@@ -16,7 +16,7 @@ export function configureOidc() {
         client_id: "vue.client",
         redirect_uri: `${Api.urls.spaUrl}oidc/callback`,
         response_type: "id_token token",
-        scope: "openid email profile vcfapi",
+        scope: "openid profile roles vcfapi",
         prompt: "none",
         post_logout_redirect_uri: Api.urls.spaUrl,
         userStore: new Oidc.WebStorageStateStore({ store: window.localStorage })
@@ -25,12 +25,18 @@ export function configureOidc() {
     authMgr.events.addAccessTokenExpiring(authorize);
 }
 
-function authorize(returnUrl = '') {
-    authMgr.createSigninRequest({ state: returnUrl })
+function authorize(): Promise<string> {
+    return authMgr.createSigninRequest()
         .then(request => {
             request.url = request.url.substring(Api.urls.authUrl.length);
             request.url += '&response_mode=form_post';
-            Api.getAuth(request.url)
+            return Api.getAuth(request.url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Authorization endpoint call failure: ${response.status}, ${response.statusText}`);
+                    }
+                    return response;
+                })
                 .then(response => response.text())
                 .then(text => {
                     let regex = /name='([^']+)' value='([^']+)'/g;
@@ -41,34 +47,47 @@ function authorize(returnUrl = '') {
                         fake_url += `&${parsed[1]}=${parsed[2]}`;
                     }
 
-                    authMgr.signinRedirectCallback(fake_url)
+                    return authMgr.signinRedirectCallback(fake_url)
                         .then(user => {
-                            if (user && user.state) {
-                                if (user.state.startsWith("http")) {
-                                    if (user.state.startsWith(Api.urls.spaUrl)) {
-                                        let local = user.state.substr(Api.urls.spaUrl.length - 1);
-                                        router.push(local);
-                                    } else {
-                                        router.push('/'); // External redirects not allowed.
-                                    }
-                                } else {
-                                    router.push(user.state);
-                                }
+                            if (user) {
+                                Store.store.commit(Store.setUser, user);
+                                return "authorized";
                             } else {
-                                router.push('/');
+                                throw new Error("Authorization callback failure.");
                             }
                         });
                 });
+        })
+        .catch(error => {
+            ErrorMsg.logError("authorization.authorize", error);
+            return "login";
         });
 }
 
-export function login(returnUrl = '') {
-    authorize(returnUrl);
+export function login(returnUrl = ''): Promise<string> {
+    return authorize()
+        .then(result => {
+            if (result === "authorized") {
+                if (returnUrl) {
+                    router.push(returnUrl);
+                } else {
+                    router.push('/');
+                }
+                return "Success";
+            } else {
+                return "A problem occurred. Login failed.";
+            }
+        })
+        .catch(error => {
+            ErrorMsg.logError("authorization.login", error);
+            return "A problem occurred. Login failed.";
+        });
 }
 
 export function logout() {
     authMgr.removeUser()
         .then(() => {
+            Store.store.commit(Store.setUser, null);
             Api.getAuth('Account/Logout');
         });
 }
@@ -78,58 +97,17 @@ export function logout() {
  * @returns {string} Either 'authorized' or 'login' if the user must sign in.
  */
 export function authenticate(full?: boolean): Promise<string> {
-    authMgr.getUser()
+    return authMgr.getUser()
         .then(user => {
-            Store.store.commit(Store.setUser, user);
             if (user) {
+                Store.store.commit(Store.setUser, user);
                 return "authorized";
             } else {
-                return "login";
-            }
-        });
-
-    let url = 'Authorization/Authenticate/';
-    if (full || !Store.store.state.userState.user) {
-        full = true;
-        url += '?full=true';
-    }
-    return Api.getAuth(url)
-        .then(response => {
-            if (!response.ok) {
-                if (response.status === 401) {
-                    throw Error("login");
-                }
-                throw Error(response.statusText);
-            }
-            return response;
-        })
-        .then(response => response.json() as Promise<AuthorizationViewModel>)
-        .then(data => {
-            if (data.token) {
-                Store.store.commit(Store.setToken, data.token);
-            }
-            if (full) {
-                Store.store.commit(Store.setUsername, data.username);
-                Store.store.commit(Store.setEmail, data.email);
-                Store.store.commit(Store.setIsAdmin, data.isAdmin);
-                Store.store.commit(Store.setIsSiteAdmin, data.isSiteAdmin);
-            }
-            if (data.authorization === "login") {
-                if (Store.store.state.userState.user) {
-                    Store.store.commit(Store.setToken, '');
-                }
-                return "login";
-            } else {
-                return "authorized";
+                return authorize();
             }
         })
         .catch(error => {
-            if (Store.store.state.userState.user) {
-                Store.store.commit(Store.setToken, '');
-            }
-            if (error.message !== "login") {
-                ErrorMsg.logError("router.checkAuthorization", new Error(error));
-            }
+            ErrorMsg.logError("authorization.authenticate", new Error(error));
             return "login";
         });
 }
@@ -139,39 +117,14 @@ export function authenticate(full?: boolean): Promise<string> {
  */
 export interface AuthorizationViewModel {
     /**
-     * A value indicating whether the user is authorized for the requested action or not.
+     * A value indicating the user's level of authorization for the requested data.
      */
     authorization: string;
 
     /**
-     * Indicates that the user is authorized to share/hide the requested data.
+     * Indicates whether the user is authorized to share/hide the requested data with anyone, their group, or no one.
      */
     canShare: string;
-
-    /**
-     * The email of the user account.
-     */
-    email: string;
-
-    /**
-     * Indicates that the current user is an administrator.
-     */
-    isAdmin: boolean;
-
-    /**
-     * Indicates that the current user is the site administrator.
-     */
-    isSiteAdmin: boolean;
-
-    /**
-     * A JWT bearer token.
-     */
-    token: string;
-
-    /**
-     * The username of the user account.
-     */
-    username: string;
 }
 
 /**
@@ -182,55 +135,64 @@ export interface AuthorizationViewModel {
  * @returns {string} Either 'authorized' or 'unauthorized' or 'login' if the user must sign in.
  */
 export function checkAuthorization(dataType: string, operation = '', id = ''): Promise<string> {
-    let url = `Authorization/Authorize/${dataType}`;
-    if (operation) url += `?operation=${operation}`;
-    if (id) {
-        if (operation) {
-            url += '&';
-        } else {
-            url += '?';
-        }
-        url += `id=${id}`;
-    }
-    return Api.getAuth(url)
-        .then(response => {
-            if (!response.ok) {
-                if (response.status === 401) {
-                    throw Error("unauthorized");
-                }
-                throw Error(response.statusText);
+    return authMgr.getUser()
+        .then(user => {
+            if (!user) {
+                return authorize();
+            } else {
+                Store.store.commit(Store.setUser, user);
+                return "authorized";
             }
-            return response;
         })
-        .then(response => response.json() as Promise<AuthorizationViewModel>)
-        .then(data => {
-            if (data.authorization === "login") {
-                if (Store.store.state.userState.user) {
-                    Store.store.commit(Store.setToken, '');
+        .then(authorizeResult => {
+            if (authorizeResult === "login") {
+                return authorizeResult;
+            } else {
+                let url = `Authorization/Authorize/${dataType}`;
+                if (operation) url += `?operation=${operation}`;
+                if (id) {
+                    if (operation) {
+                        url += '&';
+                    } else {
+                        url += '?';
+                    }
+                    url += `id=${id}`;
                 }
-                return "login";
+                return Api.getAuth(url)
+                    .then(response => {
+                        if (!response.ok) {
+                            if (response.status === 401) {
+                                throw Error("unauthorized");
+                            }
+                            throw Error(response.statusText);
+                        }
+                        return response;
+                    })
+                    .then(response => response.json() as Promise<AuthorizationViewModel>)
+                    .then(data => {
+                        if (data.authorization === "login") {
+                            return "login";
+                        }
+                        let permission: PermissionData = { dataType };
+                        if (id) {
+                            permission.id = id;
+                        }
+                        permission.canShare = data.canShare;
+                        if (data.authorization !== "authorized"
+                            && data.authorization !== "unauthorized") {
+                            permission.permission = data.authorization;
+                        }
+                        Store.store.commit(Store.updatePermission, permission);
+                        return data.authorization;
+                    });
             }
-            Store.store.commit(Store.setEmail, data.email);
-            Store.store.commit(Store.setIsAdmin, data.isAdmin);
-            Store.store.commit(Store.setIsSiteAdmin, data.isSiteAdmin);
-            Store.store.commit(Store.setToken, data.token);
-            Store.store.commit(Store.setUsername, data.username);
-            let permission: PermissionData = { dataType };
-            if (id) {
-                permission.id = id;
-            }
-            permission.canShare = data.canShare;
-            if (data.authorization !== "authorized"
-                && data.authorization !== "unauthorized") {
-                permission.permission = data.authorization;
-            }
-            Store.store.commit(Store.updatePermission, permission);
-            return data.authorization;
         })
         .catch(error => {
-            if (error.message !== "unauthorized") {
+            if (error.message === "unauthorized") {
+                return error.message;
+            } else {
                 ErrorMsg.logError("authorization.checkAuthorization", new Error(error));
+                return "login";
             }
-            return "unauthorized";
         });
 }

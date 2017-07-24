@@ -57,11 +57,6 @@ export const userState = {
     culture: 'en-US',
 
     /**
-     * The email address of the current user (if any).
-     */
-    email: 'user@example.com',
-
-    /**
      * Indicates that the current user is an administrator.
      */
     isAdmin: false,

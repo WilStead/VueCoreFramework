@@ -10,6 +10,15 @@
 
   <PropertyGroup>
     <UserSecretsId>aspnet-VueCoreFramework.Auth-b0e4ae1e-ff7f-418b-abd7-a0be3fcce62d</UserSecretsId>
+    <AssemblyVersion>0.6.0.0</AssemblyVersion>
+    <FileVersion>0.6.0.0</FileVersion>
+    <Version>0.6.0</Version>
+    <Description>ASP.NET Core API with Vue SPA</Description>
+    <Company>Wil Stead</Company>
+    <Authors>Wil Stead</Authors>
+    <Copyright>Wil Stead</Copyright>
+    <PackageLicenseUrl>https://github.com/WilStead/VueCoreFramework/blob/master/LICENSE.txt</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/WilStead/VueCoreFramework</PackageProjectUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

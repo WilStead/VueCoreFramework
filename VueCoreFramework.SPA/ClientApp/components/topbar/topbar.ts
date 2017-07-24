@@ -19,7 +19,11 @@ export default class TopbarComponent extends Vue {
                 .filter(m => !m.received).length;
     }
 
-    mounted() { this.updateAuth(); }
+    mounted() {
+        if (this.updateTimeout === 0) {
+            this.updateTimeout = setTimeout(this.updateAuth, 500);
+        }
+    }
 
     @Watch('$route')
     onRouteChange(val: VueRouter.Route, oldVal: VueRouter.Route) {
@@ -57,11 +61,7 @@ export default class TopbarComponent extends Vue {
         this.updateTimeout = 0;
         authenticate()
             .then(auth => {
-                if (auth === "authorized") {
-                    this.signedIn = true;
-                } else {
-                    this.signedIn = false;
-                }
+                this.signedIn = auth === "authorized";
             });
     }
 }

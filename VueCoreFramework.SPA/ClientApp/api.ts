@@ -23,7 +23,7 @@ export function callFetch(url: string, method?: string, body?: any, cred?: boole
         init.mode = 'cors';
     }
     if (store.state.userState.user) {
-        init.headers['Authorization'] = `bearer ${store.state.userState.user.access_token}`;
+        init.headers['Authorization'] = `Bearer ${store.state.userState.user.access_token}`;
     }
     if (body) {
         init.body = body;

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using IdentityModel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -81,7 +82,7 @@ namespace VueCoreFramework.Auth.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> ChangeEmail([FromBody]ManageUserViewModel model)
         {
-            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
@@ -145,7 +146,7 @@ namespace VueCoreFramework.Auth.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> ChangePassword([FromBody]ManageUserViewModel model)
         {
-            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
@@ -180,7 +181,7 @@ namespace VueCoreFramework.Auth.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> ChangeUsername([FromBody]ManageUserViewModel model)
         {
-            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
@@ -215,7 +216,7 @@ namespace VueCoreFramework.Auth.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> DeleteAccount(string xferUsername)
         {
-            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
@@ -429,7 +430,7 @@ namespace VueCoreFramework.Auth.Controllers
         [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
         public async Task<IActionResult> LinkLoginCallback()
         {
-            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.AuthProviderError]);
@@ -465,7 +466,7 @@ namespace VueCoreFramework.Auth.Controllers
         [ProducesResponseType(typeof(IDictionary<string, string>), 200)]
         public async Task<IActionResult> LoadXferUsernames()
         {
-            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
@@ -502,7 +503,7 @@ namespace VueCoreFramework.Auth.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetUserError]);
             }
-            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
@@ -552,7 +553,7 @@ namespace VueCoreFramework.Auth.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> RemoveLogin([FromBody]ManageUserViewModel model)
         {
-            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
@@ -598,7 +599,7 @@ namespace VueCoreFramework.Auth.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.MissingDataError]);
             }
-            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
@@ -640,7 +641,7 @@ namespace VueCoreFramework.Auth.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> SetPassword([FromBody]ManageUserViewModel model)
         {
-            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
@@ -678,7 +679,7 @@ namespace VueCoreFramework.Auth.Controllers
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidTargetUserError]);
             }
-            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);

@@ -169,21 +169,19 @@ export default class LoginComponent extends Vue {
                         this.errorMessage = "A problem occurred.";
                     }
                     throw new Error(response.statusText);
+                } else {
+                    login(this.returnUrl)
+                        .then(result => {
+                            if (result !== "Success") {
+                                this.errorMessage = result;
+                            }
+                        });
                 }
-                return response;
-            })
-            .then(response => response.json() as Promise<string>)
-            .then(data => {
-                this.$store.commit(Store.setToken, data);
-                if (this.model.rememberUser) {
-                    localStorage.setItem('token', data);
-                }
-                this.$router.push(this.returnUrl || '/');
                 this.submitting = false;
             })
             .catch(error => {
                 if (!this.errorMessage) {
-                    this.errorMessage = "A problem occurred.";
+                    this.errorMessage = "A problem occurred. Login failed.";
                     ErrorMsg.logError("login.onSignInProvider", new Error(error));
                 }
                 this.submitting = false;
@@ -205,7 +203,12 @@ export default class LoginComponent extends Vue {
                     }
                     throw new Error(response.statusText);
                 } else {
-                    login(this.returnUrl);
+                    login(this.returnUrl)
+                        .then(result => {
+                            if (result !== "Success") {
+                                this.errorMessage = result;
+                            }
+                        });
                 }
                 this.submitting = false;
             })

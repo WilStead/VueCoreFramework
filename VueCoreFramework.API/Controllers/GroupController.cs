@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using IdentityModel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
@@ -106,8 +107,7 @@ namespace VueCoreFramework.API.Controllers
         [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
         public async Task<IActionResult> GetGroup(string group)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
@@ -175,8 +175,7 @@ namespace VueCoreFramework.API.Controllers
         [ProducesResponseType(typeof(IDictionary<string, object>), 200)]
         public async Task<IActionResult> GetGroupMemberships()
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
@@ -234,8 +233,7 @@ namespace VueCoreFramework.API.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> InviteUserToGroup(string username, string group)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
@@ -329,8 +327,7 @@ namespace VueCoreFramework.API.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> LeaveGroup(string group)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
@@ -376,8 +373,7 @@ namespace VueCoreFramework.API.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> RemoveGroup(string group)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
@@ -443,8 +439,7 @@ namespace VueCoreFramework.API.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> RemoveUserFromGroup(string username, string group)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
@@ -513,8 +508,7 @@ namespace VueCoreFramework.API.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> StartNewGroup(string group)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
@@ -562,8 +556,7 @@ namespace VueCoreFramework.API.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> TransferManagerToUser(string username, string group)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
@@ -641,8 +634,7 @@ namespace VueCoreFramework.API.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> TransferSiteAdminToUser(string username)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);

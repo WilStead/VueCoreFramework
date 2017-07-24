@@ -2,6 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard1.5</TargetFramework>
+    <Version>0.6.0</Version>
+    <PackageLicenseUrl>https://github.com/WilStead/VueCoreFramework/blob/master/LICENSE.txt</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/WilStead/VueCoreFramework</PackageProjectUrl>
+    <Authors>Wil Stead</Authors>
+    <Company>Wil Stead</Company>
+    <Copyright>Wil Stead</Copyright>
+    <Description>ASP.NET Core API with Vue SPA</Description>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

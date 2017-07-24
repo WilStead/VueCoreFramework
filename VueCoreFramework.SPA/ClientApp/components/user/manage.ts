@@ -439,7 +439,9 @@ export default class ManageUserComponent extends Vue {
             .then(response => {
                 this.success = true;
                 this.successMessage = "Success!";
-                authenticate(true);
+                if (this.changingUsername) {
+                    this.$store.state.userState.username = this.model.username;
+                }
                 this.cancelChange();
             })
             .catch(error => {

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using IdentityModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -11,7 +11,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
-using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using VueCoreFramework.Auth.ViewModels;
 using VueCoreFramework.Core.Configuration;
@@ -165,9 +164,8 @@ namespace VueCoreFramework.Auth.Controllers
                 return BadRequest(_errorLocalizer[ErrorMessages.AuthProviderError]);
             }
 
-            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user.AdminLocked)
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
+            if (user?.AdminLocked ?? false)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.LockedAccount, _adminOptions.AdminEmailAddress]);
             }
@@ -183,15 +181,7 @@ namespace VueCoreFramework.Auth.Controllers
                     CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(user.Culture)),
                     new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) });
 
-                var token = await HttpContext.Authentication.GetTokenAsync("access_token");
-                if (string.IsNullOrEmpty(token))
-                {
-                    return BadRequest(_errorLocalizer[ErrorMessages.InvalidLogin]);
-                }
-                else
-                {
-                    return Json(token);
-                }
+                return Ok();
             }
             else
             {
@@ -199,6 +189,7 @@ namespace VueCoreFramework.Auth.Controllers
                 // email (before '@') as the username, since not every provider will have a unique,
                 // human-readable, non-personally-identifying username available. The user can always
                 // change it.
+                var email = HttpContext.User.FindFirstValue(JwtClaimTypes.Email);
                 user = new ApplicationUser { UserName = email.Substring(0, email.IndexOf('@')), Email = email };
                 var newResult = await _userManager.CreateAsync(user);
                 if (newResult.Succeeded)
@@ -209,15 +200,7 @@ namespace VueCoreFramework.Auth.Controllers
                         await _signInManager.SignInAsync(user, rememberUser);
                         _logger.LogInformation(LogEvent.NEW_ACCOUNT_EXTERNAL, "New account created for {USER} with {PROVIDER}.", user.Email, info.LoginProvider);
 
-                        var token = await HttpContext.Authentication.GetTokenAsync("access_token");
-                        if (string.IsNullOrEmpty(token))
-                        {
-                            return BadRequest(_errorLocalizer[ErrorMessages.InvalidLogin]);
-                        }
-                        else
-                        {
-                            return Json(token);
-                        }
+                        return Ok();
                     }
                 }
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidLogin]);
@@ -283,7 +266,7 @@ namespace VueCoreFramework.Auth.Controllers
         [ProducesResponseType(typeof(IDictionary<string, string>), 200)]
         public async Task<IActionResult> GetUserAuthProviders()
         {
-            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
@@ -308,7 +291,7 @@ namespace VueCoreFramework.Auth.Controllers
         [ProducesResponseType(typeof(IDictionary<string, string>), 200)]
         public async Task<IActionResult> HasPassword()
         {
-            var user = await _userManager.FindByEmailAsync(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);
@@ -377,6 +360,8 @@ namespace VueCoreFramework.Auth.Controllers
         [HttpGet]
         public async Task<IActionResult> Logout(string logoutId = "")
         {
+            await HttpContext.Authentication.SignOutAsync("Cookies");
+            await HttpContext.Authentication.SignOutAsync("oidc");
             await _signInManager.SignOutAsync();
             _logger.LogInformation(4, "User logged out.");
             return RedirectToAction(nameof(HomeController.Index), "Home");
@@ -563,8 +548,7 @@ namespace VueCoreFramework.Auth.Controllers
         [ProducesResponseType(typeof(UserViewModel), 200)]
         public async Task<IActionResult> VerifyUser(string id)
         {
-            var email = HttpContext.User.FindFirst(ClaimTypes.Email).Value;
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _userManager.FindByIdAsync(HttpContext.User.FindFirstValue(JwtClaimTypes.Subject));
             if (user == null)
             {
                 return BadRequest(_errorLocalizer[ErrorMessages.InvalidUserError]);

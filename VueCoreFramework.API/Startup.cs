@@ -160,6 +160,7 @@ namespace VueCoreFramework.API
             {
                 Authority = urls.Value.AuthURL,
                 ApiName = IdentityServerConfig.apiName,
+                ApiSecret = Configuration["secretJwtKey"],
                 RequireHttpsMetadata = true
             });
 
