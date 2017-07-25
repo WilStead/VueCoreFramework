@@ -108,26 +108,18 @@ export const store = new Vuex.Store({
         /**
          * Initializes the VueRouter with data type info from the API.
          */
-        addTypeRoutes(state, router) {
+        async addTypeRoutes(state, router) {
             let dataItemIndex = state.uiState.menuItems.findIndex(v => v.dataHook);
-            getMenuItems(router, state.apiVer, state.userState.culture, state.uiState.menuItems[dataItemIndex])
-                .then(data => {
-                    if (!state.uiState.menuItems[dataItemIndex].submenu
-                        || !state.uiState.menuItems[dataItemIndex].submenu.length) {
-                        state.uiState.menuItems.splice(dataItemIndex, 1);
-                    }
-
-                    // Must be added after dynamic routes to avoid matching before them.
-                    router.addRoutes([{ path: '*', redirect: '/error/notfound' }]);
-                })
-                .catch(error => {
-                    // Ensure added.
-                    router.addRoutes([{ path: '*', redirect: '/error/notfound' }]);
-
-                    ErrorLog.logError("store.addTypeRoutes.getMenuItems", error);
-                });
-            getChildItems(router, state.apiVer, state.userState.culture)
-                .catch(error => ErrorLog.logError("store.addTypeRoutes.getChildItems", error));
+            if (dataItemIndex !== -1) {
+                try {
+                    await getMenuItems(router, state.apiVer, state.userState.culture, state.uiState.menuItems[dataItemIndex]);
+                    await getChildItems(router, state.apiVer, state.userState.culture);
+                } catch (error) {
+                    ErrorLog.logError("store.addTypeRoutes", error);
+                }
+            }
+            // Must be added after dynamic routes to avoid matching before them.
+            router.addRoutes([{ path: '*', redirect: '/error/notfound' }]);
         },
 
         /**
@@ -135,6 +127,19 @@ export const store = new Vuex.Store({
          */
         hideChat(state) {
             state.uiState.messaging.chatShown = false;
+        },
+
+        /**
+         * Signs the current user out.
+         */
+        logout(state) {
+            state.uiState.messaging.groupChat = '';
+            state.uiState.messaging.proxySender = '';
+            state.uiState.messaging.interlocutor = '';
+            state.uiState.messaging.chatShown = false;
+            state.uiState.messaging.messagingShown = false;
+            state.userState.user = null;
+            state.userState.username = 'user';
         },
 
         /**
@@ -265,120 +270,78 @@ export const store = new Vuex.Store({
     },
     actions: {
         /**
-         * Signs the current user out.
-         */
-        logout({ commit, state }) {
-            state.uiState.messaging.groupChat = '';
-            state.uiState.messaging.proxySender = '';
-            state.uiState.messaging.interlocutor = '';
-            state.uiState.messaging.chatShown = false;
-            state.uiState.messaging.messagingShown = false;
-            state.userState.username = 'user';
-            authMgr.signoutRedirect();
-        },
-
-        /**
          * Updates the messages in the chat window.
          */
-        refreshChat({ commit, state }, returnPath) {
-            if (state.uiState.messaging.groupChat) {
-                return messaging.getGroupMessages(returnPath, state.uiState.messaging.groupChat)
-                    .then(data => {
-                        commit(updateMessages, data);
-                    })
-                    .catch(error => {
-                        commit(updateMessages, []);
-                        ErrorLog.logError('store.refreshChat', error);
-                    });
-            } else if (state.uiState.messaging.proxySender) {
-                return messaging.getProxyUserMessages(returnPath, state.uiState.messaging.proxySender, state.uiState.messaging.interlocutor)
-                    .then(data => {
-                        commit(updateMessages, data);
-                    })
-                    .catch(error => {
-                        commit(updateMessages, []);
-                        ErrorLog.logError('store.refreshChat', error);
-                    });
-            } else if (state.uiState.messaging.interlocutor) {
-                return messaging.getUserMessages(returnPath, state.uiState.messaging.interlocutor)
-                    .then(data => {
-                        commit(updateMessages, data);
-                        messaging.markConversationRead(returnPath, state.uiState.messaging.interlocutor);
-                    })
-                    .catch(error => {
-                        commit(updateMessages, []);
-                        ErrorLog.logError('store.refreshChat', error);
-                    });
-            } else {
-                return messaging.getSystemMessages(returnPath)
-                    .then(data => {
-                        commit(updateMessages, data);
-                        commit(updateSystemMessages, data);
-                        messaging.markSystemMessagesRead(returnPath);
-                    })
-                    .catch(error => {
-                        commit(updateMessages, []);
-                        commit(updateSystemMessages, []);
-                        ErrorLog.logError('store.refreshChat', error);
-                    });
+        async refreshChat({ commit, state }, returnPath) {
+            try {
+                let data: MessageViewModel[];
+                if (state.uiState.messaging.groupChat) {
+                    data = await messaging.getGroupMessages(returnPath, state.uiState.messaging.groupChat);
+                } else if (state.uiState.messaging.proxySender) {
+                    data = await messaging.getProxyUserMessages(returnPath, state.uiState.messaging.proxySender, state.uiState.messaging.interlocutor);
+                } else if (state.uiState.messaging.interlocutor) {
+                    data = await messaging.getUserMessages(returnPath, state.uiState.messaging.interlocutor);
+                    messaging.markConversationRead(returnPath, state.uiState.messaging.interlocutor);
+                } else {
+                    data = await messaging.getSystemMessages(returnPath);
+                    commit(updateSystemMessages, data);
+                    messaging.markSystemMessagesRead(returnPath);
+                }
+                commit(updateMessages, data);
+            } catch (error) {
+                ErrorLog.logError('store.refreshChat', error);
             }
         },
 
         /**
          * Updates the user's conversations.
          */
-        refreshConversations({ commit }, returnPath) {
-            return messaging.getConversations(returnPath)
-                .then(data => {
-                    commit(updateConversations, data);
-                })
-                .catch(error => {
-                    ErrorLog.logError('store.refreshConversations', error);
-                });
+        async refreshConversations({ commit }, returnPath) {
+            try {
+                let data = await messaging.getConversations(returnPath);
+                commit(updateConversations, data);
+            } catch (error) {
+                ErrorLog.logError('store.refreshConversations', error);
+            }
         },
 
         /**
          * Updates the user's group memberships from the API.
          */
-        refreshGroups({ commit, state }, returnPath) {
-            return Api.getApi('api/Group/GetGroupMemberships/')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(response.statusText);
+        async refreshGroups({ commit, state }, returnPath) {
+            try {
+                let response = await Api.getApi('api/Group/GetGroupMemberships/');
+                if (!response.ok) {
+                    throw new Error(response.statusText);
+                }
+                let data = await response.json() as Group[];
+                let managedGroups = [];
+                let joinedGroups = [];
+                for (var i = 0; i < data.length; i++) {
+                    if (data[i].manager === state.userState.username
+                        || data[i].name === 'Admin' && state.userState.isSiteAdmin) {
+                        managedGroups.push(data[i]);
+                    } else {
+                        joinedGroups.push(data[i]);
                     }
-                    return response;
-                })
-                .then(response => response.json() as Promise<Group[]>)
-                .then(data => {
-                    let managedGroups = [];
-                    let joinedGroups = [];
-                    for (var i = 0; i < data.length; i++) {
-                        if (data[i].manager === state.userState.username
-                            || data[i].name === 'Admin' && state.userState.isSiteAdmin) {
-                            managedGroups.push(data[i]);
-                        } else {
-                            joinedGroups.push(data[i]);
-                        }
-                    }
-                    commit(setManagedGroups, managedGroups);
-                    commit(setJoinedGroups, joinedGroups);
-                })
-                .catch(error => {
-                    ErrorLog.logError('store.refreshGroups', error);
-                });
+                }
+                commit(setManagedGroups, managedGroups);
+                commit(setJoinedGroups, joinedGroups);
+            } catch (error) {
+                ErrorLog.logError('store.refreshGroups', error);
+            }
         },
 
         /**
          * Updates the user's system messages.
          */
-        refreshSystemMessages({ commit }, returnPath) {
-            return messaging.getSystemMessages(returnPath)
-                .then(data => {
-                    commit(updateSystemMessages, data);
-                })
-                .catch(error => {
-                    ErrorLog.logError('store.refreshSystemMessages', error);
-                });
+        async refreshSystemMessages({ commit }, returnPath) {
+            try {
+                let data = await messaging.getSystemMessages(returnPath);
+                commit(updateSystemMessages, data);
+            } catch (error) {
+                ErrorLog.logError('store.refreshSystemMessages', error);
+            }
         }
     }
 });

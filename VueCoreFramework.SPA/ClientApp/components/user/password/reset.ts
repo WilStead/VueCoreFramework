@@ -94,31 +94,27 @@ export default class ResetComponent extends Vue {
     changeSuccess = false;
     submitting = false;
 
-    onSubmit() {
+    async onSubmit() {
         if (!this.isValid) return;
         this.submitting = true;
-        Api.postAuth('Account/ResetPassword', this.$route.fullPath, JSON.stringify(this.model))
-            .then(response => {
-                if (!response.ok) {
-                    if (response.statusText) {
-                        this.errors = response.statusText.split(';');
-                    } else {
-                        this.errors.push("A problem occurred.");
-                    }
-                    throw new Error(response.statusText);
+        try {
+            let response = await Api.postAuth('Account/ResetPassword', this.$route.fullPath, JSON.stringify(this.model));
+            if (!response.ok) {
+                if (response.statusText) {
+                    this.errors = response.statusText.split(';');
+                } else {
+                    this.errors.push("A problem occurred.");
                 }
-                return response;
-            })
-            .then(response => {
+                throw new Error(response.statusText);
+            } else {
                 this.changeSuccess = true;
-                this.submitting = false;
-            })
-            .catch(error => {
-                if (this.errors.length === 0) {
-                    this.errors.push("A problem occurred. Your request was not received.");
-                    ErrorMsg.logError("reset.onSubmit", new Error(error));
-                }
-                this.submitting = false;
-            });
+            }
+        } catch (error) {
+            if (this.errors.length === 0) {
+                this.errors.push("A problem occurred. Your request was not received.");
+                ErrorMsg.logError("reset.onSubmit", error);
+            }
+        }
+        this.submitting = false;
     }
 }

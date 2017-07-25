@@ -155,57 +155,51 @@ export default class AppComponent extends Vue {
         }
     }
 
-    onAdminChatProxy(interlocutor: string) {
+    async onAdminChatProxy(interlocutor: string) {
         this.$store.commit(Store.startChatAdminReview, { proxySender: this.foundUser.username, interlocutor });
-        this.$store.dispatch(Store.refreshChat, this.$route.fullPath)
-            .then(() => {
-                let chat = document.getElementById('chat-row');
-                chat.scrollTop = chat.scrollHeight;
-            });
+        await this.$store.dispatch(Store.refreshChat, this.$route.fullPath);
+        let chat = document.getElementById('chat-row');
+        chat.scrollTop = chat.scrollHeight;
     }
 
-    onDeleteChat(interlocutor: string) {
-        messaging.markConversationDeleted(this.$route.fullPath, interlocutor)
-            .then(response => {
-                this.refreshConversations();
-            })
-            .catch(error => {
-                ErrorMsg.logError('app.onDeleteChat', error);
-            });
+    async onDeleteChat(interlocutor: string) {
+        try {
+            await messaging.markConversationDeleted(this.$route.fullPath, interlocutor);
+            this.refreshConversations();
+        } catch (error) {
+            ErrorMsg.logError('app.onDeleteChat', error);
+        }
     }
 
-    onGroupChat(group: Group) {
+    async onGroupChat(group: Group) {
         this.$store.commit(Store.startChatWithGroup, group.name);
-        this.$store.dispatch(Store.refreshChat, this.$route.fullPath)
-            .then(() => {
-                let chat = document.getElementById('chat-row');
-                chat.scrollTop = chat.scrollHeight;
-            });
+        await this.$store.dispatch(Store.refreshChat, this.$route.fullPath);
+        let chat = document.getElementById('chat-row');
+        chat.scrollTop = chat.scrollHeight;
     }
 
     onHideChat() {
         this.$store.commit(Store.hideChat);
     }
 
-    onLockAccount() {
-        Api.postAuth(`Manage/LockAccount/${this.foundUser.username}`, this.$route.fullPath)
-            .then(response => {
-                if (!response.ok) {
-                    if (response.statusText) {
-                        ErrorMsg.showErrorMsg(response.statusText);
-                    } else {
-                        ErrorMsg.showErrorMsg("A problem occurred.");
-                    }
-                    throw new Error("CODE");
+    async onLockAccount() {
+        try {
+            let response = await Api.postAuth(`Manage/LockAccount/${this.foundUser.username}`, this.$route.fullPath);
+            if (!response.ok) {
+                if (response.statusText) {
+                    ErrorMsg.showErrorMsg(response.statusText);
                 } else {
-                    this.foundUser.isLocked = true;
+                    ErrorMsg.showErrorMsg("A problem occurred.");
                 }
-            })
-            .catch(error => {
-                if (error !== "CODE") {
-                    ErrorMsg.showErrorMsgAndLog('app.onLockAccount', "A problem occurred. The account was not locked.", error);
-                }
-            });
+                throw new Error("CODE");
+            } else {
+                this.foundUser.isLocked = true;
+            }
+        } catch (error) {
+            if (error !== "CODE") {
+                ErrorMsg.showErrorMsgAndLog('app.onLockAccount', "A problem occurred. The account was not locked.", error);
+            }
+        }
     }
 
     onMessageTextKeypress(event: KeyboardEvent) {
@@ -226,195 +220,149 @@ export default class AppComponent extends Vue {
         }
     }
 
-    onSystemChat() {
+    async onSystemChat() {
         this.$store.commit(Store.startChatWithSystem);
-        this.$store.dispatch(Store.refreshChat, this.$route.fullPath)
-            .then(() => {
-                let chat = document.getElementById('chat-row');
-                chat.scrollTop = chat.scrollHeight;
-            });
+        await this.$store.dispatch(Store.refreshChat, this.$route.fullPath);
+        let chat = document.getElementById('chat-row');
+        chat.scrollTop = chat.scrollHeight;
     }
 
-    onUnlockAccount() {
-        Api.postAuth(`Manage/UnlockAccount/${this.foundUser.username}`, this.$route.fullPath)
-            .then(response => {
-                if (!response.ok) {
-                    if (response.statusText) {
-                        ErrorMsg.showErrorMsg(response.statusText);
-                    } else {
-                        ErrorMsg.showErrorMsg("A problem occurred.");
-                    }
-                    throw new Error("CODE");
+    async onUnlockAccount() {
+        try {
+            let response = await Api.postAuth(`Manage/UnlockAccount/${this.foundUser.username}`, this.$route.fullPath);
+            if (!response.ok) {
+                if (response.statusText) {
+                    ErrorMsg.showErrorMsg(response.statusText);
                 } else {
-                    this.foundUser.isLocked = false;
+                    ErrorMsg.showErrorMsg("A problem occurred.");
                 }
-            })
-            .catch(error => {
-                if (error !== "CODE") {
-                    ErrorMsg.showErrorMsgAndLog('app.onUnlockAccount', "A problem occurred. The account was not unlocked.", error);
-                }
-            });
-    }
-
-    onUserChat(interlocutor: string) {
-        this.$store.commit(Store.startChatWithUser, interlocutor);
-        this.$store.dispatch(Store.refreshChat, this.$route.fullPath)
-            .then(() => {
-                let chat = document.getElementById('chat-row');
-                chat.scrollTop = chat.scrollHeight;
-            });
-    }
-
-    onUsernameSearch() {
-        this.chatErrorMessage = '';
-        this.foundUser = null;
-        if (this.searchUsername) {
-            Api.postAuth(`Account/VerifyUser/${this.searchUsername}`, this.$route.fullPath)
-                .then(response => {
-                    if (!response.ok) {
-                        if (response.statusText) {
-                            this.chatErrorMessage = response.statusText;
-                        } else if (response.status !== 404) {
-                            this.chatErrorMessage = "A problem occurred.";
-                        }
-                        throw new Error("CODE");
-                    }
-                    return response;
-                })
-                .then(response => response.json() as Promise<UserViewModel>)
-                .then(data => {
-                    this.foundUser = data;
-                    messaging.getProxyConversations(this.$route.fullPath, this.foundUser.username)
-                        .then(data => {
-                            if (data['error']) {
-                                throw new Error(data['error']);
-                            } else {
-                                this.foundUserConversations = data;
-                            }
-                        });
-                })
-                .catch(error => {
-                    if (error !== "CODE") {
-                        ErrorMsg.logError('app.onUsernameSearch', error);
-                    }
-                });
+                throw new Error("CODE");
+            } else {
+                this.foundUser.isLocked = false;
+            }
+        } catch (error) {
+            if (error !== "CODE") {
+                ErrorMsg.showErrorMsgAndLog('app.onUnlockAccount', "A problem occurred. The account was not unlocked.", error);
+            }
         }
     }
 
-    refreshChat() {
+    async onUserChat(interlocutor: string) {
+        this.$store.commit(Store.startChatWithUser, interlocutor);
+        await this.$store.dispatch(Store.refreshChat, this.$route.fullPath);
+        let chat = document.getElementById('chat-row');
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    async onUsernameSearch() {
+        this.chatErrorMessage = '';
+        this.foundUser = null;
+        if (!this.searchUsername) {
+            return;
+        }
+        try {
+            let response = await Api.postAuth(`Account/VerifyUser/${this.searchUsername}`, this.$route.fullPath);
+            if (!response.ok) {
+                if (response.statusText) {
+                    this.chatErrorMessage = response.statusText;
+                } else if (response.status !== 404) {
+                    this.chatErrorMessage = "A problem occurred.";
+                }
+                throw new Error("CODE");
+            }
+            this.foundUser = await response.json() as UserViewModel;
+            this.foundUserConversations = await messaging.getProxyConversations(this.$route.fullPath, this.foundUser.username);
+        } catch (error) {
+            if (error !== "CODE") {
+                ErrorMsg.logError('app.onUsernameSearch', error);
+            }
+        }
+    }
+
+    async refreshChat() {
         this.chatRefreshTimeout = 0;
         if (this.$store.state.uiState.messaging.messagingShown
             && this.$store.state.uiState.messaging.chatShown) {
-            this.$store.dispatch(Store.refreshChat, this.$route.fullPath)
-                .then(() => {
-                    this.chatRefreshTimeout = setTimeout(this.refreshChat, 10000);
-                })
-                .catch(() => {
-                    this.chatRefreshTimeout = setTimeout(this.refreshChat, 10000);
-                });
-        } else {
-            this.chatRefreshTimeout = setTimeout(this.refreshChat, 10000);
+            try {
+                await this.$store.dispatch(Store.refreshChat, this.$route.fullPath);
+            } catch (error) { }
         }
+        this.chatRefreshTimeout = setTimeout(this.refreshChat, 10000);
     }
 
-    refreshConversations() {
+    async refreshConversations() {
         this.conversationRefreshTimeout = 0;
         if (this.$store.state.userState.user) {
-            this.$store.dispatch(Store.refreshConversations, this.$route.fullPath)
-                .then(() => {
-                    this.conversationRefreshTimeout = setTimeout(this.refreshConversations, 10000);
-                })
-                .catch(() => {
-                    this.conversationRefreshTimeout = setTimeout(this.refreshConversations, 10000);
-                });
-        } else {
-            this.conversationRefreshTimeout = setTimeout(this.refreshConversations, 10000);
+            try {
+                await this.$store.dispatch(Store.refreshConversations, this.$route.fullPath);
+            } catch (error) { }
         }
+        this.conversationRefreshTimeout = setTimeout(this.refreshConversations, 10000);
     }
 
-    refreshGroups() {
+    async refreshGroups() {
         this.groupRefreshTimeout = 0;
         if (this.$store.state.userState.user) {
-            this.$store.dispatch(Store.refreshGroups, this.$route.fullPath)
-                .then(() => {
-                    this.groupRefreshTimeout = setTimeout(this.refreshGroups, 10000);
-                })
-                .catch(() => {
-                    this.groupRefreshTimeout = setTimeout(this.refreshGroups, 10000);
-                });
-        } else {
-            this.groupRefreshTimeout = setTimeout(this.refreshGroups, 10000);
+            try {
+                await this.$store.dispatch(Store.refreshGroups, this.$route.fullPath);
+            } catch (error) { }
         }
+        this.groupRefreshTimeout = setTimeout(this.refreshGroups, 10000);
     }
 
-    refreshSystemMessages() {
+    async refreshSystemMessages() {
         this.systemMessageRefreshTimeout = 0;
         if (this.$store.state.userState.user) {
-            this.$store.dispatch(Store.refreshSystemMessages, this.$route.fullPath)
-                .then(() => {
-                    this.systemMessageRefreshTimeout = setTimeout(this.refreshSystemMessages, 10000);
-                })
-                .catch(() => {
-                    this.systemMessageRefreshTimeout = setTimeout(this.refreshSystemMessages, 10000);
-                });
-        } else {
-            this.systemMessageRefreshTimeout = setTimeout(this.refreshSystemMessages, 10000);
+            try {
+                await this.$store.dispatch(Store.refreshSystemMessages, this.$route.fullPath);
+            } catch (error) { }
         }
+        this.systemMessageRefreshTimeout = setTimeout(this.refreshSystemMessages, 10000);
     }
 
-    sendMessage() {
+    async sendMessage() {
         this.chatErrorMessage = '';
-        if (this.$store.state.uiState.messaging.groupChat) {
-            messaging.sendMessageToGroup(this.$route.fullPath,
-                this.$store.state.uiState.messaging.groupChat,
-                this.messageText)
-                .then(data => {
-                    this.refreshChat();
-                    this.messageText = '';
-                    let chat = document.getElementById('chat-row');
-                    chat.scrollTop = chat.scrollHeight;
-                })
-                .catch(error => {
-                    if (error && error.message && error.message.startsWith('CODE')) {
-                        this.chatErrorMessage = error.message.replace('CODE:', '');
-                    } else {
-                        ErrorMsg.logError('app.sendMessage', error);
-                    }
-                });
-        } else {
-            messaging.sendMessageToUser(this.$route.fullPath,
-                this.$store.state.uiState.messaging.interlocutor,
-                this.messageText)
-                .then(data => {
-                    this.refreshChat();
-                    this.messageText = '';
-                    let chat = document.getElementById('chat-row');
-                    chat.scrollTop = chat.scrollHeight;
-                })
-                .catch(error => {
-                    if (error && error.message && error.message.startsWith('CODE')) {
-                        this.chatErrorMessage = error.message.replace('CODE:', '');
-                    } else {
-                        ErrorMsg.logError('app.sendMessage', error);
-                    }
-                });
+        try {
+            if (this.$store.state.uiState.messaging.groupChat) {
+                await messaging.sendMessageToGroup(this.$route.fullPath,
+                    this.$store.state.uiState.messaging.groupChat,
+                    this.messageText);
+                this.messageText = '';
+                await this.refreshChat();
+                let chat = document.getElementById('chat-row');
+                chat.scrollTop = chat.scrollHeight;
+            } else {
+                await messaging.sendMessageToUser(this.$route.fullPath,
+                    this.$store.state.uiState.messaging.interlocutor,
+                    this.messageText);
+                this.messageText = '';
+                await this.refreshChat();
+                let chat = document.getElementById('chat-row');
+                chat.scrollTop = chat.scrollHeight;
+            }
+        } catch (error) {
+            if (error && error.message && error.message.startsWith('CODE')) {
+                this.chatErrorMessage = error.message.replace('CODE:', '');
+            } else {
+                ErrorMsg.logError('app.sendMessage', error);
+            }
         }
     }
 
-    suggestSearchUsername() {
+    async suggestSearchUsername() {
         this.searchUsernameTimeout = 0;
-        if (this.searchUsername) {
-            Api.getApi(`api/Share/GetShareableUsernameCompletion/${this.searchUsername}`, this.$route.fullPath)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`CODE:${response.statusText}`);
-                    } else {
-                        this.searchUsernameSuggestion = response.statusText;
-                    }
-                })
-                .catch(error => {
-                    ErrorMsg.logError('app.suggestSearchUsername', error);
-                });
+        if (!this.searchUsername) {
+            return;
+        }
+        try {
+            let response = await Api.getApi(`api/Share/GetShareableUsernameCompletion/${this.searchUsername}`, this.$route.fullPath);
+            if (!response.ok) {
+                throw new Error(`CODE:${response.statusText}`);
+            } else {
+                this.searchUsernameSuggestion = response.statusText;
+            }
+        } catch (error) {
+            ErrorMsg.logError('app.suggestSearchUsername', error);
         }
     }
 }

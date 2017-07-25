@@ -108,30 +108,26 @@ export default class RegisterComponent extends Vue {
         }
     }
 
-    onSubmit() {
+    async onSubmit() {
         this.success = false;
         if (!this.isValid) return;
         this.errors = [];
-        Api.postAuth('Account/Register', undefined, JSON.stringify(this.model))
-            .then(response => {
-                if (!response.ok) {
-                    if (response.statusText) {
-                        this.errors = response.statusText.split(';');
-                    } else {
-                        this.errors.push("A problem occurred.");
-                    }
-                    throw new Error(response.statusText);
+        try {
+            let response = await Api.postAuth('Account/Register', undefined, JSON.stringify(this.model));
+            if (!response.ok) {
+                if (response.statusText) {
+                    this.errors = response.statusText.split(';');
+                } else {
+                    this.errors.push("A problem occurred.");
                 }
-                return response;
-            })
-            .then(response => {
-                this.success = true;
-            })
-            .catch(error => {
-                if (this.errors.length === 0) {
-                    this.errors = ["A problem occurred. Your account could not be registered."];
-                    ErrorMsg.logError("register.onSubmit", new Error(error));
-                }
-            });
+                throw new Error(response.statusText);
+            }
+            this.success = true;
+        } catch (error) {
+            if (this.errors.length === 0) {
+                this.errors = ["A problem occurred. Your account could not be registered."];
+                ErrorMsg.logError("register.onSubmit", error);
+            }
+        }
     }
 }

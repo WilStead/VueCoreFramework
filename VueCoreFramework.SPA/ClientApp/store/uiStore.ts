@@ -271,57 +271,54 @@ function addMenuItem(menu: MenuItem, router: VueRouter, data: any, dataClass: st
  * Retrieves the child data types (non-MenuClass types) from the API and generates routes for each.
  * @param {VueRouter} router The SPA framework's VueRouter instance.
  * @param {string} apiVer The current API version.
+ * @param {string} culture The current culture.
  */
-export function getChildItems(router: VueRouter, apiVer: string, culture: string): Promise<void> {
-    return Api.getApi('api/Data/GetChildTypes')
-        .then(response => {
-            if (!response.ok) {
-                throw Error(response.statusText);
-            }
-            return response;
-        })
-        .then(response => response.json() as Promise<Array<any>>)
-        .then(data => {
-            for (var dataClass in data) {
-                router.addRoutes([{
-                    path: `/data/${dataClass.toLowerCase()}`,
-                    meta: { requiresAuthorize: true },
-                    component: require('../components/data/dashboard.vue').default,
-                    props: {
-                        title: dataClass,
-                        iconClass: data[dataClass].iconClass || 'view_list',
-                        fontAwesome: data[dataClass].fontAwesome
-                    },
-                    children: [
-                        {
-                            name: dataClass + "DataTable",
-                            path: 'table',
-                            components: {
-                                content: data[dataClass].dashboardTableContent
-                                    ? require(`../components/data/${data[dataClass].dashboardTableContent}.vue`).default
-                                    : require('../components/data/empty.vue').default,
-                                data: require('../dynamic-data/dynamic-table/dynamic-table.vue').default
-                            },
-                            props: { content: false, data: true }
+export async function getChildItems(router: VueRouter, apiVer: string, culture: string): Promise<void> {
+    try {
+        let response = await Api.getApi('api/Data/GetChildTypes');
+        if (!response.ok) {
+            throw new Error(response.statusText);
+        }
+        let data = await response.json() as any[];
+        for (var dataClass in data) {
+            router.addRoutes([{
+                path: `/data/${dataClass.toLowerCase()}`,
+                meta: { requiresAuthorize: true },
+                component: require('../components/data/dashboard.vue').default,
+                props: {
+                    title: dataClass,
+                    iconClass: data[dataClass].iconClass || 'view_list',
+                    fontAwesome: data[dataClass].fontAwesome
+                },
+                children: [
+                    {
+                        name: dataClass + "DataTable",
+                        path: 'table',
+                        components: {
+                            content: data[dataClass].dashboardTableContent
+                                ? require(`../components/data/${data[dataClass].dashboardTableContent}.vue`).default
+                                : require('../components/data/empty.vue').default,
+                            data: require('../dynamic-data/dynamic-table/dynamic-table.vue').default
                         },
-                        {
-                            name: dataClass,
-                            path: ':operation/:id',
-                            components: {
-                                content: data[dataClass].dashboardFormContent
-                                    ? require(`../components/data/${data[dataClass].dashboardFormContent}.vue`).default
-                                    : require('../components/data/empty.vue').default,
-                                data: require('../dynamic-data/dynamic-form/dynamic-form.vue').default
-                            },
-                            props: { content: true, data: true }
-                        }
-                    ]
-                }]);
-            }
-        })
-        .catch(error => {
-            ErrorMsg.logError("uiStore.getChildItems", new Error(error));
-        });
+                        props: { content: false, data: true }
+                    },
+                    {
+                        name: dataClass,
+                        path: ':operation/:id',
+                        components: {
+                            content: data[dataClass].dashboardFormContent
+                                ? require(`../components/data/${data[dataClass].dashboardFormContent}.vue`).default
+                                : require('../components/data/empty.vue').default,
+                            data: require('../dynamic-data/dynamic-form/dynamic-form.vue').default
+                        },
+                        props: { content: true, data: true }
+                    }
+                ]
+            }]);
+        }
+    } catch (error) {
+        ErrorMsg.logError("uiStore.getChildItems", error);
+    }
 }
 
 /**
@@ -330,21 +327,17 @@ export function getChildItems(router: VueRouter, apiVer: string, culture: string
  * @param {string} apiVer The current API version.
  * @param {MenuItem} menu The top-level MenuItem under which all data types will be added.
  */
-export function getMenuItems(router: VueRouter, apiVer: string, culture: string, menu: MenuItem): Promise<void> {
-    return Api.getApi('api/Data/GetTypes')
-        .then(response => {
-            if (!response.ok) {
-                throw Error(response.statusText);
-            }
-            return response;
-        })
-        .then(response => response.json() as Promise<any>)
-        .then(data => {
-            for (var dataClass in data) {
-                addMenuItem(menu, router, data, dataClass, data[dataClass].category, data[dataClass].iconClass);
-            }
-        })
-        .catch(error => {
-            ErrorMsg.logError("uiStore.getMenuItems", new Error(error));
-        });
+export async function getMenuItems(router: VueRouter, apiVer: string, culture: string, menu: MenuItem): Promise<void> {
+    try {
+        let response = await Api.getApi('api/Data/GetTypes');
+        if (!response.ok) {
+            throw new Error(response.statusText);
+        }
+        let data = await response.json();
+        for (var dataClass in data) {
+            addMenuItem(menu, router, data, dataClass, data[dataClass].category, data[dataClass].iconClass);
+        }
+    } catch (error) {
+        ErrorMsg.logError("uiStore.getMenuItems", error);
+    }
 }

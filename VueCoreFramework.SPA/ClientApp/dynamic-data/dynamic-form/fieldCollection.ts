@@ -15,48 +15,44 @@ export default {
         };
     },
     methods: {
-        onAddSelect() {
+        async onAddSelect() {
             this.activity = true;
             this.editErrorMessage = '';
-            this.repository.addChildrenToCollection(this.$route.fullPath,
-                this.model[this.model.primaryKeyProperty],
-                this.schema.model,
-                this.selected.map(c => c[c.primaryKeyProperty]))
-                .then(data => {
-                    this.selected.splice(0);
-                    this.refresh();
-                    this.activity = false;
-                })
-                .catch(error => {
-                    this.activity = false;
-                    this.editErrorMessage = "A problem occurred. The item could not be removed.";
-                    if (error && error.message && error.message.startsWith("CODE:")) {
-                        this.editErrorMessage += error.message.replace('CODE:', '');
-                    }
-                    ErrorMsg.logError("fieldCollection.onAddSelect", new Error(error));
-                });
+            try {
+                await this.repository.addChildrenToCollection(this.$route.fullPath,
+                    this.model[this.model.primaryKeyProperty],
+                    this.schema.model,
+                    this.selected.map(c => c[c.primaryKeyProperty]));
+                this.selected.splice(0);
+                this.refresh();
+            } catch (error) {
+                ErrorMsg.logError("fieldCollection.onAddSelect", error);
+                this.editErrorMessage = "A problem occurred. The item could not be removed.";
+                if (error && error.message && error.message.startsWith("CODE:")) {
+                    this.editErrorMessage += error.message.replace('CODE:', '');
+                }
+            }
+            this.activity = false;
         },
 
-        onRemoveSelect() {
+        async onRemoveSelect() {
             this.activity = true;
             this.editErrorMessage = '';
-            this.repository.removeChildrenFromCollection(this.$route.fullPath,
-                this.model[this.model.primaryKeyProperty],
-                this.schema.model,
-                this.selectedChildren.map(c => c[c.primaryKeyProperty]))
-                .then(data => {
-                    this.selectedChildren.splice(0);
-                    this.refresh();
-                    this.activity = false;
-                })
-                .catch(error => {
-                    this.activity = false;
-                    this.editErrorMessage = "A problem occurred. The item could not be removed.";
-                    if (error && error.message && error.message.startsWith("CODE:")) {
-                        this.editErrorMessage += error.message.replace('CODE:', '');
-                    }
-                    ErrorMsg.logError("fieldCollection.onRemoveSelect", new Error(error));
-                });
+            try {
+                await this.repository.removeChildrenFromCollection(this.$route.fullPath,
+                    this.model[this.model.primaryKeyProperty],
+                    this.schema.model,
+                    this.selectedChildren.map(c => c[c.primaryKeyProperty]));
+                this.selectedChildren.splice(0);
+                this.refresh();
+            } catch (error) {
+                ErrorMsg.logError("fieldCollection.onRemoveSelect", error);
+                this.editErrorMessage = "A problem occurred. The item could not be removed.";
+                if (error && error.message && error.message.startsWith("CODE:")) {
+                    this.editErrorMessage += error.message.replace('CODE:', '');
+                }
+            }
+            this.activity = false;
         },
 
         onEditError(error: string) {

@@ -103,19 +103,18 @@ export default class LoginComponent extends Vue {
     };
     submitting = false;
 
-    mounted() {
-        Api.getAuth('Account/GetAuthProviders')
-            .then(response => response.json() as Promise<AuthProviders>)
-            .then(data => {
-                if (data.providers) {
-                    this.authProviderFacebook = data.providers.includes('Facebook');
-                    this.authProviderGoogle = data.providers.includes('Google');
-                    this.authProviderMicrosoft = data.providers.includes('Microsoft');
-                }
-            })
-            .catch(error => {
-                ErrorMsg.logError("login.mounted", new Error(error));
-            });
+    async mounted() {
+        try {
+            let response = await Api.getAuth('Account/GetAuthProviders');
+            let data = await response.json() as AuthProviders;
+            if (data.providers) {
+                this.authProviderFacebook = data.providers.includes('Facebook');
+                this.authProviderGoogle = data.providers.includes('Google');
+                this.authProviderMicrosoft = data.providers.includes('Microsoft');
+            }
+        } catch (error) {
+            ErrorMsg.logError("login.mounted", error);
+        }
     }
 
     forgotPassword(val: boolean) {
@@ -126,98 +125,85 @@ export default class LoginComponent extends Vue {
         this.isValid = isValid;
     }
 
-    resetPassword() {
+    async resetPassword() {
         if (!this.isValid) return;
         this.submitting = true;
         this.errorMessage = '';
-        Api.postAuth('Account/ForgotPassword', undefined, JSON.stringify(this.model))
-            .then(response => {
-                if (!response.ok) {
-                    if (response.statusText) {
-                        this.errorMessage = response.statusText;
-                    } else {
-                        this.errorMessage = "A problem occurred.";
-                    }
-                    throw new Error(response.statusText);
+        try {
+            let response = await Api.postAuth('Account/ForgotPassword', undefined, JSON.stringify(this.model));
+            if (!response.ok) {
+                if (response.statusText) {
+                    this.errorMessage = response.statusText;
+                } else {
+                    this.errorMessage = "A problem occurred.";
                 }
-                return response;
-            })
-            .then(response => {
-                this.passwordReset = true;
-                this.forgottenPassword = false;
-                this.submitting = false;
-            })
-            .catch(error => {
-                if (!this.errorMessage) {
-                    this.errorMessage = "A problem occurred. Your request was not received.";
-                    ErrorMsg.logError("login.resetPassword", new Error(error));
-                }
-                this.submitting = false;
-            });
+                throw new Error(response.statusText);
+            }
+            this.passwordReset = true;
+            this.forgottenPassword = false;
+        } catch (error) {
+            if (!this.errorMessage) {
+                this.errorMessage = "A problem occurred. Your request was not received.";
+                ErrorMsg.logError("login.resetPassword", error);
+            }
+        }
+        this.submitting = false;
     }
 
-    onSignInProvider(provider: string) {
+    async onSignInProvider(provider: string) {
         this.submitting = true;
         this.errorMessage = '';
         this.model.authProvider = provider;
-        Api.postAuth('Account/ExternalLogin', this.$route.fullPath, JSON.stringify(this.model))
-            .then(response => {
-                if (!response.ok) {
-                    if (response.statusText) {
-                        this.errorMessage = response.statusText;
-                    } else {
-                        this.errorMessage = "A problem occurred.";
-                    }
-                    throw new Error(response.statusText);
+        try {
+            let response = await Api.postAuth('Account/ExternalLogin', this.$route.fullPath, JSON.stringify(this.model));
+            if (!response.ok) {
+                if (response.statusText) {
+                    this.errorMessage = response.statusText;
                 } else {
-                    login(this.returnUrl)
-                        .then(result => {
-                            if (result !== "Success") {
-                                this.errorMessage = result;
-                            }
-                        });
+                    this.errorMessage = "A problem occurred.";
                 }
-                this.submitting = false;
-            })
-            .catch(error => {
-                if (!this.errorMessage) {
-                    this.errorMessage = "A problem occurred. Login failed.";
-                    ErrorMsg.logError("login.onSignInProvider", new Error(error));
+                throw new Error(response.statusText);
+            } else {
+                let result = await login(this.returnUrl);
+                if (result !== "Success") {
+                    this.errorMessage = result;
                 }
-                this.submitting = false;
-            });
+            }
+        } catch (error) {
+            if (!this.errorMessage) {
+                this.errorMessage = "A problem occurred. Login failed.";
+                ErrorMsg.logError("login.onSignInProvider", error);
+            }
+        }
+        this.submitting = false;
     }
 
-    onSubmit() {
+    async onSubmit() {
         if (!this.isValid) return;
         this.submitting = true;
         this.errorMessage = '';
 
-        Api.postAuth('Account/Login', undefined, JSON.stringify(this.model))
-            .then(response => {
-                if (!response.ok) {
-                    if (response.statusText) {
-                        this.errorMessage = response.statusText;
-                    } else {
-                        this.errorMessage = "A problem occurred.";
-                    }
-                    throw new Error(response.statusText);
+        try {
+            let response = await Api.postAuth('Account/Login', undefined, JSON.stringify(this.model));
+            if (!response.ok) {
+                if (response.statusText) {
+                    this.errorMessage = response.statusText;
                 } else {
-                    login(this.returnUrl)
-                        .then(result => {
-                            if (result !== "Success") {
-                                this.errorMessage = result;
-                            }
-                        });
+                    this.errorMessage = "A problem occurred.";
                 }
-                this.submitting = false;
-            })
-            .catch(error => {
-                if (!this.errorMessage) {
-                    this.errorMessage = "A problem occurred. Login failed.";
-                    ErrorMsg.logError("login.onSubmit", new Error(error));
+                throw new Error(response.statusText);
+            } else {
+                let result = await login(this.returnUrl);
+                if (result !== "Success") {
+                    this.errorMessage = result;
                 }
-                this.submitting = false;
-            });
+            }
+        } catch (error) {
+            if (!this.errorMessage) {
+                this.errorMessage = "A problem occurred. Login failed.";
+                ErrorMsg.logError("login.onSubmit", error);
+            }
+        }
+        this.submitting = false;
     }
 }

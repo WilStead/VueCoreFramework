@@ -44,11 +44,10 @@ export default class TopbarComponent extends Vue {
         this.$router.push({ path: '/login', query: { returnUrl: this.getReturnUrl() } });
     }
 
-    onLogout() {
-        logout()
-            .then(response => {
-                this.$router.push('/');
-            });
+    async onLogout() {
+        this.signedIn = false;
+        await logout();
+        this.$router.push('/');
     }
 
     onToggleChat() {
@@ -60,11 +59,9 @@ export default class TopbarComponent extends Vue {
         this.$store.commit(Store.toggleMessaging);
     }
 
-    updateAuth() {
+    async updateAuth() {
         this.updateTimeout = 0;
-        authenticate()
-            .then(auth => {
-                this.signedIn = auth === "authorized";
-            });
+        let auth = await authenticate();
+        this.signedIn = auth === "authorized";
     }
 }

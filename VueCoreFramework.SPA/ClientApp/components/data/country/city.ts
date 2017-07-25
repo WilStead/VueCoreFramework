@@ -33,22 +33,21 @@ export default class DynamicFormComponent extends Vue {
     updateTimeout = 0;
 
     @Watch('isCapitol')
-    onIsCapitolChanged(newVal: boolean, oldVal: boolean) {
+    async onIsCapitolChanged(newVal: boolean, oldVal: boolean) {
         this.errorMessage = '';
-        this.repository.find(this.$route.fullPath, this.id)
-            .then(data => {
-                if (data['isCapitol'] !== this.isCapitol) {
-                    data['isCapitol'] = this.isCapitol;
-                    this.repository.update(this.$route.fullPath, data);
-                }
-            })
-            .catch(error => {
-                this.errorMessage = "A problem has occurred.";
-                if (error && error.message && error.message.startsWith("CODE:")) {
-                    this.errorMessage += error.message.replace('CODE:', '');
-                }
-                ErrorMsg.logError("city.onSetCapitol", new Error(error));
-            });
+        try {
+            let data = await this.repository.find(this.$route.fullPath, this.id);
+            if (data['isCapitol'] !== this.isCapitol) {
+                data['isCapitol'] = this.isCapitol;
+                this.repository.update(this.$route.fullPath, data);
+            }
+        } catch (error) {
+            ErrorMsg.logError("city.onSetCapitol", error);
+            this.errorMessage = "A problem has occurred.";
+            if (error && error.message && error.message.startsWith("CODE:")) {
+                this.errorMessage += error.message.replace('CODE:', '');
+            }
+        }
     }
 
     @Watch('$route')
@@ -66,22 +65,21 @@ export default class DynamicFormComponent extends Vue {
         }
     }
 
-    updateForm() {
+    async updateForm() {
         this.errorMessage = '';
         this.updateTimeout = 0;
-        this.repository.getAll(this.$route.fullPath)
-            .then(data => {
-                let capitol = data.find(v => v['isCapitol']);
-                this.isCapitol = capitol && capitol[capitol.primaryKeyProperty] === this.id;
-                this.otherCapitol = capitol !== undefined && !this.isCapitol;
-            })
-            .catch(error => {
-                this.otherCapitol = true; // Without reliable information, prevent setting a new capitol.
-                this.errorMessage = "A problem has occurred.";
-                if (error && error.message && error.message.startsWith("CODE:")) {
-                    this.errorMessage += error.message.replace('CODE:', '');
-                }
-                ErrorMsg.logError("city.updateForm", new Error(error));
-            });
+        try {
+            let data = await this.repository.getAll(this.$route.fullPath);
+            let capitol = data.find(v => v['isCapitol']);
+            this.isCapitol = capitol && capitol[capitol.primaryKeyProperty] === this.id;
+            this.otherCapitol = capitol !== undefined && !this.isCapitol;
+        } catch (error) {
+            ErrorMsg.logError("city.updateForm", error);
+            this.otherCapitol = true; // Without reliable information, prevent setting a new capitol.
+            this.errorMessage = "A problem has occurred.";
+            if (error && error.message && error.message.startsWith("CODE:")) {
+                this.errorMessage += error.message.replace('CODE:', '');
+            }
+        }
     }
 }

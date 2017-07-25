@@ -64,7 +64,7 @@ export default class DashboardComponent extends Vue {
             : this.$route.name;
     }
 
-    onHide(share: ShareData) {
+    async onHide(share: ShareData) {
         this.shareActivity = true;
         this.shareErrorMessage = '';
         this.shareSuccessMessage = '';
@@ -77,23 +77,22 @@ export default class DashboardComponent extends Vue {
         } else {
             action = `HideDataFromGroup/${share.name}`;
         }
-        Api.postApi(`api/Share/${action}/${this.routeName}?operation=${encodeURIComponent(share.level)}`, this.$route.fullPath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                } else {
-                    this.updateShares();
-                    this.shareSuccessMessage = 'Success';
-                }
-                this.shareActivity = false;
-            })
-            .catch(error => {
-                this.shareErrorMessage = 'A problem occurred.';
-                if (error && error.message && error.message.startsWith('CODE:')) {
-                    this.shareErrorMessage += error.message.replace('CODE:', '');
-                }
-                ErrorMsg.logError('dynamic-table.onHide', error);
-            });
+        try {
+            let response = await Api.postApi(`api/Share/${action}/${this.routeName}?operation=${encodeURIComponent(share.level)}`, this.$route.fullPath);
+            if (!response.ok) {
+                throw new Error(`CODE:${response.statusText}`);
+            } else {
+                this.updateShares();
+                this.shareSuccessMessage = 'Success';
+            }
+        } catch (error) {
+            ErrorMsg.logError('dynamic-table.onHide', error);
+            this.shareErrorMessage = 'A problem occurred.';
+            if (error && error.message && error.message.startsWith('CODE:')) {
+                this.shareErrorMessage += error.message.replace('CODE:', '');
+            }
+        }
+        this.shareActivity = false;
     }
 
     onSelectedShareGroupChange(val: string, oldVal: string) {
@@ -130,7 +129,7 @@ export default class DashboardComponent extends Vue {
         }
     }
 
-    share(action: string, target?: string) {
+    async share(action: string, target?: string) {
         this.shareActivity = true;
         this.shareErrorMessage = '';
         this.shareSuccessMessage = '';
@@ -142,115 +141,102 @@ export default class DashboardComponent extends Vue {
         if (!this.allPermission) {
             url += `?operation=${encodeURIComponent(this.selectedPermission)}`;
         }
-        Api.postApi(url, this.$route.fullPath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                } else {
-                    this.updateShares();
-                    this.shareSuccessMessage = 'Success';
-                }
-                this.shareActivity = false;
-            })
-            .catch(error => {
-                this.shareErrorMessage = 'A problem occurred.';
-                if (error && error.message && error.message.startsWith('CODE:')) {
-                    this.shareErrorMessage += error.message.replace('CODE:', '');
-                }
-                this.shareActivity = false;
-                ErrorMsg.logError('dynamic-table.share', error);
-            });
+        try {
+            let response = await Api.postApi(url, this.$route.fullPath);
+            if (!response.ok) {
+                throw new Error(`CODE:${response.statusText}`);
+            } else {
+                this.updateShares();
+                this.shareSuccessMessage = 'Success';
+            }
+        } catch (error) {
+            ErrorMsg.logError('dynamic-table.share', error);
+            this.shareErrorMessage = 'A problem occurred.';
+            if (error && error.message && error.message.startsWith('CODE:')) {
+                this.shareErrorMessage += error.message.replace('CODE:', '');
+            }
+        }
+        this.shareActivity = false;
     }
 
-    suggestShareGroup() {
+    async suggestShareGroup() {
         this.shareGroupTimeout = 0;
-        if (this.shareGroup) {
-            Api.getApi(`api/Share/GetShareableGroupCompletion/${this.shareGroup}`, this.$route.fullPath)
-                .then(response => {
-                    if (!response.ok) {
-                        if (response.status === 404) {
-                            this.shareGroupSuggestion = '';
-                        } else {
-                            throw new Error(`CODE:${response.statusText}`);
-                        }
-                    } else {
-                        this.shareGroupSuggestion = response.statusText;
-                    }
-                })
-                .catch(error => {
-                    ErrorMsg.logError('dynamic-table.suggestShareGroup', error);
-                });
+        if (!this.shareGroup) {
+            return;
+        }
+        try {
+            let response = await Api.getApi(`api/Share/GetShareableGroupCompletion/${this.shareGroup}`, this.$route.fullPath);
+            if (!response.ok) {
+                if (response.status === 404) {
+                    this.shareGroupSuggestion = '';
+                } else {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+            } else {
+                this.shareGroupSuggestion = response.statusText;
+            }
+        } catch (error) {
+            ErrorMsg.logError('dynamic-table.suggestShareGroup', error);
         }
     }
 
-    suggestShareUsername() {
+    async suggestShareUsername() {
         this.shareUsernameTimeout = 0;
-        if (this.shareUsername) {
-            Api.getApi(`api/Share/GetShareableUsernameCompletion/${this.shareUsername}`, this.$route.fullPath)
-                .then(response => {
-                    if (!response.ok) {
-                        if (response.status === 404) {
-                            this.shareUsernameSuggestion = '';
-                        } else {
-                            throw new Error(`CODE:${response.statusText}`);
-                        }
-                    } else {
-                        this.shareUsernameSuggestion = response.statusText;
-                    }
-                })
-                .catch(error => {
-                    ErrorMsg.logError('dynamic-table.suggestShareUsername', error);
-                });
+        if (!this.shareUsername) {
+            return;
+        }
+        try {
+            let response = await Api.getApi(`api/Share/GetShareableUsernameCompletion/${this.shareUsername}`, this.$route.fullPath);
+            if (!response.ok) {
+                if (response.status === 404) {
+                    this.shareUsernameSuggestion = '';
+                } else {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+            } else {
+                this.shareUsernameSuggestion = response.statusText;
+            }
+        } catch (error) {
+            ErrorMsg.logError('dynamic-table.suggestShareUsername', error);
         }
     }
 
-    updateShares() {
-        Api.getApi(`api/Share/GetCurrentShares/${this.routeName}`, this.$route.fullPath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                }
-                return response;
-            })
-            .then(response => response.json() as Promise<ShareData[]>)
-            .then(data => {
-                this.shares = [];
-                for (var i = 0; i < data.length; i++) {
-                    this.shares[i] = data[i];
-                    this.shares[i].id = i;
-                }
-            })
-            .catch(error => {
-                ErrorMsg.logError('dynamic-table.updateShares', error);
-            });
-        Api.getApi(`api/Share/GetShareableGroupMembers`, this.$route.fullPath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                }
-                return response;
-            })
-            .then(response => response.json() as Promise<string[]>)
-            .then(data => {
-                this.groupMembers = data;
-            })
-            .catch(error => {
-                ErrorMsg.logError('dynamic-table.updateShares', error);
-            });
-        Api.getApi(`api/Share/GetShareableGroupSubset`, this.$route.fullPath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                }
-                return response;
-            })
-            .then(response => response.json() as Promise<string[]>)
-            .then(data => {
-                this.shareGroups = data;
-            })
-            .catch(error => {
-                this.shareGroups = [];
-                ErrorMsg.logError('dynamic-table.updateShares', error);
-            });
+    async updateShares() {
+        this.shares = [];
+        try {
+            let response = await Api.getApi(`api/Share/GetCurrentShares/${this.routeName}`, this.$route.fullPath);
+            if (!response.ok) {
+                throw new Error(`CODE:${response.statusText}`);
+            }
+            let data = await response.json() as ShareData[];
+            for (var i = 0; i < data.length; i++) {
+                this.shares[i] = data[i];
+                this.shares[i].id = i;
+            }
+        } catch (error) {
+            ErrorMsg.logError('dashboard.updateShares', error);
+        }
+
+        this.groupMembers = [];
+        try {
+            let response = await Api.getApi(`api/Share/GetShareableGroupMembers`, this.$route.fullPath);
+            if (!response.ok) {
+                throw new Error(`CODE:${response.statusText}`);
+            }
+            this.groupMembers = await response.json() as string[];
+        } catch (error) {
+            ErrorMsg.logError('dashboard.updateShares', error);
+        }
+
+        this.shareGroups = [];
+        try {
+            let response = await Api.getApi(`api/Share/GetShareableGroupSubset`, this.$route.fullPath);
+            if (!response.ok) {
+                throw new Error(`CODE:${response.statusText}`);
+            }
+            this.shareGroups = await response.json() as string[];
+        } catch (error) {
+            ErrorMsg.logError('dashboard.updateShares', error);
+        }
     }
 }

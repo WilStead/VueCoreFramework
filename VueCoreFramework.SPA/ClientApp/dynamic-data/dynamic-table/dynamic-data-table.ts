@@ -137,10 +137,10 @@ export default class DynamicDataTable extends Vue {
     onInternalPaginationChange(val: Pagination) {
         if (this.paginationInitialization >= 2 &&
             (!this.pagination ||
-            (val.sortBy !== this.pagination.sortBy
-                || val.descending !== this.pagination.descending
-                || val.page !== this.pagination.page
-                || val.rowsPerPage !== this.pagination.rowsPerPage))) {
+                (val.sortBy !== this.pagination.sortBy
+                    || val.descending !== this.pagination.descending
+                    || val.page !== this.pagination.page
+                    || val.rowsPerPage !== this.pagination.rowsPerPage))) {
             this.$emit("onPagination", this.internalSearch, val);
         } else {
             this.paginationInitialization++;
@@ -216,62 +216,31 @@ export default class DynamicDataTable extends Vue {
         return v;
     }
 
-    getData(): Promise<PageData<DataItem>> {
+    async getData(): Promise<PageData<DataItem>> {
         this.loading = true;
-        return new Promise((resolve, reject) => {
-            const { sortBy, descending, page, rowsPerPage } = this.internalPagination;
+        const { sortBy, descending, page, rowsPerPage } = this.internalPagination;
+        try {
+            let data: PageData<DataItem>;
             if (this.parentRepository) {
                 if (this.tableType === "multiselect") {
-                    this.parentRepository.getAllChildIds(this.$route.fullPath, this.parentId, this.parentProp)
-                        .then(childIds => {
-                            this.repository.getPage(this.$route.fullPath, this.internalSearch, sortBy, descending, page, rowsPerPage, childIds)
-                                .then(data => {
-                                    this.loading = false;
-                                    resolve(data);
-                                });
-                        })
-                        .catch(error => {
-                            this.loading = false;
-                            let msg = error;
-                            if (error && error.message && error.message.startsWith("CODE:")) {
-                                msg = error.message.replace('CODE:', '');
-                            }
-                            ErrorMsg.logError("dynamic-data-table.getData", new Error(error));
-                            reject("A problem occurred while loading the data.");
-                        });
+                    let childIds = await this.parentRepository.getAllChildIds(this.$route.fullPath, this.parentId, this.parentProp);
+                    data = await this.repository.getPage(this.$route.fullPath, this.internalSearch, sortBy, descending, page, rowsPerPage, childIds);
                 } else {
-                    this.parentRepository.getChildPage(this.$route.fullPath, this.parentId, this.parentProp, this.internalSearch, sortBy, descending, page, rowsPerPage)
-                        .then(data => {
-                            this.loading = false;
-                            resolve(data);
-                        })
-                        .catch(error => {
-                            this.loading = false;
-                            let msg = error;
-                            if (error && error.message && error.message.startsWith("CODE:")) {
-                                msg = error.message.replace('CODE:', '');
-                            }
-                            ErrorMsg.logError("dynamic-data-table.getData", new Error(error));
-                            reject("A problem occurred while loading the data.");
-                        });
+                    data = await this.parentRepository.getChildPage(this.$route.fullPath, this.parentId, this.parentProp, this.internalSearch, sortBy, descending, page, rowsPerPage);
                 }
             } else {
-                this.repository.getPage(this.$route.fullPath, this.internalSearch, sortBy, descending, page, rowsPerPage)
-                    .then(data => {
-                        this.loading = false;
-                        resolve(data);
-                    })
-                    .catch(error => {
-                        this.loading = false;
-                        let msg = error;
-                        if (error && error.message && error.message.startsWith("CODE:")) {
-                            msg = error.message.replace('CODE:', '');
-                        }
-                        ErrorMsg.logError("dynamic-data-table.getData", new Error(error));
-                        reject("A problem occurred while loading the data.");
-                    });
+                data = await this.repository.getPage(this.$route.fullPath, this.internalSearch, sortBy, descending, page, rowsPerPage);
             }
-        });
+            this.loading = false;
+            return data;
+        } catch (error) {
+            if (error && error.message && error.message.startsWith("CODE:")) {
+                error.message = error.message.replace('CODE:', '');
+            }
+            ErrorMsg.logError("dynamic-data-table.getData", new Error(error));
+            this.loading = false;
+            throw error;
+        }
     }
 
     getRouteData() {
@@ -307,133 +276,94 @@ export default class DynamicDataTable extends Vue {
         }
     }
 
-    onDelete() {
+    async onDelete() {
         this.loading = true;
-        if (this.tableType === 'collection') {
-            this.repository.removeRangeFromParent(this.$route.fullPath, this.childProp, this.selected.map(i => i[i.primaryKeyProperty]))
-                .then(response => {
-                    for (var i = 0; i < this.selected.length; i++) {
-                        this.items.splice(this.items.findIndex(d =>
-                            d[d.primaryKeyProperty] == this.selected[i][this.selected[i].primaryKeyProperty]),
-                            1);
-                    }
-                    this.selected = [];
-                    this.loading = false;
-                })
-                .catch(error => {
-                    this.loading = false;
-                    let msg = 'A problem occurred. The item(s) could not be removed. ';
-                    if (error && error.message && error.message.startsWith("CODE:")) {
-                        msg += error.message.replace('CODE:', '');
-                    }
-                    this.$emit("onError", msg);
-                    ErrorMsg.logError("dynamic-data-table.onDelete", new Error(error));
-                });
-        } else {
-            this.repository.removeRange(this.$route.fullPath, this.selected.map(i => i[i.primaryKeyProperty]))
-                .then(response => {
-                    for (var i = 0; i < this.selected.length; i++) {
-                        this.items.splice(this.items.findIndex(d =>
-                            d[d.primaryKeyProperty] == this.selected[i][this.selected[i].primaryKeyProperty]),
-                            1);
-                    }
-                    this.selected = [];
-                    this.loading = false;
-                })
-                .catch(error => {
-                    this.loading = false;
-                    let msg = 'A problem occurred. The item(s) could not be removed. ';
-                    if (error && error.message && error.message.startsWith("CODE:")) {
-                        msg += error.message.replace('CODE:', '');
-                    }
-                    this.$emit("onError", msg);
-                    ErrorMsg.logError("dynamic-data-table.onDelete", new Error(error));
-                });
+        try {
+            if (this.tableType === 'collection') {
+                await this.repository.removeRangeFromParent(this.$route.fullPath, this.childProp, this.selected.map(i => i[i.primaryKeyProperty]));
+            } else {
+                await this.repository.removeRange(this.$route.fullPath, this.selected.map(i => i[i.primaryKeyProperty]));
+            }
+            for (var i = 0; i < this.selected.length; i++) {
+                this.items.splice(this.items.findIndex(d =>
+                    d[d.primaryKeyProperty] == this.selected[i][this.selected[i].primaryKeyProperty]),
+                    1);
+            }
+            this.selected = [];
+            this.loading = false;
+        } catch (error) {
+            ErrorMsg.logError("dynamic-data-table.onDelete", error);
+            let msg = 'A problem occurred. The item(s) could not be removed. ';
+            if (error && error.message && error.message.startsWith("CODE:")) {
+                msg += error.message.replace('CODE:', '');
+            }
+            this.loading = false;
+            this.$emit("onError", msg);
         }
     }
 
-    onDeleteItem(id: string) {
+    async onDeleteItem(id: string) {
         this.loading = true;
         this.deletePendingItems.push(id);
         this.cancelDelete(id); // removes from asking
-        if (this.tableType === 'collection') {
-            this.repository.removeFromParent(this.$route.fullPath, id, this.childProp)
-                .then(response => {
-                    this.items.splice(this.items.findIndex(d => d[d.primaryKeyProperty] == id), 1);
-                    let index = this.deletePendingItems.indexOf(id);
-                    if (index !== -1) {
-                        this.deletePendingItems.splice(index, 1);
-                    }
-                    this.loading = false;
-                })
-                .catch(error => {
-                    this.loading = false;
-                    let msg = 'A problem occurred. The item could not be removed. ';
-                    if (error && error.message && error.message.startsWith("CODE:")) {
-                        msg += error.message.replace('CODE:', '');
-                    }
-                    this.$emit("onError", msg);
-                    ErrorMsg.logError("dynamic-data-table.onDeleteItem", new Error(error));
-                });
-        } else {
-            this.repository.remove(this.$route.fullPath, id)
-                .then(response => {
-                    this.items.splice(this.items.findIndex(d => d[d.primaryKeyProperty] == id), 1);
-                    let index = this.deletePendingItems.indexOf(id);
-                    if (index !== -1) {
-                        this.deletePendingItems.splice(index, 1);
-                    }
-                    this.loading = false;
-                })
-                .catch(error => {
-                    this.loading = false;
-                    let msg = 'A problem occurred. The item could not be removed. ';
-                    if (error && error.message && error.message.startsWith("CODE:")) {
-                        msg += error.message.replace('CODE:', '');
-                    }
-                    this.$emit("onError", msg);
-                    ErrorMsg.logError("dynamic-data-table.onDeleteItem", new Error(error));
-                });
+        try {
+            if (this.tableType === 'collection') {
+                await this.repository.removeFromParent(this.$route.fullPath, id, this.childProp);
+            } else {
+                await this.repository.remove(this.$route.fullPath, id);
+            }
+            this.items.splice(this.items.findIndex(d => d[d.primaryKeyProperty] == id), 1);
+            let index = this.deletePendingItems.indexOf(id);
+            if (index !== -1) {
+                this.deletePendingItems.splice(index, 1);
+            }
+            this.loading = false;
+        } catch (error) {
+            ErrorMsg.logError("dynamic-data-table.onDeleteItem", error);
+            let msg = 'A problem occurred. The item could not be removed. ';
+            if (error && error.message && error.message.startsWith("CODE:")) {
+                msg += error.message.replace('CODE:', '');
+            }
+            this.loading = false;
+            this.$emit("onError", msg);
         }
     }
 
-    onDuplicate(id: string) {
+    async onDuplicate(id: string) {
         this.loading = true;
-        this.repository.duplicate(this.$route.fullPath, id)
-            .then(data => {
-                this.loading = false;
-                this.$router.push({ name: this.dataType, params: { operation: 'add', id: data[data.primaryKeyProperty] } });
-            })
-            .catch(error => {
-                this.loading = false;
-                let msg = 'A problem occurred. The new item could not be copied. ';
-                if (error && error.message && error.message.startsWith("CODE:")) {
-                    msg += error.message.replace('CODE:', '');
-                }
-                this.$emit("onError", msg);
-                ErrorMsg.logError("dynamic-data-table.onDuplicate", new Error(error));
-            });
+        try {
+            let data = await this.repository.duplicate(this.$route.fullPath, id);
+            this.loading = false;
+            this.$router.push({ name: this.dataType, params: { operation: 'add', id: data[data.primaryKeyProperty] } });
+        } catch (error) {
+            ErrorMsg.logError("dynamic-data-table.onDuplicate", error);
+            let msg = 'A problem occurred. The new item could not be copied. ';
+            if (error && error.message && error.message.startsWith("CODE:")) {
+                msg += error.message.replace('CODE:', '');
+            }
+            this.loading = false;
+            this.$emit("onError", msg);
+        }
     }
 
-    onNew() {
+    async onNew() {
         this.loading = true;
-        this.repository.add(
-            this.$route.fullPath,
-            this.tableType === 'collection' ? this.childProp : undefined,
-            this.tableType === 'collection' ? this.parentId : undefined)
-            .then(data => {
-                this.loading = false;
-                this.$router.push({ name: this.dataType, params: { operation: 'add', id: data[data.primaryKeyProperty] } });
-            })
-            .catch(error => {
-                this.loading = false;
-                let msg = 'A problem occurred. The new item could not be added. ';
-                if (error && error.message && error.message.startsWith("CODE:")) {
-                    msg += error.message.replace('CODE:', '');
-                }
-                this.$emit("onError", msg);
-                ErrorMsg.logError("dynamic-data-table.onNew", new Error(error));
-            });
+        try {
+            let data = await this.repository.add(
+                this.$route.fullPath,
+                this.tableType === 'collection' ? this.childProp : undefined,
+                this.tableType === 'collection' ? this.parentId : undefined);
+            this.loading = false;
+            this.$router.push({ name: this.dataType, params: { operation: 'add', id: data[data.primaryKeyProperty] } });
+        } catch (error) {
+            ErrorMsg.logError("dynamic-data-table.onNew", error);
+            let msg = 'A problem occurred. The new item could not be added. ';
+            if (error && error.message && error.message.startsWith("CODE:")) {
+                msg += error.message.replace('CODE:', '');
+            }
+            this.loading = false;
+            this.$emit("onError", msg);
+        }
     }
 
     onSearch() {
@@ -452,96 +382,93 @@ export default class DynamicDataTable extends Vue {
         }
     }
 
-    updateData() {
+    async updateData() {
         if (this.repository && (this.tableType !== 'child' || this.parentRepository)) {
-            this.getData()
-                .then((data: PageData<DataItem>) => {
-                    this.items = data.pageItems;
-                    this.totalItems = data.totalItems;
+            try {
+                let data = await this.getData();
+                this.items = data.pageItems;
+                this.totalItems = data.totalItems;
 
-                    this.deletePermissions = {};
-                    if (this.allowEdit) {
-                        let deleteAny = this.$store.state.userState.isAdmin; // Admins can delete anything.
-                        if (!deleteAny) {
-                            let permission = this.$store.getters.getPermission(this.dataType);
-                            if (permission === permissions.permissionDataAll) {
-                                deleteAny = true;
-                            }
-                        }
-                        for (var i = 0; i < this.items.length; i++) {
-                            if (deleteAny) {
-                                this.deletePermissions[this.items[i][this.items[i].primaryKeyProperty]] = true;
-                            } else {
-                                let permission = this.$store.getters.getPermission(this.dataType, this.items[i][this.items[i].primaryKeyProperty]);
-                                this.deletePermissions[this.items[i][this.items[i].primaryKeyProperty]] =
-                                    permission === permissions.permissionDataAll;
-                            }
+                this.deletePermissions = {};
+                if (this.allowEdit) {
+                    let deleteAny = this.$store.state.userState.isAdmin; // Admins can delete anything.
+                    if (!deleteAny) {
+                        let permission = this.$store.getters.getPermission(this.dataType);
+                        if (permission === permissions.permissionDataAll) {
+                            deleteAny = true;
                         }
                     }
-                    this.canDelete = Object.keys(this.deletePermissions).length > 0;
-                })
-                .catch(error => {
-                    this.$emit("onError", "A problem occurred while loading the data.");
-                    ErrorMsg.logError("dynamic-data-table.updateData", new Error(error));
-                });
+                    for (var i = 0; i < this.items.length; i++) {
+                        if (deleteAny) {
+                            this.deletePermissions[this.items[i][this.items[i].primaryKeyProperty]] = true;
+                        } else {
+                            let permission = this.$store.getters.getPermission(this.dataType, this.items[i][this.items[i].primaryKeyProperty]);
+                            this.deletePermissions[this.items[i][this.items[i].primaryKeyProperty]] =
+                                permission === permissions.permissionDataAll;
+                        }
+                    }
+                }
+                this.canDelete = Object.keys(this.deletePermissions).length > 0;
+            } catch (error) {
+                ErrorMsg.logError("dynamic-data-table.updateData", error);
+                this.$emit("onError", "A problem occurred while loading the data.");
+            }
         }
     }
 
-    updateTable() {
+    async updateTable() {
         this.updateTimeout = 0;
         this.loading = true;
 
         let permission = this.$store.getters.getPermission(this.dataType);
         this.canAdd = permissionIncludesTarget(permission, permissions.permissionDataAdd);
 
-        this.headers = [];
-        this.repository.getFieldDefinitions(this.$route.fullPath)
-            .then(defData => {
-                this.headers = [];
-                defData.forEach(field => {
-                    if (!field.hideInTable) {
-                        let h: TableHeader = {
-                            text: field.label || field.placeholder,
-                            value: field.model,
-                            sortable: ((field.type === 'input'
-                                && (field.inputType === 'text'
-                                    || field.inputType === 'number'
-                                    || field.inputType === 'email'
-                                    || field.inputType === 'telephone'
-                                    || field.inputType === 'range'
-                                    || field.inputType === 'time'
-                                    || field.inputType === 'date'
-                                    || field.inputType === 'datetime'
-                                    || field.inputType === 'datetime-local'))
-                                || field.type === 'vuetifyText'
-                                || field.type === 'vuetifyDateTime'
-                                || field.type === 'vuetifyTimespan'),
-                            cultural: field.inputType === 'cultural'
-                        };
-                        if (field.type === 'vuetifySelect'
+        try {
+            let defData = await this.repository.getFieldDefinitions(this.$route.fullPath);
+            this.headers = [];
+            defData.forEach(field => {
+                if (!field.hideInTable) {
+                    let h: TableHeader = {
+                        text: field.label || field.placeholder,
+                        value: field.model,
+                        sortable: ((field.type === 'input'
+                            && (field.inputType === 'text'
+                                || field.inputType === 'number'
+                                || field.inputType === 'email'
+                                || field.inputType === 'telephone'
+                                || field.inputType === 'range'
+                                || field.inputType === 'time'
+                                || field.inputType === 'date'
+                                || field.inputType === 'datetime'
+                                || field.inputType === 'datetime-local'))
+                            || field.type === 'vuetifyText'
                             || field.type === 'vuetifyDateTime'
-                            || field.type === 'vuetifyTimespan') {
-                            h.value = field.model + "Formatted";
-                        }
-                        if (field.isName) {
-                            h.align = 'left';
-                            this.headers.unshift(h);
-                        } else {
-                            this.headers.push(h);
-                        }
+                            || field.type === 'vuetifyTimespan'),
+                        cultural: field.inputType === 'cultural'
+                    };
+                    if (field.type === 'vuetifySelect'
+                        || field.type === 'vuetifyDateTime'
+                        || field.type === 'vuetifyTimespan') {
+                        h.value = field.model + "Formatted";
                     }
-                });
-                this.updateData();
-                this.loading = false;
-            })
-            .catch(error => {
-                this.loading = false;
-                let msg = 'A problem occurred while updating the data. ';
-                if (error && error.message && error.message.startsWith("CODE:")) {
-                    msg += error.message.replace('CODE:', '');
+                    if (field.isName) {
+                        h.align = 'left';
+                        this.headers.unshift(h);
+                    } else {
+                        this.headers.push(h);
+                    }
                 }
-                this.$emit("onError", msg);
-                ErrorMsg.logError("dynamic-data-table.updateTable", error);
             });
+            await this.updateData();
+            this.loading = false;
+        } catch (error) {
+            ErrorMsg.logError("dynamic-data-table.updateTable", error);
+            let msg = 'A problem occurred while updating the data. ';
+            if (error && error.message && error.message.startsWith("CODE:")) {
+                msg += error.message.replace('CODE:', '');
+            }
+            this.loading = false;
+            this.$emit("onError", msg);
+        }
     }
 }

@@ -4,7 +4,6 @@ import * as Api from '../../api';
 import * as Store from '../../store/store';
 import { authenticate } from '../../authorization';
 import { checkResponse } from '../../router';
-import { OperationReply } from '../../store/repository';
 import { defaultCulture, setCulture } from '../../globalization/globalization';
 import VueFormGenerator from 'vue-form-generator';
 import { Schema, VFGOptions } from '../../vfg/vfg';
@@ -159,68 +158,64 @@ export default class ManageUserComponent extends Vue {
         }
     }
 
-    created() {
-        Api.getAuth('Account/HasPassword', this.$route.fullPath)
-            .then(response => {
-                if (!response.ok) {
-                    if (response.statusText) {
-                        this.errors.push(response.statusText);
-                    } else {
-                        this.errors.push("A problem occurred.");
-                    }
-                    throw new Error(response.statusText);
-                } else if (response.statusText === "yes") {
-                    this.hasPassword = true;
+    async created() {
+        try {
+            let response = await Api.getAuth('Account/HasPassword', this.$route.fullPath);
+            if (!response.ok) {
+                if (response.statusText) {
+                    this.errors.push(response.statusText);
+                } else {
+                    this.errors.push("A problem occurred.");
                 }
-            })
-            .catch(error => {
-                if (this.errors.length === 0) {
-                    ErrorMsg.logError("user/manage.created.fetchPW", new Error(error));
-                }
-            });
+                throw new Error(response.statusText);
+            } else if (response.statusText === "yes") {
+                this.hasPassword = true;
+            }
+        } catch (error) {
+            if (this.errors.length === 0) {
+                ErrorMsg.logError("user/manage.created.fetchPW", error);
+            }
+        }
     }
 
-    mounted() {
-        Api.getAuth('Account/GetUserAuthProviders', this.$route.fullPath)
-            .then(response => {
-                if (!response.ok) {
-                    if (response.statusText) {
-                        this.errors.push(response.statusText);
-                    } else {
-                        this.errors.push("A problem occurred.");
-                    }
-                    throw new Error("CODE");
-                }
-                return response;
-            })
-            .then(response => response.json() as Promise<AuthProviders>)
-            .then(data => {
-                if (data.providers) {
-                    this.authProviderFacebook = data.providers.includes('Facebook');
-                    this.authProviderGoogle = data.providers.includes('Google');
-                    this.authProviderMicrosoft = data.providers.includes('Microsoft');
-                }
-                if (data.userProviders) {
-                    this.authProviderFacebookUser = data.providers.includes('Facebook');
-                    this.authProviderGoogleUser = data.providers.includes('Google');
-                    this.authProviderMicrosoftUser = data.providers.includes('Microsoft');
-                }
-            })
-            .catch(error => {
-                if (error !== "CODE") {
+    async mounted() {
+        try {
+            let response = await Api.getAuth('Account/GetUserAuthProviders', this.$route.fullPath)
+            if (!response.ok) {
+                if (response.statusText) {
+                    this.errors.push(response.statusText);
+                } else {
                     this.errors.push("A problem occurred.");
-                    ErrorMsg.logError("user/manage.mounted", new Error(error));
                 }
-            });
-        Api.getSpa('Home/GetCultures')
-            .then(response => response.json() as Promise<string[]>)
-            .then(data => {
-                this.cultures = data;
-                this.cultures.unshift("<default>");
-            })
-            .catch(error => {
-                ErrorMsg.logError("user/manage.mounted", new Error(error));
-            });
+                throw new Error("CODE");
+            }
+            let data = await response.json() as AuthProviders;
+            if (data.providers) {
+                this.authProviderFacebook = data.providers.includes('Facebook');
+                this.authProviderGoogle = data.providers.includes('Google');
+                this.authProviderMicrosoft = data.providers.includes('Microsoft');
+            }
+            if (data.userProviders) {
+                this.authProviderFacebookUser = data.providers.includes('Facebook');
+                this.authProviderGoogleUser = data.providers.includes('Google');
+                this.authProviderMicrosoftUser = data.providers.includes('Microsoft');
+            }
+        } catch (error) {
+            if (error !== "CODE") {
+                this.errors.push("A problem occurred.");
+                ErrorMsg.logError("user/manage.mounted", error);
+            }
+        }
+        try {
+            Api.getSpa('Home/GetCultures')
+                .then(response => response.json() as Promise<string[]>)
+                .then(data => {
+                    this.cultures = data;
+                    this.cultures.unshift("<default>");
+                })
+        } catch (error) {
+            ErrorMsg.logError("user/manage.mounted", error);
+        }
     }
 
     cancelChange() {
@@ -255,162 +250,138 @@ export default class ManageUserComponent extends Vue {
         this.schema.fields[0].visible = true;
     }
 
-    loadXferUsernames() {
+    async loadXferUsernames() {
         this.xferLoading = true;
-        Api.getAuth('Manage/LoadXferUsernames', this.$route.fullPath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("CODE");
-                }
-                return response;
-            })
-            .then(response => response.json() as Promise<Array<string>>)
-            .then(data => {
-                this.xferUsernames = data;
-                this.xferLoading = false;
-                this.xferData = true;
-            })
-            .catch(error => {
-                // Errors are ignored; the list simply doesn't populate, requiring manual entry.
-                this.xferLoading = false;
-            });
+        try {
+            let response = await Api.getAuth('Manage/LoadXferUsernames', this.$route.fullPath);
+            if (!response.ok) {
+                throw new Error("CODE");
+            }
+            this.xferUsernames = await response.json() as string[];
+            this.xferData = true;
+        } catch (error) {
+            // Errors are ignored; the list simply doesn't populate, requiring manual entry.
+        }
+        this.xferLoading = false;
     }
 
-    onCultureChange(value: string) {
-        this.success = false;
+    async onCultureChange(value: string) {
         this.submitting = true;
+        this.success = false;
         this.errors = [];
 
         if (this.$store.state.userState.culture === value
             || (value === "<default>"
                 && this.$store.state.userState.culture === defaultCulture)) {
+            this.submitting = false;
             return;
         }
 
-        Api.postAuth(`Manage/SetCulture/${value}`, this.$route.fullPath)
-            .then(response => {
-                if (!response.ok) {
-                    if (response.statusText) {
-                        this.errors = response.statusText.split(';');
-                    } else {
-                        this.errors.push("A problem occurred.");
-                    }
-                    throw new Error("CODE");
-                }
-                return response;
-            })
-            .then(response => {
-                setCulture(value);
-                this.successMessage = "Your preferred culture has been updated.";
-                this.success = true;
-                this.submitting = false;
-            })
-            .catch(error => {
-                if (error !== "CODE") {
+        try {
+            let response = await Api.postAuth(`Manage/SetCulture/${value}`, this.$route.fullPath);
+            if (!response.ok) {
+                if (response.statusText) {
+                    this.errors = response.statusText.split(';');
+                } else {
                     this.errors.push("A problem occurred.");
-                    ErrorMsg.logError("user/manage.onCultureChange", new Error(error));
                 }
-                this.submitting = false;
-            });
+                throw new Error("CODE");
+            }
+            await setCulture(value);
+            this.successMessage = "Your preferred culture has been updated.";
+            this.success = true;
+        } catch (error) {
+            if (error !== "CODE") {
+                this.errors.push("A problem occurred.");
+                ErrorMsg.logError("user/manage.onCultureChange", error);
+            }
+        }
+        this.submitting = false;
     }
 
-    onDeleteAccount() {
+    async onDeleteAccount() {
+        this.submitting = true;
         this.success = false;
         this.errors = [];
-        this.submitting = true;
         let url = 'Manage/DeleteAccount';
         if (this.selectedXferUsername) {
             url += `?xferUsername=${this.selectedXferUsername}`;
         }
-        Api.postAuth(url, this.$route.fullPath)
-            .then(response => {
-                if (!response.ok) {
-                    if (response.statusText) {
-                        this.errors = response.statusText.split(';');
-                    } else {
-                        this.errors.push("A problem occurred.");
-                    }
-                    throw new Error("CODE");
+        try {
+            let response = await Api.postAuth(url, this.$route.fullPath);
+            if (!response.ok) {
+                if (response.statusText) {
+                    this.errors = response.statusText.split(';');
+                } else {
+                    this.errors.push("A problem occurred.");
                 }
-                return response;
-            })
-            .then(data => {
-                this.deleteAccountDialog = false;
-                this.successMessage = "Your request to delete your account has been received. An email has just been sent to the address on your account. Please click on the link in this email to confirm the deletion of your account.";
-                this.success = true;
-                this.submitting = false;
-            })
-            .catch(error => {
-                if (error !== "CODE") {
-                    this.errors.push("A problem occurred. Your account has not been deleted.");
-                    ErrorMsg.logError("user/manage.onDeleteAccount", new Error(error));
-                }
-                this.submitting = false;
-            });
+                throw new Error("CODE");
+            }
+            this.deleteAccountDialog = false;
+            this.successMessage = "Your request to delete your account has been received. An email has just been sent to the address on your account. Please click on the link in this email to confirm the deletion of your account.";
+            this.success = true;
+        } catch (error) {
+            if (error !== "CODE") {
+                this.errors.push("A problem occurred. Your account has not been deleted.");
+                ErrorMsg.logError("user/manage.onDeleteAccount", error);
+            }
+        }
+        this.submitting = false;
     }
 
-    onSignInProviderAdd(provider: string) {
-        this.success = false;
+    async onSignInProviderAdd(provider: string) {
         this.submitting = true;
+        this.success = false;
         this.errors = [];
         this.model.authProvider = provider;
-        Api.postAuth('Manage/LinkLogin', this.$route.fullPath, JSON.stringify(this.model))
-            .then(response => {
-                if (!response.ok) {
-                    if (response.statusText) {
-                        this.errors = response.statusText.split(';');
-                    } else {
-                        this.errors.push("A problem occurred.");
-                    }
-                    throw new Error("CODE");
+        try {
+            let response = await Api.postAuth('Manage/LinkLogin', this.$route.fullPath, JSON.stringify(this.model));
+            if (!response.ok) {
+                if (response.statusText) {
+                    this.errors = response.statusText.split(';');
+                } else {
+                    this.errors.push("A problem occurred.");
                 }
-                return response;
-            })
-            .then(response => {
-                this.successMessage = "Your accounts have been successfully linked.";
-                this.success = true;
-                this.submitting = false;
-            })
-            .catch(error => {
-                if (error !== "CODE") {
-                    this.errors.push("A problem occurred. Login failed.");
-                    ErrorMsg.logError("user/manage.onSignInProviderAdd", new Error(error));
-                }
-                this.submitting = false;
-            });
+                throw new Error("CODE");
+            }
+            this.successMessage = "Your accounts have been successfully linked.";
+            this.success = true;
+        } catch (error) {
+            if (error !== "CODE") {
+                this.errors.push("A problem occurred. Login failed.");
+                ErrorMsg.logError("user/manage.onSignInProviderAdd", error);
+            }
+        }
+        this.submitting = false;
     }
 
-    onSignInProviderRemove(provider: string) {
-        this.success = false;
+    async onSignInProviderRemove(provider: string) {
         this.submitting = true;
+        this.success = false;
         this.errors = [];
         this.model.authProvider = provider;
-        Api.postAuth('Manage/RemoveLogin', this.$route.fullPath, JSON.stringify(this.model))
-            .then(response => {
-                if (!response.ok) {
-                    if (response.statusText) {
-                        this.errors = response.statusText.split(';');
-                    } else {
-                        this.errors.push("A problem occurred.");
-                    }
-                    throw new Error("CODE");
+        try {
+            let response = await Api.postAuth('Manage/RemoveLogin', this.$route.fullPath, JSON.stringify(this.model));
+            if (!response.ok) {
+                if (response.statusText) {
+                    this.errors = response.statusText.split(';');
+                } else {
+                    this.errors.push("A problem occurred.");
                 }
-                return response;
-            })
-            .then(response => {
-                this.success = true;
-                this.submitting = false;
-            })
-            .catch(error => {
-                if (error !== "CODE") {
-                    this.errors.push("A problem occurred. Login failed.");
-                    ErrorMsg.logError("user/manage.onSignInProviderRemove", new Error(error));
-                }
-                this.submitting = false;
-            });
+                throw new Error("CODE");
+            }
+            this.success = true;
+        } catch (error) {
+            if (error !== "CODE") {
+                this.errors.push("A problem occurred. Login failed.");
+                ErrorMsg.logError("user/manage.onSignInProviderRemove", error);
+            }
+        }
+        this.submitting = false;
     }
 
-    onSubmit() {
+    async onSubmit() {
+        this.submitting = true;
         this.success = false;
         this.errors = [];
         if (!this.isValid) return;
@@ -424,33 +395,29 @@ export default class ManageUserComponent extends Vue {
         } else {
             url = 'Manage/SetPassword';
         }
-        Api.postAuth(url, this.$route.fullPath, JSON.stringify(this.model))
-            .then(response => {
-                if (!response.ok) {
-                    if (response.statusText) {
-                        this.errors = response.statusText.split(';');
-                    } else {
-                        this.errors.push("A problem occurred.");
-                    }
-                    throw new Error("CODE");
+        try {
+            let response = await Api.postAuth(url, this.$route.fullPath, JSON.stringify(this.model));
+            if (!response.ok) {
+                if (response.statusText) {
+                    this.errors = response.statusText.split(';');
+                } else {
+                    this.errors.push("A problem occurred.");
                 }
-                return response;
-            })
-            .then(response => {
-                this.success = true;
-                this.successMessage = "Success!";
-                if (this.changingUsername) {
-                    this.$store.state.userState.username = this.model.username;
-                }
-                this.cancelChange();
-            })
-            .catch(error => {
-                if (error != "CODE") {
-                    this.errors.push("A problem occurred. Your request was not received.");
-                    ErrorMsg.logError("user/manage.onSubmit", new Error(error));
-                }
-                this.success = false;
-            });
+                throw new Error("CODE");
+            }
+            this.success = true;
+            this.successMessage = "Success!";
+            if (this.changingUsername) {
+                this.$store.state.userState.username = this.model.username;
+            }
+            this.cancelChange();
+        } catch (error) {
+            if (error != "CODE") {
+                this.errors.push("A problem occurred. Your request was not received.");
+                ErrorMsg.logError("user/manage.onSubmit", error);
+            }
+        }
+        this.submitting = false;
     }
 
     onValidated(isValid: boolean, errors: Array<any>) {

@@ -6,13 +6,6 @@ import { validators } from '../vfg/vfg-custom-validators';
 import * as ErrorMsg from '../error-msg';
 
 /**
- * A ViewModel used to receive a numeric response from an API call.
- */
-interface ApiNumericResponseViewModel {
-    response: number;
-}
-
-/**
  * Represents a database object which can be displayed automatically by the SPA framework.
  */
 export interface DataItem {
@@ -20,21 +13,6 @@ export interface DataItem {
      * The name of the property which contains this item's primary key.
      */
     primaryKeyProperty: string;
-}
-
-/**
- * A ViewModel used to receive a generic response from an API call.
- */
-export interface OperationReply<T> {
-    /**
-     * The data received from the API.
-     */
-    data?: T;
-
-    /**
-     * Any error message received from the API.
-     */
-    error?: string;
 }
 
 /**
@@ -73,22 +51,16 @@ export class Repository {
      * @param {string} parentId The primary key of the entity which will be set on the childProp property.
      * @returns {DataItem} The newly added item.
      */
-    add(returnPath: string, childProp: string, parentId: string): Promise<DataItem> {
+    async add(returnPath: string, childProp: string, parentId: string): Promise<DataItem> {
         let url = `api/Data/${this.dataType}/Add`;
         if (childProp && parentId) {
             url += `/${childProp}/${parentId}`;
         }
-        return Api.postApi(url, returnPath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                }
-                return response;
-            })
-            .then(response => response.json() as Promise<DataItem>)
-            .catch(error => {
-                throw new Error(error);
-            });
+        let response = await Api.postApi(url, returnPath);
+        if (!response.ok) {
+            throw new Error(`CODE:${response.statusText}`);
+        }
+        return response.json() as Promise<DataItem>;
     }
 
     /**
@@ -100,17 +72,11 @@ export class Repository {
      * @param {string[]} ids The primary keys of the child entities which will be added.
      * @returns {Response} The response.
      */
-    addChildrenToCollection(returnPath: string, id: string, childProp: string, ids: string[]): Promise<Response> {
-        return Api.postApi(`api/Data/${this.dataType}/AddChildrenToCollection/${id}/${childProp}`, returnPath, JSON.stringify(ids))
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                }
-                return response;
-            })
-            .catch(error => {
-                throw new Error(error);
-            });
+    async addChildrenToCollection(returnPath: string, id: string, childProp: string, ids: string[]) {
+        let response = await Api.postApi(`api/Data/${this.dataType}/AddChildrenToCollection/${id}/${childProp}`, returnPath, JSON.stringify(ids));
+        if (!response.ok) {
+            throw new Error(`CODE:${response.statusText}`);
+        }
     }
 
     /**
@@ -119,21 +85,15 @@ export class Repository {
      * @param {string} id The primary key of the entity to be copied.
      * @returns {DataItem} The new copy.
      */
-    duplicate(returnPath: string, id: string): Promise<DataItem> {
+    async duplicate(returnPath: string, id: string): Promise<DataItem> {
         if (id === undefined || id === null || id === '') {
-            return Promise.reject("The item id was missing from your request.");
+            throw new Error("The item id was missing from your request.");
         }
-        return Api.getApi(`api/Data/${this.dataType}/Duplicate/${id}`, returnPath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                }
-                return response;
-            })
-            .then(response => response.json() as Promise<DataItem>)
-            .catch(error => {
-                throw new Error(error);
-            });
+        let response = await Api.getApi(`api/Data/${this.dataType}/Duplicate/${id}`, returnPath);
+        if (!response.ok) {
+            throw new Error(`CODE:${response.statusText}`);
+        }
+        return response.json() as Promise<DataItem>;
     }
 
     /**
@@ -142,25 +102,19 @@ export class Repository {
      * @param {string} id The primary key of the entity to be found.
      * @returns {DataItem} The item.
      */
-    find(returnPath: string, id: string): Promise<DataItem> {
+    async find(returnPath: string, id: string): Promise<DataItem> {
         if (id === undefined || id === null || id === '') {
-            return Promise.reject("The item id was missing from your request.");
+            throw new Error("The item id was missing from your request.");
         }
-        return Api.getApi(`api/Data/${this.dataType}/Find/${id}`, returnPath)
-            .then(response => {
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        throw new Error('CODE:No item with this ID was found.');
-                    } else {
-                        throw new Error(`CODE:${response.statusText}`);
-                    }
-                }
-                return response;
-            })
-            .then(response => response.json() as Promise<DataItem>)
-            .catch(error => {
-                throw new Error(error);
-            });
+        let response = await Api.getApi(`api/Data/${this.dataType}/Find/${id}`, returnPath);
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new Error('CODE:No item with this ID was found.');
+            } else {
+                throw new Error(`CODE:${response.statusText}`);
+            }
+        }
+        return response.json() as Promise<DataItem>;
     }
 
     /**
@@ -169,18 +123,12 @@ export class Repository {
      * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
      * @returns {DataItem[]} All the items.
      */
-    getAll(returnPath: string): Promise<DataItem[]> {
-        return Api.getApi(`api/Data/${this.dataType}/GetAll`, returnPath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                }
-                return response;
-            })
-            .then(response => response.json() as Promise<DataItem[]>)
-            .catch(error => {
-                throw new Error(error);
-            });
+    async getAll(returnPath: string): Promise<DataItem[]> {
+        let response = await Api.getApi(`api/Data/${this.dataType}/GetAll`, returnPath);
+        if (!response.ok) {
+            throw new Error(`CODE:${response.statusText}`);
+        }
+        return response.json() as Promise<DataItem[]>;
     }
 
     /**
@@ -190,18 +138,12 @@ export class Repository {
      * @param {string} childProp The navigation property of the relationship on the parent entity.
      * @returns {string[]} The primary keys of all the children.
      */
-    getAllChildIds(returnPath: string, id: string, childProp: string): Promise<string[]> {
-        return Api.getApi(`api/Data/${this.dataType}/GetAllChildIds/${id}/${childProp}`, returnPath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                }
-                return response;
-            })
-            .then(response => response.json() as Promise<string[]>)
-            .catch(error => {
-                throw new Error(error);
-            });
+    async getAllChildIds(returnPath: string, id: string, childProp: string): Promise<string[]> {
+        let response = await Api.getApi(`api/Data/${this.dataType}/GetAllChildIds/${id}/${childProp}`, returnPath);
+        if (!response.ok) {
+            throw new Error(`CODE:${response.statusText}`);
+        }
+        return response.json() as Promise<string[]>;
     }
 
     /**
@@ -211,18 +153,12 @@ export class Repository {
      * @param {string} childProp The navigation property of the relationship on the parent entity.
      * @returns {string} The primary key of the child entity.
      */
-    getChildId(returnPath: string, id: string, childProp: string): Promise<string> {
-        return Api.getApi(`api/Data/${this.dataType}/GetChildId/${id}/${childProp}`, returnPath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                } else {
-                    return response.statusText;
-                }
-            })
-            .catch(error => {
-                throw new Error(error);
-            });
+    async getChildId(returnPath: string, id: string, childProp: string): Promise<string> {
+        let response = await Api.getApi(`api/Data/${this.dataType}/GetChildId/${id}/${childProp}`, returnPath);
+        if (!response.ok) {
+            throw new Error(`CODE:${response.statusText}`);
+        }
+        return response.statusText;
     }
 
     /**
@@ -239,7 +175,7 @@ export class Repository {
      * @param {number} rowsPerPage The number of items per page.
      * @returns {PageData<DataItem>} The PageData for the page of children retrieved.
      */
-    getChildPage(
+    async getChildPage(
         returnPath: string,
         id: string,
         childProp: string,
@@ -279,33 +215,20 @@ export class Repository {
             }
             url += `rowsPerPage=${rowsPerPage}`;
         }
-        return Api.getApi(`api/Data/${this.dataType}/GetChildTotal/${id}/${childProp}`, returnPath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                } else {
-                    return Number(response.statusText);
-                }
-            })
-            .then(response => {
-                return Api.getApi(url, returnPath)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`CODE:${response.statusText}`);
-                        }
-                        return response;
-                    })
-                    .then(response => response.json() as Promise<DataItem[]>)
-                    .then(data => {
-                        return {
-                            pageItems: data,
-                            totalItems: response
-                        };
-                    });
-            })
-            .catch(error => {
-                throw new Error(error);
-            });
+        let response = await Api.getApi(`api/Data/${this.dataType}/GetChildTotal/${id}/${childProp}`, returnPath);
+        if (!response.ok) {
+            throw new Error(`CODE:${response.statusText}`);
+        }
+        let totalItems = Number(response.statusText);
+        response = await Api.getApi(url, returnPath);
+        if (!response.ok) {
+            throw new Error(`CODE:${response.statusText}`);
+        }
+        let pageItems = await response.json() as DataItem[];
+        return {
+            pageItems,
+            totalItems
+        };
     }
 
     /**
@@ -313,33 +236,22 @@ export class Repository {
      * @param {string} returnPath The URL to return to if a login redirect occurs during the operation.
      * @returns {FieldDefinition[]} The FieldDefinitions for the properties of the repository's data type.
      */
-    getFieldDefinitions(returnPath: string): Promise<FieldDefinition[]> {
+    async getFieldDefinitions(returnPath: string): Promise<FieldDefinition[]> {
         if (this.fieldDefinitions === null) {
-            return Api.getApi(`api/Data/${this.dataType}/GetFieldDefinitions`, returnPath)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`CODE:${response.statusText}`);
-                    }
-                    return response;
-                })
-                .then(response => response.json() as Promise<FieldDefinition[]>)
-                .then(data => {
-                    let defs = data;
-                    // Translate validator keys to default validator names or actual functions.
-                    for (var i = 0; i < defs['length']; i++) {
-                        if (defs[i].validator && validators[defs[i].validator as string]) {
-                            defs[i].validator = validators[defs[i].validator as string];
-                        }
-                    }
-                    this.fieldDefinitions = defs;
-                    return this.fieldDefinitions;
-                })
-                .catch(error => {
-                    throw new Error(error);
-                });
-        } else {
-            return new Promise<FieldDefinition[]>((resolve, reject) => { resolve(this.fieldDefinitions); });
+            let response = await Api.getApi(`api/Data/${this.dataType}/GetFieldDefinitions`, returnPath);
+            if (!response.ok) {
+                throw new Error(`CODE:${response.statusText}`);
+            }
+            let defs = await response.json() as FieldDefinition[];
+            // Translate validator keys to default validator names or actual functions.
+            for (var i = 0; i < defs.length; i++) {
+                if (defs[i].validator && validators[defs[i].validator as string]) {
+                    defs[i].validator = validators[defs[i].validator as string];
+                }
+            }
+            this.fieldDefinitions = defs;
         }
+        return this.fieldDefinitions;
     }
 
     /**
@@ -356,7 +268,7 @@ export class Repository {
      * results before calculating the page contents.
      * @returns {PageData<DataItem>} The PageData for the page of items retrieved.
      */
-    getPage(
+    async getPage(
         returnPath: string,
         search: string,
         sortBy: string,
@@ -399,33 +311,20 @@ export class Repository {
             url += '&';
         }
         url += `culture=${store.state.userState.culture}`;
-        return Api.getApi(`api/Data/${this.dataType}/GetTotal`, returnPath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                } else {
-                    return Number(response.statusText);
-                }
-            })
-            .then(response => {
-                return Api.postApi(url, returnPath, JSON.stringify(except))
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`CODE:${response.statusText}`);
-                        }
-                        return response;
-                    })
-                    .then(response => response.json() as Promise<DataItem[]>)
-                    .then(data => {
-                        return {
-                            pageItems: data,
-                            totalItems: response - (except ? except.length : 0)
-                        };
-                    });
-            })
-            .catch(error => {
-                throw new Error(error);
-            });
+        let response = await Api.getApi(`api/Data/${this.dataType}/GetTotal`, returnPath);
+        if (!response.ok) {
+            throw new Error(`CODE:${response.statusText}`);
+        }
+        let totalItems = await Number(response.statusText);
+        response = await Api.postApi(url, returnPath, JSON.stringify(except));
+        if (!response.ok) {
+            throw new Error(`CODE:${response.statusText}`);
+        }
+        let pageItems = await response.json() as DataItem[];
+        return {
+            pageItems,
+            totalItems: totalItems - (except ? except.length : 0)
+        };
     }
 
     /**
@@ -434,20 +333,14 @@ export class Repository {
      * @param {string} id The primary key of the entity to remove.
      * @returns {Response} The response.
      */
-    remove(returnPath: string, id: string): Promise<Response> {
+    async remove(returnPath: string, id: string) {
         if (id === undefined || id === null || id === '') {
             throw new Error("The item id was missing from your request.");
         }
-        return Api.postApi(`api/Data/${this.dataType}/Remove/${id}`, returnPath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                }
-                return response;
-            })
-            .catch(error => {
-                throw new Error(error);
-            });
+        let response = await Api.postApi(`api/Data/${this.dataType}/Remove/${id}`, returnPath);
+        if (!response.ok) {
+            throw new Error(`CODE:${response.statusText}`);
+        }
     }
 
     /**
@@ -459,17 +352,11 @@ export class Repository {
      * @param {Array<string>} childIds The primary keys of the child entities which will be removed.
      * @returns {Response} The response.
      */
-    removeChildrenFromCollection(returnPath: string, id: string, childProp: string, childIds: Array<string>): Promise<Response> {
-        return Api.postApi(`api/Data/${this.dataType}/RemoveChildrenFromCollection/${id}/${childProp}`, returnPath, JSON.stringify(childIds))
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                }
-                return response;
-            })
-            .catch(error => {
-                throw new Error(error);
-            });
+    async removeChildrenFromCollection(returnPath: string, id: string, childProp: string, childIds: Array<string>) {
+        let response = await Api.postApi(`api/Data/${this.dataType}/RemoveChildrenFromCollection/${id}/${childProp}`, returnPath, JSON.stringify(childIds));
+        if (!response.ok) {
+            throw new Error(`CODE:${response.statusText}`);
+        }
     }
 
     /**
@@ -481,17 +368,11 @@ export class Repository {
      * @param {string} childProp The navigation property of the relationship being severed.
      * @returns {Response} The response.
      */
-    removeFromParent(returnPath: string, id: string, childProp: string): Promise<Response> {
-        return Api.postApi(`api/Data/${this.dataType}/RemoveFromParent/${id}/${childProp}`, returnPath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                }
-                return response;
-            })
-            .catch(error => {
-                throw new Error(error);
-            });
+    async removeFromParent(returnPath: string, id: string, childProp: string) {
+        let response = await Api.postApi(`api/Data/${this.dataType}/RemoveFromParent/${id}/${childProp}`, returnPath);
+        if (!response.ok) {
+            throw new Error(`CODE:${response.statusText}`);
+        }
     }
 
     /**
@@ -500,20 +381,14 @@ export class Repository {
      * @param {string[]} ids The primary keys of the entities to remove.
      * @returns {Response} The response.
      */
-    removeRange(returnPath: string, ids: string[]): Promise<Response> {
+    async removeRange(returnPath: string, ids: string[]) {
         if (ids === undefined || ids === null || !ids.length) {
             throw new Error("The item ids were missing from your request.");
         }
-        return Api.postApi(`api/Data/${this.dataType}/RemoveRange`, returnPath, JSON.stringify(ids))
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                }
-                return response;
-            })
-            .catch(error => {
-                throw new Error(error);
-            });
+        let response = await Api.postApi(`api/Data/${this.dataType}/RemoveRange`, returnPath, JSON.stringify(ids));
+        if (!response.ok) {
+            throw new Error(`CODE:${response.statusText}`);
+        }
     }
 
     /**
@@ -525,17 +400,11 @@ export class Repository {
      * @param {string[]} ids The primary keys of child entities whose relationships are being severed.
      * @returns {Response} The response.
      */
-    removeRangeFromParent(returnPath: string, childProp: string, ids: string[]): Promise<Response> {
-        return Api.postApi(`api/Data/${this.dataType}/RemoveRangeFromParent/${childProp}`, returnPath, JSON.stringify(ids))
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                }
-                return response;
-            })
-            .catch(error => {
-                throw new Error(error);
-            });
+    async removeRangeFromParent(returnPath: string, childProp: string, ids: string[]) {
+        let response = await Api.postApi(`api/Data/${this.dataType}/RemoveRangeFromParent/${childProp}`, returnPath, JSON.stringify(ids));
+        if (!response.ok) {
+            throw new Error(`CODE:${response.statusText}`);
+        }
     }
 
     /**
@@ -548,17 +417,11 @@ export class Repository {
      * @param {string} childProp The navigation property of the relationship on the child entity.
      * @returns {Response} The response.
      */
-    replaceChild(returnPath: string, parentId: string, newChildId: string, childProp: string): Promise<Response> {
-        return Api.postApi(`api/Data/${this.dataType}/ReplaceChild/${parentId}/${newChildId}/${childProp}`, returnPath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                }
-                return response;
-            })
-            .catch(error => {
-                throw new Error(error);
-            });
+    async replaceChild(returnPath: string, parentId: string, newChildId: string, childProp: string) {
+        let response = await Api.postApi(`api/Data/${this.dataType}/ReplaceChild/${parentId}/${newChildId}/${childProp}`, returnPath);
+        if (!response.ok) {
+            throw new Error(`CODE:${response.statusText}`);
+        }
     }
 
     /**
@@ -570,18 +433,12 @@ export class Repository {
      * @param {string} childProp The navigation property of the relationship on the child entity.
      * @returns {DataItem} The new item.
      */
-    replaceChildWithNew(returnPath: string, parentId: string, childProp: string): Promise<DataItem> {
-        return Api.postApi(`api/Data/${this.dataType}/ReplaceChildWithNew/${parentId}/${childProp}`, returnPath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                }
-                return response;
-            })
-            .then(response => response.json() as Promise<DataItem>)
-            .catch(error => {
-                throw new Error(error);
-            });
+    async replaceChildWithNew(returnPath: string, parentId: string, childProp: string): Promise<DataItem> {
+        let response = await Api.postApi(`api/Data/${this.dataType}/ReplaceChildWithNew/${parentId}/${childProp}`, returnPath);
+        if (!response.ok) {
+            throw new Error(`CODE:${response.statusText}`);
+        }
+        return response.json() as Promise<DataItem>;
     }
 
     /**
@@ -590,17 +447,11 @@ export class Repository {
      * @param {DataItem} vm The item to update.
      * @returns {DataItem} A response object containing any error which occurred, or the updated item.
      */
-    update(returnPath: string, vm: DataItem): Promise<DataItem> {
-        return Api.postApi(`api/Data/${this.dataType}/Update`, returnPath, JSON.stringify(vm))
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                }
-                return response;
-            })
-            .then(response => response.json() as Promise<DataItem>)
-            .catch(error => {
-                throw new Error(error);
-            });
+    async update(returnPath: string, vm: DataItem): Promise<DataItem> {
+        let response = await Api.postApi(`api/Data/${this.dataType}/Update`, returnPath, JSON.stringify(vm));
+        if (!response.ok) {
+            throw new Error(`CODE:${response.statusText}`);
+        }
+        return response.json() as Promise<DataItem>;
     }
 }

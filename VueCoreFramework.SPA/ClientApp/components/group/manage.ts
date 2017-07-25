@@ -63,58 +63,58 @@ export default class ManageGroupComponent extends Vue {
         this.$store.dispatch(Store.refreshChat, this.$route.fullPath);
     }
 
-    onCreateGroup() {
-        if (this.newGroupName) {
-            let re = /^[\w.@-]+$/;
-            if (re.test(this.newGroupName)) {
-                this.activity = true;
-                this.errorMessage = '';
-                this.createErrorMessage = '';
-                this.successMessage = '';
-                Api.postApi(`api/Group/StartNewGroup/${this.newGroupName}`, this.$route.fullPath)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`CODE:${response.statusText}`);
-                        } else {
-                            this.refreshGroups();
-                        }
-                        this.createGroupDialog = false;
-                        this.activity = false;
-                    })
-                    .catch(error => {
-                        this.createErrorMessage = 'A problem occurred.';
-                        if (error && error.message && error.message.startsWith("CODE:")) {
-                            this.errorMessage += error.message.replace('CODE:', '');
-                        }
-                        this.activity = false;
-                        ErrorMsg.logError('group/manage.onCreateGroup', error);
-                    });
+    async onCreateGroup() {
+        if (!this.newGroupName) {
+            return;
+        }
+
+        let re = /^[\w.@-]+$/;
+        if (!re.test(this.newGroupName)) {
+            return;
+        }
+
+        this.activity = true;
+        this.errorMessage = '';
+        this.createErrorMessage = '';
+        this.successMessage = '';
+        try {
+            let response = await Api.postApi(`api/Group/StartNewGroup/${this.newGroupName}`, this.$route.fullPath);
+            if (!response.ok) {
+                throw new Error(`CODE:${response.statusText}`);
+            } else {
+                this.refreshGroups();
+            }
+            this.createGroupDialog = false;
+        } catch (error) {
+            ErrorMsg.logError('group/manage.onCreateGroup', error);
+            this.createErrorMessage = 'A problem occurred.';
+            if (error && error.message && error.message.startsWith("CODE:")) {
+                this.errorMessage += error.message.replace('CODE:', '');
             }
         }
+        this.activity = false;
     }
 
-    onDeleteGroup() {
+    async onDeleteGroup() {
         this.activity = true;
         this.errorMessage = '';
         this.successMessage = '';
         this.deleteGroupDialog = false;
-        Api.postApi(`api/Group/RemoveGroup/${this.deleteGroup.name}`, this.$route.fullPath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                } else {
-                    this.refreshGroups();
-                }
-                this.activity = false;
-            })
-            .catch(error => {
-                this.errorMessage = 'A problem occurred.';
-                if (error && error.message && error.message.startsWith("CODE:")) {
-                    this.errorMessage += error.message.replace('CODE:', '');
-                }
-                this.activity = false;
-                ErrorMsg.logError('group/manage.onDeleteGroup', error);
-            });
+        try {
+            let response = await Api.postApi(`api/Group/RemoveGroup/${this.deleteGroup.name}`, this.$route.fullPath);
+            if (!response.ok) {
+                throw new Error(`CODE:${response.statusText}`);
+            } else {
+                this.refreshGroups();
+            }
+        } catch (error) {
+            ErrorMsg.logError('group/manage.onDeleteGroup', error);
+            this.errorMessage = 'A problem occurred.';
+            if (error && error.message && error.message.startsWith("CODE:")) {
+                this.errorMessage += error.message.replace('CODE:', '');
+            }
+        }
+        this.activity = false;
     }
 
     onDeleteGroupConfirm(group: Group) {
@@ -127,59 +127,51 @@ export default class ManageGroupComponent extends Vue {
         this.$store.dispatch(Store.refreshChat, this.$route.fullPath);
     }
 
-    onGroupSearch() {
+    async onGroupSearch() {
         this.activity = true;
         this.errorMessage = '';
         this.successMessage = '';
-        Api.postApi(`api/Group/GetGroup/${this.searchGroup}`, this.$route.fullPath)
-            .then(response => {
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        throw new Error('404');
-                    } else {
-                        throw new Error(`CODE:${response.statusText}`);
-                    }
-                }
-                return response;
-            })
-            .then(response => response.json() as Promise<Group>)
-            .then(data => {
-                this.foundGroup = data;
-                this.activity = false;
-            })
-            .catch(error => {
-                if (error && error.message && error.message === '404') {
-                    this.errorMessage = 'No results.';
+        try {
+            let response = await Api.postApi(`api/Group/GetGroup/${this.searchGroup}`, this.$route.fullPath);
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('404');
                 } else {
-                    this.errorMessage = 'A problem occurred. ';
-                    if (error && error.message && error.message.startsWith("CODE:")) {
-                        this.errorMessage += error.message.replace('CODE:', '');
-                    }
-                }
-                this.activity = false;
-                ErrorMsg.logError('group/manage.onGroupSearch', error);
-            });
-    }
-
-    onInvite() {
-        this.inviteDialog = false;
-        Api.postApi(`api/Group/InviteUserToGroup/${this.searchUsername}/${this.inviteGroup.name}`, this.$route.fullPath)
-            .then(response => {
-                if (!response.ok) {
                     throw new Error(`CODE:${response.statusText}`);
-                } else {
-                    this.successMessage = 'Invitation sent!';
                 }
-                this.activity = false;
-            })
-            .catch(error => {
-                this.errorMessage = 'A problem occurred.';
+            }
+            this.foundGroup = await response.json() as Group;
+        } catch (error) {
+            ErrorMsg.logError('group/manage.onGroupSearch', error);
+            if (error && error.message && error.message === '404') {
+                this.errorMessage = 'No results.';
+            } else {
+                this.errorMessage = 'A problem occurred. ';
                 if (error && error.message && error.message.startsWith("CODE:")) {
                     this.errorMessage += error.message.replace('CODE:', '');
                 }
-                this.activity = false;
-                ErrorMsg.logError('group/manage.onInvite', error);
-            });
+            }
+        }
+        this.activity = false;
+    }
+
+    async onInvite() {
+        this.inviteDialog = false;
+        try {
+            let response = await Api.postApi(`api/Group/InviteUserToGroup/${this.searchUsername}/${this.inviteGroup.name}`, this.$route.fullPath);
+            if (!response.ok) {
+                throw new Error(`CODE:${response.statusText}`);
+            } else {
+                this.successMessage = 'Invitation sent!';
+            }
+        } catch (error) {
+            ErrorMsg.logError('group/manage.onInvite', error);
+            this.errorMessage = 'A problem occurred.';
+            if (error && error.message && error.message.startsWith("CODE:")) {
+                this.errorMessage += error.message.replace('CODE:', '');
+            }
+        }
+        this.activity = false;
     }
 
     onInviteConfirm(group: Group) {
@@ -187,28 +179,26 @@ export default class ManageGroupComponent extends Vue {
         this.inviteDialog = true;
     }
 
-    onLeaveGroup() {
+    async onLeaveGroup() {
         this.activity = true;
         this.errorMessage = '';
         this.successMessage = '';
         this.leaveGroupDialog = false;
-        Api.postApi(`api/Group/LeaveGroup/${this.leaveGroup.name}`, this.$route.fullPath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                } else {
-                    this.refreshGroups();
-                }
-                this.activity = false;
-            })
-            .catch(error => {
-                this.errorMessage = 'A problem occurred.';
-                if (error && error.message && error.message.startsWith("CODE:")) {
-                    this.errorMessage += error.message.replace('CODE:', '');
-                }
-                this.activity = false;
-                ErrorMsg.logError('group/manage.onLeaveGroup', error);
-            });
+        try {
+            let response = await Api.postApi(`api/Group/LeaveGroup/${this.leaveGroup.name}`, this.$route.fullPath);
+            if (!response.ok) {
+                throw new Error(`CODE:${response.statusText}`);
+            } else {
+                this.refreshGroups();
+            }
+        } catch (error) {
+            ErrorMsg.logError('group/manage.onLeaveGroup', error);
+            this.errorMessage = 'A problem occurred.';
+            if (error && error.message && error.message.startsWith("CODE:")) {
+                this.errorMessage += error.message.replace('CODE:', '');
+            }
+        }
+        this.activity = false;
     }
 
     onLeaveGroupConfirm(group: Group) {
@@ -216,27 +206,25 @@ export default class ManageGroupComponent extends Vue {
         this.leaveGroupDialog = true;
     }
 
-    onRemoveGroupMember(group: Group, member: string) {
+    async onRemoveGroupMember(group: Group, member: string) {
         this.activity = true;
         this.errorMessage = '';
         this.successMessage = '';
-        Api.postApi(`api/Group/RemoveUserFromGroup/${member}/${group.name}`, this.$route.fullPath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`CODE:${response.statusText}`);
-                } else {
-                    this.refreshGroups();
-                }
-                this.activity = false;
-            })
-            .catch(error => {
-                this.errorMessage = 'A problem occurred.';
-                if (error && error.message && error.message.startsWith("CODE:")) {
-                    this.errorMessage += error.message.replace('CODE:', '');
-                }
-                this.activity = false;
-                ErrorMsg.logError('group/manage.onRemoveGroupMember', error);
-            });
+        try {
+            let response = await Api.postApi(`api/Group/RemoveUserFromGroup/${member}/${group.name}`, this.$route.fullPath);
+            if (!response.ok) {
+                throw new Error(`CODE:${response.statusText}`);
+            } else {
+                this.refreshGroups();
+            }
+        } catch (error) {
+            ErrorMsg.logError('group/manage.onRemoveGroupMember', error);
+            this.errorMessage = 'A problem occurred.';
+            if (error && error.message && error.message.startsWith("CODE:")) {
+                this.errorMessage += error.message.replace('CODE:', '');
+            }
+        }
+        this.activity = false;
     }
 
     onSearchGroupChange(val: string, oldVal: string) {
@@ -257,49 +245,34 @@ export default class ManageGroupComponent extends Vue {
         }
     }
 
-    onXferGroup() {
+    async onXferGroup() {
         this.activity = true;
         this.errorMessage = '';
         this.successMessage = '';
         this.xferGroupDialog = false;
-        if (this.xferGroup.name === 'Admin') {
-            Api.postApi(`api/Group/TransferSiteAdminToUser/${this.newManager}`, this.$route.fullPath)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`CODE:${response.statusText}`);
-                    } else {
-                        this.$store.state.userState.isSiteAdmin = false;
-                        this.refreshGroups();
-                    }
-                    this.activity = false;
-                })
-                .catch(error => {
-                    this.errorMessage = 'A problem occurred.';
-                    if (error && error.message && error.message.startsWith("CODE:")) {
-                        this.errorMessage += error.message.replace('CODE:', '');
-                    }
-                    this.activity = false;
-                    ErrorMsg.logError('group/manage.onXferGroup', error);
-                });
-        } else {
-            Api.postApi(`api/Group/TransferManagerToUser/${this.newManager}/${this.xferGroup.name}`, this.$route.fullPath)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`CODE:${response.statusText}`);
-                    } else {
-                        this.refreshGroups();
-                    }
-                    this.activity = false;
-                })
-                .catch(error => {
-                    this.errorMessage = 'A problem occurred.';
-                    if (error && error.message && error.message.startsWith("CODE:")) {
-                        this.errorMessage += error.message.replace('CODE:', '');
-                    }
-                    this.activity = false;
-                    ErrorMsg.logError('group/manage.onXferGroup', error);
-                });
+        try {
+            if (this.xferGroup.name === 'Admin') {
+                let response = await Api.postApi(`api/Group/TransferSiteAdminToUser/${this.newManager}`, this.$route.fullPath);
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                } else {
+                    this.$store.state.userState.isSiteAdmin = false;
+                }
+            } else {
+                let response = await Api.postApi(`api/Group/TransferManagerToUser/${this.newManager}/${this.xferGroup.name}`, this.$route.fullPath);
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                }
+            }
+            this.refreshGroups();
+        } catch (error) {
+            ErrorMsg.logError('group/manage.onXferGroup', error);
+            this.errorMessage = 'A problem occurred.';
+            if (error && error.message && error.message.startsWith("CODE:")) {
+                this.errorMessage += error.message.replace('CODE:', '');
+            }
         }
+        this.activity = false;
     }
 
     onXferGroupConfirm(group: Group) {
@@ -311,39 +284,36 @@ export default class ManageGroupComponent extends Vue {
         this.$store.dispatch(Store.refreshGroups, this.$route.fullPath);
     }
 
-    suggestSearchGroup() {
+    async suggestSearchGroup() {
         this.searchGroupTimeout = 0;
         if (this.searchGroup) {
-            Api.getApi(`api/Share/GetShareableGroupCompletion/${this.searchGroup}`, this.$route.fullPath)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`CODE:${response.statusText}`);
-                    } else {
-                        this.searchGroupSuggestion = response.statusText;
-                    }
-                    this.activity = false;
-                })
-                .catch(error => {
-                    ErrorMsg.logError('group/manage.suggestSearchGroup', error);
-                });
+            try {
+                let response = await Api.getApi(`api/Share/GetShareableGroupCompletion/${this.searchGroup}`, this.$route.fullPath);
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                } else {
+                    this.searchGroupSuggestion = response.statusText;
+                }
+            } catch (error) {
+                ErrorMsg.logError('group/manage.suggestSearchGroup', error);
+            }
         }
     }
 
-    suggestSearchUsername() {
+    async suggestSearchUsername() {
         this.searchUsernameTimeout = 0;
         if (this.searchUsername) {
-            Api.getApi(`api/Share/GetShareableUsernameCompletion/${this.searchUsername}`, this.$route.fullPath)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`CODE:${response.statusText}`);
-                    } else {
-                        this.searchUsernameSuggestion = response.statusText;
-                    }
-                    this.activity = false;
-                })
-                .catch(error => {
-                    ErrorMsg.logError('group/manage.suggestSearchUsername', error);
-                });
+            try {
+                let response = await Api.getApi(`api/Share/GetShareableUsernameCompletion/${this.searchUsername}`, this.$route.fullPath);
+                if (!response.ok) {
+                    throw new Error(`CODE:${response.statusText}`);
+                } else {
+                    this.searchUsernameSuggestion = response.statusText;
+                }
+            } catch (error) {
+                ErrorMsg.logError('group/manage.suggestSearchUsername', error);
+            }
+            this.activity = false;
         }
     }
 

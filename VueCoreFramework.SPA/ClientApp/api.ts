@@ -32,7 +32,7 @@ export function callFetch(url: string, method?: string, body?: any, cred?: boole
     return fetch(url, init);
 }
 
-function invokeHost(hostUrl: string, relUrl: string, returnPath: string, method: string, body: any, cred?: boolean) {
+function invokeHost(hostUrl: string, relUrl: string, returnPath: string, method: string, body: any, cred?: boolean): Promise<Response> {
     let f = callFetch(hostUrl + relUrl, method, body, cred);
     if (returnPath) {
         return f.then(response => checkResponse(response, returnPath));
