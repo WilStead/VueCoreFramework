@@ -1,4 +1,7 @@
-﻿namespace VueCoreFramework.Core.Extensions
+﻿using Newtonsoft.Json.Linq;
+using VueCoreFramework.Core.Models;
+
+namespace VueCoreFramework.Core.Extensions
 {
     /// <summary>
     /// Custom extensions for <see cref="string"/>.
@@ -25,6 +28,28 @@
             var chars = str.ToCharArray();
             chars[0] = char.ToLower(chars[0]);
             return new string(chars);
+        }
+
+        /// <summary>
+        /// Gets a specific cultural value from a string in the format expected by <see cref="ICulturalDataItem"/>.
+        /// </summary>
+        public static string GetCulturalValue(this string str, string culture)
+        {
+            dynamic data = JObject.Parse(str);
+            var value = data[culture];
+            if (value == null)
+            {
+                var def = data["default"];
+                if (def != null)
+                {
+                    value = data[def];
+                }
+            }
+            if (value != null)
+            {
+                return value.Value;
+            }
+            return null;
         }
     }
 }

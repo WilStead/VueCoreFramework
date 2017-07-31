@@ -1156,6 +1156,12 @@ namespace VueCoreFramework.Core.Data
                 {
                     lValue = value as ILocalizable;
                 }
+                var isLocalizableCultural = pInfo.PropertyType.GetInterfaces().Any(i => i == typeof(ILocalizableCulturalDataItem));
+                ILocalizableCulturalDataItem lcValue = null;
+                if (value != null && isLocalizableCultural)
+                {
+                    lcValue = value as ILocalizableCulturalDataItem;
+                }
 
                 if (nav != null)
                 {
@@ -1173,6 +1179,10 @@ namespace VueCoreFramework.Core.Data
                         if (item == null)
                         {
                             vm[pInfo.Name.ToInitialLower()] = "[None]";
+                        }
+                        else if (isLocalizableCultural)
+                        {
+                            vm[pInfo.Name.ToInitialLower()] = lcValue.ToString(culture, localizer);
                         }
                         else if (isCultural)
                         {
