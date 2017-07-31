@@ -7,8 +7,13 @@ namespace VueCoreFramework.Core.Models
     /// this variation of <see cref="ToString"/> with the current <see cref="IStringLocalizer"/> so
     /// that you can properly localize the result.
     /// </summary>
-    interface ILocalizable
+    public interface ILocalizable
     {
+        /// <summary>
+        /// Returns a localized representation of the object, as a <see cref="string"/>.
+        /// </summary>
+        /// <param name="localizer">An <see cref="IStringLocalizer"/> instance.</param>
+        /// <returns>A localized representation of the object, as a <see cref="string"/>.</returns>
         string ToString(IStringLocalizer localizer);
     }
 }
