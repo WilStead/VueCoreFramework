@@ -26,8 +26,8 @@ namespace VueCoreFramework.Test.Data
         [ClassInitialize]
         public static void Setup(TestContext testContext)
         {
-            var optionsBuilder = new DbContextOptionsBuilder();
-            optionsBuilder.UseInMemoryDatabase();
+            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
+            optionsBuilder.UseInMemoryDatabase("test");
             context = new ApplicationDbContext(optionsBuilder.Options);
 
             var mock = new Mock<IStringLocalizer<Startup>>();

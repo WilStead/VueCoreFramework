@@ -225,7 +225,10 @@ namespace VueCoreFramework.Core.Data
             foreach (var prop in typeof(T).GetProperties())
             {
                 // Do not copy the primary key.
-                if (PrimaryKey.PropertyInfo == prop) continue;
+                if (PrimaryKey.PropertyInfo == prop)
+                {
+                    continue;
+                }
 
                 // Many-to-many or one-to-many relationships can be duplicated.
                 var nav = EntityType.FindNavigation(prop);
@@ -1103,7 +1106,10 @@ namespace VueCoreFramework.Core.Data
                     throw new ArgumentException($"The primary key of {typeof(T).Name} is long, and {nameof(pk_string)} is not a valid Guid.", nameof(pk_string));
                 }
             }
-            else return pk_string;
+            else
+            {
+                return pk_string;
+            }
         }
 
         /// <summary>

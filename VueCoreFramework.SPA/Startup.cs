@@ -23,32 +23,21 @@ namespace VueCoreFramework
     public class Startup
     {
         /// <summary>
+        /// The <see cref="IConfiguration"/> object.
+        /// </summary>
+        public IConfiguration Configuration { get; }
+
+        /// <summary>
         /// Initializes a new instance of <see cref="Startup"/>.
         /// </summary>
         /// <param name="env">An <see cref="IHostingEnvironment"/> used to set up configuration sources.</param>
-        public Startup(IHostingEnvironment env)
+        /// <param name="configuration">An <see cref="IConfiguration"/> which will be exposed as a class Property.</param>
+        public Startup(IHostingEnvironment env, IConfiguration configuration)
         {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(env.ContentRootPath)
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
-
-            if (env.IsDevelopment())
-            {
-                // For more details on using the user secret store see https://go.microsoft.com/fwlink/?LinkID=532709
-                builder.AddUserSecrets<Startup>();
-            }
-
-            builder.AddEnvironmentVariables();
-            Configuration = builder.Build();
+            Configuration = configuration;
 
             env.ConfigureNLog("nlog.config");
         }
-
-        /// <summary>
-        /// The root of the configuration hierarchy.
-        /// </summary>
-        public IConfigurationRoot Configuration { get; }
 
         /// <summary>
         /// This method gets called by the runtime, and is used to add services to the container.

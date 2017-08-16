@@ -126,9 +126,10 @@ namespace VueCoreFramework.Auth.Controllers
         [HttpPost]
         [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
         [ProducesResponseType(302)]
-        public IActionResult ExternalLogin([FromBody]LoginViewModel model)
+        public async Task<IActionResult> ExternalLogin([FromBody]LoginViewModel model)
         {
-            var provider = _signInManager.GetExternalAuthenticationSchemes().SingleOrDefault(a => a.DisplayName == model.AuthProvider);
+            var schemes = await _signInManager.GetExternalAuthenticationSchemesAsync();
+            var provider = schemes.SingleOrDefault(a => a.DisplayName == model.AuthProvider);
             if (provider == null)
             {
                 _logger.LogWarning(LogEvent.EXTERNAL_PROVIDER_NOTFOUND, "Could not find provider {PROVIDER}.", model.AuthProvider);
@@ -139,8 +140,8 @@ namespace VueCoreFramework.Auth.Controllers
                 action: nameof(ExternalLoginCallback),
                 controller: "Account",
                 values: new { RememberUser = model.RememberUser });
-            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider.AuthenticationScheme, redirectUrl);
-            return Challenge(properties, provider.AuthenticationScheme);
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider.Name, redirectUrl);
+            return Challenge(properties, provider.Name);
         }
 
         /// <summary>
@@ -249,9 +250,10 @@ namespace VueCoreFramework.Auth.Controllers
         /// <response code="200">A list of accepted external authentication providers.</response>
         [HttpGet]
         [ProducesResponseType(typeof(IDictionary<string, string>), 200)]
-        public JsonResult GetAuthProviders()
+        public async Task<JsonResult> GetAuthProviders()
         {
-            return Json(new { providers = _signInManager.GetExternalAuthenticationSchemes().Select(s => s.DisplayName).ToArray() });
+            var schemes = await _signInManager.GetExternalAuthenticationSchemesAsync();
+            return Json(new { providers = schemes.Select(s => s.DisplayName).ToArray() });
         }
 
         /// <summary>
@@ -272,9 +274,10 @@ namespace VueCoreFramework.Auth.Controllers
                 return BadRequest(new { error = _errorLocalizer[ErrorMessages.InvalidUserError] });
             }
             var userLogins = await _userManager.GetLoginsAsync(user);
+            var schemes = await _signInManager.GetExternalAuthenticationSchemesAsync();
             return Json(new
             {
-                providers = _signInManager.GetExternalAuthenticationSchemes().Select(s => s.DisplayName).ToArray(),
+                providers = schemes.Select(s => s.DisplayName).ToArray(),
                 userProviders = userLogins.Select(l => l.ProviderDisplayName).ToArray()
             });
         }

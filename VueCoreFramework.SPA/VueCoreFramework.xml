@@ -54,23 +54,30 @@
             <summary>
             The main entry point of the application.
             </summary>
-            <param name="args">Any commandline arguments passed to the application on launch.</param>
+            <param name="args">Any command-line arguments passed to the application on launch.</param>
+        </member>
+        <member name="M:VueCoreFramework.Program.BuildWebHost(System.String[])">
+            <summary>
+            Builds a default <see cref="T:Microsoft.AspNetCore.Hosting.IWebHost"/>.
+            </summary>
+            <param name="args">Any command-line arguments passed to the application on launch.</param>
         </member>
         <member name="T:VueCoreFramework.Startup">
             <summary>
             Configures services and the application's request pipeline.
             </summary>
         </member>
-        <member name="M:VueCoreFramework.Startup.#ctor(Microsoft.AspNetCore.Hosting.IHostingEnvironment)">
+        <member name="P:VueCoreFramework.Startup.Configuration">
+            <summary>
+            The <see cref="T:Microsoft.Extensions.Configuration.IConfiguration"/> object.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Startup.#ctor(Microsoft.AspNetCore.Hosting.IHostingEnvironment,Microsoft.Extensions.Configuration.IConfiguration)">
             <summary>
             Initializes a new instance of <see cref="T:VueCoreFramework.Startup"/>.
             </summary>
             <param name="env">An <see cref="T:Microsoft.AspNetCore.Hosting.IHostingEnvironment"/> used to set up configuration sources.</param>
-        </member>
-        <member name="P:VueCoreFramework.Startup.Configuration">
-            <summary>
-            The root of the configuration hierarchy.
-            </summary>
+            <param name="configuration">An <see cref="T:Microsoft.Extensions.Configuration.IConfiguration"/> which will be exposed as a class Property.</param>
         </member>
         <member name="M:VueCoreFramework.Startup.ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
             <summary>

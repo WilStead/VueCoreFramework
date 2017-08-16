@@ -1,26 +1,28 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
+using System;
+using System.IO;
 using System.Reflection;
 
 namespace VueCoreFramework.Core.Data
 {
     /// <summary>
-    /// The <see cref="IDbContextFactory{TContext}"/> for <see cref="VueCoreFramework"/>.
+    /// The <see cref="IDesignTimeDbContextFactory{TContext}"/> for <see cref="VueCoreFramework"/>.
     /// </summary>
-    public class VueCoreFrameworkDbContextFactory : IDbContextFactory<VueCoreFrameworkDbContext>
+    public class VueCoreFrameworkDbContextFactory : IDesignTimeDbContextFactory<VueCoreFrameworkDbContext>
     {
         /// <summary>
         /// Creates a new instance of <see cref="VueCoreFrameworkDbContext"/>.
         /// </summary>
         /// <returns>A new instance of <see cref="VueCoreFrameworkDbContext"/>.</returns>
-        public VueCoreFrameworkDbContext Create(DbContextFactoryOptions options)
+        public VueCoreFrameworkDbContext CreateDbContext(string[] args)
         {
             var configurationBuilder = new ConfigurationBuilder()
-                .SetBasePath(options.ContentRootPath)
+                .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{options.EnvironmentName}.json", optional: true);
-            configurationBuilder.AddEnvironmentVariables();
+                .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json", optional: true)
+                .AddEnvironmentVariables();
             var configuration = configurationBuilder.Build();
 
             var contextBuilder = new DbContextOptionsBuilder<VueCoreFrameworkDbContext>();

@@ -24,7 +24,7 @@ namespace VueCoreFramework.Sample.Data
             var context = provider.GetRequiredService<ApplicationDbContext>();
             var roleManager = provider.GetRequiredService<RoleManager<IdentityRole>>();
 
-            if (!context.Users.Any(u => !u.Roles.Any()))
+            if (!context.Users.Any(u => u.Email == "test_user@example.com"))
             {
                 var userManager = provider.GetRequiredService<UserManager<ApplicationUser>>();
                 var user = context.Users.FirstOrDefault(u => u.Email == "test_user@example.com");

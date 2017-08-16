@@ -9,7 +9,7 @@
             The API controller for handling data manipulation tasks.
             </summary>
         </member>
-        <member name="M:VueCoreFramework.API.Controllers.DataController.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.AdminOptions},VueCoreFramework.Sample.Data.ApplicationDbContext,Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.ErrorMessages},Microsoft.Extensions.Logging.ILogger{VueCoreFramework.API.Controllers.DataController},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.EmailMessages},Microsoft.AspNetCore.Identity.RoleManager{Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.API.Startup},Microsoft.AspNetCore.Identity.UserManager{VueCoreFramework.Core.Models.ApplicationUser})">
+        <member name="M:VueCoreFramework.API.Controllers.DataController.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.AdminOptions},VueCoreFramework.Sample.Data.ApplicationDbContext,Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.ErrorMessages},Microsoft.Extensions.Logging.ILogger{VueCoreFramework.API.Controllers.DataController},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.EmailMessages},Microsoft.AspNetCore.Identity.RoleManager{Microsoft.AspNetCore.Identity.IdentityRole},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.API.Startup},Microsoft.AspNetCore.Identity.UserManager{VueCoreFramework.Core.Models.ApplicationUser})">
             <summary>
             Initializes a new instance of <see cref="T:VueCoreFramework.API.Controllers.DataController"/>.
             </summary>
@@ -326,7 +326,7 @@
             An API controller for handling group membership tasks.
             </summary>
         </member>
-        <member name="M:VueCoreFramework.API.Controllers.GroupController.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.AdminOptions},VueCoreFramework.Sample.Data.ApplicationDbContext,VueCoreFramework.Core.Services.IEmailSender,Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.ErrorMessages},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.EmailMessages},Microsoft.AspNetCore.Identity.RoleManager{Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole},Microsoft.AspNetCore.Identity.UserManager{VueCoreFramework.Core.Models.ApplicationUser})">
+        <member name="M:VueCoreFramework.API.Controllers.GroupController.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.AdminOptions},VueCoreFramework.Sample.Data.ApplicationDbContext,VueCoreFramework.Core.Services.IEmailSender,Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.ErrorMessages},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.EmailMessages},Microsoft.AspNetCore.Identity.RoleManager{Microsoft.AspNetCore.Identity.IdentityRole},Microsoft.AspNetCore.Identity.UserManager{VueCoreFramework.Core.Models.ApplicationUser})">
             <summary>
             Initializes a new instance of <see cref="T:VueCoreFramework.API.Controllers.GroupController"/>.
             </summary>
@@ -456,23 +456,30 @@
             <summary>
             The main entry point of the application.
             </summary>
-            <param name="args">Any commandline arguments passed to the application on launch.</param>
+            <param name="args">Any command-line arguments passed to the application on launch.</param>
+        </member>
+        <member name="M:VueCoreFramework.API.Program.BuildWebHost(System.String[])">
+            <summary>
+            Builds a default <see cref="T:Microsoft.AspNetCore.Hosting.IWebHost"/>.
+            </summary>
+            <param name="args">Any command-line arguments passed to the application on launch.</param>
         </member>
         <member name="T:VueCoreFramework.API.Startup">
             <summary>
             Configures services and the application's request pipeline.
             </summary>
         </member>
-        <member name="M:VueCoreFramework.API.Startup.#ctor(Microsoft.AspNetCore.Hosting.IHostingEnvironment)">
+        <member name="P:VueCoreFramework.API.Startup.Configuration">
+            <summary>
+            The <see cref="T:Microsoft.Extensions.Configuration.IConfiguration"/> object.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.API.Startup.#ctor(Microsoft.AspNetCore.Hosting.IHostingEnvironment,Microsoft.Extensions.Configuration.IConfiguration)">
             <summary>
             Initializes a new instance of <see cref="T:VueCoreFramework.API.Startup"/>.
             </summary>
             <param name="env">An <see cref="T:Microsoft.AspNetCore.Hosting.IHostingEnvironment"/> used to set up configuration sources.</param>
-        </member>
-        <member name="P:VueCoreFramework.API.Startup.Configuration">
-            <summary>
-            The root of the configuration hierarchy.
-            </summary>
+            <param name="configuration">An <see cref="T:Microsoft.Extensions.Configuration.IConfiguration"/> which will be exposed as a class Property.</param>
         </member>
         <member name="M:VueCoreFramework.API.Startup.ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
             <summary>
@@ -600,7 +607,7 @@
             An API controller for handling messaging tasks.
             </summary>
         </member>
-        <member name="M:VueCoreFramework.Controllers.MessageController.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.AdminOptions},VueCoreFramework.Sample.Data.ApplicationDbContext,Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.ErrorMessages},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.EmailMessages},Microsoft.AspNetCore.Identity.RoleManager{Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole},Microsoft.AspNetCore.Identity.UserManager{VueCoreFramework.Core.Models.ApplicationUser})">
+        <member name="M:VueCoreFramework.Controllers.MessageController.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.AdminOptions},VueCoreFramework.Sample.Data.ApplicationDbContext,Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.ErrorMessages},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.EmailMessages},Microsoft.AspNetCore.Identity.RoleManager{Microsoft.AspNetCore.Identity.IdentityRole},Microsoft.AspNetCore.Identity.UserManager{VueCoreFramework.Core.Models.ApplicationUser})">
             <summary>
             Initializes a new instance of <see cref="T:VueCoreFramework.Controllers.MessageController"/>.
             </summary>
@@ -724,7 +731,7 @@
             An API controller for handling sharing tasks.
             </summary>
         </member>
-        <member name="M:VueCoreFramework.Controllers.ShareController.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.AdminOptions},VueCoreFramework.Sample.Data.ApplicationDbContext,Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.ErrorMessages},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.EmailMessages},Microsoft.AspNetCore.Identity.RoleManager{Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole},Microsoft.AspNetCore.Identity.UserManager{VueCoreFramework.Core.Models.ApplicationUser})">
+        <member name="M:VueCoreFramework.Controllers.ShareController.#ctor(Microsoft.Extensions.Options.IOptions{VueCoreFramework.Core.Configuration.AdminOptions},VueCoreFramework.Sample.Data.ApplicationDbContext,Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.ErrorMessages},Microsoft.Extensions.Localization.IStringLocalizer{VueCoreFramework.Core.Messages.EmailMessages},Microsoft.AspNetCore.Identity.RoleManager{Microsoft.AspNetCore.Identity.IdentityRole},Microsoft.AspNetCore.Identity.UserManager{VueCoreFramework.Core.Models.ApplicationUser})">
             <summary>
             Initializes a new instance of <see cref="T:VueCoreFramework.Controllers.ShareController"/>.
             </summary>

@@ -403,9 +403,10 @@ namespace VueCoreFramework.Auth.Controllers
         [HttpPost]
         [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
         [ProducesResponseType(302)]
-        public IActionResult LinkLogin([FromBody]ManageUserViewModel model)
+        public async Task<IActionResult> LinkLogin([FromBody]ManageUserViewModel model)
         {
-            var provider = _signInManager.GetExternalAuthenticationSchemes().SingleOrDefault(a => a.DisplayName == model.AuthProvider);
+            var schemes = await _signInManager.GetExternalAuthenticationSchemesAsync();
+            var provider = schemes.SingleOrDefault(a => a.DisplayName == model.AuthProvider);
             if (provider == null)
             {
                 _logger.LogWarning(LogEvent.EXTERNAL_PROVIDER_NOTFOUND, "Could not find provider {PROVIDER}.", model.AuthProvider);
@@ -417,8 +418,8 @@ namespace VueCoreFramework.Auth.Controllers
                 controller: "Manage",
                 values: null,
                 protocol: HttpContext.Request.Scheme);
-            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider.AuthenticationScheme, redirectUrl, _userManager.GetUserId(User));
-            return Challenge(properties, provider.AuthenticationScheme);
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider.Name, redirectUrl, _userManager.GetUserId(User));
+            return Challenge(properties, provider.Name);
         }
 
         /// <summary>

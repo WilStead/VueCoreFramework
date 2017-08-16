@@ -45,7 +45,7 @@ namespace VueCoreFramework.Core.Data
             }
 
             var siteAdminRole = context.Roles.FirstOrDefault(r => r.Name == CustomRoles.SiteAdmin);
-            if (!context.Users.Any(u => u.Roles.Any(r => r.RoleId == siteAdminRole.Id)))
+            if (!context.UserRoles.Any(r => r.RoleId == siteAdminRole.Id))
             {
                 var userManager = provider.GetRequiredService<UserManager<ApplicationUser>>();
                 var adminOptions = new AdminOptions();

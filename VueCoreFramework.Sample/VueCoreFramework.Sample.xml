@@ -43,10 +43,10 @@
         </member>
         <member name="T:VueCoreFramework.Sample.Data.ApplicationDbContextFactory">
             <summary>
-            The <see cref="T:Microsoft.EntityFrameworkCore.Infrastructure.IDbContextFactory`1"/> for <see cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/>.
+            The <see cref="T:Microsoft.EntityFrameworkCore.Design.IDesignTimeDbContextFactory`1"/> for <see cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/>.
             </summary>
         </member>
-        <member name="M:VueCoreFramework.Sample.Data.ApplicationDbContextFactory.Create(Microsoft.EntityFrameworkCore.Infrastructure.DbContextFactoryOptions)">
+        <member name="M:VueCoreFramework.Sample.Data.ApplicationDbContextFactory.CreateDbContext(System.String[])">
             <summary>
             Creates a new instance of <see cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/>.
             </summary>

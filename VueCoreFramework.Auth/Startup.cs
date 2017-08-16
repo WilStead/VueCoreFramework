@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Rewrite;
@@ -13,8 +14,10 @@ using Microsoft.Extensions.Options;
 using NLog;
 using NLog.Extensions.Logging;
 using NLog.Web;
+using System.Net;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 using VueCoreFramework.Core.Configuration;
 using VueCoreFramework.Core.Models;
 using VueCoreFramework.Core.Services;
@@ -28,32 +31,21 @@ namespace VueCoreFramework.Auth
     public class Startup
     {
         /// <summary>
+        /// The <see cref="IConfiguration"/> object.
+        /// </summary>
+        public IConfiguration Configuration { get; }
+
+        /// <summary>
         /// Initializes a new instance of <see cref="Startup"/>.
         /// </summary>
         /// <param name="env">An <see cref="IHostingEnvironment"/> used to set up configuration sources.</param>
-        public Startup(IHostingEnvironment env)
+        /// <param name="configuration">An <see cref="IConfiguration"/> which will be exposed as a class Property.</param>
+        public Startup(IHostingEnvironment env, IConfiguration configuration)
         {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(env.ContentRootPath)
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
-
-            if (env.IsDevelopment())
-            {
-                // For more details on using the user secret store see https://go.microsoft.com/fwlink/?LinkID=532709
-                builder.AddUserSecrets<Startup>();
-            }
-
-            builder.AddEnvironmentVariables();
-            Configuration = builder.Build();
+            Configuration = configuration;
 
             env.ConfigureNLog("nlog.config");
         }
-
-        /// <summary>
-        /// The root of the configuration hierarchy.
-        /// </summary>
-        public IConfigurationRoot Configuration { get; }
 
         /// <summary>
         /// This method gets called by the runtime, and is used to add services to the container.
@@ -64,18 +56,38 @@ namespace VueCoreFramework.Auth
             services.AddOptions();
 
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
-            services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+            services.AddDbContextPool<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 
             services.AddIdentity<ApplicationUser, IdentityRole>(config =>
             {
                 config.User.RequireUniqueEmail = true;
                 config.SignIn.RequireConfirmedEmail = true;
-                config.Cookies.ApplicationCookie.AutomaticChallenge = false;
-                config.Cookies.ApplicationCookie.LoginPath = PathString.FromUriComponent("/Home/Index?forwardUrl=%2Flogin");
-                config.Cookies.ApplicationCookie.AccessDeniedPath = PathString.FromUriComponent("/Home/Index?forwardUrl=%2Ferror%2F403");
             })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = PathString.FromUriComponent("/Home/Index?forwardUrl=%2Flogin");
+                options.AccessDeniedPath = PathString.FromUriComponent("/Home/Index?forwardUrl=%2Ferror%2F403");
+
+                // Disable automatic challenge and allow 401 responses.
+                options.Events = new CookieAuthenticationEvents
+                {
+                    OnRedirectToLogin = ctx =>
+                    {
+                        if (ctx.Response.StatusCode == (int)HttpStatusCode.OK)
+                        {
+                            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                        }
+                        else
+                        {
+                            ctx.Response.Redirect(ctx.RedirectUri);
+                        }
+                        return Task.FromResult(0);
+                    }
+                };
+            });
+            services.AddAuthentication();
 
             services.AddLocalization(options => options.ResourcesPath = "Resources");
             services.Configure<RequestLocalizationOptions>(options =>
@@ -165,7 +177,7 @@ namespace VueCoreFramework.Auth
 
             app.UseRequestLocalization(localization.Value);
 
-            app.UseIdentity();
+            app.UseAuthentication();
 
             app.UseIdentityServer();
 

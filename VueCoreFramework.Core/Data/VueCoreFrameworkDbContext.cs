@@ -61,10 +61,7 @@ namespace VueCoreFramework.Core.Data
             base.OnModelCreating(builder);
             // Add your customizations after calling base.OnModelCreating(builder);
 
-            builder.Entity<Message>()
-                .Property(m => m.Timestamp)
-                .HasDefaultValueSql("GETUTCDATE()")
-                .ValueGeneratedOnAdd();
+            builder.ApplyConfiguration(new MessageConfiguration());
         }
 
         /// <summary>

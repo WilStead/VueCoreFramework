@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -31,9 +32,7 @@ namespace VueCoreFramework.Auth.Controllers
         /// redirected to the main SPA application's error page.
         /// </summary>
         public IActionResult Error()
-        {
-            return Redirect($"{_urls.ClientURL}Home/Index?forwardUrl={new PathString("/error/500").ToString()}");
-        }
+            => Redirect($"{_urls.ClientURL}Home/Index?forwardUrl={new PathString("/error/500").ToString()}");
 
         /// <summary>
         /// If a user navigates to the root of the auth server, the user is automatically redirected
@@ -51,8 +50,8 @@ namespace VueCoreFramework.Auth.Controllers
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.Authentication.SignOutAsync("Cookies");
-            await HttpContext.Authentication.SignOutAsync("oidc");
+            await HttpContext.SignOutAsync("Cookies");
+            await HttpContext.SignOutAsync("oidc");
             await _signInManager.SignOutAsync();
             return Redirect($"{_urls.ClientURL}Home/Index");
         }

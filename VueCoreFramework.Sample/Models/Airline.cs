@@ -1,10 +1,12 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using VueCoreFramework.Core.Data.Attributes;
 using VueCoreFramework.Core.Models;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace VueCoreFramework.Sample.Models
 {
@@ -80,5 +82,26 @@ namespace VueCoreFramework.Sample.Models
         /// The foreign key for <see cref="Country"/>.
         /// </summary>
         public Guid CountryId { get; set; }
+    }
+
+    /// <summary>
+    /// The <see cref="IEntityTypeConfiguration{TEntity}"/> for <see cref="AirlineCountry"/>.
+    /// </summary>
+    public class AirlineCountryConfiguration : IEntityTypeConfiguration<AirlineCountry>
+    {
+        /// <summary>
+        /// Configures the entity of type <see cref="AirlineCountry"/>.
+        /// </summary>
+        /// <param name="builder">The builder to be used to configure the entity type.</param>
+        public void Configure(EntityTypeBuilder<AirlineCountry> builder)
+        {
+            builder.HasKey(c => new { c.CountryId, c.AirlineId });
+            builder.HasOne(c => c.Airline)
+                .WithMany(c => c.Countries)
+                .HasForeignKey(c => c.AirlineId);
+            builder.HasOne(c => c.Country)
+                .WithMany(c => c.Airlines)
+                .HasForeignKey(c => c.CountryId);
+        }
     }
 }

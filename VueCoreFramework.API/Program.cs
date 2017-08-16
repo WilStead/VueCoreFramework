@@ -1,6 +1,5 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using System.IO;
-using System.Security.Cryptography.X509Certificates;
+﻿using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Hosting;
 using VueCoreFramework.Core.Configuration;
 
 namespace VueCoreFramework.API
@@ -13,21 +12,18 @@ namespace VueCoreFramework.API
         /// <summary>
         /// The main entry point of the application.
         /// </summary>
-        /// <param name="args">Any commandline arguments passed to the application on launch.</param>
-        public static void Main(string[] args)
-        {
-            var cert = new X509Certificate2("localhost.pfx", "password");
+        /// <param name="args">Any command-line arguments passed to the application on launch.</param>
+        public static void Main(string[] args) => BuildWebHost(args).Run();
 
-            var host = new WebHostBuilder()
-                .UseKestrel(options => options.UseHttps(cert))
+        /// <summary>
+        /// Builds a default <see cref="IWebHost"/>.
+        /// </summary>
+        /// <param name="args">Any command-line arguments passed to the application on launch.</param>
+        private static IWebHost BuildWebHost(string[] args)
+            => WebHost.CreateDefaultBuilder()
                 .UseUrls(URLs.ApiURL)
-                .UseContentRoot(Directory.GetCurrentDirectory())
-                .UseIISIntegration()
                 .UseStartup<Startup>()
                 .UseApplicationInsights()
                 .Build();
-
-            host.Run();
-        }
     }
 }

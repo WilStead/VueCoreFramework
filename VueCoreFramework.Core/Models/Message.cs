@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
 using System.ComponentModel.DataAnnotations;
 
@@ -75,5 +77,20 @@ namespace VueCoreFramework.Core.Models
         /// </summary>
         /// <remarks>Set automatically by the database.</remarks>
         public DateTime Timestamp { get; set; }
+    }
+
+    /// <summary>
+    /// The <see cref="IEntityTypeConfiguration{TEntity}"/> for <see cref="Message"/>.
+    /// </summary>
+    public class MessageConfiguration : IEntityTypeConfiguration<Message>
+    {
+        /// <summary>
+        /// Configures the entity of type <see cref="Message"/>.
+        /// </summary>
+        /// <param name="builder">The builder to be used to configure the entity type.</param>
+        public void Configure(EntityTypeBuilder<Message> builder)
+            => builder.Property(m => m.Timestamp)
+                .HasDefaultValueSql("GETUTCDATE()")
+                .ValueGeneratedOnAdd();
     }
 }

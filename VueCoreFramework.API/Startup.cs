@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +15,8 @@ using Microsoft.Extensions.Options;
 using NLog;
 using NLog.Extensions.Logging;
 using NLog.Web;
+using System.Net;
+using System.Threading.Tasks;
 using VueCoreFramework.Core.Configuration;
 using VueCoreFramework.Core.Models;
 using VueCoreFramework.Core.Services;
@@ -27,32 +30,21 @@ namespace VueCoreFramework.API
     public class Startup
     {
         /// <summary>
+        /// The <see cref="IConfiguration"/> object.
+        /// </summary>
+        public IConfiguration Configuration { get; }
+
+        /// <summary>
         /// Initializes a new instance of <see cref="Startup"/>.
         /// </summary>
         /// <param name="env">An <see cref="IHostingEnvironment"/> used to set up configuration sources.</param>
-        public Startup(IHostingEnvironment env)
+        /// <param name="configuration">An <see cref="IConfiguration"/> which will be exposed as a class Property.</param>
+        public Startup(IHostingEnvironment env, IConfiguration configuration)
         {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(env.ContentRootPath)
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
-
-            if (env.IsDevelopment())
-            {
-                // For more details on using the user secret store see https://go.microsoft.com/fwlink/?LinkID=532709
-                builder.AddUserSecrets<Startup>();
-            }
-
-            builder.AddEnvironmentVariables();
-            Configuration = builder.Build();
+            Configuration = configuration;
 
             env.ConfigureNLog("nlog.config");
         }
-
-        /// <summary>
-        /// The root of the configuration hierarchy.
-        /// </summary>
-        public IConfigurationRoot Configuration { get; }
 
         /// <summary>
         /// This method gets called by the runtime, and is used to add services to the container.
@@ -62,19 +54,50 @@ namespace VueCoreFramework.API
         {
             services.AddOptions();
 
-            services.AddDbContext<ApplicationDbContext>(options =>
+            services.AddDbContextPool<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
+            var urls = Configuration.GetSection("URLs");
 
             services.AddIdentity<ApplicationUser, IdentityRole>(config =>
             {
                 config.User.RequireUniqueEmail = true;
                 config.SignIn.RequireConfirmedEmail = true;
-                config.Cookies.ApplicationCookie.AutomaticChallenge = false;
-                config.Cookies.ApplicationCookie.LoginPath = PathString.FromUriComponent("/Home/Index?forwardUrl=%2Flogin");
-                config.Cookies.ApplicationCookie.AccessDeniedPath = PathString.FromUriComponent("/Home/Index?forwardUrl=%2Ferror%2F403");
             })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = PathString.FromUriComponent("/Home/Index?forwardUrl=%2Flogin");
+                options.AccessDeniedPath = PathString.FromUriComponent("/Home/Index?forwardUrl=%2Ferror%2F403");
+
+                // Disable automatic challenge and allow 401 responses.
+                options.Events = new CookieAuthenticationEvents
+                {
+                    OnRedirectToLogin = ctx =>
+                    {
+                        if (ctx.Response.StatusCode == (int)HttpStatusCode.OK)
+                        {
+                            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                        }
+                        else
+                        {
+                            ctx.Response.Redirect(ctx.RedirectUri);
+                        }
+                        return Task.FromResult(0);
+                    }
+                };
+            });
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+                .AddJwtBearer(options =>
+                {
+                    options.Authority = urls.GetValue("AuthURL", URLs.AuthURL);
+                    options.Audience = IdentityServerConfig.apiName;
+                });
 
             services.AddLocalization(options => options.ResourcesPath = "Resources");
             services.Configure<RequestLocalizationOptions>(options =>
@@ -102,18 +125,11 @@ namespace VueCoreFramework.API
             })
             .AddDataAnnotationsLocalization();
 
-            services.AddApiVersioning(options =>
-            {
-                options.ApiVersionReader = new MediaTypeApiVersionReader();
-                options.AssumeDefaultVersionWhenUnspecified = true;
-                options.ApiVersionSelector = new CurrentImplementationApiVersionSelector(options);
-            });
-
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.Configure<AuthMessageSenderOptions>(Configuration.GetSection("AuthMessageSender"));
             services.Configure<AdminOptions>(Configuration.GetSection("AdminOptions"));
-            services.Configure<URLOptions>(Configuration.GetSection("URLs"));
+            services.Configure<URLOptions>(urls);
         }
 
         /// <summary>
@@ -152,17 +168,17 @@ namespace VueCoreFramework.API
 
             app.UseRequestLocalization(localization.Value);
 
-            app.UseIdentity();
+            app.UseAuthentication();
 
             app.UseCors("default");
 
-            app.UseIdentityServerAuthentication(new IdentityServerAuthenticationOptions
-            {
-                Authority = urls.Value.AuthURL,
-                ApiName = IdentityServerConfig.apiName,
-                ApiSecret = Configuration["secretJwtKey"],
-                RequireHttpsMetadata = true
-            });
+            //app.UseIdentityServerAuthentication(new IdentityServerAuthenticationOptions
+            //{
+            //    Authority = urls.Value.AuthURL,
+            //    ApiName = IdentityServerConfig.apiName,
+            //    ApiSecret = Configuration["secretJwtKey"],
+            //    RequireHttpsMetadata = true
+            //});
 
             app.UseMvc(routes =>
             {

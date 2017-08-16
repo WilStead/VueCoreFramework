@@ -1160,10 +1160,10 @@
         </member>
         <member name="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContextFactory">
             <summary>
-            The <see cref="T:Microsoft.EntityFrameworkCore.Infrastructure.IDbContextFactory`1"/> for <see cref="N:VueCoreFramework"/>.
+            The <see cref="T:Microsoft.EntityFrameworkCore.Design.IDesignTimeDbContextFactory`1"/> for <see cref="N:VueCoreFramework"/>.
             </summary>
         </member>
-        <member name="M:VueCoreFramework.Core.Data.VueCoreFrameworkDbContextFactory.Create(Microsoft.EntityFrameworkCore.Infrastructure.DbContextFactoryOptions)">
+        <member name="M:VueCoreFramework.Core.Data.VueCoreFrameworkDbContextFactory.CreateDbContext(System.String[])">
             <summary>
             Creates a new instance of <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>.
             </summary>
@@ -1208,6 +1208,11 @@
         <member name="M:VueCoreFramework.Core.Extensions.StringExtensions.ToInitialLower(System.String)">
             <summary>
             Gets a version of this string with the first character converted to lower case.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Extensions.StringExtensions.GetCulturalValue(System.String,System.String)">
+            <summary>
+            Gets a specific cultural value from a string in the format expected by <see cref="T:VueCoreFramework.Core.Models.ICulturalDataItem"/>.
             </summary>
         </member>
         <member name="T:VueCoreFramework.Core.Extensions.TypeExtensions">
@@ -1488,6 +1493,26 @@
             this variation of <see cref="M:VueCoreFramework.Core.Models.ILocalizable.ToString(Microsoft.Extensions.Localization.IStringLocalizer)"/> with the current <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> so
             that you can properly localize the result.
             </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Models.ILocalizable.ToString(Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Returns a localized representation of the object, as a <see cref="T:System.String"/>.
+            </summary>
+            <param name="localizer">An <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+            <returns>A localized representation of the object, as a <see cref="T:System.String"/>.</returns>
+        </member>
+        <member name="T:VueCoreFramework.Core.Models.ILocalizableCulturalDataItem">
+            <summary>
+            Combines <see cref="T:VueCoreFramework.Core.Models.ICulturalDataItem"/> and <see cref="T:VueCoreFramework.Core.Models.ILocalizable"/>.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Models.ILocalizableCulturalDataItem.ToString(System.String,Microsoft.Extensions.Localization.IStringLocalizer)">
+            <summary>
+            Returns a localized representation of the object for the given culture, as a <see cref="T:System.String"/>.
+            </summary>
+            <param name="culture">A culture name.</param>
+            <param name="localizer">An <see cref="T:Microsoft.Extensions.Localization.IStringLocalizer"/> instance.</param>
+            <returns>A localized representation of the object for the given culture, as a <see cref="T:System.String"/>.</returns>
         </member>
         <member name="T:VueCoreFramework.Core.Models.Log">
             <summary>
