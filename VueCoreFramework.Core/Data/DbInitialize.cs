@@ -67,9 +67,9 @@ namespace VueCoreFramework.Core.Data
         /// <summary>
         /// Seeds the framework's database with IdentityServer data.
         /// </summary>
-        public static void InitializeIdentitySever(IApplicationBuilder app, string secret, bool replace)
+        public static void InitializeIdentitySever(IServiceProvider provider, string secret, bool replace)
         {
-            using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
+            using (var serviceScope = provider.GetService<IServiceScopeFactory>().CreateScope())
             {
                 serviceScope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>().Database.Migrate();
 

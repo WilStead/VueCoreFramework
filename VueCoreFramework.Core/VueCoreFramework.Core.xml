@@ -97,19 +97,34 @@
             necessary to update these, depending on how you are deploying and hosting.
             </remarks>
         </member>
-        <member name="F:VueCoreFramework.Core.Configuration.URLs.ApiURL">
+        <member name="F:VueCoreFramework.Core.Configuration.URLs.Api_IP">
             <summary>
-            The URL of the API server.
+            The IP of the API server.
             </summary>
         </member>
-        <member name="F:VueCoreFramework.Core.Configuration.URLs.AuthURL">
+        <member name="F:VueCoreFramework.Core.Configuration.URLs.Api_Port">
             <summary>
-            The URL of the authentication server.
+            The port number of the API server.
             </summary>
         </member>
-        <member name="F:VueCoreFramework.Core.Configuration.URLs.ClientURL">
+        <member name="F:VueCoreFramework.Core.Configuration.URLs.Auth_IP">
             <summary>
-            The URL of the default Vue client.
+            The IP of the authentication server.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Configuration.URLs.Auth_Port">
+            <summary>
+            The port number of the authentication server.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Configuration.URLs.Client_IP">
+            <summary>
+            The IP of the default Vue client.
+            </summary>
+        </member>
+        <member name="F:VueCoreFramework.Core.Configuration.URLs.Client_Port">
+            <summary>
+            The port number of the default Vue client.
             </summary>
         </member>
         <member name="T:VueCoreFramework.Core.Data.Attributes.CulturalAttribute">
@@ -352,7 +367,7 @@
             Seeds the framework's database with core data.
             </summary>
         </member>
-        <member name="M:VueCoreFramework.Core.Data.DbInitialize.InitializeIdentitySever(Microsoft.AspNetCore.Builder.IApplicationBuilder,System.String,System.Boolean)">
+        <member name="M:VueCoreFramework.Core.Data.DbInitialize.InitializeIdentitySever(System.IServiceProvider,System.String,System.Boolean)">
             <summary>
             Seeds the framework's database with IdentityServer data.
             </summary>
@@ -1629,6 +1644,17 @@
             The date and time when the message was sent.
             </summary>
             <remarks>Set automatically by the database.</remarks>
+        </member>
+        <member name="T:VueCoreFramework.Core.Models.MessageConfiguration">
+            <summary>
+            The <see cref="T:Microsoft.EntityFrameworkCore.IEntityTypeConfiguration`1"/> for <see cref="T:VueCoreFramework.Core.Models.Message"/>.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Core.Models.MessageConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{VueCoreFramework.Core.Models.Message})">
+            <summary>
+            Configures the entity of type <see cref="T:VueCoreFramework.Core.Models.Message"/>.
+            </summary>
+            <param name="builder">The builder to be used to configure the entity type.</param>
         </member>
         <member name="T:VueCoreFramework.Core.Models.NamedDataItem">
             <summary>

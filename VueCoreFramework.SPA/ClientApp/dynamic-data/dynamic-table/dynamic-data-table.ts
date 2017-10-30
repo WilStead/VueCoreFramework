@@ -1,5 +1,5 @@
 ﻿import Vue from 'vue';
-import VueRouter from 'vue-router';
+import VueRouter, { Route } from 'vue-router';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import * as ErrorMsg from '../../error-msg';
 import { DataItem, PageData, Repository } from '../../store/repository';
@@ -160,7 +160,7 @@ export default class DynamicDataTable extends Vue {
     }
 
     @Watch('$route')
-    onRouteChange(val: VueRouter.Route) {
+    onRouteChange(val: Route) {
         this.getRouteData();
         if (this.pagination
             && (this.pagination.sortBy

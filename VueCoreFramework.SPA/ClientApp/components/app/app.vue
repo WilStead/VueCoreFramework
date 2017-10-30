@@ -1,6 +1,6 @@
 <template>
     <v-app light id='app-root'>
-        <v-navigation-drawer persistent disable-route-watcher v-model="sideNav">
+        <v-navigation-drawer app persistent disable-route-watcher v-model="sideNav">
             <v-list>
                 <menu-item-component v-for="menuItem in $store.state.uiState.menuItems" :menuItem="menuItem" :submenu="menuItem.submenu" :key="menuItem.key" />
             </v-list>
@@ -157,7 +157,7 @@
                 </v-list-group>
             </v-list>
         </v-navigation-drawer>
-        <v-toolbar fixed class="primary topnav">
+        <v-toolbar app fixed class="primary topnav">
             <v-toolbar-side-icon @click.stop="sideNav = !sideNav" />
             <div class="logo-container">
                 <router-link to="/"><span class="logo-link"></span></router-link>
@@ -187,7 +187,7 @@
                 </v-dialog>
             </v-container>
         </main>
-        <v-footer fixed class="primary">
+        <v-footer app fixed class="primary">
             <v-spacer></v-spacer>
             <a :href="'mailto:' + $store.state.uiState.contact" class="copy-text">&copy; {{ $store.state.uiState.author }}, {{ $store.state.uiState.year }}</a>
         </v-footer>

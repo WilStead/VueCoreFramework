@@ -1,5 +1,6 @@
 import 'bootstrap';
 import Vue from 'vue';
+import '../node_modules/vuetify/dist/vuetify.min.css';
 import VueRouter from 'vue-router';
 Vue.use(VueRouter);
 import { store } from './store/store';

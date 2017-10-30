@@ -1,4 +1,6 @@
-﻿namespace VueCoreFramework.Core.Configuration
+﻿using System.Net;
+
+namespace VueCoreFramework.Core.Configuration
 {
     /// <summary>
     /// Provides the URLs for the different hosts which form the application.
@@ -11,18 +13,33 @@
     public static class URLs
     {
         /// <summary>
-        /// The URL of the API server.
+        /// The IP of the API server.
         /// </summary>
-        public const string ApiURL = "https://localhost:44325/";
+        public const string Api_IP = "127.0.0.1";
 
         /// <summary>
-        /// The URL of the authentication server.
+        /// The port number of the API server.
         /// </summary>
-        public const string AuthURL = "https://localhost:44300/";
+        public const int Api_Port = 44325;
 
         /// <summary>
-        /// The URL of the default Vue client.
+        /// The IP of the authentication server.
         /// </summary>
-        public const string ClientURL = "https://localhost:44350/";
+        public const string Auth_IP = "127.0.0.1";
+
+        /// <summary>
+        /// The port number of the authentication server.
+        /// </summary>
+        public const int Auth_Port = 44300;
+
+        /// <summary>
+        /// The IP of the default Vue client.
+        /// </summary>
+        public const string Client_IP = "127.0.0.1";
+
+        /// <summary>
+        /// The port number of the default Vue client.
+        /// </summary>
+        public const int Client_Port = 44350;
     }
 }

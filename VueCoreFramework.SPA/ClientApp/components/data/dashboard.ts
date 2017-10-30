@@ -1,5 +1,5 @@
 ﻿import Vue from 'vue';
-import VueRouter from 'vue-router';
+import VueRouter, { Route } from 'vue-router';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import * as Api from '../../api';
 import * as ErrorMsg from '../../error-msg';
@@ -50,7 +50,7 @@ export default class DashboardComponent extends Vue {
     }
 
     @Watch('$route', { deep: true })
-    onRouteChange(val: VueRouter.Route) {
+    onRouteChange(val: Route) {
         this.getRouteData();
     }
 

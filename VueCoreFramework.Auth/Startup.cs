@@ -125,12 +125,18 @@ namespace VueCoreFramework.Auth
                 options.UserInteraction.ErrorUrl = "/Home/Error";
             })
                 .AddSigningCredential(new X509Certificate2("localhost.pfx", "password"))
-                .AddConfigurationStore(builder =>
-                    builder.UseSqlServer(connectionString, options =>
-                        options.MigrationsAssembly(migrationsAssembly)))
-                .AddOperationalStore(builder =>
-                    builder.UseSqlServer(connectionString, options =>
-                        options.MigrationsAssembly(migrationsAssembly)))
+                .AddConfigurationStore(options =>
+                {
+                    options.ConfigureDbContext =
+                        builder => builder.UseSqlServer(connectionString,
+                            sql => sql.MigrationsAssembly(migrationsAssembly));
+                })
+                .AddOperationalStore(options =>
+                {
+                    options.ConfigureDbContext =
+                        builder => builder.UseSqlServer(connectionString,
+                            sql => sql.MigrationsAssembly(migrationsAssembly));
+                })
                 .AddAspNetIdentity<ApplicationUser>();
 
             // Add application services.
@@ -177,8 +183,6 @@ namespace VueCoreFramework.Auth
 
             app.UseRequestLocalization(localization.Value);
 
-            app.UseAuthentication();
-
             app.UseIdentityServer();
 
             app.UseMvc(routes =>
@@ -187,9 +191,6 @@ namespace VueCoreFramework.Auth
                     name: "default",
                     template: "{controller=Home}/{action=Index}");
             });
-
-            // Add IdentityServer data
-            Core.Data.DbInitialize.InitializeIdentitySever(app, Configuration["secretJwtKey"], true);
         }
     }
 }

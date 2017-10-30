@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using IdentityServer4.AccessTokenValidation;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -89,15 +89,13 @@ namespace VueCoreFramework.API
                     }
                 };
             });
-            services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-                .AddJwtBearer(options =>
+            services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
+                .AddIdentityServerAuthentication(options =>
                 {
-                    options.Authority = urls.GetValue("AuthURL", URLs.AuthURL);
-                    options.Audience = IdentityServerConfig.apiName;
+                    options.Authority = urls.GetValue("AuthURL", $"https://{new IPEndPoint(IPAddress.Parse(URLs.Auth_IP), URLs.Auth_Port).ToString()}/");
+                    options.ApiName = IdentityServerConfig.apiName;
+                    options.ApiSecret = Configuration["secretJwtKey"];
+                    options.EnableCaching = true;
                 });
 
             services.AddLocalization(options => options.ResourcesPath = "Resources");
@@ -181,28 +179,12 @@ namespace VueCoreFramework.API
 
             app.UseCors("default");
 
-            //app.UseIdentityServerAuthentication(new IdentityServerAuthenticationOptions
-            //{
-            //    Authority = urls.Value.AuthURL,
-            //    ApiName = IdentityServerConfig.apiName,
-            //    ApiSecret = Configuration["secretJwtKey"],
-            //    RequireHttpsMetadata = true
-            //});
-
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
                     name: "default",
                     template: "api/{controller}/{action}");
             });
-
-            // Seed the database
-            Core.Data.DbInitialize.Initialize(
-                app.ApplicationServices,
-                app.ApplicationServices.GetRequiredService<ApplicationDbContext>());
-
-            // Add sample data
-            DbInitialize.Initialize(app.ApplicationServices);
         }
     }
 }

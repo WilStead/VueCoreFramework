@@ -1,5 +1,5 @@
 ﻿import Vue from 'vue';
-import VueRouter from 'vue-router';
+import VueRouter, { Route } from 'vue-router';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import * as Api from '../../api';
 import * as ErrorMsg from '../../error-msg';
@@ -71,7 +71,7 @@ export default class DynamicFormComponent extends Vue {
     vmDefinition: Array<FieldDefinition>;
 
     @Watch('$route')
-    onRouteChange(val: VueRouter.Route, oldVal: VueRouter.Route) {
+    onRouteChange(val: Route, oldVal: Route) {
         this.repository = this.$store.getters.getRepository(val.name);
         if (this.updateTimeout === 0) {
             this.updateTimeout = setTimeout(this.updateForm, 125);

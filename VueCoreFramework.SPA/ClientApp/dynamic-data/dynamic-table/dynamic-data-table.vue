@@ -34,7 +34,7 @@
                       :pagination.sync="internalPagination"
                       :total-items="totalItems"
                       :search="internalSearch">
-            <template slot="items" scope="props">
+            <template slot="items" slot-scope="props">
                 <td><v-checkbox hide-details primary v-model="props.selected" v-if="deletePendingItems.indexOf(props.item[props.item.primaryKeyProperty]) === -1"></v-checkbox></td>
                 <td v-for="field in headers" :class="{ 'text-xs-right': field.text !== 'Name' }">
                     <span v-if="field.cultural">{{ getCulturalValue(props.item[field.value]) }}</span>

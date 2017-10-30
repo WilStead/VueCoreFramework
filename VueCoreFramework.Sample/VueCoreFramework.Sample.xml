@@ -130,6 +130,17 @@
             The foreign key for <see cref="P:VueCoreFramework.Sample.Models.AirlineCountry.Country"/>.
             </summary>
         </member>
+        <member name="T:VueCoreFramework.Sample.Models.AirlineCountryConfiguration">
+            <summary>
+            The <see cref="T:Microsoft.EntityFrameworkCore.IEntityTypeConfiguration`1"/> for <see cref="T:VueCoreFramework.Sample.Models.AirlineCountry"/>.
+            </summary>
+        </member>
+        <member name="M:VueCoreFramework.Sample.Models.AirlineCountryConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{VueCoreFramework.Sample.Models.AirlineCountry})">
+            <summary>
+            Configures the entity of type <see cref="T:VueCoreFramework.Sample.Models.AirlineCountry"/>.
+            </summary>
+            <param name="builder">The builder to be used to configure the entity type.</param>
+        </member>
         <member name="T:VueCoreFramework.Sample.Models.CityTransit">
             <summary>
             Types of city transportation.

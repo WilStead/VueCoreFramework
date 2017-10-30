@@ -1,5 +1,5 @@
 ﻿import Vue from 'vue';
-import VueRouter from 'vue-router';
+import VueRouter, { Route } from 'vue-router';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import * as Store from '../../store/store';
 import { authenticate, authMgr, logout } from '../../authorization';
@@ -26,7 +26,7 @@ export default class TopbarComponent extends Vue {
     }
 
     @Watch('$route')
-    onRouteChange(val: VueRouter.Route, oldVal: VueRouter.Route) {
+    onRouteChange(val: Route, oldVal: Route) {
         if (this.updateTimeout === 0) {
             this.updateTimeout = setTimeout(this.updateAuth, 500);
         }

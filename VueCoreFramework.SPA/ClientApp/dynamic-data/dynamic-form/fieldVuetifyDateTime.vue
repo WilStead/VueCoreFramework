@@ -24,7 +24,7 @@
                            :formatted-value.sync="formattedDate"
                            no-title
                            scrollable>
-                <template scope="{ save, cancel }">
+                <template slot-scope="{ save, cancel }">
                     <v-card-actions>
                         <v-btn flat primary @click="cancel()">Cancel</v-btn>
                         <v-btn flat primary @click="save()">Save</v-btn>
@@ -52,7 +52,7 @@
                           readonly></v-text-field>
             <v-time-picker v-model="valueTime"
                            actions>
-                <template scope="{ save, cancel }">
+                <template slot-scope="{ save, cancel }">
                     <v-card-actions>
                         <v-btn flat primary @click="cancel()">Cancel</v-btn>
                         <v-btn flat primary @click="save()">Save</v-btn>

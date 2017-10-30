@@ -1,8 +1,8 @@
-﻿import VueRouter from 'vue-router';
+﻿import VueRouter, { Route, RouteConfig } from 'vue-router';
 import { authenticate, AuthorizationViewModel, checkAuthorization } from './authorization';
 import * as ErrorMsg from './error-msg';
 
-const routes: Array<VueRouter.RouteConfig> = [
+const routes: Array<RouteConfig> = [
     { path: '/', component: require('./components/home/home.vue').default },
     { path: '/home/index', redirect: '/' },
     {
@@ -95,7 +95,7 @@ router.beforeEach(async (to, from, next) => {
  * @param to The Route being navigated to.
  * @returns {string} Either 'authorized' or 'unauthorized' or 'login' if the user must sign in.
  */
-export function authorize(to: VueRouter.Route): Promise<string> {
+export function authorize(to: Route): Promise<string> {
     let dataType = to.name;
     let op: string;
     let id: string;
