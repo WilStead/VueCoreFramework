@@ -5,15 +5,18 @@
                 <v-icon :fa="fontAwesome" class="primary--text">{{ iconClass }}</v-icon>
                 <span style="margin-left: 0.5em;">{{ title }}</span>
                 <v-spacer></v-spacer>
+                <v-tooltip top>
+                    <v-btn slot="activator" icon class="info--text" @click.native.stop="shareDialog = true"><v-icon>visibility</v-icon></v-btn>
+                    <span>type sharing</span>
+                </v-tooltip>
                 <v-dialog v-if="$store.state.userState.isAdmin" v-model="shareDialog" fullscreen :overlay="false">
-                    <v-btn v-tooltip:top="{ html: 'type sharing' }" icon class="info--text" slot="activator"><v-icon>visibility</v-icon></v-btn>
                     <v-card>
                         <v-card-title primary-title class="info">
                             <v-btn icon @click="shareDialog = false"><v-icon>close</v-icon></v-btn>
                             <span class="white--text headline">Share {{routeName}} Data Type</span>
                         </v-card-title>
-                        <v-alert error :value="shareErrorMessage">{{ shareErrorMessage }}</v-alert>
-                        <v-alert success :value="shareSuccessMessage">{{ shareSuccessMessage }}</v-alert>
+                        <v-alert color="error" :value="shareErrorMessage">{{ shareErrorMessage }}</v-alert>
+                        <v-alert color="success" :value="shareSuccessMessage">{{ shareSuccessMessage }}</v-alert>
                         <v-card-text>
                             <v-list>
                                 <v-list-group>
@@ -31,7 +34,10 @@
                                             <v-list-tile-sub-title>{{ share.shortLevel }}</v-list-tile-sub-title>
                                         </v-list-tile-content>
                                         <v-list-tile-action>
-                                            <v-btn v-tooltip:top="{ html: 'hide' }" icon class="info--text" @click="onHide(share)"><v-icon>visibility_off</v-icon></v-btn>
+                                            <v-tooltip top>
+                                                <v-btn icon slot="activator" class="info--text" @click="onHide(share)"><v-icon>visibility_off</v-icon></v-btn>
+                                                <span>hide</span>
+                                            </v-tooltip>
                                         </v-list-tile-action>
                                     </v-list-tile>
                                 </v-list-group>
@@ -70,7 +76,10 @@
                                         <v-select label="Permission" v-model="selectedPermission" :items="permissionOptions" auto></v-select>
                                     </v-flex>
                                     <v-flex xs3>
-                                        <v-btn v-tooltip:top="{ html: 'share' }" primary @click="onShare()">Share</v-btn>
+                                        <v-tooltip top>
+                                            <v-btn slot="activator" color="primary" @click="onShare()">Share</v-btn>
+                                            <span>share</span>
+                                        </v-tooltip>
                                     </v-flex>
                                 </v-layout>
                             </v-container>

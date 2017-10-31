@@ -12,11 +12,8 @@ module.exports = (env) => {
         entry: {
             vendor: [
                 'babel-polyfill',
-                'bootstrap',
-                'bootstrap/dist/css/bootstrap.css',
                 'event-source-polyfill',
                 'isomorphic-fetch',
-                'jquery',
                 'jsnlog',
                 'moment',
                 'oidc-client',
@@ -25,6 +22,7 @@ module.exports = (env) => {
                 'vue-markdown',
                 'vue-router',
                 'vuetify',
+                'vuetify/dist/vuetify.min.css',
                 'vuex'
             ]
         },
@@ -42,7 +40,6 @@ module.exports = (env) => {
         },
         plugins: [
             extractCSS,
-            new webpack.ProvidePlugin({ $: 'jquery', jQuery: 'jquery' }), // Maps these identifiers to the jQuery package (because Bootstrap expects it to be a global variable)
             new webpack.DefinePlugin({
                 'process.env.NODE_ENV': isDevBuild ? '"development"' : '"production"'
             }),

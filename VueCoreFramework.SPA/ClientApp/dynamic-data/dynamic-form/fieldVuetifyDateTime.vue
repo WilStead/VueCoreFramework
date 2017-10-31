@@ -26,8 +26,8 @@
                            scrollable>
                 <template slot-scope="{ save, cancel }">
                     <v-card-actions>
-                        <v-btn flat primary @click="cancel()">Cancel</v-btn>
-                        <v-btn flat primary @click="save()">Save</v-btn>
+                        <v-btn flat color="primary" @click="cancel()">Cancel</v-btn>
+                        <v-btn flat color="primary" @click="save()">Save</v-btn>
                     </v-card-actions>
                 </template>
             </v-date-picker>
@@ -54,14 +54,14 @@
                            actions>
                 <template slot-scope="{ save, cancel }">
                     <v-card-actions>
-                        <v-btn flat primary @click="cancel()">Cancel</v-btn>
-                        <v-btn flat primary @click="save()">Save</v-btn>
+                        <v-btn flat color="primary" @click="cancel()">Cancel</v-btn>
+                        <v-btn flat color="primary" @click="save()">Save</v-btn>
                     </v-card-actions>
                 </template>
             </v-time-picker>
         </v-menu>
         <div v-if="!schema.required" class="null-clear-container">
-            <v-btn class="btn-null-clear" floating primary :disabled="disabled" @click="onClear"><v-icon>remove</v-icon></v-btn>
+            <v-btn class="btn-null-clear" floating color="primary" :disabled="disabled" @click="onClear"><v-icon>remove</v-icon></v-btn>
         </div>
     </div>
 </template>

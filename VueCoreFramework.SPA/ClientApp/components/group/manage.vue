@@ -2,14 +2,17 @@
     <v-layout row wrap justify-center>
         <v-card>
             <v-card-title primary-title class="primary headline">Groups</v-card-title>
-            <v-alert error :value="errorMessage">{{ errorMessage }}</v-alert>
-            <v-alert success :value="successMessage">{{ successMessage }}</v-alert>
+            <v-alert color="error" :value="errorMessage">{{ errorMessage }}</v-alert>
+            <v-alert color="success" :value="successMessage">{{ successMessage }}</v-alert>
             <v-list two-line>
                 <v-subheader v-if="$store.state.userState.managedGroups.length > 0">Groups you manage</v-subheader>
                 <v-list-group v-for="group in $store.state.userState.managedGroups" :key="group.name">
                     <v-list-tile avatar slot="item">
                         <v-list-tile-avatar>
-                            <v-btn v-tooltip:top="{ html: 'group chat' }" icon class="info--text" @click="onGroupChat(group)"><v-icon>group</v-icon></v-btn>
+                            <v-tooltip top>
+                                <v-btn slot="activator" icon class="info--text" @click="onGroupChat(group)"><v-icon>group</v-icon></v-btn>
+                                <span>group chat</span>
+                            </v-tooltip>
                         </v-list-tile-avatar>
                         <v-list-tile-content>
                             <v-list-tile-title>{{ group.name }}</v-list-tile-title>
@@ -21,13 +24,19 @@
                     </v-list-tile>
                     <v-list-tile v-for="member in group.members.filter(m => m !== $store.state.userState.username)" :key="member" avatar>
                         <v-list-tile-avatar>
-                            <v-btn v-tooltip:top="{ html: 'chat' }" icon class="info--text" @click="onContactGroupMember(member)"><v-icon>person</v-icon></v-btn>
+                            <v-tooltip top>
+                                <v-btn slot="activator" icon class="info--text" @click="onContactGroupMember(member)"><v-icon>person</v-icon></v-btn>
+                                <span>chat</span>
+                            </v-tooltip>
                         </v-list-tile-avatar>
                         <v-list-tile-content>
                             <v-list-tile-title>{{ member }}</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
-                            <v-btn v-tooltip:top="{ html: 'remove from group' }" icon class="error--text" @click="onRemoveGroupMember(group, member)"><v-icon>remove_circle</v-icon></v-btn>
+                            <v-tooltip top>
+                                <v-btn slot="activator" icon class="error--text" @click="onRemoveGroupMember(group, member)"><v-icon>remove_circle</v-icon></v-btn>
+                                <span>remove from group</span>
+                            </v-tooltip>
                         </v-list-tile-action>
                     </v-list-tile>
                     <v-list-tile>
@@ -60,7 +69,10 @@
                 <v-list-group v-for="group in $store.state.userState.joinedGroups" :key="group.name">
                     <v-list-tile slot="item">
                         <v-list-tile-avatar>
-                            <v-btn v-tooltip:top="{ html: 'group chat' }" icon class="info--text" @click="onGroupChat(group)"><v-icon>group</v-icon></v-btn>
+                            <v-tooltip top>
+                                <v-btn slot="activator" icon class="info--text" @click="onGroupChat(group)"><v-icon>group</v-icon></v-btn>
+                                <span>group chat</span>
+                            </v-tooltip>
                         </v-list-tile-avatar>
                         <v-list-tile-content>
                             <v-list-tile-title>{{ group.name }}</v-list-tile-title>
@@ -72,7 +84,10 @@
                     </v-list-tile>
                     <v-list-tile v-for="member in group.members.filter(m => m !== $store.state.userState.username)" :key="member" avatar>
                         <v-list-tile-avatar>
-                            <v-btn v-tooltip:top="{ html: 'contact' }" icon class="info--text" @click="onContactGroupMember(member)"><v-icon>person</v-icon></v-btn>
+                            <v-tooltip top>
+                                <v-btn slot="activator" icon class="info--text" @click="onContactGroupMember(member)"><v-icon>person</v-icon></v-btn>
+                                <span>contact</span>
+                            </v-tooltip>
                         </v-list-tile-avatar>
                         <v-list-tile-content>
                             <v-list-tile-title>{{ member }}</v-list-tile-title>
@@ -95,16 +110,16 @@
             </v-card-text>
             <v-card-text v-else>
                 <v-dialog v-model="createGroupDialog">
-                    <v-btn slot="activator" primary>Start a New Group</v-btn>
+                    <v-btn slot="activator" color="primary">Start a New Group</v-btn>
                     <v-card>
                         <v-card-title class="primary headline">Create a Group</v-card-title>
-                        <v-alert error :value="createErrorMessage">{{ createErrorMessage }}</v-alert>
+                        <v-alert color="error" :value="createErrorMessage">{{ createErrorMessage }}</v-alert>
                         <v-card-text>
                             <v-text-field label="Group name" v-model="newGroupName" :rules="[validateGroupName]"></v-text-field>
                         </v-card-text>
                         <v-card-actions>
                             <v-btn flat @click="createGroupDialog = false">Cancel</v-btn>
-                            <v-btn primary @click="onCreateGroup" :disabled="!newGroupName">Create Group</v-btn>
+                            <v-btn color="primary" @click="onCreateGroup" :disabled="!newGroupName">Create Group</v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-dialog>
@@ -123,7 +138,10 @@
                 <v-list-group>
                     <v-list-tile slot="item">
                         <v-list-tile-avatar>
-                            <v-btn v-tooltip:top="{ html: 'group chat' }" icon class="info--text" @click="onGroupChat(foundGroup)"><v-icon>group</v-icon></v-btn>
+                            <v-tooltip top>
+                                <v-btn slot="activator" icon class="info--text" @click="onGroupChat(foundGroup)"><v-icon>group</v-icon></v-btn>
+                                <span>group chat</span>
+                            </v-tooltip>
                         </v-list-tile-avatar>
                         <v-list-tile-content>
                             <v-list-tile-title>{{ foundGroup.name }}</v-list-tile-title>
@@ -135,13 +153,19 @@
                     </v-list-tile>
                     <v-list-tile v-for="member in foundGroup.members.filter(m => m !== $store.state.userState.username)" :key="member" avatar>
                         <v-list-tile-avatar>
-                            <v-btn v-tooltip:top="{ html: 'contact' }" icon class="info--text" @click="onContactGroupMember(member)"><v-icon>person</v-icon></v-btn>
+                            <v-tooltip top>
+                                <v-btn slot="activator" icon class="info--text" @click="onContactGroupMember(member)"><v-icon>person</v-icon></v-btn>
+                                <span>contact</span>
+                            </v-tooltip>
                         </v-list-tile-avatar>
                         <v-list-tile-content>
                             <v-list-tile-title>{{ member }}</v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
-                            <v-btn v-tooltip:top="{ html: 'remove from group' }" icon class="error--text" @click="onRemoveGroupMember(foundGroup, member)"><v-icon>remove_circle</v-icon></v-btn>
+                            <v-tooltip top>
+                                <v-btn slot="activator" icon class="error--text" @click="onRemoveGroupMember(foundGroup, member)"><v-icon>remove_circle</v-icon></v-btn>
+                                <span>remove from group</span>
+                            </v-tooltip>
                         </v-list-tile-action>
                     </v-list-tile>
                     <v-list-tile>
@@ -180,7 +204,7 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-btn flat @click="inviteDialog = false">Cancel</v-btn>
-                    <v-btn primary @click="onInvite">Invite</v-btn>
+                    <v-btn color="primary" @click="onInvite">Invite</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -189,18 +213,18 @@
                 <v-card-title primary-title class="warning headline">Transfer management of {{ xferGroup.name }}</v-card-title>
                 <v-card-text v-if="xferGroup.name === 'Admin'">
                     <p>Select an admin to be the new site administrator.</p>
-                    <p>Note that this aciton cannot be undone. Only the new site admin will be able to transfer the role back to you if you change your mind.</p>
+                    <p>Note that this action cannot be undone. Only the new site admin will be able to transfer the role back to you if you change your mind.</p>
                 </v-card-text>
                 <v-card-text v-else>
                     <p>Select a group member to be the new manager of {{ xferGroup.name }}.</p>
-                    <p>Note that this aciton cannot be undone. Only the new manager of {{ xferGroup.name }} will be able to transfer management back to you if you change your mind.</p>
+                    <p>Note that this action cannot be undone. Only the new manager of {{ xferGroup.name }} will be able to transfer management back to you if you change your mind.</p>
                 </v-card-text>
                 <v-card-text>
                     <v-select label="New manager" v-model="newManager" :items="xferGroup.members.filter(m => m !== xferGroup.manager)" single-line auto></v-select>
                 </v-card-text>
                 <v-card-actions>
                     <v-btn flat @click="xferGroupDialog = false">Cancel</v-btn>
-                    <v-btn warning @click="onXferGroup" :disabled="!newManager">Transfer</v-btn>
+                    <v-btn color="warning" @click="onXferGroup" :disabled="!newManager">Transfer</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -213,7 +237,7 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-btn flat @click="leaveGroupDialog = false">Cancel</v-btn>
-                    <v-btn error @click="onLeaveGroup">Leave Group</v-btn>
+                    <v-btn color="error" @click="onLeaveGroup">Leave Group</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -226,7 +250,7 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-btn flat @click="deleteGroupDialog = false">Cancel</v-btn>
-                    <v-btn error @click="onDeleteGroup">Delete Group</v-btn>
+                    <v-btn color="error" @click="onDeleteGroup">Delete Group</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>

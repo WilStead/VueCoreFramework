@@ -11,7 +11,7 @@
                         :prepend-icon="schema.icon"></v-checkbox>
         </div>
         <div v-if="!schema.required" class="null-clear-container">
-            <v-btn class="btn-null-clear" floating primary :disabled="disabled" @click="onClear"><v-icon>remove</v-icon></v-btn>
+            <v-btn class="btn-null-clear" floating color="primary" :disabled="disabled" @click="onClear"><v-icon>remove</v-icon></v-btn>
         </div>
     </v-layout>
 </template>

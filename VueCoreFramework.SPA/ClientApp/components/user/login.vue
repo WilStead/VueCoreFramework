@@ -2,7 +2,7 @@
     <v-layout row wrap justify-center>
         <v-card>
             <v-card-title primary-title class="primary--text headline">Sign In</v-card-title>
-            <v-alert error :value="errorMessage">{{ errorMessage }}</v-alert>
+            <v-alert color="error" :value="errorMessage">{{ errorMessage }}</v-alert>
             <v-card-text>
                 <vue-form-generator class="vfg-container" :schema="schema" :model="model" :options="formOptions" @validated="onValidated"></vue-form-generator>
             </v-card-text>
@@ -11,8 +11,8 @@
             </v-card-text>
             <div v-else>
                 <v-card-actions>
-                    <v-btn primary ripple v-if="this.forgottenPassword" @click="resetPassword">Reset Password</v-btn>
-                    <v-btn primary ripple v-else @click="onSubmit">Sign In</v-btn>
+                    <v-btn color="primary" ripple v-if="this.forgottenPassword" @click="resetPassword">Reset Password</v-btn>
+                    <v-btn color="primary" ripple v-else @click="onSubmit">Sign In</v-btn>
                     <router-link class="ml-5 mr-3" :to="{ path: '/register', query: { returnUrl }}">New? Register here</router-link>
                 </v-card-actions>
                 <v-card-text class="text-xs-right small">

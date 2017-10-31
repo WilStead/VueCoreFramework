@@ -11,9 +11,15 @@
         <v-card-text v-if="allowEdit" class="pa-0">
             <v-container fluid class="pa-0">
                 <v-layout justify-end>
-                    <v-btn v-if="canAdd" icon v-tooltip:top="{ html: 'new' }" @click="onNew"><v-icon class="success--text">add_circle</v-icon></v-btn>
+                    <v-tooltip top>
+                        <v-btn v-if="canAdd" icon slot="activator" @click="onNew"><v-icon class="success--text">add_circle</v-icon></v-btn>
+                        <span>new</span>
+                    </v-tooltip>
+                    <v-tooltip top>
+                        <v-btn icon slot="activator" @click.native.stop="deleteDialogShown = true"><v-icon :class="{ 'error--text': selected.length > 0 }">remove_circle</v-icon></v-btn>
+                        <span>delete</span>
+                    </v-tooltip>
                     <v-dialog v-if="canDelete" v-model="deleteDialogShown">
-                        <v-btn icon slot="activator" v-tooltip:top="{ html: 'delete' }"><v-icon :class="{ 'error--text': selected.length > 0 }">remove_circle</v-icon></v-btn>
                         <v-card>
                             <v-card-title primary-title class="headline">Are you sure you want to delete {{ selected.length > 1 ? 'these' : 'this' }} item{{ selected.length > 1 ? 's' : '' }}?</v-card-title>
                             <v-card-actions>
@@ -35,7 +41,7 @@
                       :total-items="totalItems"
                       :search="internalSearch">
             <template slot="items" slot-scope="props">
-                <td><v-checkbox hide-details primary v-model="props.selected" v-if="deletePendingItems.indexOf(props.item[props.item.primaryKeyProperty]) === -1"></v-checkbox></td>
+                <td><v-checkbox hide-details color="primary" v-model="props.selected" v-if="deletePendingItems.indexOf(props.item[props.item.primaryKeyProperty]) === -1"></v-checkbox></td>
                 <td v-for="field in headers" :class="{ 'text-xs-right': field.text !== 'Name' }">
                     <span v-if="field.cultural">{{ getCulturalValue(props.item[field.value]) }}</span>
                     <span v-else>{{ props.item[field.value] }}</span>
@@ -43,15 +49,30 @@
                 <td v-if="deletePendingItems.indexOf(props.item[props.item.primaryKeyProperty]) !== -1" colspan="3">Deleting...</td>
                 <td v-else>
                     <span v-if="deleteAskingItems.indexOf(props.item[props.item.primaryKeyProperty]) !== -1">Are you sure?</span>
-                    <v-btn v-else icon v-tooltip:top="{ html: 'view/edit' }" @click="onViewItem(props.item[props.item.primaryKeyProperty])"><v-icon class="info--text">edit</v-icon></v-btn>
+                    <v-tooltip top v-else>
+                        <v-btn icon slot="activator" @click="onViewItem(props.item[props.item.primaryKeyProperty])"><v-icon class="info--text">edit</v-icon></v-btn>
+                        <span>view/edit</span>
+                    </v-tooltip>
                 </td>
                 <td v-if="allowEdit && deletePendingItems.indexOf(props.item[props.item.primaryKeyProperty]) === -1 && (canAdd || deleteAskingItems.indexOf(props.item[props.item.primaryKeyProperty]) !== -1)">
-                    <v-btn v-if="deleteAskingItems.indexOf(props.item[props.item.primaryKeyProperty]) !== -1" icon v-tooltip:top="{ html: 'cancel delete' }" @click="cancelDelete(props.item[props.item.primaryKeyProperty])"><v-icon class="success--text">undo</v-icon></v-btn>
-                    <v-btn v-else-if="allowEdit && canAdd" icon v-tooltip:top="{ html: 'copy' }" @click="onDuplicate(props.item[props.item.primaryKeyProperty])"><v-icon class="info--text">content_copy</v-icon></v-btn>
+                    <v-tooltip top v-if="deleteAskingItems.indexOf(props.item[props.item.primaryKeyProperty]) !== -1">
+                        <v-btn icon slot="activator" @click="cancelDelete(props.item[props.item.primaryKeyProperty])"><v-icon class="success--text">undo</v-icon></v-btn>
+                        <span>cancel delete</span>
+                    </v-tooltip>
+                    <v-tooltip top v-else-if="allowEdit && canAdd">
+                        <v-btn icon slot="activator" @click="onDuplicate(props.item[props.item.primaryKeyProperty])"><v-icon class="info--text">content_copy</v-icon></v-btn>
+                        <span>copy</span>
+                    </v-tooltip>
                 </td>
                 <td v-if="allowEdit && deletePendingItems.indexOf(props.item[props.item.primaryKeyProperty]) === -1 && (canDelete || deleteAskingItems.indexOf(props.item[props.item.primaryKeyProperty]) !== -1)">
-                    <v-btn v-if="deleteAskingItems.indexOf(props.item[props.item.primaryKeyProperty]) !== -1" icon v-tooltip:top="{ html: 'confirm delete' }" @click="onDeleteItem(props.item[props.item.primaryKeyProperty])"><v-icon class="error--text">delete</v-icon></v-btn>
-                    <v-btn v-else-if="deletePermissions[props.item[props.item.primaryKeyProperty]]" icon v-tooltip:top="{ html: 'delete' }" @click="deleteAskingItems.push(props.item[props.item.primaryKeyProperty])"><v-icon class="error--text">remove_circle</v-icon></v-btn>
+                    <v-tooltip top v-if="deleteAskingItems.indexOf(props.item[props.item.primaryKeyProperty]) !== -1">
+                        <v-btn icon slot="activator" @click="onDeleteItem(props.item[props.item.primaryKeyProperty])"><v-icon class="error--text">delete</v-icon></v-btn>
+                        <span>confirm delete</span>
+                    </v-tooltip>
+                    <v-tooltip top v-else-if="deletePermissions[props.item[props.item.primaryKeyProperty]]">
+                        <v-btn icon slot="activator" @click="deleteAskingItems.push(props.item[props.item.primaryKeyProperty])"><v-icon class="error--text">remove_circle</v-icon></v-btn>
+                        <span>delete</span>
+                    </v-tooltip>
                 </td>
             </template>
         </v-data-table>

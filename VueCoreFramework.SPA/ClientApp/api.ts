@@ -13,10 +13,10 @@ export function callFetch(url: string, method?: string, body?: any, cred?: boole
     }
     let init: RequestInit = {
         method,
-        headers: {
+        headers: new Headers({
             'Accept': `application/json;v=${store.state.apiVer}`,
             'Accept-Language': store.state.userState.culture
-        }
+        })
     };
     if (cred) {
         init.credentials = 'include';

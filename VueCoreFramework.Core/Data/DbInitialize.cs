@@ -1,8 +1,6 @@
 ﻿using IdentityServer4.EntityFramework.DbContexts;
 using IdentityServer4.EntityFramework.Mappers;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -26,41 +24,46 @@ namespace VueCoreFramework.Core.Data
         /// </summary>
         public static void Initialize(IServiceProvider provider, VueCoreFrameworkDbContext context)
         {
-            var roleManager = provider.GetRequiredService<RoleManager<IdentityRole>>();
-            if (!context.Roles.Any(r => r.Name == CustomRoles.SiteAdmin))
+            using (var serviceScope = provider.GetService<IServiceScopeFactory>().CreateScope())
             {
-                var admin = new IdentityRole(CustomRoles.SiteAdmin);
-                roleManager.CreateAsync(admin).Wait();
-                roleManager.AddClaimAsync(admin, new Claim(CustomClaimTypes.PermissionGroupSiteAdmin, CustomClaimTypes.PermissionAll)).Wait();
-                roleManager.AddClaimAsync(admin, new Claim(CustomClaimTypes.PermissionDataAll, CustomClaimTypes.PermissionAll)).Wait();
-                context.SaveChanges();
-            }
-            if (!context.Roles.Any(r => r.Name == CustomRoles.Admin))
-            {
-                var admin = new IdentityRole(CustomRoles.Admin);
-                roleManager.CreateAsync(admin).Wait();
-                roleManager.AddClaimAsync(admin, new Claim(CustomClaimTypes.PermissionGroupAdmin, CustomClaimTypes.PermissionAll)).Wait();
-                roleManager.AddClaimAsync(admin, new Claim(CustomClaimTypes.PermissionDataAll, CustomClaimTypes.PermissionAll)).Wait();
-                context.SaveChanges();
-            }
+                context.Database.Migrate();
 
-            var siteAdminRole = context.Roles.FirstOrDefault(r => r.Name == CustomRoles.SiteAdmin);
-            if (!context.UserRoles.Any(r => r.RoleId == siteAdminRole.Id))
-            {
-                var userManager = provider.GetRequiredService<UserManager<ApplicationUser>>();
-                var adminOptions = new AdminOptions();
-                provider.GetRequiredService<IConfigureOptions<AdminOptions>>().Configure(adminOptions);
-                var user = context.Users.FirstOrDefault(u => u.Email == adminOptions.AdminEmailAddress);
-                if (user == null)
+                var roleManager = serviceScope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                if (!context.Roles.Any(r => r.Name == CustomRoles.SiteAdmin))
                 {
-                    user = new ApplicationUser { UserName = "Admin", Email = adminOptions.AdminEmailAddress };
-                    userManager.CreateAsync(user, adminOptions.AdminPassword).Wait();
-                    userManager.Users.FirstOrDefault().EmailConfirmed = true;
-                    userManager.UpdateAsync(user).Wait();
+                    var admin = new IdentityRole(CustomRoles.SiteAdmin);
+                    roleManager.CreateAsync(admin).Wait();
+                    roleManager.AddClaimAsync(admin, new Claim(CustomClaimTypes.PermissionGroupSiteAdmin, CustomClaimTypes.PermissionAll)).Wait();
+                    roleManager.AddClaimAsync(admin, new Claim(CustomClaimTypes.PermissionDataAll, CustomClaimTypes.PermissionAll)).Wait();
+                    context.SaveChanges();
                 }
-                userManager.AddToRoleAsync(user, CustomRoles.SiteAdmin).Wait();
-                userManager.AddToRoleAsync(user, CustomRoles.Admin).Wait();
-                context.SaveChanges();
+                if (!context.Roles.Any(r => r.Name == CustomRoles.Admin))
+                {
+                    var admin = new IdentityRole(CustomRoles.Admin);
+                    roleManager.CreateAsync(admin).Wait();
+                    roleManager.AddClaimAsync(admin, new Claim(CustomClaimTypes.PermissionGroupAdmin, CustomClaimTypes.PermissionAll)).Wait();
+                    roleManager.AddClaimAsync(admin, new Claim(CustomClaimTypes.PermissionDataAll, CustomClaimTypes.PermissionAll)).Wait();
+                    context.SaveChanges();
+                }
+
+                var siteAdminRole = context.Roles.FirstOrDefault(r => r.Name == CustomRoles.SiteAdmin);
+                if (!context.UserRoles.Any(r => r.RoleId == siteAdminRole.Id))
+                {
+                    var userManager = serviceScope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                    var adminOptions = new AdminOptions();
+                    serviceScope.ServiceProvider.GetRequiredService<IConfigureOptions<AdminOptions>>().Configure(adminOptions);
+                    var user = context.Users.FirstOrDefault(u => u.Email == adminOptions.AdminEmailAddress);
+                    if (user == null)
+                    {
+                        user = new ApplicationUser { UserName = "Admin", Email = adminOptions.AdminEmailAddress };
+                        userManager.CreateAsync(user, adminOptions.AdminPassword).Wait();
+                        userManager.Users.FirstOrDefault().EmailConfirmed = true;
+                        userManager.UpdateAsync(user).Wait();
+                    }
+                    userManager.AddToRoleAsync(user, CustomRoles.SiteAdmin).Wait();
+                    userManager.AddToRoleAsync(user, CustomRoles.Admin).Wait();
+                    context.SaveChanges();
+                }
             }
         }
 
@@ -77,6 +80,7 @@ namespace VueCoreFramework.Core.Data
 
                 var context = serviceScope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
                 context.Database.Migrate();
+
                 if (replace)
                 {
                     context.Clients.Clear();

@@ -1,13 +1,27 @@
 ﻿<template>
     <v-list class="topbar">
-        <v-btn icon v-tooltip:left="{ html: 'sign in' }" v-if="!signedIn" @click="onLogin"><v-icon class="user-icon">account_circle</v-icon></v-btn>
+        <v-tooltip left v-if="!signedIn">
+            <v-btn icon @click="onLogin"><v-icon class="user-icon">account_circle</v-icon></v-btn>
+            <span>sign in</span>
+        </v-tooltip>
         <div v-else>
-            <v-btn icon v-tooltip:left="{ html: 'chat' }" @click="onToggleChat">
-                <v-icon v-badge="{ value: totalUnread, overlap: true, visible: totalUnread > 0 }"
-                        class="info--after user-icon">chat</v-icon>
-            </v-btn>
-            <router-link class="btn btn--icon btn--raised" v-tooltip:left="{ html: 'profile' }" title="profile" to="/user/manage"><v-icon class="user-icon">account_circle</v-icon></router-link>
-            <v-btn icon v-tooltip:left="{ html: 'sign out' }" @click="onLogout"><v-icon class="user-icon">exit_to_app</v-icon></v-btn>
+            <v-tooltip left>
+                <v-btn icon slot="activator" @click="onToggleChat">
+                    <v-badge overlap v-model="totalUnread" color="info">
+                        <span slot="badge">{{ totalUnread }}</span>
+                        <v-icon class="user-icon">chat</v-icon>
+                    </v-badge>
+                </v-btn>
+                <span>chat</span>
+            </v-tooltip>
+            <v-tooltip left>
+                <router-link class="btn btn--icon btn--raised" slot="activator" title="profile" to="/user/manage"><v-icon class="user-icon">account_circle</v-icon></router-link>
+                <span>profile</span>
+            </v-tooltip>
+            <v-tooltip left>
+                <v-btn icon slot="activator" @click="onLogout"><v-icon class="user-icon">exit_to_app</v-icon></v-btn>
+                <span>sign out</span>
+            </v-tooltip>
         </div>
         <div>
             <a class="btn btn--icon btn--raised" href="http://twitter.com" title="Twitter"><v-icon fa>twitter</v-icon></a>

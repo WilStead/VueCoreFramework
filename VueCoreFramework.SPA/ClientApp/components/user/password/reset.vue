@@ -2,12 +2,12 @@
     <v-layout row wrap justify-center>
         <v-card>
             <v-card-title primary-title class="headline">Reset your password</v-card-title>
-            <v-alert error :value="errors.length > 0">
+            <v-alert color="error" :value="errors.length > 0">
                 <ul>
                     <li v-for="error in errors" class="error--text">{{ error }}</li>
                 </ul>
             </v-alert>
-            <v-alert success v-model="changeSuccess">
+            <v-alert color="success" v-model="changeSuccess">
                 Success! Your password has been reset. Please <router-link to="/login">click here</router-link>
                 to return to the login page, where you can sign in.
             </v-alert>
@@ -19,7 +19,7 @@
             </v-card-text>
             <v-card-actions v-if="!submitting && !changeSuccess">
                 <v-btn default @click.stop.prevent="cancelChange">Cancel</v-btn>
-                <v-btn primary @click.stop.prevent="onSubmit">Submit</v-btn>
+                <v-btn color="primary" @click.stop.prevent="onSubmit">Submit</v-btn>
             </v-card-actions>
         </v-card>
     </v-layout>

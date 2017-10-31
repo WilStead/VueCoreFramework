@@ -17,6 +17,7 @@ using NLog;
 using NLog.Extensions.Logging;
 using NLog.Web;
 using System.Net;
+using System.Reflection;
 using System.Threading.Tasks;
 using VueCoreFramework.Core.Configuration;
 using VueCoreFramework.Core.Models;
@@ -55,7 +56,7 @@ namespace VueCoreFramework.API
         {
             services.AddOptions();
 
-            services.AddDbContextPool<ApplicationDbContext>(options =>
+            services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
             var urls = Configuration.GetSection("URLs");
@@ -111,7 +112,7 @@ namespace VueCoreFramework.API
                 options.AddPolicy("default", policy =>
                 {
                     policy
-                        .AllowAnyOrigin()
+                        .WithOrigins(urls["AuthURL"].TrimEnd('/'), urls["ClientURL"].TrimEnd('/'))
                         .AllowAnyHeader()
                         .AllowAnyMethod();
                 });
@@ -175,9 +176,9 @@ namespace VueCoreFramework.API
 
             app.UseRequestLocalization(localization.Value);
 
-            app.UseAuthentication();
-
             app.UseCors("default");
+
+            app.UseAuthentication();
 
             app.UseMvc(routes =>
             {

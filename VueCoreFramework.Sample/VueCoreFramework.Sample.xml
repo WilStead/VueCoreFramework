@@ -29,6 +29,11 @@
             Gets or sets the <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1"/> of <see cref="T:VueCoreFramework.Sample.Models.Leader"/>s.
             </summary>
         </member>
+        <member name="M:VueCoreFramework.Sample.Data.ApplicationDbContext.#ctor">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/>.
+            </summary>
+        </member>
         <member name="M:VueCoreFramework.Sample.Data.ApplicationDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{VueCoreFramework.Sample.Data.ApplicationDbContext})">
             <summary>
             Initializes a new instance of <see cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/>.
@@ -40,17 +45,6 @@
             Configures the schema required for the framework.
             </summary>
             <param name="builder">The builder being used to construct the model for this context.</param>
-        </member>
-        <member name="T:VueCoreFramework.Sample.Data.ApplicationDbContextFactory">
-            <summary>
-            The <see cref="T:Microsoft.EntityFrameworkCore.Design.IDesignTimeDbContextFactory`1"/> for <see cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/>.
-            </summary>
-        </member>
-        <member name="M:VueCoreFramework.Sample.Data.ApplicationDbContextFactory.CreateDbContext(System.String[])">
-            <summary>
-            Creates a new instance of <see cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/>.
-            </summary>
-            <returns>A new instance of <see cref="T:VueCoreFramework.Sample.Data.ApplicationDbContext"/>.</returns>
         </member>
         <member name="T:VueCoreFramework.Sample.Data.DbInitialize">
             <summary>

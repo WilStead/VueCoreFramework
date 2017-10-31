@@ -8,7 +8,7 @@ using System.Reflection;
 namespace VueCoreFramework.Core.Data
 {
     /// <summary>
-    /// The <see cref="IDesignTimeDbContextFactory{TContext}"/> for <see cref="VueCoreFramework"/>.
+    /// The <see cref="IDesignTimeDbContextFactory{TContext}"/> for <see cref="VueCoreFrameworkDbContext"/>.
     /// </summary>
     public class VueCoreFrameworkDbContextFactory : IDesignTimeDbContextFactory<VueCoreFrameworkDbContext>
     {

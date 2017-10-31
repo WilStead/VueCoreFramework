@@ -56,12 +56,13 @@ namespace VueCoreFramework
                 options.SupportedUICultures = LocalizationConfig.SupportedCultures;
             });
 
+            var urls = Configuration.GetSection("URLs");
             services.AddCors(options =>
             {
                 options.AddPolicy("default", policy =>
                 {
                     policy
-                        .AllowAnyOrigin()
+                        .WithOrigins(urls["ApiURL"].TrimEnd('/'), urls["AuthURL"].TrimEnd('/'))
                         .AllowAnyHeader()
                         .AllowAnyMethod()
                         .AllowCredentials();

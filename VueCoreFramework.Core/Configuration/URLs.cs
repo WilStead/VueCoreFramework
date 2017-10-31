@@ -1,6 +1,4 @@
-﻿using System.Net;
-
-namespace VueCoreFramework.Core.Configuration
+﻿namespace VueCoreFramework.Core.Configuration
 {
     /// <summary>
     /// Provides the URLs for the different hosts which form the application.

@@ -5,12 +5,12 @@
                 <span>Welcome, {{ $store.state.userState.username }}</span>
                 <v-subheader>Manage your account</v-subheader>
             </v-card-title>
-            <v-alert error :value="errors.length > 0">
+            <v-alert color="error" :value="errors.length > 0">
                 <ul>
                     <li v-for="error in errors" class="white--text">{{ error }}</li>
                 </ul>
             </v-alert>
-            <v-alert success v-model="success">{{ successMessage }}</v-alert>
+            <v-alert color="success" v-model="success">{{ successMessage }}</v-alert>
             <v-card-text>
                 <vue-form-generator class="vfg-container" :schema="schema" :model="model" :options="formOptions" @validated="onValidated"></vue-form-generator>
             </v-card-text>
@@ -35,7 +35,7 @@
             </v-card-text>
             <v-card-actions v-else-if="changingUsername || changingEmail || changingPassword || settingPassword">
                 <v-btn default @click.stop.prevent="cancelChange">Cancel</v-btn>
-                <v-btn primary @click.stop.prevent="onSubmit">Submit</v-btn>
+                <v-btn color="primary" @click.stop.prevent="onSubmit">Submit</v-btn>
             </v-card-actions>
             <v-card-text v-else>
                 <dl class="dl-horizontal">
@@ -58,7 +58,7 @@
             </v-card-text>
             <v-card-text v-if="!submitting && !changingUsername && !changingEmail && !changingPassword && !settingPassword">
                 <v-dialog v-model="deleteAccountDialog" fullscreen :overlay="false">
-                    <v-btn error slot="activator">Delete Account</v-btn>
+                    <v-btn color="error" slot="activator">Delete Account</v-btn>
                     <v-card>
                         <v-card-title primary-title class="error white--text headline">Are you sure you want to delete your account?</v-card-title>
                         <v-card-text class="error--text">This will delete all data associated with your account that isn't being shared with others (unless you choose to transfer it, below). Even if you sign up again later with the same account information, any deleted data will remain lost.</v-card-text>
@@ -81,7 +81,7 @@
                         </v-card-text>
                         <v-card-actions v-else>
                             <v-btn flat class="success--text" @click="deleteAccountDialog = false">Cancel</v-btn>
-                            <v-btn :disabled="xferData && !validXferUsername" error @click="onDeleteAccount">Delete Account</v-btn>
+                            <v-btn :disabled="xferData && !validXferUsername" color="error" @click="onDeleteAccount">Delete Account</v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-dialog>

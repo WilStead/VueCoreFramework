@@ -1,12 +1,11 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq;
 using System.Security.Claims;
 using VueCoreFramework.Core.Data.Identity;
 using VueCoreFramework.Core.Models;
-using VueCoreFramework.Sample.Data;
 using VueCoreFramework.Sample.Models;
 
 namespace VueCoreFramework.Sample.Data
@@ -21,37 +20,41 @@ namespace VueCoreFramework.Sample.Data
         /// </summary>
         public static void Initialize(IServiceProvider provider)
         {
-            var context = provider.GetRequiredService<ApplicationDbContext>();
-            var roleManager = provider.GetRequiredService<RoleManager<IdentityRole>>();
-
-            if (!context.Users.Any(u => u.Email == "test_user@example.com"))
+            using (var serviceScope = provider.GetService<IServiceScopeFactory>().CreateScope())
             {
-                var userManager = provider.GetRequiredService<UserManager<ApplicationUser>>();
-                var user = context.Users.FirstOrDefault(u => u.Email == "test_user@example.com");
-                if (user == null)
-                {
-                    user = new ApplicationUser { UserName = "Test_User", Email = "test_user@example.com" };
-                    userManager.CreateAsync(user, "Password*1").Wait();
-                    user = userManager.Users.FirstOrDefault(u => u.UserName == "Test_User");
-                    user.EmailConfirmed = true;
-                    userManager.UpdateAsync(user).Wait();
-                }
-                user = context.Users.FirstOrDefault(u => u.Email == "test_user_2@example.com");
-                if (user == null)
-                {
-                    user = new ApplicationUser { UserName = "Test_User_2", Email = "test_user_2@example.com" };
-                    userManager.CreateAsync(user, "Password*2").Wait();
-                    user = userManager.Users.FirstOrDefault(u => u.UserName == "Test_User_2");
-                    user.EmailConfirmed = true;
-                    userManager.UpdateAsync(user).Wait();
-                }
-                context.SaveChanges();
-            }
+                var context = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                context.Database.Migrate();
 
-            if (!context.Countries.Any())
-            {
-                var countries = new Country[]
+                var roleManager = serviceScope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+                if (!context.Users.Any(u => u.Email == "test_user@example.com"))
                 {
+                    var userManager = provider.GetRequiredService<UserManager<ApplicationUser>>();
+                    var user = context.Users.FirstOrDefault(u => u.Email == "test_user@example.com");
+                    if (user == null)
+                    {
+                        user = new ApplicationUser { UserName = "Test_User", Email = "test_user@example.com" };
+                        userManager.CreateAsync(user, "Password*1").Wait();
+                        user = userManager.Users.FirstOrDefault(u => u.UserName == "Test_User");
+                        user.EmailConfirmed = true;
+                        userManager.UpdateAsync(user).Wait();
+                    }
+                    user = context.Users.FirstOrDefault(u => u.Email == "test_user_2@example.com");
+                    if (user == null)
+                    {
+                        user = new ApplicationUser { UserName = "Test_User_2", Email = "test_user_2@example.com" };
+                        userManager.CreateAsync(user, "Password*2").Wait();
+                        user = userManager.Users.FirstOrDefault(u => u.UserName == "Test_User_2");
+                        user.EmailConfirmed = true;
+                        userManager.UpdateAsync(user).Wait();
+                    }
+                    context.SaveChanges();
+                }
+
+                if (!context.Countries.Any())
+                {
+                    var countries = new Country[]
+                    {
                     new Country
                     {
                         Name = "{\"default\":\"en-US\",\"en-US\":\"Switzerland\"}",
@@ -182,17 +185,17 @@ namespace VueCoreFramework.Sample.Data
                             Age = 56
                         }
                     }
-                };
-                context.Countries.AddRange(countries);
-                context.SaveChanges();
-            }
+                    };
+                    context.Countries.AddRange(countries);
+                    context.SaveChanges();
+                }
 
-            if (!context.Cities.Any())
-            {
-                var countries = context.Countries.ToList();
-                var now = DateTime.Now;
-                var cities = new City[]
+                if (!context.Cities.Any())
                 {
+                    var countries = context.Countries.ToList();
+                    var now = DateTime.Now;
+                    var cities = new City[]
+                    {
                     new City
                     {
                         Name = "{\"default\":\"en-US\",\"en-US\":\"Bern\"}",
@@ -347,15 +350,15 @@ namespace VueCoreFramework.Sample.Data
                         Transit = CityTransit.Airport | CityTransit.BusStation | CityTransit.TrainDepot,
                         CountryId = countries[9].Id
                     }
-                };
-                context.Cities.AddRange(cities);
-                context.SaveChanges();
-            }
+                    };
+                    context.Cities.AddRange(cities);
+                    context.SaveChanges();
+                }
 
-            if (!context.Airlines.Any())
-            {
-                var airlines = new Airline[]
+                if (!context.Airlines.Any())
                 {
+                    var airlines = new Airline[]
+                    {
                     new Airline
                     {
                         Name = "{\"default\":\"en-US\",\"en-US\":\"Lufthansa\"}",
@@ -384,77 +387,78 @@ namespace VueCoreFramework.Sample.Data
                     {
                         Name = "{\"default\":\"en-US\",\"en-US\":\"Luxair\"}"
                     }
-                };
-                context.Airlines.AddRange(airlines);
-                context.SaveChanges();
-                var countries = context.Countries.ToList();
-                var airlineList = context.Airlines.ToList();
-                airlineList[0].Countries.Add(new AirlineCountry
-                {
-                    Airline = airlineList[0],
-                    Country = countries[0]
-                });
-                airlineList[0].Countries.Add(new AirlineCountry
-                {
-                    Airline = airlineList[0],
-                    Country = countries[5]
-                });
-                airlineList[0].Countries.Add(new AirlineCountry
-                {
-                    Airline = airlineList[0],
-                    Country = countries[7]
-                });
-                airlineList[1].Countries.Add(new AirlineCountry
-                {
-                    Airline = airlineList[1],
-                    Country = countries[8]
-                });
-                airlineList[1].Countries.Add(new AirlineCountry
-                {
-                    Airline = airlineList[1],
-                    Country = countries[9]
-                });
-                airlineList[2].Countries.Add(new AirlineCountry
-                {
-                    Airline = airlineList[2],
-                    Country = countries[6]
-                });
-                airlineList[3].Countries.Add(new AirlineCountry
-                {
-                    Airline = airlineList[3],
-                    Country = countries[6]
-                });
-                airlineList[4].Countries.Add(new AirlineCountry
-                {
-                    Airline = airlineList[4],
-                    Country = countries[4]
-                });
-                airlineList[5].Countries.Add(new AirlineCountry
-                {
-                    Airline = airlineList[5],
-                    Country = countries[1]
-                });
-            }
+                    };
+                    context.Airlines.AddRange(airlines);
+                    context.SaveChanges();
+                    var countries = context.Countries.ToList();
+                    var airlineList = context.Airlines.ToList();
+                    airlineList[0].Countries.Add(new AirlineCountry
+                    {
+                        Airline = airlineList[0],
+                        Country = countries[0]
+                    });
+                    airlineList[0].Countries.Add(new AirlineCountry
+                    {
+                        Airline = airlineList[0],
+                        Country = countries[5]
+                    });
+                    airlineList[0].Countries.Add(new AirlineCountry
+                    {
+                        Airline = airlineList[0],
+                        Country = countries[7]
+                    });
+                    airlineList[1].Countries.Add(new AirlineCountry
+                    {
+                        Airline = airlineList[1],
+                        Country = countries[8]
+                    });
+                    airlineList[1].Countries.Add(new AirlineCountry
+                    {
+                        Airline = airlineList[1],
+                        Country = countries[9]
+                    });
+                    airlineList[2].Countries.Add(new AirlineCountry
+                    {
+                        Airline = airlineList[2],
+                        Country = countries[6]
+                    });
+                    airlineList[3].Countries.Add(new AirlineCountry
+                    {
+                        Airline = airlineList[3],
+                        Country = countries[6]
+                    });
+                    airlineList[4].Countries.Add(new AirlineCountry
+                    {
+                        Airline = airlineList[4],
+                        Country = countries[4]
+                    });
+                    airlineList[5].Countries.Add(new AirlineCountry
+                    {
+                        Airline = airlineList[5],
+                        Country = countries[1]
+                    });
+                }
 
-            if (!context.Roles.Any(r => r.Name == CustomRoles.AllUsers))
-            {
-                var allUsers = new IdentityRole(CustomRoles.AllUsers);
-                roleManager.CreateAsync(allUsers).Wait();
-                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataAll, nameof(Leader))).Wait();
-                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataView, nameof(City))).Wait();
-                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataEdit, nameof(City))).Wait();
-                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataView, nameof(Country))).Wait();
-                var countries = context.Countries.ToList();
-                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataView, $"{nameof(Country)}{{{countries[0].Id}}}")).Wait();
-                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataEdit, $"{nameof(Country)}{{{countries[0].Id}}}")).Wait();
-                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataView, $"{nameof(Country)}{{{countries[1].Id}}}")).Wait();
-                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataEdit, $"{nameof(Country)}{{{countries[1].Id}}}")).Wait();
-                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataView, $"{nameof(Country)}{{{countries[2].Id}}}")).Wait();
-                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataEdit, $"{nameof(Country)}{{{countries[2].Id}}}")).Wait();
-                var airlines = context.Airlines.ToList();
-                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataView, $"{nameof(Airline)}{{{airlines[0].Id}}}")).Wait();
-                roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataView, $"{nameof(Airline)}{{{airlines[1].Id}}}")).Wait();
-                context.SaveChanges();
+                if (!context.Roles.Any(r => r.Name == CustomRoles.AllUsers))
+                {
+                    var allUsers = new IdentityRole(CustomRoles.AllUsers);
+                    roleManager.CreateAsync(allUsers).Wait();
+                    roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataAll, nameof(Leader))).Wait();
+                    roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataView, nameof(City))).Wait();
+                    roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataEdit, nameof(City))).Wait();
+                    roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataView, nameof(Country))).Wait();
+                    var countries = context.Countries.ToList();
+                    roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataView, $"{nameof(Country)}{{{countries[0].Id}}}")).Wait();
+                    roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataEdit, $"{nameof(Country)}{{{countries[0].Id}}}")).Wait();
+                    roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataView, $"{nameof(Country)}{{{countries[1].Id}}}")).Wait();
+                    roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataEdit, $"{nameof(Country)}{{{countries[1].Id}}}")).Wait();
+                    roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataView, $"{nameof(Country)}{{{countries[2].Id}}}")).Wait();
+                    roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataEdit, $"{nameof(Country)}{{{countries[2].Id}}}")).Wait();
+                    var airlines = context.Airlines.ToList();
+                    roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataView, $"{nameof(Airline)}{{{airlines[0].Id}}}")).Wait();
+                    roleManager.AddClaimAsync(allUsers, new Claim(CustomClaimTypes.PermissionDataView, $"{nameof(Airline)}{{{airlines[1].Id}}}")).Wait();
+                    context.SaveChanges();
+                }
             }
         }
     }

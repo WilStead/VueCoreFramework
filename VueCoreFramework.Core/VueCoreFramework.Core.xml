@@ -1146,6 +1146,11 @@
             <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>.
             </summary>
         </member>
+        <member name="M:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext.#ctor">
+            <summary>
+            Initializes a new instance of <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>.
+            </summary>
+        </member>
         <member name="M:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions)">
             <summary>
             Initializes a new instance of <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>.
@@ -1175,7 +1180,7 @@
         </member>
         <member name="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContextFactory">
             <summary>
-            The <see cref="T:Microsoft.EntityFrameworkCore.Design.IDesignTimeDbContextFactory`1"/> for <see cref="N:VueCoreFramework"/>.
+            The <see cref="T:Microsoft.EntityFrameworkCore.Design.IDesignTimeDbContextFactory`1"/> for <see cref="T:VueCoreFramework.Core.Data.VueCoreFrameworkDbContext"/>.
             </summary>
         </member>
         <member name="M:VueCoreFramework.Core.Data.VueCoreFrameworkDbContextFactory.CreateDbContext(System.String[])">

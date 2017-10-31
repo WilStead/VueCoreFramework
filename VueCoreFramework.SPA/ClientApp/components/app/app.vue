@@ -15,16 +15,18 @@
                         <v-subheader v-if="$store.state.uiState.messaging.proxySender">{{ $store.state.uiState.messaging.proxySender }}</v-subheader>
                     </v-toolbar-title>
                 </v-toolbar>
-                <v-alert error :value="chatErrorMessage">{{ chatErrorMessage }}</v-alert>
+                <v-alert color="error" :value="chatErrorMessage">{{ chatErrorMessage }}</v-alert>
                 <v-card-text class="chat-row" id="chat-row">
                     <div class="chat-container pa-0">
                         <v-list dense>
                             <v-list-tile avatar
                                          v-for="message in $store.state.uiState.messaging.messages"
-                                         :key="message.timestamp"
-                                         v-tooltip:bottom="{ html: formatTimestamp(message.timestamp) }">
-                                <v-list-tile-content v-if="message.isSystemMessage" class="grey--text text--darken-1">[***SYSTEM***]:</v-list-tile-content>
-                                <v-list-tile-content v-else :class="getMessageClass(message)">[{{ message.username }}]:</v-list-tile-content>
+                                         :key="message.timestamp">
+                                <v-tooltip bottom>
+                                    <v-list-tile-content v-if="message.isSystemMessage" slot="activator" class="grey--text text--darken-1">[***SYSTEM***]:</v-list-tile-content>
+                                    <v-list-tile-content v-else slot="activator" :class="getMessageClass(message)">[{{ message.username }}]:</v-list-tile-content>
+                                    <span>{{ formatTimestamp(message.timestamp) }}</span>
+                                </v-tooltip>
                                 <v-list-tile-content>
                                     <v-list-tile-title>
                                         <vue-markdown :source="message.content"></vue-markdown>
@@ -52,8 +54,10 @@
             <v-list v-else two-line>
                 <v-list-tile v-if="$store.state.uiState.messaging.systemMessages.length" avatar>
                     <v-list-tile-avatar>
-                        <v-icon v-if="$store.state.uiState.messaging.systemMessages.filter(m => !m.received).length"
-                                v-badge="{ value: $store.state.uiState.messaging.systemMessages.filter(m => !m.received).length, overlap: true }">settings</v-icon>
+                        <v-badge v-if="$store.state.uiState.messaging.systemMessages.filter(m => !m.received).length" overlap>
+                            <span slot="badge">{{ $store.state.uiState.messaging.systemMessages.filter(m => !m.received).length }}</span>
+                            <v-icon>settings</v-icon>
+                        </v-badge>
                         <v-icon v-else>settings</v-icon>
                     </v-list-tile-avatar>
                     <v-list-tile-content>
@@ -79,7 +83,12 @@
                 <v-list-tile v-for="conversation in $store.state.uiState.messaging.conversations.filter(c => c.unreadCount > 0)"
                              :key="conversation.interlocutor"
                              avatar>
-                    <v-list-tile-avatar><v-icon v-badge="{ value: conversation.unreadCount, overlap: true }" class="blue-grey lighten-4 primary--text info--after">person</v-icon></v-list-tile-avatar>
+                    <v-list-tile-avatar>
+                        <v-badge overlap color="info">
+                            <span slot="badge">{{ conversation.unreadCount }}</span>
+                            <v-icon class="blue-grey lighten-4 primary--text">person</v-icon>
+                        </v-badge>
+                    </v-list-tile-avatar>
                     <v-list-tile-content>
                         <v-list-tile-title>{{ conversation.interlocutor }}</v-list-tile-title>
                     </v-list-tile-content>
@@ -117,12 +126,17 @@
                     </v-list-tile-content>
                 </v-list-tile>
                 <v-list-group v-if="foundUser">
-                    <v-list-tile avatar slot="item" v-tooltip:top="{ html: foundUser.email }">
+                    <v-list-tile avatar slot="item">
                         <v-list-tile-avatar>
                             <v-btn icon class="info--text" @click="onUserChat(foundUser.username)"><v-icon>chat</v-icon></v-btn>
                         </v-list-tile-avatar>
                         <v-list-tile-content>
-                            <v-list-tile-title>{{ foundUser.username }}</v-list-tile-title>
+                            <v-list-tile-title>
+                                <v-tooltip top>
+                                    <span slot="activator">{{ foundUser.username }}</span>
+                                    <span>{{ foundUser.email }}</span>
+                                </v-tooltip>
+                            </v-list-tile-title>
                         </v-list-tile-content>
                         <v-list-tile-action>
                             <v-icon>keyboard_arrow_down</v-icon>

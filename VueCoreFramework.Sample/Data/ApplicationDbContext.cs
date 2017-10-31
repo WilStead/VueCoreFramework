@@ -32,6 +32,11 @@ namespace VueCoreFramework.Sample.Data
         /// <summary>
         /// Initializes a new instance of <see cref="ApplicationDbContext"/>.
         /// </summary>
+        protected ApplicationDbContext() : base() { }
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="ApplicationDbContext"/>.
+        /// </summary>
         /// <param name="options">The options to be used by a <see cref="DbContext"/>.</param>
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 

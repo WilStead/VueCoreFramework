@@ -1,6 +1,6 @@
 ﻿<template>
     <v-card>
-        <v-alert error :value="errorMessage">{{ errorMessage }}</v-alert>
+        <v-alert color="error" :value="errorMessage">{{ errorMessage }}</v-alert>
         <v-card-text>
             <v-checkbox v-model="isCapitol"
                         label="Is Capitol"

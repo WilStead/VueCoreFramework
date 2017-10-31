@@ -31,6 +31,11 @@ namespace VueCoreFramework.Core.Data
         /// <summary>
         /// Initializes a new instance of <see cref="VueCoreFrameworkDbContext"/>.
         /// </summary>
+        protected VueCoreFrameworkDbContext() : base() { }
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="VueCoreFrameworkDbContext"/>.
+        /// </summary>
         /// <param name="options">The options to be used by a <see cref="DbContext"/>.</param>
         public VueCoreFrameworkDbContext(DbContextOptions options)
             : base(options)
