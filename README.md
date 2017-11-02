@@ -30,10 +30,8 @@ If you discover that the framework itself has a bug that needs fixing, or think 
 ## Credits
 VueCoreFramework was built with the essential help of libraries and technologies that are the work of many great developers, without whom it would not have been possible to create. What follows is a (probably incomplete) list:
 * [ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/)
-* [Bootstrap](http://getbootstrap.com/)
 * [Entity Framework Core](https://docs.microsoft.com/en-us/ef/core/)
 * [IdentityServer4](http://identityserver.io/)
-* [jQuery](https://jquery.com/)
 * [JSNLog](http://nodejs.jsnlog.com/)
 * [LocalePlanet](http://www.localeplanet.com/)
 * [Moment.js](http://momentjs.com/)

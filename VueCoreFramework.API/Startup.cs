@@ -1,8 +1,6 @@
 ﻿using IdentityServer4.AccessTokenValidation;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,8 +15,6 @@ using NLog;
 using NLog.Extensions.Logging;
 using NLog.Web;
 using System.Net;
-using System.Reflection;
-using System.Threading.Tasks;
 using VueCoreFramework.Core.Configuration;
 using VueCoreFramework.Core.Models;
 using VueCoreFramework.Core.Services;
@@ -68,29 +64,15 @@ namespace VueCoreFramework.API
             })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
-            //services.ConfigureApplicationCookie(options =>
-            //{
-            //    options.LoginPath = PathString.FromUriComponent("/Home/Index?forwardUrl=%2Flogin");
-            //    options.AccessDeniedPath = PathString.FromUriComponent("/Home/Index?forwardUrl=%2Ferror%2F403");
-
-            //    // Disable automatic challenge and allow 401 responses.
-            //    options.Events = new CookieAuthenticationEvents
-            //    {
-            //        OnRedirectToLogin = ctx =>
-            //        {
-            //            if (ctx.Response.StatusCode == (int)HttpStatusCode.OK)
-            //            {
-            //                ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-            //            }
-            //            else
-            //            {
-            //                ctx.Response.Redirect(ctx.RedirectUri);
-            //            }
-            //            return Task.FromResult(0);
-            //        }
-            //    };
-            //});
-            services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
+            services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultAuthenticateScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultForbidScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultSignInScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultSignOutScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
+            })
                 .AddIdentityServerAuthentication(options =>
                 {
                     options.Authority = urls.GetValue("AuthURL", $"https://{new IPEndPoint(IPAddress.Parse(URLs.Auth_IP), URLs.Auth_Port).ToString()}/");

@@ -62,10 +62,9 @@ namespace VueCoreFramework
                 options.AddPolicy("default", policy =>
                 {
                     policy
-                        .WithOrigins(urls["ApiURL"].TrimEnd('/'), urls["AuthURL"].TrimEnd('/'))
+                        .AllowAnyOrigin()
                         .AllowAnyHeader()
-                        .AllowAnyMethod()
-                        .AllowCredentials();
+                        .AllowAnyMethod();
                 });
             });
 

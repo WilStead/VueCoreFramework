@@ -6,6 +6,7 @@
             <ul>
                 <li><a href="https://get.asp.net/">ASP.NET Core</a> and <a href="https://msdn.microsoft.com/en-us/library/67ef8sbd.aspx">C#</a> for cross-platform server-side code</li>
                 <li><a href="https://docs.microsoft.com/en-us/ef/core/">Entity Framework Core</a> and <a href="https://www.microsoft.com/en-us/sql-server/">MS Sql Server</a> for data storage and access</li>
+                <li><a href="http://identityserver.io/">IdentityServer</a> for authentication and authorization</li>
                 <li><a href="https://vuejs.org/">Vue.js</a> and <a href="http://www.typescriptlang.org/">TypeScript</a> for client-side code</li>
                 <li><a href="https://webpack.github.io/">Webpack</a> for building and bundling client-side resources</li>
                 <li><a href="https://vuetifyjs.com/">Vuetify</a> for layout and styling</li>
