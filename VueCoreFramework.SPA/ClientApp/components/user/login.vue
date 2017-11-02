@@ -31,9 +31,9 @@
                 <v-card-text v-if="authProviderFacebook || authProviderGoogle || authProviderMicrosoft">
                     <span>Sign in with an external account</span>
                     <div class="auth-providers">
-                        <v-btn icon ripple v-if="authProviderFacebook" @click="onSignInProvider('Facebook')"><v-icon fa>facebook</v-icon></v-btn>
-                        <v-btn icon ripple v-if="authProviderGoogle" @click="onSignInProvider('Google')"><v-icon fa>google</v-icon></v-btn>
-                        <v-btn icon ripple v-if="authProviderMicrosoft" @click="onSignInProvider('Microsoft')"><v-icon fa>windows</v-icon></v-btn>
+                        <v-btn icon ripple v-if="authProviderFacebook" @click="onSignInProvider('Facebook')"><v-icon>fa-facebook</v-icon></v-btn>
+                        <v-btn icon ripple v-if="authProviderGoogle" @click="onSignInProvider('Google')"><v-icon>fa-google</v-icon></v-btn>
+                        <v-btn icon ripple v-if="authProviderMicrosoft" @click="onSignInProvider('Microsoft')"><v-icon>fa-windows</v-icon></v-btn>
                     </div>
                 </v-card-text>
             </div>

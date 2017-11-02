@@ -5,7 +5,7 @@
                 <menu-item-component v-for="menuItem in $store.state.uiState.menuItems" :menuItem="menuItem" :submenu="menuItem.submenu" :key="menuItem.key" />
             </v-list>
         </v-navigation-drawer>
-        <v-navigation-drawer right persistent disable-route-watcher v-model="$store.state.uiState.messaging.messagingShown">
+        <v-navigation-drawer app right persistent disable-route-watcher v-model="$store.state.uiState.messaging.messagingShown">
             <v-card v-if="$store.state.uiState.messaging.chatShown" style="display: flex; flex-flow: column nowrap; min-height: 100%;">
                 <v-toolbar card class="primary" style="flex-grow: 0;">
                     <v-btn icon @click="onHideChat"><v-icon>arrow_back</v-icon></v-btn>
@@ -171,7 +171,7 @@
                 </v-list-group>
             </v-list>
         </v-navigation-drawer>
-        <v-toolbar app fixed class="primary topnav">
+        <v-toolbar app dark fixed class="primary topnav">
             <v-toolbar-side-icon @click.stop="sideNav = !sideNav" />
             <div class="logo-container">
                 <router-link to="/"><span class="logo-link"></span></router-link>
@@ -184,22 +184,24 @@
                 <v-btn icon slot="activator">
                     <v-icon>more_vert</v-icon>
                 </v-btn>
-                <topbar-component />
+                <topbar-component class="topbar-vertical" />
             </v-menu>
         </v-toolbar>
         <main>
-            <v-container fluid>
-                <router-view></router-view>
-                <v-dialog v-model="$store.state.error.dialogShown">
-                    <v-card>
-                        <v-card-title primary-title class="error white--text">Error!</v-card-title>
-                        <v-card-text class="error--text text--darken-4 mt-4">{{ $store.state.error.message }}</v-card-text>
-                        <v-card-actions>
-                            <v-btn default @click="$store.state.error.dialogShown = false">Close</v-btn>
-                        </v-card-actions>
-                    </v-card>
-                </v-dialog>
-            </v-container>
+            <v-content>
+                <v-container fluid>
+                    <router-view></router-view>
+                    <v-dialog v-model="$store.state.error.dialogShown">
+                        <v-card>
+                            <v-card-title primary-title class="error white--text">Error!</v-card-title>
+                            <v-card-text class="error--text text--darken-4 mt-4">{{ $store.state.error.message }}</v-card-text>
+                            <v-card-actions>
+                                <v-btn default @click="$store.state.error.dialogShown = false">Close</v-btn>
+                            </v-card-actions>
+                        </v-card>
+                    </v-dialog>
+                </v-container>
+            </v-content>
         </main>
         <v-footer app fixed class="primary">
             <v-spacer></v-spacer>

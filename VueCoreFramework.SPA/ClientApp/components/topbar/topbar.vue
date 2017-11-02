@@ -1,7 +1,7 @@
 ﻿<template>
     <v-list class="topbar">
         <v-tooltip left v-if="!signedIn">
-            <v-btn icon @click="onLogin"><v-icon class="user-icon">account_circle</v-icon></v-btn>
+            <v-btn slot="activator" icon @click="onLogin"><v-icon class="user-icon">account_circle</v-icon></v-btn>
             <span>sign in</span>
         </v-tooltip>
         <div v-else>
@@ -15,7 +15,7 @@
                 <span>chat</span>
             </v-tooltip>
             <v-tooltip left>
-                <router-link class="btn btn--icon btn--raised" slot="activator" title="profile" to="/user/manage"><v-icon class="user-icon">account_circle</v-icon></router-link>
+                <router-link class="btn btn--icon btn--raised" slot="activator" title="profile" to="/user/manage"><v-icon class="user-icon" dark>account_circle</v-icon></router-link>
                 <span>profile</span>
             </v-tooltip>
             <v-tooltip left>
@@ -24,10 +24,10 @@
             </v-tooltip>
         </div>
         <div>
-            <a class="btn btn--icon btn--raised" href="http://twitter.com" title="Twitter"><v-icon fa>twitter</v-icon></a>
-            <a class="btn btn--icon btn--raised" href="http://facebook.com" title="Facebook"><v-icon fa>facebook-official</v-icon></a>
-            <a class="btn btn--icon btn--raised" href="http://plus.google.com" title="Google+"><v-icon fa>google-plus-official</v-icon></a>
-            <a class="btn btn--icon btn--raised" href="http://reddit.com" title="Reddit"><v-icon fa>reddit-alien</v-icon></a>
+            <a class="btn btn--icon btn--raised" href="http://twitter.com" title="Twitter"><v-icon dark>fa-twitter</v-icon></a>
+            <a class="btn btn--icon btn--raised" href="http://facebook.com" title="Facebook"><v-icon dark>fa-facebook-official</v-icon></a>
+            <a class="btn btn--icon btn--raised" href="http://plus.google.com" title="Google+"><v-icon dark>fa-google-plus-official</v-icon></a>
+            <a class="btn btn--icon btn--raised" href="http://reddit.com" title="Reddit"><v-icon dark>fa-reddit-alien</v-icon></a>
         </div>
     </v-list>
 </template>

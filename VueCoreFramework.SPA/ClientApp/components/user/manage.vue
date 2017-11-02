@@ -17,17 +17,17 @@
             <v-card-text v-if="!submitting && (authProviderFacebook || authProviderGoogle || authProviderMicrosoft) && (!authProviderFacebookUser || !authProviderGoogleUser || !authProviderMicrosoftUser)">
                 <span>Add external login</span>
                 <div class="auth-providers">
-                    <v-btn icon ripple v-if="authProviderFacebook && !authProviderFacebookUser" @click="onSignInProviderAdd('Facebook')"><v-icon fa>facebook</v-icon></v-btn>
-                    <v-btn icon ripple v-if="authProviderGoogle && !authProviderGoogleUser" @click="onSignInProviderAdd('Google')"><v-icon fa>google</v-icon></v-btn>
-                    <v-btn icon ripple v-if="authProviderMicrosoft && !authProviderMicrosoftUser" @click="onSignInProviderAdd('Microsoft')"><v-icon fa>windows</v-icon></v-btn>
+                    <v-btn icon ripple v-if="authProviderFacebook && !authProviderFacebookUser" @click="onSignInProviderAdd('Facebook')"><v-icon>fa-facebook</v-icon></v-btn>
+                    <v-btn icon ripple v-if="authProviderGoogle && !authProviderGoogleUser" @click="onSignInProviderAdd('Google')"><v-icon>fa-google</v-icon></v-btn>
+                    <v-btn icon ripple v-if="authProviderMicrosoft && !authProviderMicrosoftUser" @click="onSignInProviderAdd('Microsoft')"><v-icon>fa-windows</v-icon></v-btn>
                 </div>
             </v-card-text>
             <v-card-text v-if="!submitting && (authProviderFacebookUser || authProviderGoogleUser || authProviderMicrosoftUser)">
                 <span>Remove external login</span>
                 <div class="auth-providers">
-                    <v-btn icon ripple v-if="authProviderFacebook && authProviderFacebookUser" @click="onSignInProviderRemove('Facebook')"><v-icon fa>facebook</v-icon></v-btn>
-                    <v-btn icon ripple v-if="authProviderGoogle && authProviderGoogleUser" @click="onSignInProviderRemove('Google')"><v-icon fa>google</v-icon></v-btn>
-                    <v-btn icon ripple v-if="authProviderMicrosoft && authProviderMicrosoftUser" @click="onSignInProviderRemove('Microsoft')"><v-icon fa>windows</v-icon></v-btn>
+                    <v-btn icon ripple v-if="authProviderFacebook && authProviderFacebookUser" @click="onSignInProviderRemove('Facebook')"><v-icon>fa-facebook</v-icon></v-btn>
+                    <v-btn icon ripple v-if="authProviderGoogle && authProviderGoogleUser" @click="onSignInProviderRemove('Google')"><v-icon>fa-google</v-icon></v-btn>
+                    <v-btn icon ripple v-if="authProviderMicrosoft && authProviderMicrosoftUser" @click="onSignInProviderRemove('Microsoft')"><v-icon>fa-windows</v-icon></v-btn>
                 </div>
             </v-card-text>
             <v-card-text v-if="submitting" class="activity-row">

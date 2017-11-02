@@ -28,6 +28,10 @@ table.table tbody td:empty {
     height: auto;
 }
 
+fieldset {
+    border-width: 0;
+}
+
 .datatable {
     .btn {
         margin-top: 0;

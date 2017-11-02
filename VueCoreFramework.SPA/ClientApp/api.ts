@@ -20,14 +20,14 @@ export function callFetch(url: string, method?: string, body?: any, cred?: boole
     };
     if (cred) {
         init.credentials = 'include';
-        init.mode = 'cors';
     }
+    init.mode = 'cors';
     if (store.state.userState.user) {
-        init.headers['Authorization'] = `Bearer ${store.state.userState.user.access_token}`;
+        (init.headers as Headers).set('Authorization', `Bearer ${store.state.userState.user.access_token}`);
     }
     if (body) {
         init.body = body;
-        init.headers['Content-Type'] = `application/json;v=${store.state.apiVer}`;
+        (init.headers as Headers).set('Content-Type', `application/json;v=${store.state.apiVer}`);
     }
     return fetch(url, init);
 }

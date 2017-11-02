@@ -119,28 +119,28 @@ namespace VueCoreFramework.Auth
                     options.TokenCleanupInterval = 30;
                 })
                 .AddAspNetIdentity<ApplicationUser>();
-            services.ConfigureApplicationCookie(options =>
-            {
-                options.LoginPath = PathString.FromUriComponent("/Home/Index?forwardUrl=%2Flogin");
-                options.AccessDeniedPath = PathString.FromUriComponent("/Home/Index?forwardUrl=%2Ferror%2F403");
+            //services.ConfigureApplicationCookie(options =>
+            //{
+            //    options.LoginPath = PathString.FromUriComponent("/Home/Index?forwardUrl=%2Flogin");
+            //    options.AccessDeniedPath = PathString.FromUriComponent("/Home/Index?forwardUrl=%2Ferror%2F403");
 
-                // Disable automatic challenge and allow 401 responses.
-                options.Events = new CookieAuthenticationEvents
-                {
-                    OnRedirectToLogin = ctx =>
-                    {
-                        if (ctx.Response.StatusCode == (int)HttpStatusCode.OK)
-                        {
-                            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                        }
-                        else
-                        {
-                            ctx.Response.Redirect(ctx.RedirectUri);
-                        }
-                        return Task.FromResult(0);
-                    }
-                };
-            });
+            //    // Disable automatic challenge and allow 401 responses.
+            //    options.Events = new CookieAuthenticationEvents
+            //    {
+            //        OnRedirectToLogin = ctx =>
+            //        {
+            //            if (ctx.Response.StatusCode == (int)HttpStatusCode.OK)
+            //            {
+            //                ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            //            }
+            //            else
+            //            {
+            //                ctx.Response.Redirect(ctx.RedirectUri);
+            //            }
+            //            return Task.FromResult(0);
+            //        }
+            //    };
+            //});
             services.AddAuthentication()
                 .AddOpenIdConnect("oidc", "OpenID Connect", options =>
                 {

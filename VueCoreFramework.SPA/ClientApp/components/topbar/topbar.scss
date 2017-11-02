@@ -42,24 +42,38 @@
         background-color: inherit;
     }
 
+    &.topbar-vertical {
+        .user-icon {
+            color: $color-primary;
+        }
+
+        a.btn {
+            .fa-twitter {
+                color: $twitter-color;
+            }
+
+            .fa-facebook-official {
+                color: $facebook-color;
+            }
+
+            .fa-google-plus-official {
+                color: $google-color;
+            }
+
+            .fa-reddit-alien {
+                color: $reddit-color;
+            }
+        }
+    }
+
     &.topbar-header {
         background-color: $color-primary;
         display: flex;
         flex-direction: row-reverse;
         padding-bottom: 0;
 
-        .btn {
-            .icon {
-                color: $color-primary-text;
-            }
-        }
-
         div {
             flex-direction: row;
-        }
-
-        .user-icon {
-            color: $color-primary-text;
         }
     }
 }
